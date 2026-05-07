@@ -1,91 +1,141 @@
-// src/lib/engine.ts
 import { CHAMPIONS_DB, type ChampionData } from './data';
+import { NAME_TO_ID } from './constants';
 
 export interface Recommendation {
   id: number;
   score: number;
   name: string;
+  reasons: string[];
 }
 
+/**
+ * Normaliza nombres para evitar fallos por comillas o espacios
+ */
+const normalize = (n: string) => n.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * Función principal que procesa el draft y devuelve las recomendaciones
+ */
 export function getProcessedRecommendations(
-  myTeam: any[], 
-  theirTeam: any[], 
-  rawRole: string // El rol que viene del LCU (ej: "UTILITY"): string,
+    myTeam: any[], 
+    theirTeam: any[], 
+    rawRole: string,
+    metaCache: any // <--- Pasamos el meta como parámetro
 ): Recommendation[] {
-  
+    if (!metaCache) return [];
+
+    // Mapeo de roles LCU -> OP.GG
     const posMap: Record<string, string> = {
         "top": "top",
         "jungle": "jungle",
         "middle": "mid",   
-        "bottom": "bottom",
+        "bottom": "adc", 
         "utility": "support"
     };
-  
     const myRole = posMap[rawRole.toLowerCase()] || rawRole.toLowerCase();
-    // 2. Extraer IDs
-    const myTeamIds = myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
-    const enemyTeamIds = theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
 
-    // 3. Filtrar DB y calcular scores
-    const results = Object.values(CHAMPIONS_DB)
-        .filter(champ => 
-        // Buscamos si alguno de los tags coincide con el rol normalizado
-        champ.tags.some(t => t.toLowerCase() === myRole)
-        )
-        .map(champ => ({
-        id: champ.id,
-        name: champ.name,
-        score: calculateScore(champ, myTeamIds, enemyTeamIds)
-        }));
+    // Extraer IDs y limpiar duplicados/vacíos
+    const myTeamIds = myTeam.map(p => p.championId || p.championPickIntent).filter(id => id > 0);
+    const enemyTeamIds = theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id > 0);
+    const allPickedIds = [...myTeamIds, ...enemyTeamIds];
 
+    // Obtener campeones del meta para el rol actual
+    const currentMetaRole = metaCache.roles[myRole] || []; // Esto está bien si pasas el JSON completo
+    const totalInMeta = currentMetaRole.length;
+
+    const results = currentMetaRole.map((metaEntry: any) => {
+        const champId = NAME_TO_ID[metaEntry.name];
+        
+        // No recomendar si ya está pickeado o no existe en DB
+        if (!champId || allPickedIds.includes(champId)) return null;
+        
+        const baseChamp = CHAMPIONS_DB[champId as number] || (CHAMPIONS_DB as any)[champId.toString()];
+        if (!baseChamp) return null;
+
+        // Calcular Score basado en Ranking y Contexto
+        const { score, reasons } = calculateScore(baseChamp, myTeamIds, enemyTeamIds, metaEntry, totalInMeta);
+
+        return {
+            id: champId,
+            name: metaEntry.name,
+            score: score,
+            reasons: reasons
+        };
+    }).filter(Boolean) as Recommendation[];
+
+    // Ordenar de mejor a peor
     return results.sort((a, b) => b.score - a.score);
 }
 
-export function calculateScore(target: ChampionData, myTeam: number[], enemyTeam: number[]): number {
-  let score = target.baseScore;
+/**
+ * Calcula el puntaje individual de un campeón
+ */
 
-  // 1. PESO DE COUNTERS (40% de importancia)
-  // No solo miramos si le ganas, sino qué tan fuerte es el counter
-  enemyTeam.forEach(enemyId => {
-    if (target.counters.includes(enemyId)) score += 2.5; // Hard Counter
-    
-    const enemyData = CHAMPIONS_DB[enemyId];
-    if (enemyData && enemyData.counters.includes(target.id)) score -= 3.0; // Ser countereado es más peligroso
+export function calculateScore(
+  target: ChampionData, 
+  myTeamIds: number[], 
+  enemyTeamIds: number[],
+  metaEntry: any,
+  totalChampsInRole: number
+): { score: number; reasons: string[] } {
+  const reasons: string[] = [];
+  const rank = parseInt(metaEntry.rank) || totalChampsInRole;
+
+  // 1. BASE DE META (Igual que antes)
+  let score = 3.0 + (3.0 * ((totalChampsInRole - rank + 1) / totalChampsInRole));
+  if (rank > 25) score -= 2.0;
+
+  const allies = myTeamIds.map(id => CHAMPIONS_DB[id]).filter(Boolean);
+  const enemies = enemyTeamIds.map(id => CHAMPIONS_DB[id]).filter(Boolean);
+
+  // --- 2. LÓGICA DE MULTI-COUNTER (EL "DESTRUCTOR DE COMPS") ---
+  let counterCount = 0;
+  enemyTeamIds.forEach(enemyId => {
+    if (target.hardCounters.includes(enemyId)) counterCount++;
   });
 
-  // 2. EQUILIBRIO DE DAÑO (Fundamental en el Meta)
-  // Si tu equipo es Full AD, el enemigo armará armadura y perderás.
-  const damageTypeCount = { AD: 0, AP: 0 };
-  myTeam.forEach(id => {
-    const ally = CHAMPIONS_DB[id];
-    if (ally) damageTypeCount[ally.damageType as "AD" | "AP"]++;
-  });
+  if (counterCount >= 2) {
+    const bonus = counterCount * 1.2; // 2.4 o 3.6 puntos
+    score += bonus;
+    reasons.push(`Dominio: Countereas a ${counterCount} enemigos`);
+  }
 
-  if (target.damageType === "AP" && damageTypeCount.AP === 0) score += 2.0; // Necesidad crítica de AP
-  if (target.damageType === "AD" && damageTypeCount.AD >= 3) score -= 1.5; // Demasiado AD en el equipo
+  // --- 3. LÓGICA DE FRONTLINE (EL MURO FALTANTE) ---
+  const teamHasFrontline = allies.some(a => a.isFrontline);
+  if (!teamHasFrontline && target.isFrontline) {
+    score += 2.5;
+    reasons.push("Necesidad: Tu equipo no tiene resistencia");
+  }
 
-  // 3. CURVA DE PODER (Scaling)
-  // Si tu equipo es todo de Early Game y no ganan en 20 min, pierden.
-  const scalingCount = { Early: 0, Mid: 0, Late: 0 };
-  myTeam.forEach(id => {
-    const ally = CHAMPIONS_DB[id];
-    if (ally) scalingCount[ally.scaling as "Early" | "Mid" | "Late"]++;
-  });
+  // --- 4. LÓGICA DE HYPERCARRY (EL SEGURO DE VIDA) ---
+  const teamHasLateGame = allies.some(a => a.scaling === 'Late' || a.isHypercarry);
+  if (!teamHasLateGame && target.isHypercarry) {
+    score += 1.5;
+    reasons.push("Escalado: Aportas potencia para el juego tardío");
+  }
 
-  // Balancear la curva: Si todos son Early, un pick de Late (como Karthus o Master Yi) suma puntos.
-  if (scalingCount.Early >= 2 && target.scaling === "Late") score += 1.0;
-  if (scalingCount.Late >= 2 && target.scaling === "Early") score += 1.0;
+  // --- 5. EL DILEMA AD VS AP (PESO AGRESIVO) ---
+  const adAllies = allies.filter(a => a.damageType === 'AD').length;
+  const apAllies = allies.filter(a => a.damageType === 'AP').length;
 
-  // 4. EL FACTOR "WOMB COMBO" (Sinergia de CC)
-  // Si hay mucho CC en tu equipo, los campeones que aprovechan eso suben.
-  const teamHasHardCC = myTeam.some(id => CHAMPIONS_DB[id]?.tags.includes("CC"));
-  if (teamHasHardCC && target.tags.includes("FollowUp")) score += 1.2;
+  if (adAllies >= 3 && target.damageType === 'AD') {
+    // Si ya somos Full AD, aunque sea counter, le bajamos la moral
+    score -= 3.5; 
+    reasons.push("RIESGO CRÍTICO: Demasiado daño físico (Full AD)");
+  }
+  
+  if (apAllies === 0 && target.damageType === 'AP') {
+    score += 3.0;
+    reasons.push("Balance: Única fuente de daño mágico necesaria");
+  }
 
-  // 5. PENALIZACIÓN POR "SOBREPOBLACIÓN" DE ROL
-  // Si ya hay un Assassin en Mid, otro Assassin en Jungla podría ser redundante.
-  const hasAssassin = myTeam.some(id => CHAMPIONS_DB[id]?.tags.includes("Assassin"));
-  if (hasAssassin && target.tags.includes("Assassin")) score -= 0.8;
+  // --- 6. SINERGIA ESPECÍFICA (Ej: Yasuo + Knockup) ---
+  const hasYasuo = allies.some(a => a.name === "Yasuo");
+  if (hasYasuo && target.tags.includes("Knockup")) {
+    score += 2.0;
+    reasons.push("Sinergia: Combo de levantamiento para Yasuo");
+  }
 
-  // Normalización Final (0.1 a 10.0)
-  return Math.min(Math.max(score, 0.1), 10.0);
+  const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
+  return { score: finalScore, reasons };
 }

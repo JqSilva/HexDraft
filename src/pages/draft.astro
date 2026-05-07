@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getTopPicks } from '../lib/scraper';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
@@ -48,7 +47,7 @@ import { getTopPicks } from '../lib/scraper';
                 </header>
 
                 <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 max-w-fit">
-                    <p class="text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando recomendaciones...</p>
+                    <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando Fase de Selección...</p>
                 </div>
             </div>
         </div>
@@ -68,7 +67,19 @@ import { getTopPicks } from '../lib/scraper';
           </div>
         ))}
       </div>
-
+    </div>
+    <div id="reason-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden p-4">
+        <div class="bg-[#010a13] border border-blue-900/50 p-6 max-w-sm w-full rounded-sm shadow-2xl">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h4 id="popup-champ-name" class="text-xl font-black text-white uppercase italic">Nombre</h4>
+                    <p class="text-xs text-blue-400 font-bold uppercase tracking-widest">Score: <span id="popup-score">0.0</span></p>
+                </div>
+                <button id="close-popup" class="text-slate-500 hover:text-white font-bold">✕</button>
+            </div>
+            <ul id="popup-reasons-list" class="space-y-3">
+                </ul>
+        </div>
     </div>
   </main>
 </Layout>
@@ -76,7 +87,9 @@ import { getTopPicks } from '../lib/scraper';
 <script>
     import { getProcessedRecommendations } from '../lib/engine';
 
+    // Variables de estado global [cite: 13, 15]
     let champMap = {};
+    let globalMetaCache = null;
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
 
@@ -88,94 +101,152 @@ import { getTopPicks } from '../lib/scraper';
         "utility": "icon-position-utility.png"
     };
 
+    // 1. CARGA DE DATOS INICIALES [cite: 16, 20]
+    async function loadMetaCache() {
+        try {
+            const res = await fetch('/api/meta');
+            const json = await res.json();
+            console.log("✅ Meta-cache cargado:", json);
+            globalMetaCache = json;
+        } catch (e) {
+            console.error("❌ Error cargando meta-cache:", e);
+        }
+    }
+
     async function loadChampionData() {
         try {
             const res = await fetch('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json');
             const data = await res.json();
             data.forEach(c => { champMap[c.id] = c.name; });
-            console.log("Diccionario de campeones cargado.");
+            console.log("✅ Diccionario de campeones cargado.");
         } catch (e) {
-            console.error("Error cargando CommunityDragon");
+            console.error("❌ Error cargando CommunityDragon:", e);
         }
     }
 
+
+    function clearDraftUI() {
+        // 1. Limpiar el grid de recomendaciones
+        const container = document.getElementById('recommendations-grid');
+        if (container) {
+            container.innerHTML = '<p class="text-slate-600 uppercase font-bold">Esperando fase de selección...</p>';
+        }
+
+        // 2. Limpiar los 10 slots (5 aliados y 5 enemigos)
+        const allSlots = [...Array(5).keys()].flatMap(i => [`ally-slot-${i}`, `enemy-slot-${i}`]);
+        
+        allSlots.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            // Ocultar iconos de rol y fotos de campeones
+            const roleIcon = el.querySelector('.role-icon');
+            if (roleIcon) roleIcon.classList.add('hidden');
+
+            const img = el.querySelector('.champ-img');
+            if (img) img.classList.add('hidden');
+
+            // Resetear textos
+            const sName = el.querySelector('.summoner-name');
+            if (sName) sName.innerText = "Invocador";
+
+            const cName = el.querySelector('.champ-name');
+            if (cName) {
+                cName.innerText = "Esperando Pick";
+                cName.classList.remove('text-white');
+            }
+        });
+    }
+
+
+    // 2. CICLO DE ACTUALIZACIÓN DEL DRAFT [cite: 23, 26, 28]
     async function updateDraftStatus() {
         try {
             const res = await fetch('/api/champ-select');
             const data = await res.json();
-            const grid = document.getElementById('recommendations-grid');
-
-
-            const resName = await fetch('/api/me');
-            const meData = await resName.json();
-
             
+            const statusText = document.getElementById('status-text');
 
+            if (data.inDraft && globalMetaCache) {
+                // Actualizar estado visual [cite: 4]
+                if(statusText) {
+                    statusText.innerText = "Conectado";
+                    statusText.className = "text-xs uppercase tracking-widest font-bold text-green-500";
+                }
 
-        if (data.inDraft) {
+                // Obtener mi posición [cite: 26, 27]
+                const resMe = await fetch('/api/me');
+                const meData = await resMe.json();
+                const myPlayer = data.myTeam.find(p => p.summonerId === meData.summonerId);
+                const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+
+                // Generar recomendaciones [cite: 28, 32]
+                const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos, globalMetaCache);
+                const topRecs = recs
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 20);
+
+                renderGrid(topRecs);
             
-            const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, data.myTeam.find(p => p.username === meData.username).assignedPosition);
-            renderGrid(recs);
-            
-            // Actualizar slots (tus funciones de siempre)
-            data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
-            data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
-        }
+                
+                // Actualizar slots de jugadores [cite: 29, 44]
+                data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+                data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
+            } else {
+                if(statusText) {
+                    statusText.innerText = data.error ? "Error LCU" : "Fuera de Draft";
+                    statusText.className = "text-xs uppercase tracking-widest font-bold text-red-500";
+                }
+                clearDraftUI();
+            }
         } catch (e) {
-        console.error("Error en el ciclo de actualización");
+            console.error("Error en el ciclo de actualización:", e);
         }
     }
 
-    // Esta función dibuja el grid que diseñaste
+    // 3. RENDERIZADO DE INTERFAZ [cite: 34, 35, 41]
     function renderGrid(recs) {
-    
-
         const container = document.getElementById('recommendations-grid');
-        if (!container) return;
+        if (!container || recs.length === 0) return;
 
         container.innerHTML = recs.map(r => {
-            let scoreColor = "";
-            if (r.score >= 7) {
-                scoreColor = 'text-green-400';
-            } else if (r.score >= 4) {
-                scoreColor = 'text-yellow-400';
-            } else {
-                scoreColor = 'text-red-400';
-            }
+            let scoreColor = r.score >= 7 ? 'text-green-400' : (r.score >= 4 ? 'text-yellow-400' : 'text-red-400');
+            const reasonsStr = r.reasons.join('|');
 
-            return `<div class="relative w-26 h-26 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all group mb-2">
-                        <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover" />
-                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
-                            <span class="text-xs font-black px-1.5 py-0.5 rounded-xl border border-slate-900 bg-slate-900 ${scoreColor} shadow-lg shadow-black">
-                                ${r.score.toFixed(1)}
-                            </span>
-                        </div>
-                    </div>`;
+            return `
+                <div class="recommendation-item relative w-16 h-16 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-help mb-4"
+                    data-name="${r.name}" data-reasons="${reasonsStr}" data-score="${r.score.toFixed(1)}">
+                    <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md" />
+                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
+                        <span class="text-[10px] font-black px-1.5 py-0.5 rounded-xl border border-slate-900 bg-slate-900 ${scoreColor} shadow-lg shadow-black">
+                            ${r.score.toFixed(1)}
+                        </span>
+                    </div>
+                </div>`;
         }).join('');
+        attachReasonEvents();
     }
 
     function updateSlot(id, player) {
         const el = document.getElementById(id);
         if (!el) return;
-        const roleIcon = el.querySelector('.role-icon');
-        const position = player.assignedPosition.toLowerCase();
-        console.log("Posición asignada:", position);
 
+        const position = player.assignedPosition?.toLowerCase();
+        const roleIcon = el.querySelector('.role-icon');
+        
         if (position && posMapping[position]) {
             roleIcon.src = `${POS_BASE}${posMapping[position]}`;
             roleIcon.classList.remove('hidden');
             roleIcon.style.filter = "brightness(0) invert(1)"; 
-        } else if (roleIcon) {
-            roleIcon.classList.add('hidden');
         }
 
         const img = el.querySelector('.champ-img');
         const sName = el.querySelector('.summoner-name');
         const cName = el.querySelector('.champ-name');
 
-        sName.innerText = player.gameName || "Invocador";
+        sName.innerText = player.displayName || player.gameName || "Invocador";
         const cid = player.championId || player.championPickIntent;
-        
+
         if (cid > 0) {
             img.src = `${IMG_BASE}${cid}.png`;
             img.classList.remove('hidden');
@@ -189,6 +260,39 @@ import { getTopPicks } from '../lib/scraper';
         }
     }
 
-    
-    setInterval(updateDraftStatus, 2000);
+    // 4. EVENTOS DE RAZONES (POPUP) [cite: 38, 39, 43]
+    function attachReasonEvents() {
+        const items = document.querySelectorAll('.recommendation-item');
+        const popup = document.getElementById('reason-popup');
+        
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                document.getElementById('popup-champ-name').innerText = item.getAttribute('data-name');
+                document.getElementById('popup-score').innerText = item.getAttribute('data-score');
+                const reasons = item.getAttribute('data-reasons').split('|');
+                
+                document.getElementById('popup-reasons-list').innerHTML = reasons.map(res => `
+                    <li class="flex items-start gap-2 text-sm text-slate-300">
+                        <span class="text-blue-500">▹</span> ${res}
+                    </li>
+                `).join('');
+                popup.classList.remove('hidden');
+            });
+        });
+    }
+
+    document.getElementById('close-popup')?.addEventListener('click', () => document.getElementById('reason-popup').classList.add('hidden'));
+
+    // 5. INICIALIZACIÓN ORQUESTADA [cite: 18, 19, 23]
+    async function init() {
+        console.log("🚀 Iniciando HexDraft...");
+        await Promise.all([loadMetaCache(), loadChampionData()]);
+
+        if (globalMetaCache) {
+            console.log("✅ Sistema listo. Iniciando monitoreo LCU.");
+            setInterval(updateDraftStatus, 2000);
+        }
+    }
+
+    init();
 </script>
