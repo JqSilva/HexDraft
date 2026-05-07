@@ -129,7 +129,7 @@ import Layout from '../layouts/Layout.astro';
         // 1. Limpiar el grid de recomendaciones
         const container = document.getElementById('recommendations-grid');
         if (container) {
-            container.innerHTML = '<p class="text-slate-600 uppercase font-bold">Esperando fase de selección...</p>';
+            container.innerHTML = '<p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando fase de selección...</p>';
         }
 
         // 2. Limpiar los 10 slots (5 aliados y 5 enemigos)
