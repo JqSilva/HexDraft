@@ -1,0 +1,194 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getTopPicks } from '../lib/scraper';
+---
+
+<Layout title="HexDraft | LCU Real-Time">
+  <main class="min-h-screen p-6 md:p-12 relative bg-[#010a13] text-slate-200">
+    <a href="/" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
+      ← Volver al Inicio
+    </a>
+
+    <div id="lcu-status" class="mb-6 text-center py-2 bg-slate-900/80 border border-slate-800 rounded-sm">
+      <span class="text-xs uppercase tracking-widest font-bold text-slate-500">Estado del Cliente: </span>
+      <span id="status-text" class="text-xs uppercase tracking-widest font-bold text-red-500">Desconectado</span>
+    </div>
+
+    <div class="grid grid-cols-12 gap-8">
+      
+        <div class="col-span-12 lg:col-span-3 space-y-4">
+            <h3 class="text-blue-400 font-bold uppercase tracking-tighter border-b border-blue-900 pb-2">Tu Equipo</h3>
+            {Array(5).fill(0).map((_, i) => (
+            <div id={`ally-slot-${i}`} class="h-24 bg-blue-900/10 border border-blue-900/30 flex items-center px-4 rounded-sm transition-all overflow-hidden relative group">
+                <div class="relative w-16 h-16 bg-slate-800 border border-blue-500/30 overflow-hidden">
+                <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
+                <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-blue-500/20">?</div>
+                </div>
+                <div class="ml-4 flex flex-col">
+                <span class="summoner-name text-xs font-bold text-blue-400 uppercase tracking-tight truncate w-32">Buscando...</span>
+                <span class="champ-name text-[10px] text-slate-500 uppercase font-black">Esperando Pick</span>
+                </div>
+                <div class="absolute right-1 mr-4">
+                    <img class="role-icon w-10 h-10 hidden" />
+                </div>
+            </div>
+            ))}
+        </div>
+
+        <div class="col-span-12 lg:col-span-6">
+            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-sm backdrop-blur-md min-h-[600px]">
+                <header class="mb-8 flex justify-between items-end border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">Recomendaciones</h2>
+                    <p class="text-[10px] text-slate-500 uppercase">Basado en composiciones y counters</p>
+                </div>
+                <div class="text-xs text-blue-400 font-bold uppercase tracking-widest">
+                    Fase: <span id="timer-display">00</span>
+                </div>
+                </header>
+
+                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 max-w-fit">
+                    <p class="text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando recomendaciones...</p>
+                </div>
+            </div>
+        </div>
+
+      <div class="col-span-12 lg:col-span-3 space-y-4 text-right">
+        <h3 class="text-red-400 font-bold uppercase tracking-tighter border-b border-red-900 pb-2">Enemigos</h3>
+        {Array(5).fill(0).map((_, i) => (
+          <div id={`enemy-slot-${i}`} class="h-24 bg-red-900/10 border border-red-900/30 flex flex-row-reverse items-center px-4 rounded-sm transition-all overflow-hidden relative group">
+            <div class="relative w-16 h-16 bg-slate-800 border border-red-500/30 overflow-hidden">
+              <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
+              <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-red-500/20">?</div>
+            </div>
+            <div class="mr-4 flex flex-col">
+              <span class="summoner-name text-xs font-bold text-red-400 uppercase tracking-tight truncate w-32">Enemigo</span>
+              <span class="champ-name text-[10px] text-slate-500 uppercase font-black">Esperando Pick</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+    import { getProcessedRecommendations } from '../lib/engine';
+
+    let champMap = {};
+    const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
+    const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
+
+    const posMapping = {
+        "top": "icon-position-top.png",
+        "jungle": "icon-position-jungle.png",
+        "middle": "icon-position-middle.png",   
+        "bottom": "icon-position-bottom.png",
+        "utility": "icon-position-utility.png"
+    };
+
+    async function loadChampionData() {
+        try {
+            const res = await fetch('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json');
+            const data = await res.json();
+            data.forEach(c => { champMap[c.id] = c.name; });
+            console.log("Diccionario de campeones cargado.");
+        } catch (e) {
+            console.error("Error cargando CommunityDragon");
+        }
+    }
+
+    async function updateDraftStatus() {
+        try {
+            const res = await fetch('/api/champ-select');
+            const data = await res.json();
+            const grid = document.getElementById('recommendations-grid');
+
+
+            const resName = await fetch('/api/me');
+            const meData = await resName.json();
+
+            
+
+
+        if (data.inDraft) {
+            
+            const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, data.myTeam.find(p => p.username === meData.username).assignedPosition);
+            renderGrid(recs);
+            
+            // Actualizar slots (tus funciones de siempre)
+            data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+            data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
+        }
+        } catch (e) {
+        console.error("Error en el ciclo de actualización");
+        }
+    }
+
+    // Esta función dibuja el grid que diseñaste
+    function renderGrid(recs) {
+    
+
+        const container = document.getElementById('recommendations-grid');
+        if (!container) return;
+
+        container.innerHTML = recs.map(r => {
+            let scoreColor = "";
+            if (r.score >= 7) {
+                scoreColor = 'text-green-400';
+            } else if (r.score >= 4) {
+                scoreColor = 'text-yellow-400';
+            } else {
+                scoreColor = 'text-red-400';
+            }
+
+            return `<div class="relative w-26 h-26 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all group mb-2">
+                        <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover" />
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
+                            <span class="text-xs font-black px-1.5 py-0.5 rounded-xl border border-slate-900 bg-slate-900 ${scoreColor} shadow-lg shadow-black">
+                                ${r.score.toFixed(1)}
+                            </span>
+                        </div>
+                    </div>`;
+        }).join('');
+    }
+
+    function updateSlot(id, player) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const roleIcon = el.querySelector('.role-icon');
+        const position = player.assignedPosition.toLowerCase();
+        console.log("Posición asignada:", position);
+
+        if (position && posMapping[position]) {
+            roleIcon.src = `${POS_BASE}${posMapping[position]}`;
+            roleIcon.classList.remove('hidden');
+            roleIcon.style.filter = "brightness(0) invert(1)"; 
+        } else if (roleIcon) {
+            roleIcon.classList.add('hidden');
+        }
+
+        const img = el.querySelector('.champ-img');
+        const sName = el.querySelector('.summoner-name');
+        const cName = el.querySelector('.champ-name');
+
+        sName.innerText = player.gameName || "Invocador";
+        const cid = player.championId || player.championPickIntent;
+        
+        if (cid > 0) {
+            img.src = `${IMG_BASE}${cid}.png`;
+            img.classList.remove('hidden');
+            img.style.opacity = player.championId === 0 ? "0.4" : "1";
+            cName.innerText = champMap[cid] || "Campeón";
+            cName.classList.add('text-white');
+        } else {
+            img.classList.add('hidden');
+            cName.innerText = "Esperando Pick";
+            cName.classList.remove('text-white');
+        }
+    }
+
+    
+    setInterval(updateDraftStatus, 2000);
+</script>
