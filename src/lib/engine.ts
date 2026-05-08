@@ -20,9 +20,12 @@ export function getProcessedRecommendations(
     myTeam: any[], 
     theirTeam: any[], 
     rawRole: string,
-    metaCache: any // <--- Pasamos el meta como parámetro
+    dataFromApi: any // <--- Pasamos el meta como parámetro
 ): Recommendation[] {
-    if (!metaCache) return [];
+    if (!dataFromApi || !dataFromApi.meta) return [];
+
+    const metaCache = dataFromApi.meta; 
+    const spikes = dataFromApi.spikes; 
 
     // Mapeo de roles LCU -> OP.GG
     const posMap: Record<string, string> = {
@@ -53,7 +56,7 @@ export function getProcessedRecommendations(
         if (!baseChamp) return null;
 
         // Calcular Score basado en Ranking y Contexto
-        const { score, reasons } = calculateScore(baseChamp, myTeamIds, enemyTeamIds, metaEntry, totalInMeta);
+        const { score, reasons } = calculateScore(baseChamp, myTeamIds, enemyTeamIds, metaEntry, totalInMeta,spikes);
 
         return {
             id: champId,
@@ -76,7 +79,8 @@ export function calculateScore(
   myTeamIds: number[], 
   enemyTeamIds: number[],
   metaEntry: any,
-  totalChampsInRole: number
+  totalChampsInRole: number,
+  spikes: any
 ): { score: number; reasons: string[] } {
   const reasons: string[] = [];
   const rank = parseInt(metaEntry.rank) || totalChampsInRole;
@@ -134,6 +138,54 @@ export function calculateScore(
   if (hasYasuo && target.tags.includes("Knockup")) {
     score += 2.0;
     reasons.push("Sinergia: Combo de levantamiento para Yasuo");
+  }
+
+  // --- 7. POWER SPIKES  ---
+  if (spikes) {
+    const isEarly = spikes.strong_early.includes(target.name);
+    const isMid = spikes.strong_midgame.includes(target.name);
+    const isLate = spikes.late_bloomer.includes(target.name);
+
+    // Solo imprimimos log para los primeros 3 campeones de la lista para no saturar
+    if (parseInt(metaEntry.rank) <= 3) {
+        console.log(`🔍 Auditando ${target.name}: Early:${isEarly}, Mid:${isMid}, Late:${isLate}`);
+    }
+
+    // Contar cuántos Early/Late tenemos ya
+    const earlyAllies = allies.filter(a => spikes.strong_early.includes(a.name)).length;
+    const lateAllies = allies.filter(a => spikes.late_bloomer.includes(a.name)).length;
+
+    // REGLA 1: Evitar composiciones 100% Early (se desinflan)
+    if (earlyAllies >= 2 && isLate) {
+      const bonus = 2.0;
+      score += bonus;
+      reasons.push("Seguro: Tu equipo es muy Early, necesitas escalado");
+      console.log(`✅ BONO APLICADO a ${target.name}: +${bonus} por necesidad de Late`);
+    }
+
+    // REGLA 2: Evitar composiciones 100% Late (pierden antes de empezar)
+    if (lateAllies >= 2 && isEarly) {
+      const bonus = 1.5;
+      score += bonus;
+      console.log(`✅ BONO APLICADO a ${target.name}: +${bonus} por necesidad de Early`);
+      reasons.push("Presión: Necesitas Early para sobrevivir al inicio");
+    }
+
+    // REGLA 3: Penalizar "Struggle Midgame" si ya tenemos picks débiles en esa fase
+    const strugglingAllies = allies.filter(a => spikes.struggle_midgame.includes(a.name)).length;
+    if (strugglingAllies >= 1 && spikes.struggle_midgame.includes(target.name)) {
+      const penalty = 1.2;
+      score -= penalty;
+      console.log(`❌ PENALIDAD APLICADA a ${target.name}: -${penalty} por riesgo en Mid-game`);
+      reasons.push("Riesgo: Demasiados campeones débiles en Mid-game");
+    }
+    // BONO: Si el equipo es puro Early, premia un pick de Late
+    if (earlyAllies >= 2 && isLate) {
+      const bonus = 2.0;
+      score += bonus;
+      console.log(`✅ BONO APLICADO a ${target.name}: +${bonus} por necesidad de Late`);
+      reasons.push("Escalado: Tu equipo necesita potencia para el juego tardío");
+    }
   }
 
   const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));

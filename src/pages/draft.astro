@@ -3,12 +3,12 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
-  <main class="min-h-screen p-6 md:p-12 relative bg-[#010a13] text-slate-200">
+  <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#010a13] text-slate-200">
     <a href="/" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
       ← Volver al Inicio
     </a>
 
-    <div id="lcu-status" class="mb-6 text-center py-2 bg-slate-900/80 border border-slate-800 rounded-sm">
+    <div id="lcu-status" class="w-fit mx-auto mb-6 text-center py-2 px-3 bg-slate-900/80 border border-slate-800 rounded-sm">
       <span class="text-xs uppercase tracking-widest font-bold text-slate-500">Estado del Cliente: </span>
       <span id="status-text" class="text-xs uppercase tracking-widest font-bold text-red-500">Desconectado</span>
     </div>
@@ -46,8 +46,10 @@ import Layout from '../layouts/Layout.astro';
                 </div>
                 </header>
 
-                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 max-w-fit">
-                    <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando Fase de Selección...</p>
+                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative">
+                    <p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">
+                        Esperando Fase de Selección...
+                    </p>
                 </div>
             </div>
         </div>
@@ -129,7 +131,7 @@ import Layout from '../layouts/Layout.astro';
         // 1. Limpiar el grid de recomendaciones
         const container = document.getElementById('recommendations-grid');
         if (container) {
-            container.innerHTML = '<p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase col-span-full animate-pulse font-bold">Esperando fase de selección...</p>';
+            container.innerHTML = '<p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">Esperando fase de selección...</p>';
         }
 
         // 2. Limpiar los 10 slots (5 aliados y 5 enemigos)
@@ -158,63 +160,118 @@ import Layout from '../layouts/Layout.astro';
         });
     }
 
+    function updateTimer(timerData) {
+        const timerDisplay = document.getElementById('timer-display');
+        if (!timerDisplay || !timerData) return;
 
-    // 2. CICLO DE ACTUALIZACIÓN DEL DRAFT [cite: 23, 26, 28]
-    async function updateDraftStatus() {
-        try {
-            const res = await fetch('/api/champ-select');
-            const data = await res.json();
+        // Convertir milisegundos a segundos
+        const seconds = Math.floor(timerData.adjustedTimeLeftInPhase / 1000);
+        
+        if (seconds >= 0) {
+            timerDisplay.innerText = seconds < 10 ? `0${seconds}` : seconds;
             
-            const statusText = document.getElementById('status-text');
+            // Efecto visual si queda poco tiempo
+            if (seconds <= 5) {
+                timerDisplay.classList.add('text-red-500', 'animate-pulse');
+            } else {
+                timerDisplay.classList.remove('text-red-500', 'animate-pulse');
+            }
+        }
+    }
+
+    // 1. Definir una variable para guardar el estado anterior (fuera de las funciones)
+    let lastPicksState = "";
+    let isConnected = false;
+    let checkTimeout = null;
+    async function updateDraftStatus() {
+        let nextCheckDelay = 2000; // Por defecto 2 segundos
+        try {
+            const res = await fetch('/api/champ-select');     
+            const status = document.getElementById('status-text');
+            if (!res.ok) {
+                // --- ESTADO: DESCONECTADO ---
+                if (status) {
+                    status.innerText = "Desconectado";
+                    status.classList.remove('text-green-500');
+                    status.classList.add('text-red-500');
+                }
+                isConnected = false;
+                clearDraftUI();
+
+                nextCheckDelay = 10000; // Si no estamos conectados, aumentamos el tiempo de espera para el próximo check
+                console.log("💤 LCU no detectado. Reintentando en 10s...");
+                return;
+            }
+
+            // --- ESTADO: CONECTADO ---
+            isConnected = true;
+            const data = await res.json();
+            if (status) {
+                status.innerText = "Conectado";
+                status.classList.remove('text-red-500');
+                status.classList.add('text-green-500');
+            }
+
 
             if (data.inDraft && globalMetaCache) {
-                // Actualizar estado visual [cite: 4]
-                if(statusText) {
-                    statusText.innerText = "Conectado";
-                    statusText.className = "text-xs uppercase tracking-widest font-bold text-green-500";
+                // 2. Crear un "Snapshot" único de la fase actual
+                // Concatenamos todos los IDs de campeones para detectar cambios
+                const currentPicksState = data.myTeam.map(p => p.championId).join(',') + '|' + 
+                                        data.theirTeam.map(p => p.championId).join(',');
+
+                // 3. SOLO SI HUBO UN CAMBIO REAL, PROCESAMOS
+                if (currentPicksState !== lastPicksState) {
+                    console.log("🔄 Cambio detectado en el Draft. Recalculando...");
+                    
+                    lastPicksState = currentPicksState; // Actualizamos el recuerdo
+
+                    const resMe = await fetch('/api/me');
+                    const meData = await resMe.json();
+                    const myPlayer = data.myTeam.find(p => p.summonerId === meData.summonerId);
+                    const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+
+                    // Ejecutamos el motor pesado solo aquí
+                    const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos, globalMetaCache);
+                    const topRecs = recs.sort((a, b) => b.score - a.score).slice(0, 20);
+                    
+                    renderGrid(topRecs);
+                    
+                    // Actualizar visualmente los slots
+                    data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+                    data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
+                } else {
+                    // Si no hay cambios en picks, solo actualizamos el Timer (que es ligero)
+                    updateTimer(data.timer); 
                 }
 
-                // Obtener mi posición [cite: 26, 27]
-                const resMe = await fetch('/api/me');
-                const meData = await resMe.json();
-                const myPlayer = data.myTeam.find(p => p.summonerId === meData.summonerId);
-                const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-
-                // Generar recomendaciones [cite: 28, 32]
-                const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos, globalMetaCache);
-                const topRecs = recs
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 20);
-
-                renderGrid(topRecs);
-            
-                
-                // Actualizar slots de jugadores [cite: 29, 44]
-                data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
-                data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
             } else {
-                if(statusText) {
-                    statusText.innerText = data.error ? "Error LCU" : "Fuera de Draft";
-                    statusText.className = "text-xs uppercase tracking-widest font-bold text-red-500";
-                }
+                lastPicksState = ""; // Resetear estado si salimos de draft
                 clearDraftUI();
             }
+            isConnected = true;
+            nextCheckDelay = 2000; // Si estamos en draft, mantenemos el check cada 2 segundos
         } catch (e) {
-            console.error("Error en el ciclo de actualización:", e);
+            console.error("Error en el ciclo:", e);
+            nextCheckDelay = 10000; // En caso de error, esperar más tiempo antes del próximo intento
+        } finally {
+            checkTimeout = setTimeout(updateDraftStatus, nextCheckDelay);
         }
     }
 
     // 3. RENDERIZADO DE INTERFAZ [cite: 34, 35, 41]
     function renderGrid(recs) {
         const container = document.getElementById('recommendations-grid');
+        const status = document.getElementById('status-text');
         if (!container || recs.length === 0) return;
+
+        status.innerText = "Conectado";
 
         container.innerHTML = recs.map(r => {
             let scoreColor = r.score >= 7 ? 'text-green-400' : (r.score >= 4 ? 'text-yellow-400' : 'text-red-400');
             const reasonsStr = r.reasons.join('|');
 
             return `
-                <div class="recommendation-item relative w-16 h-16 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-help mb-4"
+                <div class="recommendation-item relative w-18 h-18 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-help mb-4"
                     data-name="${r.name}" data-reasons="${reasonsStr}" data-score="${r.score.toFixed(1)}">
                     <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md" />
                     <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
@@ -290,7 +347,7 @@ import Layout from '../layouts/Layout.astro';
 
         if (globalMetaCache) {
             console.log("✅ Sistema listo. Iniciando monitoreo LCU.");
-            setInterval(updateDraftStatus, 2000);
+            updateDraftStatus();
         }
     }
 

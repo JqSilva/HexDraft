@@ -1,0 +1,29 @@
+{
+  "strong_early": [
+    "Lee Sin", "Elise", "Rek'Sai", "Renekton", "Pantheon", "Draven", "Lucian", "Kalista", "Nidalee", "Olaf",
+    "Warwick", "Darius", "Sett", "Kled", "Zed", "Qiyana", "Pyke", "Blitzcrank", "LeBlanc", "Talon",
+    "Xin Zhao", "Graves", "Volibear", "Udyr", "Nautilus", "Thresh", "Karma", "Zyra", "Brand", "Teemo",
+    "Garen", "Briar", "Naafiri", "Jarvan IV", "Vi", "Shaco", "Rengar", "Kha'Zix", "Ivern", "Bard",
+    "Alistar", "Braum", "Leona", "Rell", "Nunu & Willump", "Poppy", "Singed", "Tahm Kench", "Trundle",
+    "Urgot", "Yorick", "Heimerdinger", "Illaoi", "Pantheon", "Quinn"
+  ],
+  "strong_midgame": [
+    "Ahri", "Katarina", "Akali", "Ekko", "Irelia", "Yasuo", "Yone", "Tristana", "Caitlyn", "Miss Fortune",
+    "Twisted Fate", "Vex", "Sylas", "Hecarim", "Rumble", "Diana", "Fizz", "Taliyah", "Nocturne", "Samira",
+    "Varus", "Ashe", "Orianna", "Viktor", "Lissandra", "Lux", "Neeko", "Swain", "Aatrox", "Camille",
+    "Fiora", "Jax", "Riven", "Wukong", "Jayce", "Gragas", "Amumu", "Sejuani", "Zac", "Malphite",
+    "Galio", "Annie", "Zoe", "Viego", "Gwen", "K'Sante", "Nilah", "Xayah", "Kai'Sa", "Ezreal",
+    "Corki", "Jhin", "Seraphine", "Morgana", "Rakan", "Renata Glasc", "Milio"
+  ],
+  "late_bloomer": [
+    "Jinx", "Vayne", "Kog'Maw", "Twitch", "Aphelios", "Kayle", "Kassadin", "Veigar", "Nasus", "Smolder",
+    "Aurelion Sol", "Senna", "Kindred", "Ryze", "Azir", "Master Yi", "Bel'Veth", "Sion", "Ornn",
+    "Gangplank", "Vladimir", "Karthus", "Cassiopeia", "Cho'Gath", "Dr. Mundo", "Zeri", "Sivir", "Taric",
+    "Sona", "Soraka", "Janna", "Lulu", "Yuumi", "Zilean", "Anivia", "Malzahar", "Mordekaiser",
+    "Rammus", "Skamer", "Bel'Veth", "Hwei", "Aurora"
+  ],
+  "struggle_midgame": [
+    "Nasus", "Veigar", "Kayle", "Kassadin", "Vayne", "Kog'Maw", "Twitch", "Azir", "Ryze", "Vladimir",
+    "Gangplank", "Zeri", "Smolder", "Master Yi", "Cho'Gath", "Aurelion Sol", "Senna", "Karthus", "Sivir"
+  ]
+}

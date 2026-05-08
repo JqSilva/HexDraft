@@ -1,15 +1,16 @@
 // src/pages/api/meta.ts
 import { getStoredMeta } from '../../lib/metaManager';
+import { getStoredSpikes } from '../../lib/metaManager';
+import fs from 'fs';
+import path from 'path';
 
 export async function GET() {
-  const meta = getStoredMeta();
+  const meta = getStoredMeta(); // Datos de OP.GG
+  const spikes = getStoredSpikes(); // Datos de spikes
   
-  if (!meta) {
-    // Si esto ocurre, revisa la terminal de VS Code para ver errores de metaManager
-    return new Response(JSON.stringify(null), { status: 500 });
-  }
 
-  return new Response(JSON.stringify(meta), {
+  // Enviamos todo en un solo paquete
+  return new Response(JSON.stringify({ meta, spikes }), {
     status: 200,
     headers: { "Content-Type": "application/json" }
   });
