@@ -1,0 +1,612 @@
+[
+  {
+    "champion": "Hwei",
+    "primaryLane": "MIDDLE",
+    "stats": {
+      "jungleClear": 0,
+      "damageType": "AP"
+    },
+    "engineData": {
+      "counters": [
+        {
+          "name": "Pyke",
+          "wr": "35.7"
+        },
+        {
+          "name": "Karma",
+          "wr": "36.4"
+        },
+        {
+          "name": "Heimerdinger",
+          "wr": "37.9"
+        },
+        {
+          "name": "Yorick",
+          "wr": "38.1"
+        },
+        {
+          "name": "Zac",
+          "wr": "40.9"
+        }
+      ],
+      "synergies": {
+        "BOTTOM": [
+          {
+            "name": "Syndra",
+            "delta": 0.26200267717226244
+          },
+          {
+            "name": "TahmKench",
+            "delta": 0.1628806647717709
+          },
+          {
+            "name": "Kennen",
+            "delta": 0.08258714233841849
+          },
+          {
+            "name": "Mel",
+            "delta": 0.057880751336254116
+          },
+          {
+            "name": "Karthus",
+            "delta": 0.05727826741774072
+          }
+        ],
+        "UTILITY": [
+          {
+            "name": "Zed",
+            "delta": 0.16108700948520419
+          },
+          {
+            "name": "Annie",
+            "delta": 0.0954768050179475
+          },
+          {
+            "name": "JarvanIV",
+            "delta": 0.0954236538437323
+          },
+          {
+            "name": "Elise",
+            "delta": 0.08654330818024346
+          },
+          {
+            "name": "Malzahar",
+            "delta": 0.08017125276299587
+          }
+        ],
+        "JUNGLE": [
+          {
+            "name": "Sion",
+            "delta": 0.100661687211556
+          },
+          {
+            "name": "Olaf",
+            "delta": 0.08948247310397524
+          },
+          {
+            "name": "Belveth",
+            "delta": 0.0816338853861224
+          },
+          {
+            "name": "Fizz",
+            "delta": 0.07280468847519057
+          },
+          {
+            "name": "Sejuani",
+            "delta": 0.06393934303332834
+          }
+        ],
+        "TOP": [
+          {
+            "name": "Veigar",
+            "delta": 0.30046971653972043
+          },
+          {
+            "name": "Sejuani",
+            "delta": 0.19917915927090235
+          },
+          {
+            "name": "Zilean",
+            "delta": 0.18301890876025814
+          },
+          {
+            "name": "Akshan",
+            "delta": 0.164433281426865
+          },
+          {
+            "name": "Graves",
+            "delta": 0.15328609803850599
+          }
+        ]
+      }
+    }
+  },
+  {
+    "champion": "Ziggs",
+    "primaryLane": "BOTTOM",
+    "stats": {
+      "jungleClear": 0,
+      "damageType": "AP"
+    },
+    "engineData": {
+      "counters": [
+        {
+          "name": "Vladimir",
+          "wr": "39.3"
+        },
+        {
+          "name": "Cassiopeia",
+          "wr": "40.0"
+        },
+        {
+          "name": "TwistedFate",
+          "wr": "40.0"
+        },
+        {
+          "name": "Sylas",
+          "wr": "40.0"
+        },
+        {
+          "name": "AurelionSol",
+          "wr": "40.6"
+        }
+      ],
+      "synergies": {
+        "MIDDLE": [
+          {
+            "name": "MonkeyKing",
+            "delta": 0.5013630197574548
+          },
+          {
+            "name": "Zaahen",
+            "delta": 0.4922313210719138
+          },
+          {
+            "name": "Kayn",
+            "delta": 0.4818719130380872
+          },
+          {
+            "name": "Vayne",
+            "delta": 0.3045618667625236
+          },
+          {
+            "name": "Aphelios",
+            "delta": 0.30357423032863967
+          }
+        ],
+        "TOP": [
+          {
+            "name": "Ashe",
+            "delta": 0.25615420968880487
+          },
+          {
+            "name": "Morgana",
+            "delta": 0.24820982041373038
+          },
+          {
+            "name": "Janna",
+            "delta": 0.2349380776427132
+          },
+          {
+            "name": "Ahri",
+            "delta": 0.2242814452534446
+          },
+          {
+            "name": "Brand",
+            "delta": 0.18672361503147963
+          }
+        ],
+        "JUNGLE": [
+          {
+            "name": "Tryndamere",
+            "delta": 0.30575632679591863
+          },
+          {
+            "name": "Camille",
+            "delta": 0.24050541789800703
+          },
+          {
+            "name": "Zaahen",
+            "delta": 0.23516587771465014
+          },
+          {
+            "name": "Gragas",
+            "delta": 0.16675965251053573
+          },
+          {
+            "name": "Nidalee",
+            "delta": 0.1492648128005176
+          }
+        ],
+        "UTILITY": [
+          {
+            "name": "Syndra",
+            "delta": 0.4864173675835417
+          },
+          {
+            "name": "Naafiri",
+            "delta": 0.2479558291220032
+          },
+          {
+            "name": "Jax",
+            "delta": 0.2341237896018904
+          },
+          {
+            "name": "Taliyah",
+            "delta": 0.22848085964703377
+          },
+          {
+            "name": "Trundle",
+            "delta": 0.21138684255301662
+          }
+        ]
+      }
+    }
+  },
+  {
+    "champion": "Rakan",
+    "primaryLane": "UTILITY",
+    "stats": {
+      "jungleClear": 0,
+      "damageType": "AP"
+    },
+    "engineData": {
+      "counters": [
+        {
+          "name": "Syndra",
+          "wr": "30.0"
+        },
+        {
+          "name": "FiddleSticks",
+          "wr": "39.3"
+        },
+        {
+          "name": "Lissandra",
+          "wr": "40.0"
+        },
+        {
+          "name": "JarvanIV",
+          "wr": "40.0"
+        },
+        {
+          "name": "Maokai",
+          "wr": "41.3"
+        }
+      ],
+      "synergies": {
+        "BOTTOM": [
+          {
+            "name": "Yone",
+            "delta": 0.2607674202532771
+          },
+          {
+            "name": "Ryze",
+            "delta": 0.15374757442746118
+          },
+          {
+            "name": "Viktor",
+            "delta": 0.12452851170324385
+          },
+          {
+            "name": "Nilah",
+            "delta": 0.10681393000597221
+          },
+          {
+            "name": "Ziggs",
+            "delta": 0.09797279411415696
+          }
+        ],
+        "JUNGLE": [
+          {
+            "name": "Chogath",
+            "delta": 0.1495819853845561
+          },
+          {
+            "name": "Sion",
+            "delta": 0.1025619371999495
+          },
+          {
+            "name": "Darius",
+            "delta": 0.09627727636633483
+          },
+          {
+            "name": "Skarner",
+            "delta": 0.0916319243723767
+          },
+          {
+            "name": "Morgana",
+            "delta": 0.08940162762587844
+          }
+        ],
+        "MIDDLE": [
+          {
+            "name": "Rumble",
+            "delta": 0.1997193847057699
+          },
+          {
+            "name": "Ornn",
+            "delta": 0.16846423032058755
+          },
+          {
+            "name": "Gangplank",
+            "delta": 0.15720302636890848
+          },
+          {
+            "name": "Heimerdinger",
+            "delta": 0.15225769988059165
+          },
+          {
+            "name": "Mordekaiser",
+            "delta": 0.13472017793943472
+          }
+        ],
+        "TOP": [
+          {
+            "name": "Nidalee",
+            "delta": 0.23646310451141223
+          },
+          {
+            "name": "RekSai",
+            "delta": 0.1813939685256796
+          },
+          {
+            "name": "Katarina",
+            "delta": 0.17379696947685616
+          },
+          {
+            "name": "JarvanIV",
+            "delta": 0.16052718907175068
+          },
+          {
+            "name": "Annie",
+            "delta": 0.15680591959106946
+          }
+        ]
+      }
+    }
+  },
+  {
+    "champion": "Soraka",
+    "primaryLane": "UTILITY",
+    "stats": {
+      "jungleClear": 0,
+      "damageType": "AP"
+    },
+    "engineData": {
+      "counters": [
+        {
+          "name": "MissFortune",
+          "wr": "30.0"
+        },
+        {
+          "name": "Annie",
+          "wr": "34.0"
+        },
+        {
+          "name": "JarvanIV",
+          "wr": "34.1"
+        },
+        {
+          "name": "FiddleSticks",
+          "wr": "41.5"
+        },
+        {
+          "name": "TwistedFate",
+          "wr": "42.9"
+        }
+      ],
+      "synergies": {
+        "BOTTOM": [
+          {
+            "name": "Syndra",
+            "delta": 0.15354904379997944
+          },
+          {
+            "name": "Viktor",
+            "delta": 0.1513926734553492
+          },
+          {
+            "name": "Cassiopeia",
+            "delta": 0.11576593530951537
+          },
+          {
+            "name": "Zyra",
+            "delta": 0.11006245643014323
+          },
+          {
+            "name": "TahmKench",
+            "delta": 0.10648024134743465
+          }
+        ],
+        "TOP": [
+          {
+            "name": "Karthus",
+            "delta": 0.3000784276801563
+          },
+          {
+            "name": "Kassadin",
+            "delta": 0.22710690767473807
+          },
+          {
+            "name": "Viktor",
+            "delta": 0.199858684755137
+          },
+          {
+            "name": "Velkoz",
+            "delta": 0.17413196999106245
+          },
+          {
+            "name": "Talon",
+            "delta": 0.16184534368092246
+          }
+        ],
+        "JUNGLE": [
+          {
+            "name": "AurelionSol",
+            "delta": 0.21291775176023
+          },
+          {
+            "name": "Nautilus",
+            "delta": 0.16044969483108446
+          },
+          {
+            "name": "Tryndamere",
+            "delta": 0.09954130086490187
+          },
+          {
+            "name": "Amumu",
+            "delta": 0.07769797997475754
+          },
+          {
+            "name": "Brand",
+            "delta": 0.07555222689962138
+          }
+        ],
+        "MIDDLE": [
+          {
+            "name": "TahmKench",
+            "delta": 0.41316427136368067
+          },
+          {
+            "name": "Nunu",
+            "delta": 0.30764542020806923
+          },
+          {
+            "name": "Viego",
+            "delta": 0.17096320003575233
+          },
+          {
+            "name": "Kled",
+            "delta": 0.1613611979527052
+          },
+          {
+            "name": "Zac",
+            "delta": 0.1407765713444017
+          }
+        ]
+      }
+    }
+  },
+  {
+    "champion": "Sivir",
+    "primaryLane": "BOTTOM",
+    "stats": {
+      "jungleClear": 0,
+      "damageType": "AD"
+    },
+    "engineData": {
+      "counters": [
+        {
+          "name": "Syndra",
+          "wr": "36.8"
+        },
+        {
+          "name": "Cassiopeia",
+          "wr": "37.5"
+        },
+        {
+          "name": "Katarina",
+          "wr": "37.5"
+        },
+        {
+          "name": "Vladimir",
+          "wr": "38.2"
+        },
+        {
+          "name": "Viktor",
+          "wr": "38.9"
+        }
+      ],
+      "synergies": {
+        "TOP": [
+          {
+            "name": "Karthus",
+            "delta": 0.2898661284370813
+          },
+          {
+            "name": "Kassadin",
+            "delta": 0.22123634512634088
+          },
+          {
+            "name": "Nidalee",
+            "delta": 0.20344404970246646
+          },
+          {
+            "name": "Ahri",
+            "delta": 0.1572938959897169
+          },
+          {
+            "name": "KogMaw",
+            "delta": 0.15537359342021567
+          }
+        ],
+        "JUNGLE": [
+          {
+            "name": "AurelionSol",
+            "delta": 0.1725774922421359
+          },
+          {
+            "name": "Chogath",
+            "delta": 0.11819463220731198
+          },
+          {
+            "name": "Gragas",
+            "delta": 0.10809572029564865
+          },
+          {
+            "name": "Poppy",
+            "delta": 0.0871644461515293
+          },
+          {
+            "name": "Rumble",
+            "delta": 0.0762585220235178
+          }
+        ],
+        "MIDDLE": [
+          {
+            "name": "Twitch",
+            "delta": 0.17294269888187494
+          },
+          {
+            "name": "KSante",
+            "delta": 0.1600254296050805
+          },
+          {
+            "name": "Mordekaiser",
+            "delta": 0.13188146910030865
+          },
+          {
+            "name": "Nasus",
+            "delta": 0.12488604928260046
+          },
+          {
+            "name": "Tryndamere",
+            "delta": 0.11087580402809483
+          }
+        ],
+        "UTILITY": [
+          {
+            "name": "TwistedFate",
+            "delta": 0.4178403777337943
+          },
+          {
+            "name": "Annie",
+            "delta": 0.14810352296730828
+          },
+          {
+            "name": "LeeSin",
+            "delta": 0.14547803170979964
+          },
+          {
+            "name": "Nidalee",
+            "delta": 0.14490847301806947
+          },
+          {
+            "name": "Zac",
+            "delta": 0.1281599770499728
+          }
+        ]
+      }
+    }
+  }
+]

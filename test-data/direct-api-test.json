@@ -1,0 +1,22 @@
+{
+  "champion": "Nocturne",
+  "jungleFullClearTimestamp": 169.5171473753542,
+  "championStats": {
+    "kills": 7.494978479196557,
+    "deaths": 5.678498985801217,
+    "assists": 8.956711027556523,
+    "physicalDamage": 17356.66177707416,
+    "magicDamage": 1274.938084401128,
+    "damageTaken": 36518.141789937166,
+    "goldEarned": 13107.148988274872,
+    "killParticipation": 0.5109139751786471,
+    "teamDamagePercentage": 0.17709225517665747,
+    "csPerMin": 6.7594131600781235,
+    "goldPerMin": 446.8046575023499,
+    "dmgPerMin": 635.125579351713,
+    "visionPerMin": 0.9234355225121845,
+    "soloKills": 1.3546727353683272,
+    "controlWards": 1.765027457576807,
+    "firstBloodRate": 6.550239944590115
+  }
+}
