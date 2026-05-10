@@ -1,0 +1,294 @@
+import { ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
+import { NAME_TO_ID } from './constants';
+
+
+export interface Recommendation {
+  id: number;
+  score: number;
+  name: string;
+  reasons: string[];
+}
+
+// Inicializamos la DB al cargar el módulo
+initializeEngineData();
+
+/**
+ * Función principal: Ahora mucho más limpia porque la data ya viene "cocinada"
+ */
+export function getProcessedRecommendations(
+    myTeamIds: number[], 
+    theirTeamIds: number[], 
+    myRole: string
+): Recommendation[] {
+    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, role: myRole });
+    const allPickedIds = [...myTeamIds, ...theirTeamIds];
+    const results: Recommendation[] = [];
+
+    const posMap: Record<string, string> = {
+        "top": "TOP",
+        "jungle": "JUNGLE",
+        "middle": "MIDDLE",   
+        "bottom": "BOTTOM", 
+        "utility": "UTILITY"
+    };
+
+    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
+    console.log(`📍 [ENGINE] Buscando para la línea: ${targetLane}`);
+    // Convertimos IDs a nombres para facilitar las búsquedas en la ENRICHED_DB
+    const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+    const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+
+    let filteredCount = 0;
+    // Iteramos sobre todos los campeones enriquecidos
+    for (const [name, champ] of Object.entries(ENRICHED_DB)) {
+        const c = champ as any;
+
+        if (c.lane !== targetLane) {
+            filteredCount++;
+            continue;
+        }
+
+        if (allPickedIds.includes(c.id)) continue;
+        
+        const { score, reasons } = calculateScore(c, allies, enemies);
+
+        results.push({
+            id: c.id,
+            name: c.name,
+            score: score,
+            reasons: reasons
+        });
+    }
+    console.log(`📊 [ENGINE] Procesados: ${results.length} | Omitidos por línea: ${filteredCount}`);
+    return results.sort((a, b) => b.score - a.score).slice(0, 15);
+}
+
+/**
+ * EL CORAZÓN DEL CÁLCULO: Aquí usamos los DELTAS
+ */
+function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
+    // 1. CONSTANTES DE PESO (Ajuste fino de experto)
+    const WEIGHTS = {
+        META_BASE: 1.0,      // Peso por cada punto de WinRate sobre 50%
+        SYNERGY: 2.0,       // Multiplicador de Delta de sinergia
+        COUNTER: 0.8,       // Multiplicador de déficit de WR contra enemigos
+        COMPOSITION: 0.6,   // Puntos por cubrir huecos (AP/AD/Tank)
+        SCALING: 1.0,       // Puntos por equilibrar la curva de tiempo
+        TAGS: 0.3           // Puntos por sinergias de clase genéricas
+    };
+
+    let score = 5.0; // Base neutra
+    const reasons: string[] = [];
+    const rank = target.meta.tier || target.meta.rank || 50;
+
+    // --- CAPA 1: FORTALEZA INDIVIDUAL (EL "SUELO" DEL CAMPEÓN) ---
+    // Un campeón S-Tier (1-5) recibe un bono, uno D-Tier (>30) una penalización severa.
+    if (rank <= 10) score += 1.5;
+
+    if (rank > 10){
+      const rankPenalty = ((rank - 10) / 10) * 0.5; 
+      score -= rankPenalty;
+    }
+    if (rank > 25) {
+        score -= 2.5;
+        reasons.push("Nota: Débil en el meta actual");
+    }
+
+    // Winrate puro de OPGG/Meta
+    score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
+
+
+    // --- CAPA 2: SINERGIAS ESPECÍFICAS (DATOS REALES) ---
+    allies.forEach(allyName => {
+        for (const laneSynergies of Object.values(target.synergies)) {
+            const match = (laneSynergies as any[]).find(s => s.name === allyName);
+            if (match) {
+                const delta = parseFloat(match.delta);
+                // Solo bonificamos deltas significativos para evitar ruido
+                if (delta > 0.02) { 
+                    const bonus = delta * 1.2 * 10; // x10 para normalizar el decimal del delta
+                    score += bonus;
+                    reasons.push(`Sinergia: +${(delta * 100).toFixed(1)}% con ${allyName}`);
+                }
+            }
+        }
+    });
+
+    // --- CAPA 2: GOD MATCHUPS (DANGER ZONE) ---
+    enemies.forEach(enemyName => {
+        const godMatch = target.godMatchups?.find(m => normalizeKey(m.name) === normalizeKey(enemyName));
+
+        if (godMatch) {
+            const wr = parseFloat(godMatch.winrate);
+            
+            // --- PREDICCIÓN DE LÍNEA ---
+            // Obtenemos la posición principal del enemigo según tu JSON
+            const enemyMainPos = ENRICHED_DB[enemyName]?.lane || ""; 
+            const isLikelySameLane = enemyMainPos === target.lane; // targetLane es JUNGLE, TOP, etc.
+            if (isLikelySameLane) {
+                // Caso A: Es muy probable que sea tu rival directo
+                score += 1.0; 
+                reasons.push(`Dominancia: Matchup directo histórico contra ${enemyName} (${wr}%)`);
+            } else {
+                // Caso B: Es un enemigo en otra línea (Caza)
+                // Solo puntuamos si el WR es destructivo (> 55%)
+                if (wr >= 55) {
+                    score += 0.4;
+                    reasons.push(`Caza: ${target.name} es counter natural de ${enemyName}`);
+                }
+            }
+            
+            // --- BONO POR SNOWBALL (Oro y XP) ---
+            // Si el Gold Diff es > 400, el pick tiene prioridad alta
+            const gDiff = parseInt(godMatch.goldDiff);
+            if (gDiff > 400) {
+                score += 0.3;
+                reasons.push(`Snowball: Gran ventaja de oro histórica vs ${enemyName}`);
+            }
+        }
+    });
+    // --- CAPA 3: COUNTERS ESPECÍFICOS (DANGER ZONE) ---
+    enemies.forEach(enemyName => {
+        const normalizedEnemy = normalizeKey(enemyName);
+        const match = target.counters.find(c => normalizeKey(c.name) === normalizedEnemy);
+        if (match) {
+            const wr = parseFloat(match.winrate.replace('%', ''));
+            const deficit = 50 - wr;
+            if (deficit > 0) {
+                const penalty = deficit * WEIGHTS.COUNTER;
+                score -= penalty;
+                reasons.push(`Counter: ${enemyName} (${wr}% WR)`);
+            }
+        }
+    });
+
+
+    // --- CAPA 4: BALANCE DE DAÑO Y ADAPTABILIDAD ---
+    const damage = target.combat.damageComposition;
+    const totalDmg = damage.physical + damage.magic + (damage.true || 0);
+    const physPct = (damage.physical / totalDmg) * 100;
+    const magicPct = (damage.magic / totalDmg) * 100;
+    
+    // Contamos tipos de daño en el equipo
+    const teamAD = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.physical / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
+    const teamAP = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.magic / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
+
+    // Lógica para Híbridos (Shaco, Volibear, etc.)
+    const isHybrid = physPct > 35 && magicPct > 35;
+    if (isHybrid && allies.length > 0) {
+        if (teamAD >= 2 && teamAP === 0) {
+            score += 0.7;
+            reasons.push(`Adaptabilidad: El equipo necesita AP, puedes jugar ${target.name} AP`);
+        }
+    }
+
+    // Penalización por redundancia (Full AD o Full AP)
+    if (allies.length >= 2) {
+        if (teamAD >= 3 && physPct > 70) {
+            score -= 1.2;
+            reasons.push("Aviso: Exceso de daño físico en el equipo");
+        }
+        if (teamAP >= 3 && magicPct > 70) {
+            score -= 1.2;
+            reasons.push("Aviso: Exceso de daño mágico en el equipo");
+        }
+    }
+
+    // Bono por cubrir hueco (Solo si el campeón es viable)
+    if (allies.length >= 2 && rank <= 25) {
+        if (teamAD >= 2 && teamAP === 0 && magicPct > 65) {
+            score += WEIGHTS.COMPOSITION;
+            reasons.push("Balance: Aportas el daño mágico faltante");
+        }
+        if (teamAP >= 2 && teamAD === 0 && physPct > 65) {
+            score += WEIGHTS.COMPOSITION;
+            reasons.push("Balance: Aportas el daño físico faltante");
+        }
+    }
+
+
+    // --- CAPA 5: EQUILIBRIO DE CURVA (SCALING) ---
+    if (allies.length >= 2) {
+        const earlyCount = allies.filter(a => ENRICHED_DB[a]?.scalingType === 'Early').length;
+        const lateCount = allies.filter(a => ENRICHED_DB[a]?.scalingType === 'Late').length;
+
+        if (earlyCount >= 2 && target.scalingType === 'Late') {
+            score += WEIGHTS.SCALING;
+            reasons.push("Escalado: Tu equipo es Early, aseguras el Late Game");
+        }
+        if (lateCount >= 2 && target.scalingType === 'Early') {
+            score += WEIGHTS.SCALING;
+            reasons.push("Presión: Equipo lento, aportas Early Game necesario");
+        }
+    }
+
+
+    // --- CAPA 6: SINERGIAS POR TAGS (CLASES) ---
+
+    const allyTags = allies.flatMap(name => ENRICHED_DB[name]?.tags || []);
+    const hasFrontline = allyTags.includes('Tank') || allyTags.includes('Fighter');
+    
+    if (target.tags.includes('Assassin') && hasFrontline) {
+        score += WEIGHTS.TAGS;
+        reasons.push("Sinergia: Frontline detectada para entrar");
+    }
+    if (target.tags.includes('Marksman') && hasFrontline) {
+        const tagBonus = rank > 20 ? 0.15 : WEIGHTS.TAGS;
+        score += tagBonus;
+        if (tagBonus >= 0.2) reasons.push("Sinergia: Composición con frontline para protegerte");
+    }
+
+    const enemyTags = enemies.flatMap(e => ENRICHED_DB[e]?.tags || []);
+    const enemyTankCount = enemyTags.filter(t => t === 'Tank').length;
+    const pureBurstAssassins = ["Talon", "Kha'Zix", "Rengar", "Naafiri", "Evelynn", "Zed"];
+    
+    if (enemyTankCount >= 2) {
+        if (pureBurstAssassins.includes(target.name) && physPct > 70) {
+            score -= 1.2;
+            reasons.push("Aviso: Composición enemiga muy resistente para este tipo de asesino");
+        }
+    
+        if (magicPct > 60) {
+            const isTank = target.tags.includes('Tank');
+            const isMage = target.tags.includes('Mage');
+
+            if (isMage && !isTank) {
+                // CASO A: Mago puro (Lillia, Karthus, etc.)
+                score += 1.0; // Bono máximo
+                reasons.push("Estrategia: Daño mágico constante para derretir la frontline");
+            } else if (isTank) {
+                // CASO B: Tanque AP (Zac, Amumu, Maokai)
+                score += 0.4; // Bono menor: es bueno tener AP, pero no es tu función principal matar al tanque
+                reasons.push("Balance: Aportas daño mágico híbrido y utilidad");
+            } else {
+                // CASO C: Otros (Asesinos AP como Evelynn o Ekko)
+                score += 0.6;
+                reasons.push("Estrategia: Daño mágico efectivo contra armaduras físicas");
+            }
+        }
+        
+        // Penalización real para asesinos AD
+        if (target.tags.includes('Fighter') || target.name === "Master Yi") {
+            score += 0.5; // Los luchadores/hipercarries están bien contra tanques
+            reasons.push(`Duelo: ${target.name} tiene herramientas para pelear vs tanques`);
+        }
+    }
+
+    if (score > 8.0) {
+        // Los puntos por encima de 8 valen la mitad
+        score = 8.0 + (score - 8.0) * 0.5;
+    }
+
+    // --- AJUSTE FINAL ---
+    // Normalizamos para que el score sea difícil de llevar a 10 o a 0 a menos que sea un caso extremo
+    const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
+    return { score: finalScore, reasons };
+}
+
+// Helper para traducir
+function getNameFromId(id: number): string | undefined {
+    // Buscamos la llave cuyo valor coincida con el ID
+    const name = Object.keys(NAME_TO_ID).find(key => NAME_TO_ID[key] === id);
+    if (!name) console.warn(`⚠️ ID ${id} no encontrado en NAME_TO_ID`);
+    return name;
+}

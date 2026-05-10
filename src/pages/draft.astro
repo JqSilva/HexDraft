@@ -87,11 +87,12 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-    import { getProcessedRecommendations } from '../lib/engine';
+    import { getProcessedRecommendations } from '../lib/engine/engine';
+    import { ENRICHED_DB } from '../lib/engine/dataProvider';
+    
 
-    // Variables de estado global [cite: 13, 15]
     let champMap = {};
-    let globalMetaCache = null;
+    
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
 
@@ -103,30 +104,7 @@ import Layout from '../layouts/Layout.astro';
         "utility": "icon-position-utility.png"
     };
 
-    // 1. CARGA DE DATOS INICIALES [cite: 16, 20]
-    async function loadMetaCache() {
-        try {
-            const res = await fetch('/api/meta');
-            const json = await res.json();
-            console.log("✅ Meta-cache cargado:", json);
-            globalMetaCache = json;
-        } catch (e) {
-            console.error("❌ Error cargando meta-cache:", e);
-        }
-    }
-
-    async function loadChampionData() {
-        try {
-            const res = await fetch('https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json');
-            const data = await res.json();
-            data.forEach(c => { champMap[c.id] = c.name; });
-            console.log("✅ Diccionario de campeones cargado.");
-        } catch (e) {
-            console.error("❌ Error cargando CommunityDragon:", e);
-        }
-    }
-
-
+    
     function clearDraftUI() {
         // 1. Limpiar el grid de recomendaciones
         const container = document.getElementById('recommendations-grid');
@@ -158,25 +136,6 @@ import Layout from '../layouts/Layout.astro';
                 cName.classList.remove('text-white');
             }
         });
-    }
-
-    function updateTimer(timerData) {
-        const timerDisplay = document.getElementById('timer-display');
-        if (!timerDisplay || !timerData) return;
-
-        // Convertir milisegundos a segundos
-        const seconds = Math.floor(timerData.adjustedTimeLeftInPhase / 1000);
-        
-        if (seconds >= 0) {
-            timerDisplay.innerText = seconds < 10 ? `0${seconds}` : seconds;
-            
-            // Efecto visual si queda poco tiempo
-            if (seconds <= 5) {
-                timerDisplay.classList.add('text-red-500', 'animate-pulse');
-            } else {
-                timerDisplay.classList.remove('text-red-500', 'animate-pulse');
-            }
-        }
     }
 
     // 1. Definir una variable para guardar el estado anterior (fuera de las funciones)
@@ -213,7 +172,7 @@ import Layout from '../layouts/Layout.astro';
             }
 
 
-            if (data.inDraft && globalMetaCache) {
+            if (data.inDraft) {
                 // 2. Crear un "Snapshot" único de la fase actual
                 // Concatenamos todos los IDs de campeones para detectar cambios
                 const currentPicksState = data.myTeam.map(p => p.championId).join(',') + '|' + 
@@ -231,7 +190,7 @@ import Layout from '../layouts/Layout.astro';
                     const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
                     // Ejecutamos el motor pesado solo aquí
-                    const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos, globalMetaCache);
+                    const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos);
                     const topRecs = recs.sort((a, b) => b.score - a.score).slice(0, 20);
                     
                     renderGrid(topRecs);
@@ -241,7 +200,7 @@ import Layout from '../layouts/Layout.astro';
                     data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
                 } else {
                     // Si no hay cambios en picks, solo actualizamos el Timer (que es ligero)
-                    updateTimer(data.timer); 
+                    // updateTimer(data.timer); 
                 }
 
             } else {
@@ -343,12 +302,9 @@ import Layout from '../layouts/Layout.astro';
     // 5. INICIALIZACIÓN ORQUESTADA [cite: 18, 19, 23]
     async function init() {
         console.log("🚀 Iniciando HexDraft...");
-        await Promise.all([loadMetaCache(), loadChampionData()]);
-
-        if (globalMetaCache) {
-            console.log("✅ Sistema listo. Iniciando monitoreo LCU.");
-            updateDraftStatus();
-        }
+        
+        updateDraftStatus();
+       
     }
 
     init();
