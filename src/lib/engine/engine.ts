@@ -286,7 +286,7 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 }
 
 // Helper para traducir
-function getNameFromId(id: number): string | undefined {
+export function getNameFromId(id: number): string | undefined {
     // Buscamos la llave cuyo valor coincida con el ID
     const name = Object.keys(NAME_TO_ID).find(key => NAME_TO_ID[key] === id);
     if (!name) console.warn(`⚠️ ID ${id} no encontrado en NAME_TO_ID`);

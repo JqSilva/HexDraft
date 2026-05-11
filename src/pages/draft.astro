@@ -35,21 +35,53 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <div class="col-span-12 lg:col-span-6">
-            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-sm backdrop-blur-md min-h-[600px]">
+            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden">
                 <header class="mb-8 flex justify-between items-end border-b border-slate-800 pb-4">
-                <div>
-                    <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">Recomendaciones</h2>
-                    <p class="text-[10px] text-slate-500 uppercase">Basado en composiciones y counters</p>
-                </div>
-                <div class="text-xs text-blue-400 font-bold uppercase tracking-widest">
-                    Fase: <span id="timer-display">00</span>
-                </div>
+                    <div>
+                        <h2 id="view-title" class="text-2xl font-black text-white uppercase italic tracking-tighter">Recomendaciones</h2>
+                        <p id="view-subtitle" class="text-[10px] text-slate-500 uppercase">Basado en composiciones y counters</p>
+                    </div>
+                    <div class="text-xs text-blue-400 font-bold uppercase tracking-widest">
+                        Fase: <span id="timer-display">00</span>
+                    </div>
                 </header>
 
-                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative">
+                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative transition-all duration-500">
                     <p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">
                         Esperando Fase de Selección...
                     </p>
+                </div>
+
+                <div id="build-view" class="hidden opacity-0 translate-y-4 transition-all duration-500">
+                    <div class="flex justify-between items-start mb-6">
+                        <button id="back-to-grid" class="text-[10px] text-slate-500 hover:text-white uppercase font-bold transition-colors">
+                            ← Volver a Recomendaciones
+                        </button>
+                        <button id="import-lcu" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 uppercase tracking-tighter transition-all shadow-lg shadow-blue-900/20">
+                            Importar al Cliente (LCU)
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6">
+                        <div id="runes-display" class="col-span-12 md:col-span-7 bg-black/40 p-4 border border-slate-800">
+                            <h4 class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-widest">Configuración de Runas</h4>
+                            <div id="runes-content" class="grid grid-cols-4 gap-4">
+                                </div>
+                        </div>
+
+                        <div class="col-span-12 md:col-span-5 space-y-6">
+                            <div id="items-display" class="bg-black/40 p-4 border border-slate-800">
+                                <h4 class="text-[10px] text-orange-400 font-bold uppercase mb-4 tracking-widest">Build Sugerida</h4>
+                                <div id="items-content" class="flex flex-wrap gap-2">
+                                    </div>
+                            </div>
+                            <div id="skills-display" class="bg-black/40 p-4 border border-slate-800">
+                                <h4 class="text-[10px] text-green-400 font-bold uppercase mb-2 tracking-widest">Orden de Habilidades</h4>
+                                <div id="skills-content" class="text-xl font-black text-white italic tracking-tighter">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,157 +121,223 @@ import Layout from '../layouts/Layout.astro';
 <script>
     import { getProcessedRecommendations } from '../lib/engine/engine';
     import { ENRICHED_DB } from '../lib/engine/dataProvider';
-    
+    import { getNameFromId } from '../lib/engine/engine';
 
-    let champMap = {};
-    
+
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
+    const ITEM_IMG_BASE = "https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/";
+    const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/";
 
     const posMapping = {
         "top": "icon-position-top.png",
         "jungle": "icon-position-jungle.png",
-        "middle": "icon-position-middle.png",   
+        "middle": "icon-position-middle.png",
+        "mid": "icon-position-middle.png",
         "bottom": "icon-position-bottom.png",
         "utility": "icon-position-utility.png"
     };
 
-    
+    const RUNE_STYLE_MAP = {
+        7200: "7200_domination.png",
+        7201: "7201_precision.png",
+        7202: "7202_sorcery.png",
+        7203: "7203_whimsy.png", // Inspiración
+        7204: "7204_resolve.png"
+    };
+
+    let lastPicksState = "";
+
+    /**
+     * Limpia profundamente la interfaz y resetea estados
+     */
     function clearDraftUI() {
-        // 1. Limpiar el grid de recomendaciones
+        console.log("🧹 [UI] Limpiando interfaz completa...");
+        showRecomendaciones(); 
         const container = document.getElementById('recommendations-grid');
         if (container) {
-            container.innerHTML = '<p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">Esperando fase de selección...</p>';
+            container.innerHTML = `
+                <p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">
+                    Esperando Fase de Selección...
+                </p>`;
         }
-
-        // 2. Limpiar los 10 slots (5 aliados y 5 enemigos)
-        const allSlots = [...Array(5).keys()].flatMap(i => [`ally-slot-${i}`, `enemy-slot-${i}`]);
         
-        allSlots.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-
-            // Ocultar iconos de rol y fotos de campeones
-            const roleIcon = el.querySelector('.role-icon');
-            if (roleIcon) roleIcon.classList.add('hidden');
-
-            const img = el.querySelector('.champ-img');
-            if (img) img.classList.add('hidden');
-
-            // Resetear textos
-            const sName = el.querySelector('.summoner-name');
-            if (sName) sName.innerText = "Invocador";
-
-            const cName = el.querySelector('.champ-name');
-            if (cName) {
-                cName.innerText = "Esperando Pick";
-                cName.classList.remove('text-white');
-            }
-        });
+        // Limpiar slots visuales
+        for (let i = 0; i < 5; i++) {
+            resetSlot(`ally-slot-${i}`);
+            resetSlot(`enemy-slot-${i}`);
+        }
+        
+        lastPicksState = "";
     }
 
-    // 1. Definir una variable para guardar el estado anterior (fuera de las funciones)
-    let lastPicksState = "";
-    let isConnected = false;
-    let checkTimeout = null;
+    function resetSlot(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const img = el.querySelector('.champ-img');
+        const cName = el.querySelector('.champ-name');
+        const roleIcon = el.querySelector('.role-icon');
+        if (img) img.classList.add('hidden');
+        if (roleIcon) roleIcon.classList.add('hidden');
+        if (cName) {
+            cName.innerText = "Esperando...";
+            cName.className = "text-[10px] text-slate-500 uppercase font-black";
+        }
+    }
+
+    function renderBuild(championName) {
+        const champData = ENRICHED_DB[championName];
+        if (!champData?.buildData) return;
+
+        const { runes, items, skills } = champData.buildData;
+
+        // --- RENDER SIMPLIFICADO ---
+        const buildView = document.getElementById('build-view');
+        if (!buildView) return;
+
+        buildView.innerHTML = `
+            <div class="flex flex-col gap-6 p-4 bg-black/20 rounded-sm border border-slate-800">
+                
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex gap-4 items-center">
+                        <div class="relative">
+                            proximamente...
+                        </div>
+                        <div>
+                            <span class="block text-xs font-black text-white uppercase tracking-tighter">Configuración Meta</span>
+                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">WR: ${champData.meta.winRate}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <span class="block text-[10px] text-slate-500 uppercase font-bold">Prioridad</span>
+                        <span class="text-lg font-black text-green-400 italic">proximamente</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-[10px] text-slate-500 uppercase font-black mb-3 block tracking-widest">Core Items (Power Spike)</span>
+                    <div class="flex gap-3">
+                        proximamente
+                        <div class="flex items-center ml-2">
+                            <span class="text-slate-700 font-black text-xl">+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="import-lcu" class="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase text-xs tracking-widest transition-all">
+                    Importar Runas al Cliente
+                </button>
+            </div>
+        `;
+        
+        // Re-vincular el evento del botón (lo haremos dsp)
+    }
+
     async function updateDraftStatus() {
-        let nextCheckDelay = 2000; // Por defecto 2 segundos
+        let isBuildViewActive = false;
         try {
-            const res = await fetch('/api/champ-select');     
+            const res = await fetch('/api/champ-select');
             const status = document.getElementById('status-text');
+
             if (!res.ok) {
-                // --- ESTADO: DESCONECTADO ---
                 if (status) {
                     status.innerText = "Desconectado";
-                    status.classList.remove('text-green-500');
-                    status.classList.add('text-red-500');
+                    status.className = "text-xs uppercase tracking-widest font-bold text-red-500";
                 }
-                isConnected = false;
                 clearDraftUI();
-
-                nextCheckDelay = 10000; // Si no estamos conectados, aumentamos el tiempo de espera para el próximo check
-                console.log("💤 LCU no detectado. Reintentando en 10s...");
+                setTimeout(updateDraftStatus, 5000);
                 return;
             }
 
-            // --- ESTADO: CONECTADO ---
-            isConnected = true;
-            const data = await res.json();
             if (status) {
                 status.innerText = "Conectado";
-                status.classList.remove('text-red-500');
-                status.classList.add('text-green-500');
+                status.classList.replace("text-red-500", "text-green-500");
             }
-
-
+            const data = await res.json();
+            
+            
             if (data.inDraft) {
-                // 2. Crear un "Snapshot" único de la fase actual
-                // Concatenamos todos los IDs de campeones para detectar cambios
-                const currentPicksState = data.myTeam.map(p => p.championId).join(',') + '|' + 
-                                        data.theirTeam.map(p => p.championId).join(',');
+                const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
+                                        data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
 
-                // 3. SOLO SI HUBO UN CAMBIO REAL, PROCESAMOS
                 if (currentPicksState !== lastPicksState) {
-                    console.log("🔄 Cambio detectado en el Draft. Recalculando...");
-                    
-                    lastPicksState = currentPicksState; // Actualizamos el recuerdo
+                    console.group("🎮 [DRAFT UPDATE] Cambio detectado");
+                    lastPicksState = currentPicksState;
 
+                    // 1. Limpieza de IDs para el motor
+                    const cleanMyTeam = data.myTeam
+                        .map(p => p.championId || p.championPickIntent)
+                        .filter(id => id !== 0);
+
+                    const cleanTheirTeam = data.theirTeam
+                        .map(p => p.championId || p.championPickIntent)
+                        .filter(id => id !== 0);
+
+                    // 2. Obtener mi posición
                     const resMe = await fetch('/api/me');
                     const meData = await resMe.json();
-                    const myPlayer = data.myTeam.find(p => p.summonerId === meData.summonerId);
+                    const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
+
                     const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
-                    // Ejecutamos el motor pesado solo aquí
-                    const recs = getProcessedRecommendations(data.myTeam, data.theirTeam, myPos);
-                    const topRecs = recs.sort((a, b) => b.score - a.score).slice(0, 20);
+                    console.log(myPlayer)
+                    if (myPlayer){
+                        if (myPlayer.championId !== 0 && !isBuildViewActive) {
+                            const champname = getNameFromId(myPlayer.championId);
+                            renderBuild(champname);
+                            showBuildView(champname || "Desconocido", );
+                            isBuildViewActive = true;
+                        }
+                    }
+
+                    // 3. Procesar Recomendaciones
+                    const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myPos);
+                    console.log("📊 Recomendaciones generadas:", recs.length);
                     
-                    renderGrid(topRecs);
-                    
-                    // Actualizar visualmente los slots
+                    renderGrid(recs.slice(0, 20));
+
+                    // 4. Actualizar slots
                     data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
                     data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
-                } else {
-                    // Si no hay cambios en picks, solo actualizamos el Timer (que es ligero)
-                    // updateTimer(data.timer); 
+                    
+                    console.groupEnd();
                 }
-
             } else {
-                lastPicksState = ""; // Resetear estado si salimos de draft
-                clearDraftUI();
+                if (lastPicksState !== "") {
+                    console.log("🏳️ El draft ha terminado o se ha cancelado.");
+                    isBuildViewActive = false;
+                    clearDraftUI();
+                }
             }
-            isConnected = true;
-            nextCheckDelay = 2000; // Si estamos en draft, mantenemos el check cada 2 segundos
         } catch (e) {
-            console.error("Error en el ciclo:", e);
-            nextCheckDelay = 10000; // En caso de error, esperar más tiempo antes del próximo intento
+            console.error("❌ Error en ciclo de draft:", e);
         } finally {
-            checkTimeout = setTimeout(updateDraftStatus, nextCheckDelay);
+            setTimeout(updateDraftStatus, 2000);
         }
     }
 
-    // 3. RENDERIZADO DE INTERFAZ [cite: 34, 35, 41]
     function renderGrid(recs) {
         const container = document.getElementById('recommendations-grid');
-        const status = document.getElementById('status-text');
-        if (!container || recs.length === 0) return;
-
-        status.innerText = "Conectado";
-
+        if (!container) return;
+        
+        container.className = "grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-3 w-full justify-items-center content-start";
         container.innerHTML = recs.map(r => {
-            let scoreColor = r.score >= 7 ? 'text-green-400' : (r.score >= 4 ? 'text-yellow-400' : 'text-red-400');
+            const scoreColor = r.score >= 8 ? 'text-green-400' : (r.score >= 6 ? 'text-yellow-400' : 'text-red-400');
             const reasonsStr = r.reasons.join('|');
 
             return `
-                <div class="recommendation-item relative w-18 h-18 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-help mb-4"
-                    data-name="${r.name}" data-reasons="${reasonsStr}" data-score="${r.score.toFixed(1)}">
-                    <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md" />
-                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
-                        <span class="text-[10px] font-black px-1.5 py-0.5 rounded-xl border border-slate-900 bg-slate-900 ${scoreColor} shadow-lg shadow-black">
+                <div class="recommendation-item group relative w-14 h-14 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
+                    data-name="${r.name}" data-reasons="${r.reasons.join('|')}" data-score="${r.score.toFixed(1)}">
+                    <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
+                    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
+                        <span class="text-[9px] font-black px-1 py-0.5 rounded border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
                             ${r.score.toFixed(1)}
                         </span>
                     </div>
                 </div>`;
         }).join('');
+
         attachReasonEvents();
     }
 
@@ -247,65 +345,127 @@ import Layout from '../layouts/Layout.astro';
         const el = document.getElementById(id);
         if (!el) return;
 
-        const position = player.assignedPosition?.toLowerCase();
-        const roleIcon = el.querySelector('.role-icon');
-        
-        if (position && posMapping[position]) {
-            roleIcon.src = `${POS_BASE}${posMapping[position]}`;
-            roleIcon.classList.remove('hidden');
-            roleIcon.style.filter = "brightness(0) invert(1)"; 
-        }
-
         const img = el.querySelector('.champ-img');
         const sName = el.querySelector('.summoner-name');
         const cName = el.querySelector('.champ-name');
+        const roleIcon = el.querySelector('.role-icon');
 
-        sName.innerText = player.displayName || player.gameName || "Invocador";
+        if (sName) sName.innerText = player.displayName || player.gameName || "Invocador";
+
         const cid = player.championId || player.championPickIntent;
 
         if (cid > 0) {
-            img.src = `${IMG_BASE}${cid}.png`;
-            img.classList.remove('hidden');
-            img.style.opacity = player.championId === 0 ? "0.4" : "1";
-            cName.innerText = champMap[cid] || "Campeón";
-            cName.classList.add('text-white');
-        } else {
-            img.classList.add('hidden');
-            cName.innerText = "Esperando Pick";
-            cName.classList.remove('text-white');
+            if (img) {
+                img.src = `${IMG_BASE}${cid}.png`;
+                img.classList.remove('hidden');
+                img.style.opacity = player.championId === 0 ? "0.5" : "1";
+            }
+            if (cName) {
+                cName.innerText = player.championId === 0 ? "Eligiendo..." : "Bloqueado";
+                cName.className = `text-[10px] uppercase font-black ${player.championId === 0 ? 'text-slate-500' : 'text-white'}`;
+            }
+        }
+
+        const pos = player.assignedPosition?.toLowerCase();
+        if (roleIcon && posMapping[pos]) {
+            roleIcon.src = `${POS_BASE}${posMapping[pos]}`;
+            roleIcon.classList.remove('hidden');
+            roleIcon.style.filter = "brightness(0) invert(1)";
         }
     }
 
-    // 4. EVENTOS DE RAZONES (POPUP) [cite: 38, 39, 43]
     function attachReasonEvents() {
         const items = document.querySelectorAll('.recommendation-item');
         const popup = document.getElementById('reason-popup');
         
         items.forEach(item => {
-            item.addEventListener('click', () => {
-                document.getElementById('popup-champ-name').innerText = item.getAttribute('data-name');
-                document.getElementById('popup-score').innerText = item.getAttribute('data-score');
-                const reasons = item.getAttribute('data-reasons').split('|');
+            item.onclick = () => {
+                const nameEl = document.getElementById('popup-champ-name');
+                const scoreEl = document.getElementById('popup-score');
+                const listEl = document.getElementById('popup-reasons-list');
                 
-                document.getElementById('popup-reasons-list').innerHTML = reasons.map(res => `
-                    <li class="flex items-start gap-2 text-sm text-slate-300">
-                        <span class="text-blue-500">▹</span> ${res}
-                    </li>
-                `).join('');
-                popup.classList.remove('hidden');
-            });
+                if (nameEl) nameEl.innerText = item.getAttribute('data-name');
+                if (scoreEl) scoreEl.innerText = item.getAttribute('data-score');
+                
+                const reasons = (item.getAttribute('data-reasons') || "").split('|');
+                if (listEl) {
+                    listEl.innerHTML = reasons.map(res => `
+                        <li class="flex items-start gap-2 text-sm text-slate-300 border-l-2 border-blue-500/30 pl-2 py-1">
+                            <span class="text-blue-500 font-bold">»</span> ${res}
+                        </li>
+                    `).join('');
+                }
+                if (popup) popup.classList.remove('hidden');
+            };
         });
     }
 
-    document.getElementById('close-popup')?.addEventListener('click', () => document.getElementById('reason-popup').classList.add('hidden'));
 
-    // 5. INICIALIZACIÓN ORQUESTADA [cite: 18, 19, 23]
-    async function init() {
-        console.log("🚀 Iniciando HexDraft...");
-        
-        updateDraftStatus();
-       
+    function showRecomendaciones() {
+        const gridRecomendations = document.getElementById('recommendations-grid');
+        const buildView = document.getElementById('build-view');
+        const title = document.getElementById('view-title');
+        const subtitle = document.getElementById('view-subtitle');
+        console.log("🔙 Volviendo a Recomendaciones");
+        // Cambiar textos del header
+        title.innerText = `Recomendaciones`;
+        subtitle.innerText = "Basado en composiciones y counters";
+
+        // Animación de salida y entrada
+        buildView.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+            buildView.classList.add('hidden');
+            gridRecomendations.classList.remove('hidden');
+            setTimeout(() => {
+                gridRecomendations.classList.remove('opacity-0', 'translate-y-4');
+                gridRecomendations.classList.add('opacity-100', 'translate-y-0');
+            }, 50);
+        }, 300);
     }
 
-    init();
+
+    function showBuildView(championName) {
+        const grid = document.getElementById('recommendations-grid');
+        const buildView = document.getElementById('build-view');
+        const title = document.getElementById('view-title');
+        const subtitle = document.getElementById('view-subtitle');
+
+        // Cambiar textos del header
+        title.innerText = `Build: ${championName}`;
+        subtitle.innerText = "Sincronizado con meta actual";
+
+        // Animación de salida y entrada
+        grid.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+            grid.classList.add('hidden');
+            buildView.classList.remove('hidden');
+            setTimeout(() => {
+                buildView.classList.remove('opacity-0', 'translate-y-4');
+                buildView.classList.add('opacity-100', 'translate-y-0');
+            }, 50);
+        }, 300);
+        
+        // Aquí llamarías a una función que busque en ENRICHED_DB[championName].buildData 
+        // y pinte las imágenes en runes-content y items-content
+    }
+
+    // Manejo de Popup corregido
+    const closeBtn = document.getElementById('close-popup');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            const popup = document.getElementById('reason-popup');
+            if (popup) popup.classList.add('hidden');
+        };
+    }
+
+    window.addEventListener('click', (event) => {
+        const popup = document.getElementById('reason-popup');
+        if (event.target === popup && popup) {
+            popup.classList.add('hidden');
+        }
+    });
+
+    // Iniciar
+    console.log("🚀 HexDraft UI Ready");
+    updateDraftStatus();
 </script>

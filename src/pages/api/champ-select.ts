@@ -31,7 +31,7 @@ export const GET: APIRoute = async () => {
     if (response.status === 404) {
       return new Response(JSON.stringify({ inDraft: false }), { status: 200 });
     }
-
+    
     const data = await response.json();
     
     // Mapeo básico para que el frontend reciba lo que espera

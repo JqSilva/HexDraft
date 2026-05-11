@@ -1,4 +1,5 @@
 // src/lib/engine/dataProvider.ts
+import { object } from 'astro:schema';
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
 import counterSynergies from '../data/counter-synergies.json';
 import metaCache from '../data/meta-cache.json';
@@ -71,6 +72,7 @@ export function initializeEngineData() {
         damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
         winrateCurve: curve
       },
+      buildData: extra?.buildData || null,
       counters: extra?.counters || [],
       synergies: extra?.synergies || {},
       godMatchups: extra?.godMatchups || [],
@@ -113,9 +115,15 @@ function calculateScalingType(curve: any[]): 'Early' | 'Mid' | 'Late' {
 
 function findInMetaCache(name: string) {
     const nName = normalizeKey(name);
-    for (const role of Object.values(metaCache.roles)) {
-        const found = (role as any[]).find(c => normalizeKey(c.name) === nName);
-        if (found) return found;
+    const rolesData = Object.values(metaCache);
+    
+    for (const championList of rolesData) {
+      if (!Array.isArray(championList)) continue;
+
+      const found = championList.find((champ: any) => normalizeKey(champ.name) === nName);
+      if (found) {
+        return found;
+      }
     }
     return null;
 }
