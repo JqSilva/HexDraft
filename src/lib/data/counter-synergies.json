@@ -38303,63 +38303,63 @@
     "godMatchups": [
       {
         "name": "Malzahar",
-        "winrate": "64.8%",
-        "goldDiff": "357",
-        "xpDiff": "-6"
+        "winrate": "65.5%",
+        "goldDiff": "368",
+        "xpDiff": "8"
       },
       {
         "name": "Teemo",
-        "winrate": "64.3%",
-        "goldDiff": "228",
-        "xpDiff": "47"
+        "winrate": "64.1%",
+        "goldDiff": "230",
+        "xpDiff": "50"
       },
       {
         "name": "Kennen",
-        "winrate": "62.9%",
-        "goldDiff": "195",
-        "xpDiff": "109"
+        "winrate": "63.0%",
+        "goldDiff": "194",
+        "xpDiff": "110"
       },
       {
         "name": "Kalista",
-        "winrate": "57.7%",
-        "goldDiff": "-680",
-        "xpDiff": "-113"
-      },
-      {
-        "name": "TwistedFate",
-        "winrate": "57.1%",
-        "goldDiff": "-477",
-        "xpDiff": "88"
+        "winrate": "57.9%",
+        "goldDiff": "-666",
+        "xpDiff": "-100"
       },
       {
         "name": "Ezreal",
         "winrate": "57.1%",
-        "goldDiff": "-459",
-        "xpDiff": "-200"
-      },
-      {
-        "name": "Yunara",
-        "winrate": "56.6%",
-        "goldDiff": "-347",
-        "xpDiff": "-4"
+        "goldDiff": "-456",
+        "xpDiff": "-199"
       },
       {
         "name": "Kaisa",
-        "winrate": "56.4%",
-        "goldDiff": "-224",
-        "xpDiff": "13"
+        "winrate": "56.6%",
+        "goldDiff": "-226",
+        "xpDiff": "12"
+      },
+      {
+        "name": "Yunara",
+        "winrate": "56.5%",
+        "goldDiff": "-345",
+        "xpDiff": "-4"
+      },
+      {
+        "name": "TwistedFate",
+        "winrate": "56.5%",
+        "goldDiff": "-506",
+        "xpDiff": "70"
       },
       {
         "name": "Zeri",
-        "winrate": "56.3%",
-        "goldDiff": "-457",
-        "xpDiff": "140"
+        "winrate": "56.2%",
+        "goldDiff": "-450",
+        "xpDiff": "142"
       },
       {
         "name": "Corki",
         "winrate": "56.1%",
         "goldDiff": "-414",
-        "xpDiff": "-98"
+        "xpDiff": "-93"
       }
     ],
     "synergies": {
@@ -38454,7 +38454,7 @@
     },
     "buildData": {
       "patch": "16.9",
-      "lastUpdate": "2026-05-12T04:30:46.103Z",
+      "lastUpdate": "2026-05-12T16:36:41.880Z",
       "runes": {
         "primaryStyleId": 8200,
         "subStyleId": 8300,
@@ -38478,21 +38478,23 @@
           2003
         ],
         "boots": {
-          "id": 3008,
-          "winrate": 57.33590083690741
+          "id": 3008
         },
         "coreSlots": [
           {
-            "id": 3508,
-            "winrate": 54.43
+            "id": 3508
           },
           {
-            "id": 3071,
-            "winrate": 57.48
+            "id": 3071
           },
           {
-            "id": 3161,
-            "winrate": 59.81
+            "id": 3161
+          },
+          {
+            "id": 2517
+          },
+          {
+            "id": 3094
           }
         ]
       },
@@ -38500,8 +38502,8 @@
         "skillLevelUp1": 1,
         "skillLevelUp2": 2,
         "skillLevelUp3": 3,
-        "winrate": 54.830505460107425,
-        "pickrate": 93.77407895395187
+        "winrate": 54.86583892160534,
+        "pickrate": 93.78581576132935
       }
     }
   },

@@ -195,7 +195,7 @@ import Layout from '../layouts/Layout.astro';
         }
     }
 
-    function renderBuild(build, championName) {
+    function renderBuild(build, championName, championId) {
         const version = '16.9.1';
         const buildView = document.getElementById('build-view');
         if (!buildView || !build) {
@@ -249,9 +249,8 @@ import Layout from '../layouts/Layout.astro';
                         </div>
                     </div>
                     
-                    <button id="btn-import-runes" 
-                            class="cursor-pointer pointer-events-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-[10px] rounded transition-all shadow-lg shadow-blue-900/40">
-                        Importar al Cliente
+                    <button id="btn-import-all" class="cursor-pointer pointer-events-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-[10px] rounded transition-all shadow-lg shadow-blue-900/40">
+                        Importar Todo
                     </button>
                 </div>
 
@@ -290,46 +289,72 @@ import Layout from '../layouts/Layout.astro';
         `;
 
         // Vinculación del evento
-        const btn = document.getElementById('btn-import-runes');
-        if (btn) {
-            btn.onclick = () => importToLCU(build.runes, championName);
-        }
+        document.getElementById('btn-import-all').onclick = async () => {
+            const btn = document.getElementById('btn-import-all');
+            btn.innerText = "Importando...";
+            btn.disabled = true;
+
+            try {
+                // 1. Importar Todo
+                await importAll(runes,items,championName,championId,skillOrder);
+                
+                btn.innerText = "¡Completado!";
+                btn.classList.replace('bg-blue-600', 'bg-green-600');
+            } catch (e) {
+                btn.innerText = "Error";
+                btn.classList.replace('bg-blue-600', 'bg-red-600');
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = "Importar Todo (Runas + Build)";
+                    btn.className = "cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs rounded transition-all";
+                }, 3000);
+            }
+        };
     }
 
-    async function importToLCU(runes, champName) {
-        const btn = document.getElementById('btn-import-runes');
-        const keystoneId = parseInt(runes.selections[0]);
-
-        
-        
-        // 3. Re-calculamos los estilos para que coincidan SI O SI con las runas
-        const payload = {
-            name: `HexDraft: ${champName.toUpperCase()}`,
-            primaryStyleId: runes.primaryStyle,
-            subStyleId: runes.secondaryStyle,
-            selectedPerkIds: [
-                ...runes.selections.map(r => r.id || r),
-                ...runes.shards.map(s => s.id || s)
-            ]
-        };
-
-        console.log("📤 [IMPORT] Payload validado:", payload)
+    async function importAll(runes, buildItems, championName, championId, skillOrder) {
+        console.log("🚀 Iniciando importación masiva para", championName);
 
         try {
-            const res = await fetch('/api/set-runes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            if (res.ok) {
-                console.log("✅ Runas aplicadas");
-            } else {
-                const err = await res.json();
-                console.error("❌ Error LCU:", err);
+            // 1. Payload de Runas (el que ya tenías) [cite: 525, 526]
+            const runePayload = {
+                name: `HexDraft: ${championName}`,
+                primaryStyleId: runes.primaryStyle,
+                subStyleId: runes.secondaryStyle,
+                selectedPerkIds: [
+                    ...runes.selections.map(r => r.id || r),
+                    ...runes.shards.map(s => s.id || s)
+                ]
+            };
+
+            // 2. Payload de Items (basado en tu estructura solicitada)
+            const itemPayload = {
+                championId: championId,
+                championName: championName,
+                items: buildItems,
+                skillOrder: skillOrder
+            };
+
+            // Ejecutar ambas peticiones [cite: 527, 630]
+            const [resRunes, resItems] = await Promise.all([
+                fetch('/api/set-runes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(runePayload)
+                }),
+                fetch('/api/set-items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemPayload)
+                })
+            ]);
+
+            if (resRunes.ok && resItems.ok) {
+                console.log("✅ Configuración completa aplicada");
             }
         } catch (e) {
-            console.error("❌ Error de red:", e);
+            console.error("❌ Fallo en la importación:", e);
         }
     }
 
@@ -405,7 +430,7 @@ import Layout from '../layouts/Layout.astro';
                             if (pickData) {
                                 isBuildViewActive = true;
                                 showBuildView(champname);
-                                renderBuild(pickData.build, champname); 
+                                renderBuild(pickData.build, champname, myPlayer.championId); 
                                 console.log("✅ Build renderizada para", champname);
                             }
                         }

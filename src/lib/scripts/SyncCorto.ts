@@ -87,13 +87,39 @@ const getBestSelection = (arr: any[], idKey: string, minPick: number = 1.5, limi
     return limit === 1 ? results[0] : results;
 };
 
+
+const getBestCoreBuild = (coreBuilds: any) => {
+    if (!coreBuilds) return [];
+
+    // Priorizamos coreItem5 (Build completa)
+    if (coreBuilds.coreItem5 && coreBuilds.coreItem5.length > 0) {
+        return [...coreBuilds.coreItem5]
+            .sort((a, b) => b.pickrate - a.pickrate)[0].itemIds;
+    }
+
+    // Fallback a coreItem3 si no hay suficiente data para 5
+    if (coreBuilds.coreItem3 && coreBuilds.coreItem3.length > 0) {
+        return [...coreBuilds.coreItem3]
+            .sort((a, b) => b.pickrate - a.pickrate)[0].itemIds;
+    }
+
+    return [];
+};
+
+const getMostPopularItem = (items: any[], key: string) => {
+    if (!items || items.length === 0) return 0;
+    return [...items].sort((a, b) => b.pickrate - a.pickrate)[0][key];
+};
+
 export async function syncShortCycle(version: string) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const cachePath = './src/lib/data/meta-cache.json';
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
     
     
-    const champions = Object.keys(db);
+    //const champions = Object.keys(db);
+
+    const champions = ["Smolder"]
     
 
     console.log(`🚀 INICIANDO CICLO CORTO - Versión: ${version}`);
@@ -160,14 +186,17 @@ export async function syncShortCycle(version: string) {
 
             
             
-            // Runas y Builds (Para la UI)
+            /// --- EXTRACCIÓN DE RUNAS  ---
             const r = data.runes;
             const bestKeystone = getBestRuneSlot(r.primaryRuneId);
             const secondaryRunes = getBestSecondaryRunes(r.secondaryRuneId);
-
             const primaryStyleId = getStyleOfRune(bestKeystone);
             const subStyleId = getStyleOfRune(secondaryRunes[0]);
 
+            // --- EXTRACCIÓN DE BUILD ---
+            const bestStarter = data.startItems?.sort((a: any, b: any) => b.pickrate - a.pickrate)[0]?.startItems || [];   
+            const bestBootsId = getMostPopularItem(data.boots, 'itemId');
+            const bestCoreItems = getBestCoreBuild(data.coreBuilds);
 
             db[name].buildData = {
                 patch: version,
@@ -191,13 +220,9 @@ export async function syncShortCycle(version: string) {
                     ]
                 },
                 items: {
-                    starter: data.startItems?.sort((a:any, b:any) => b.winrate - a.winrate)[0]?.startItems || [],
-                    boots: getBestSelection(data.boots, 'itemId', 2),
-                    coreSlots: [
-                        getBestSelection(data.items?.item1, 'Id', 2.0, 1),
-                        getBestSelection(data.items?.item2, 'Id', 2.0, 1),
-                        getBestSelection(data.items?.item3, 'Id', 2.0, 1)
-                    ]
+                    starter: bestStarter,
+                    boots: { id: bestBootsId },
+                    coreSlots: bestCoreItems.map((id: number) => ({ id }))
                 },
 
                 skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
