@@ -1,5 +1,6 @@
 import { ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
 import { NAME_TO_ID } from './constants';
+import { hydrateAsset } from './hydrator';
 
 
 export interface Recommendation {
@@ -7,6 +8,16 @@ export interface Recommendation {
   score: number;
   name: string;
   reasons: string[];
+  build: {
+    runes: {
+      primaryStyle: any;
+      subStyle: any;
+      selections: any;
+      shards: any[];
+    };
+    //items: any[]; // Objetos con {id, name, icon}
+    skillMax: string;
+  };
 }
 
 // Inicializamos la DB al cargar el módulo
@@ -52,11 +63,33 @@ export function getProcessedRecommendations(
         
         const { score, reasons } = calculateScore(c, allies, enemies);
 
+        const rawBuild = c.buildData;
+
+        console.log(rawBuild);
+        
+        const hydratedBuild = {
+            runes: {
+                // Hidratamos los Estilos (Ramas)
+                primaryStyle: hydrateAsset('runes', rawBuild.runes.primaryStyleId),
+                subStyle: hydrateAsset('runes', rawBuild.runes.subStyleId),
+                
+                // Hidratamos las 6 selecciones (Keystone + 3 principales + 2 secundarias)
+                selections: rawBuild.runes.selections.map((id: number) => hydrateAsset('runes', id)),
+                
+                // Hidratamos los 3 Shards
+                shards: rawBuild.runes.shards.map((id: number) => hydrateAsset('shards', id))
+            },
+
+            // Obtenemos la letra de la habilidad (Q, W, E) basada en el primer maxeo
+            skillMax: rawBuild.skills ? ["Q", "W", "E"][rawBuild.skills.skillLevelUp1 - 1] : "Q"
+        };
+
         results.push({
             id: c.id,
             name: c.name,
             score: score,
-            reasons: reasons
+            reasons: reasons,
+            build: hydratedBuild
         });
     }
     console.log(`📊 [ENGINE] Procesados: ${results.length} | Omitidos por línea: ${filteredCount}`);
@@ -283,6 +316,53 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     // Normalizamos para que el score sea difícil de llevar a 10 o a 0 a menos que sea un caso extremo
     const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
     return { score: finalScore, reasons };
+}
+
+// Cambia esto dentro de getSingleChampionBuild:
+export function getSingleChampionBuild(championId: number): any {
+    const name = getNameFromId(championId);
+    if (!name) return null;
+
+    const champ = ENRICHED_DB[name];
+    if (!champ || !champ.buildData) return null;
+
+    const b = champ.buildData;
+    const skills = b.skills;
+    const skillOrder = ["Q", "W", "E"];
+
+    const fullOrder = skills 
+    ? [
+        { key: "Q", pos: skills.skillLevelUp1 },
+        { key: "W", pos: skills.skillLevelUp2 },
+        { key: "E", pos: skills.skillLevelUp3 }
+      ]
+      .sort((a, b) => a.pos - b.pos) // Ordenamos del 1 al 3
+      .map(s => s.key)
+      .join(" > ")
+    : "Q > W > E";
+
+
+    console.log(b.runes.primaryStyleId,"BEBESITA");
+    return {
+        name: champ.name,
+        build: {
+            runes: {
+                // USA LAS PROPIEDADES PLANAS QUE GENERA TU SCRAPER
+                primaryStyle: b.runes.primaryStyleId,
+                secondaryStyle: b.runes.subStyleId,
+                keystone: hydrateAsset('runes', b.runes.selections[0]),
+                shards: b.runes.shards.map((id: number) => hydrateAsset('shards', id)),
+                selections: b.runes.selections.map((id: number) => hydrateAsset('runes', id))
+            },
+            items: {
+                boots: hydrateAsset('items', b.items.boots.id),
+                core: b.items.coreSlots.map((i: any) => hydrateAsset('items', i.id)),
+                starter: b.items.starter.map((id: number) => hydrateAsset('items', id))
+            },
+            // Corrección de undefined en skills
+            skillOrder: fullOrder
+        }
+    };
 }
 
 // Helper para traducir

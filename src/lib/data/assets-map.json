@@ -1,0 +1,4607 @@
+{
+  "runes": {
+    "8000": {
+      "name": "Precisión",
+      "icon": "perk-images/Styles/7201_Precision.png",
+      "isStyle": true
+    },
+    "8005": {
+      "name": "Estrategia Ofensiva",
+      "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png"
+    },
+    "8008": {
+      "name": "Cadencia Letal",
+      "icon": "perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png"
+    },
+    "8009": {
+      "name": "Concentración Profunda",
+      "icon": "perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png"
+    },
+    "8010": {
+      "name": "Conquistador",
+      "icon": "perk-images/Styles/Precision/Conqueror/Conqueror.png"
+    },
+    "8014": {
+      "name": "Golpe de Gracia",
+      "icon": "perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png"
+    },
+    "8017": {
+      "name": "Corte",
+      "icon": "perk-images/Styles/Precision/CutDown/CutDown.png"
+    },
+    "8021": {
+      "name": "Sobre la Marcha",
+      "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png"
+    },
+    "8100": {
+      "name": "Dominación",
+      "icon": "perk-images/Styles/7200_Domination.png",
+      "isStyle": true
+    },
+    "8105": {
+      "name": "Cazador Implacable",
+      "icon": "perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png"
+    },
+    "8106": {
+      "name": "Cazador Definitivo",
+      "icon": "perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png"
+    },
+    "8112": {
+      "name": "Electrocutar",
+      "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png"
+    },
+    "8126": {
+      "name": "Golpe Bajo",
+      "icon": "perk-images/Styles/Domination/CheapShot/CheapShot.png"
+    },
+    "8128": {
+      "name": "Cosecha Oscura",
+      "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png"
+    },
+    "8135": {
+      "name": "Cazador de Tesoros",
+      "icon": "perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png"
+    },
+    "8137": {
+      "name": "Sexto Sentido",
+      "icon": "perk-images/Styles/Domination/SixthSense/SixthSense.png"
+    },
+    "8139": {
+      "name": "Sabor a Sangre",
+      "icon": "perk-images/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.png"
+    },
+    "8140": {
+      "name": "Recuerdos Macabros",
+      "icon": "perk-images/Styles/Domination/GrislyMementos/GrislyMementos.png"
+    },
+    "8141": {
+      "name": "Centinela profundo",
+      "icon": "perk-images/Styles/Domination/DeepWard/DeepWard.png"
+    },
+    "8143": {
+      "name": "Impacto Súbito",
+      "icon": "perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png"
+    },
+    "8200": {
+      "name": "Brujería",
+      "icon": "perk-images/Styles/7202_Sorcery.png",
+      "isStyle": true
+    },
+    "8210": {
+      "name": "Trascendencia",
+      "icon": "perk-images/Styles/Sorcery/Transcendence/Transcendence.png"
+    },
+    "8214": {
+      "name": "Invocación: Aery",
+      "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png"
+    },
+    "8224": {
+      "name": "Arcanista Axiomático",
+      "icon": "perk-images/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png"
+    },
+    "8226": {
+      "name": "Anillo de Flujo de Maná",
+      "icon": "perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png"
+    },
+    "8229": {
+      "name": "Cometa Arcano",
+      "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png"
+    },
+    "8230": {
+      "name": "Saqueador de Tormentas",
+      "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png"
+    },
+    "8232": {
+      "name": "Caminata Sobre Agua",
+      "icon": "perk-images/Styles/Sorcery/Waterwalking/Waterwalking.png"
+    },
+    "8233": {
+      "name": "Concentración Absoluta",
+      "icon": "perk-images/Styles/Sorcery/AbsoluteFocus/AbsoluteFocus.png"
+    },
+    "8234": {
+      "name": "Celeridad",
+      "icon": "perk-images/Styles/Sorcery/Celerity/CelerityTemp.png"
+    },
+    "8236": {
+      "name": "Tormenta Creciente",
+      "icon": "perk-images/Styles/Sorcery/GatheringStorm/GatheringStorm.png"
+    },
+    "8237": {
+      "name": "Quemadura",
+      "icon": "perk-images/Styles/Sorcery/Scorch/Scorch.png"
+    },
+    "8242": {
+      "name": "Inquebrantable",
+      "icon": "perk-images/Styles/Sorcery/Unflinching/Unflinching.png"
+    },
+    "8275": {
+      "name": "Capa del Nimbo",
+      "icon": "perk-images/Styles/Sorcery/NimbusCloak/6361.png"
+    },
+    "8299": {
+      "name": "La Última Batalla",
+      "icon": "perk-images/Styles/Sorcery/LastStand/LastStand.png"
+    },
+    "8300": {
+      "name": "Inspiración",
+      "icon": "perk-images/Styles/7203_Whimsy.png",
+      "isStyle": true
+    },
+    "8304": {
+      "name": "Calzado Mágico",
+      "icon": "perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png"
+    },
+    "8306": {
+      "name": "Destello Hextech",
+      "icon": "perk-images/Styles/Inspiration/HextechFlashtraption/HextechFlashtraption.png"
+    },
+    "8313": {
+      "name": "Tónico Triple",
+      "icon": "perk-images/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png"
+    },
+    "8316": {
+      "name": "Comodín",
+      "icon": "perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png"
+    },
+    "8321": {
+      "name": "Reembolso",
+      "icon": "perk-images/Styles/Inspiration/CashBack/CashBack2.png"
+    },
+    "8345": {
+      "name": "Entrega de Galletas",
+      "icon": "perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png"
+    },
+    "8347": {
+      "name": "Perspicacia Cósmica",
+      "icon": "perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png"
+    },
+    "8351": {
+      "name": "Aumento Glacial",
+      "icon": "perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png"
+    },
+    "8352": {
+      "name": "Tónico de Distorsión Temporal",
+      "icon": "perk-images/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png"
+    },
+    "8360": {
+      "name": "Libro de Hechizos Abierto",
+      "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png"
+    },
+    "8369": {
+      "name": "Primer Golpe",
+      "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png"
+    },
+    "8400": {
+      "name": "Valor",
+      "icon": "perk-images/Styles/7204_Resolve.png",
+      "isStyle": true
+    },
+    "8401": {
+      "name": "Golpe de Escudo",
+      "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png"
+    },
+    "8410": {
+      "name": "Velocidad de Aproximación",
+      "icon": "perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png"
+    },
+    "8429": {
+      "name": "Acondicionamiento",
+      "icon": "perk-images/Styles/Resolve/Conditioning/Conditioning.png"
+    },
+    "8437": {
+      "name": "Agarre del Perpetuo",
+      "icon": "perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png"
+    },
+    "8439": {
+      "name": "Réplica",
+      "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png"
+    },
+    "8444": {
+      "name": "Segundo Aire",
+      "icon": "perk-images/Styles/Resolve/SecondWind/SecondWind.png"
+    },
+    "8446": {
+      "name": "Demolición",
+      "icon": "perk-images/Styles/Resolve/Demolish/Demolish.png"
+    },
+    "8451": {
+      "name": "Crecimiento Excesivo",
+      "icon": "perk-images/Styles/Resolve/Overgrowth/Overgrowth.png"
+    },
+    "8453": {
+      "name": "Revitalizar",
+      "icon": "perk-images/Styles/Resolve/Revitalize/Revitalize.png"
+    },
+    "8463": {
+      "name": "Fuente de Vida",
+      "icon": "perk-images/Styles/Resolve/FontOfLife/FontOfLife.png"
+    },
+    "8465": {
+      "name": "Guardián",
+      "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png"
+    },
+    "8473": {
+      "name": "Coraza Ósea",
+      "icon": "perk-images/Styles/Resolve/BonePlating/BonePlating.png"
+    },
+    "8992": {
+      "name": "Toque de la Muerte Ígnea",
+      "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png"
+    },
+    "9101": {
+      "name": "Absorber Vida",
+      "icon": "perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png"
+    },
+    "9103": {
+      "name": "Leyenda: Linaje",
+      "icon": "perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png"
+    },
+    "9104": {
+      "name": "Leyenda: Celeridad",
+      "icon": "perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png"
+    },
+    "9105": {
+      "name": "Leyenda: Aceleración",
+      "icon": "perk-images/Styles/Precision/LegendHaste/LegendHaste.png"
+    },
+    "9111": {
+      "name": "Triunfo",
+      "icon": "perk-images/Styles/Precision/Triumph.png"
+    },
+    "9923": {
+      "name": "Lluvia de Espadas",
+      "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png"
+    }
+  },
+  "items": {
+    "1001": {
+      "name": "Botas",
+      "description": "Aumenta ligeramente la Velocidad de Movimiento.",
+      "gold": 300,
+      "icon": "1001.png"
+    },
+    "1004": {
+      "name": "Amuleto de las Hadas",
+      "description": "Aumenta ligeramente la Regen. de Maná.",
+      "gold": 200,
+      "icon": "1004.png"
+    },
+    "1006": {
+      "name": "Perla de Rejuvenecimiento",
+      "description": "Aumenta ligeramente la Regen. de Vida.",
+      "gold": 300,
+      "icon": "1006.png"
+    },
+    "1011": {
+      "name": "Cinturón de Gigante",
+      "description": "Aumenta en gran medida la Vida.",
+      "gold": 900,
+      "icon": "1011.png"
+    },
+    "1018": {
+      "name": "Capa de Agilidad",
+      "description": "Aumenta la probabilidad de golpe crítico.",
+      "gold": 600,
+      "icon": "1018.png"
+    },
+    "1026": {
+      "name": "Varita Explosiva",
+      "description": "Aumenta moderadamente el Poder de Habilidad.",
+      "gold": 850,
+      "icon": "1026.png"
+    },
+    "1027": {
+      "name": "Cristal de Zafiro",
+      "description": "Aumenta el Maná.",
+      "gold": 300,
+      "icon": "1027.png"
+    },
+    "1028": {
+      "name": "Cristal de Rubí",
+      "description": "Aumenta la Vida.",
+      "gold": 400,
+      "icon": "1028.png"
+    },
+    "1029": {
+      "name": "Armadura de Tela",
+      "description": "Aumenta ligeramente la Armadura.",
+      "gold": 300,
+      "icon": "1029.png"
+    },
+    "1031": {
+      "name": "Cota de Malla",
+      "description": "Aumenta en gran medida la Armadura.",
+      "gold": 800,
+      "icon": "1031.png"
+    },
+    "1033": {
+      "name": "Manto Anulamagia",
+      "description": "Aumenta ligeramente la Resistencia Mágica.",
+      "gold": 400,
+      "icon": "1033.png"
+    },
+    "1035": {
+      "name": "Cuchillo Ámbar",
+      "description": "",
+      "gold": 350,
+      "icon": "1035.png"
+    },
+    "1036": {
+      "name": "Espada Larga",
+      "description": "Aumenta ligeramente el daño de ataque.",
+      "gold": 350,
+      "icon": "1036.png"
+    },
+    "1037": {
+      "name": "Picacha",
+      "description": "Aumenta moderadamente el Daño de Ataque.",
+      "gold": 875,
+      "icon": "1037.png"
+    },
+    "1038": {
+      "name": "Espadón",
+      "description": "Aumenta en gran medida el daño de ataque.",
+      "gold": 1300,
+      "icon": "1038.png"
+    },
+    "1039": {
+      "name": "Hoja Granizo",
+      "description": "Proporciona daño contra monstruos y regeneración de maná en la jungla.",
+      "gold": 350,
+      "icon": "1039.png"
+    },
+    "1040": {
+      "name": "Filo de Obsidiana",
+      "description": "",
+      "gold": 350,
+      "icon": "1040.png"
+    },
+    "1042": {
+      "name": "Daga",
+      "description": "Aumenta la velocidad de ataque ligeramente.",
+      "gold": 250,
+      "icon": "1042.png"
+    },
+    "1043": {
+      "name": "Arco Recurvado",
+      "description": "Aumenta la velocidad de ataque en gran medida.",
+      "gold": 700,
+      "icon": "1043.png"
+    },
+    "1052": {
+      "name": "Libro Amplificador",
+      "description": "Aumenta levemente el poder de habilidad.",
+      "gold": 400,
+      "icon": "1052.png"
+    },
+    "1053": {
+      "name": "Cetro Vampírico",
+      "description": "Los ataques básicos restauran vida.",
+      "gold": 900,
+      "icon": "1053.png"
+    },
+    "1054": {
+      "name": "Escudo de Doran",
+      "description": "Buen objeto inicial de defensa.",
+      "gold": 450,
+      "icon": "1054.png"
+    },
+    "1055": {
+      "name": "Espada de Doran",
+      "description": "Buen objeto inicial para atacantes.",
+      "gold": 450,
+      "icon": "1055.png"
+    },
+    "1056": {
+      "name": "Sortija de Doran",
+      "description": "Buen objeto inicial para hechiceros.",
+      "gold": 400,
+      "icon": "1056.png"
+    },
+    "1057": {
+      "name": "Capa de Negatrones",
+      "description": "Aumenta moderadamente la resistencia mágica.",
+      "gold": 850,
+      "icon": "1057.png"
+    },
+    "1058": {
+      "name": "Vara Innecesariamente Grande",
+      "description": "Aumenta en gran medida el poder de habilidad.",
+      "gold": 1200,
+      "icon": "1058.png"
+    },
+    "1082": {
+      "name": "El Sello de la Oscuridad",
+      "description": "Proporciona poder de habilidad y maná. Aumenta su poder a medida que asesinas enemigos.",
+      "gold": 350,
+      "icon": "1082.png"
+    },
+    "1083": {
+      "name": "Sacrificar",
+      "description": "Inflige daño y robo de vida al impactar. Asesinar súbditos otorga oro adicional.",
+      "gold": 450,
+      "icon": "1083.png"
+    },
+    "1086": {
+      "name": "Arco de Doran",
+      "description": "",
+      "gold": 400,
+      "icon": "1086.png"
+    },
+    "1090": {
+      "name": "Misión: Carril superior",
+      "description": "",
+      "gold": 0,
+      "icon": "1090.png"
+    },
+    "1091": {
+      "name": "Misión: Carril central",
+      "description": "",
+      "gold": 0,
+      "icon": "1091.png"
+    },
+    "1092": {
+      "name": "Misión: Carril inferior",
+      "description": "",
+      "gold": 0,
+      "icon": "1092.png"
+    },
+    "1093": {
+      "name": "Misión: Soporte",
+      "description": "",
+      "gold": 0,
+      "icon": "1093.png"
+    },
+    "1094": {
+      "name": "Misión: Jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1094.png"
+    },
+    "1101": {
+      "name": "Cachorro de Rasgafuegos",
+      "description": "",
+      "gold": 450,
+      "icon": "1101.png"
+    },
+    "1102": {
+      "name": "Cría de Trotabrisas",
+      "description": "",
+      "gold": 450,
+      "icon": "1102.png"
+    },
+    "1103": {
+      "name": "Retoño de Pisamusgo",
+      "description": "",
+      "gold": 450,
+      "icon": "1103.png"
+    },
+    "1104": {
+      "name": "Ojo del Heraldo",
+      "description": "",
+      "gold": 0,
+      "icon": "1104.png"
+    },
+    "1105": {
+      "name": "Retoño de Pisamusgo",
+      "description": "",
+      "gold": 450,
+      "icon": "1105.png"
+    },
+    "1106": {
+      "name": "Cría de Trotabrisas",
+      "description": "",
+      "gold": 450,
+      "icon": "1106.png"
+    },
+    "1107": {
+      "name": "Cachorro de Rasgafuegos",
+      "description": "",
+      "gold": 450,
+      "icon": "1107.png"
+    },
+    "1111": {
+      "name": "Jarvan Primero",
+      "description": "",
+      "gold": 300,
+      "icon": "1111.png"
+    },
+    "1120": {
+      "name": "Casco de Doran",
+      "description": "",
+      "gold": 450,
+      "icon": "1120.png"
+    },
+    "1200": {
+      "name": "Misión del carril superior",
+      "description": "",
+      "gold": 0,
+      "icon": "1200.png"
+    },
+    "1201": {
+      "name": "Misión del carril central",
+      "description": "",
+      "gold": 0,
+      "icon": "1201.png"
+    },
+    "1202": {
+      "name": "Misión del carril inferior",
+      "description": "",
+      "gold": 0,
+      "icon": "1202.png"
+    },
+    "1203": {
+      "name": "Misión de soporte",
+      "description": "",
+      "gold": 0,
+      "icon": "1203.png"
+    },
+    "1204": {
+      "name": "Misión de la jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1204.png"
+    },
+    "1205": {
+      "name": "Recompensa de la misión de la jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1205.png"
+    },
+    "1206": {
+      "name": "Recompensa de misión del carril central",
+      "description": "",
+      "gold": 0,
+      "icon": "1206.png"
+    },
+    "1207": {
+      "name": "Recompensa de misión del carril inferior",
+      "description": "",
+      "gold": 0,
+      "icon": "1207.png"
+    },
+    "1208": {
+      "name": "Recompensa de la misión de soporte",
+      "description": "",
+      "gold": 0,
+      "icon": "1208.png"
+    },
+    "1209": {
+      "name": "Recompensa de la misión de la jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1209.png"
+    },
+    "1210": {
+      "name": "Recompensa de la misión de la jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1210.png"
+    },
+    "1211": {
+      "name": "Recompensa de la misión de la jungla",
+      "description": "",
+      "gold": 0,
+      "icon": "1211.png"
+    },
+    "1220": {
+      "name": "Teleportación Desatada (recompensa de la misión del carril superior)",
+      "description": "",
+      "gold": 0,
+      "icon": "1220.png"
+    },
+    "1221": {
+      "name": "Recompensa de misión del carril superior",
+      "description": "",
+      "gold": 0,
+      "icon": "1221.png"
+    },
+    "1222": {
+      "name": "Misión del carril superior",
+      "description": "",
+      "gold": 0,
+      "icon": "1222.png"
+    },
+    "1500": {
+      "name": "Balas Penetrantes",
+      "description": "",
+      "gold": 0,
+      "icon": "1500.png"
+    },
+    "1501": {
+      "name": "Fortificación",
+      "description": "",
+      "gold": 0,
+      "icon": "1501.png"
+    },
+    "1502": {
+      "name": "Armadura Reforzada",
+      "description": "",
+      "gold": 0,
+      "icon": "1502.png"
+    },
+    "1503": {
+      "name": "Ojo del Guardián",
+      "description": "",
+      "gold": 0,
+      "icon": "1503.png"
+    },
+    "1504": {
+      "name": "Vanguardia",
+      "description": "",
+      "gold": 0,
+      "icon": "1504.png"
+    },
+    "1505": {
+      "name": "Armadura Reforzada",
+      "description": "",
+      "gold": 0,
+      "icon": "1505.png"
+    },
+    "1506": {
+      "name": "Armadura Reforzada",
+      "description": "",
+      "gold": 0,
+      "icon": "1506.png"
+    },
+    "1507": {
+      "name": "Sobrecargado",
+      "description": "",
+      "gold": 0,
+      "icon": "1507.png"
+    },
+    "1508": {
+      "name": "Calcetas antitorretas",
+      "description": "",
+      "gold": 0,
+      "icon": "1508.png"
+    },
+    "1509": {
+      "name": "Entusiasmo",
+      "description": "",
+      "gold": 0,
+      "icon": "1509.png"
+    },
+    "1510": {
+      "name": "Entusiasmo Temerario",
+      "description": "",
+      "gold": 0,
+      "icon": "1510.png"
+    },
+    "1511": {
+      "name": "Armadura Supermecanizada",
+      "description": "",
+      "gold": 0,
+      "icon": "1511.png"
+    },
+    "1512": {
+      "name": "Campo de Fuerza Supermecánico",
+      "description": "",
+      "gold": 0,
+      "icon": "1512.png"
+    },
+    "1515": {
+      "name": "Revestimiento de Torretas",
+      "description": "",
+      "gold": 0,
+      "icon": "1515.png"
+    },
+    "1516": {
+      "name": "Recompensa por estructuras",
+      "description": "",
+      "gold": 0,
+      "icon": "1516.png"
+    },
+    "1517": {
+      "name": "Recompensa por estructuras",
+      "description": "",
+      "gold": 0,
+      "icon": "1517.png"
+    },
+    "1518": {
+      "name": "Recompensa por estructuras",
+      "description": "",
+      "gold": 0,
+      "icon": "1518.png"
+    },
+    "1519": {
+      "name": "Recompensa por estructuras",
+      "description": "",
+      "gold": 0,
+      "icon": "1519.png"
+    },
+    "1520": {
+      "name": "SobrecargadoAL",
+      "description": "",
+      "gold": 0,
+      "icon": "1520.png"
+    },
+    "1521": {
+      "name": "Fortificación",
+      "description": "",
+      "gold": 0,
+      "icon": "1521.png"
+    },
+    "1522": {
+      "name": "Aumento de poder de la torre",
+      "description": "",
+      "gold": 0,
+      "icon": "1522.png"
+    },
+    "1523": {
+      "name": "Sobrecargado",
+      "description": "",
+      "gold": 0,
+      "icon": "1523.png"
+    },
+    "1524": {
+      "name": "Cristavid",
+      "description": "",
+      "gold": 0,
+      "icon": "1524.png"
+    },
+    "2001": {
+      "name": "Retirada",
+      "description": "",
+      "gold": 60,
+      "icon": "2001.png"
+    },
+    "2002": {
+      "name": "Retirada mejorada",
+      "description": "",
+      "gold": 60,
+      "icon": "2002.png"
+    },
+    "2003": {
+      "name": "Poción de Vida",
+      "description": "Al usarse, restaura vida a lo largo del tiempo.",
+      "gold": 50,
+      "icon": "2003.png"
+    },
+    "2007": {
+      "name": "Retirada desactivada",
+      "description": "",
+      "gold": 60,
+      "icon": "2007.png"
+    },
+    "2008": {
+      "name": "",
+      "description": "",
+      "gold": 60,
+      "icon": "2008.png"
+    },
+    "2010": {
+      "name": "Galleta Definitiva de la Voluntad Eterna",
+      "description": "",
+      "gold": 50,
+      "icon": "2010.png"
+    },
+    "2015": {
+      "name": "Fragmento de Kircheis",
+      "description": "Velocidad de ataque y un golpe mágico que puede cargarse.",
+      "gold": 700,
+      "icon": "2015.png"
+    },
+    "2019": {
+      "name": "Sello de Acero",
+      "description": "",
+      "gold": 1100,
+      "icon": "2019.png"
+    },
+    "2020": {
+      "name": "El Brutalizador",
+      "description": "",
+      "gold": 1337,
+      "icon": "2020.png"
+    },
+    "2021": {
+      "name": "Excavador de Túneles",
+      "description": "",
+      "gold": 1150,
+      "icon": "2021.png"
+    },
+    "2022": {
+      "name": "Mena Brillante",
+      "description": "",
+      "gold": 250,
+      "icon": "2022.png"
+    },
+    "2031": {
+      "name": "Poción Reutilizable",
+      "description": "Restaura vida de forma prolongada. Se rellena en la tienda.",
+      "gold": 150,
+      "icon": "2031.png"
+    },
+    "2033": {
+      "name": "Poción de Corrupción",
+      "description": "Restaura vida y maná con el tiempo y aumenta la potencia de combate. Se rellena en la tienda.",
+      "gold": 500,
+      "icon": "2033.png"
+    },
+    "2049": {
+      "name": "Amuleto del Guardián",
+      "description": "Aumenta la vida y va proporcionando Centinelas Invisibles a lo largo del tiempo.",
+      "gold": 500,
+      "icon": "2049.png"
+    },
+    "2050": {
+      "name": "Manto del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "2050.png"
+    },
+    "2051": {
+      "name": "Cuerno del Guardián",
+      "description": "Buen objeto inicial para tanques.",
+      "gold": 950,
+      "icon": "2051.png"
+    },
+    "2052": {
+      "name": "Porogalletas",
+      "description": "",
+      "gold": 0,
+      "icon": "2052.png"
+    },
+    "2055": {
+      "name": "Centinela de Control",
+      "description": "Se utiliza para desactivar centinelas y trampas invisibles en la zona.",
+      "gold": 75,
+      "icon": "2055.png"
+    },
+    "2056": {
+      "name": "Centinela Invisible",
+      "description": "Se usa para proporcionar visión temporal en un área",
+      "gold": 40,
+      "icon": "2056.png"
+    },
+    "2065": {
+      "name": "Canto de Guerra de Shurelya",
+      "description": "Activa para aumentar la velocidad de los aliados cercanos.",
+      "gold": 2200,
+      "icon": "2065.png"
+    },
+    "2138": {
+      "name": "Elixir de Hierro",
+      "description": "Aumenta las defensas por un momento. Deja un rastro que pueden seguir los aliados.",
+      "gold": 500,
+      "icon": "2138.png"
+    },
+    "2139": {
+      "name": "Elixir de Brujería",
+      "description": "Otorga temporalmente Poder de Habilidad y daño adicional a campeones y torretas.",
+      "gold": 500,
+      "icon": "2139.png"
+    },
+    "2140": {
+      "name": "Elixir de Furia",
+      "description": "Otorga temporalmente Daño de Ataque y te cura cuando infliges daño físico a los campeones.",
+      "gold": 500,
+      "icon": "2140.png"
+    },
+    "2141": {
+      "name": "Juguito de Gorrito",
+      "description": "",
+      "gold": 300,
+      "icon": "2141.png"
+    },
+    "2142": {
+      "name": "Juguito de Poder",
+      "description": "",
+      "gold": 500,
+      "icon": "2142.png"
+    },
+    "2143": {
+      "name": "Juguito de Vitalidad",
+      "description": "",
+      "gold": 500,
+      "icon": "2143.png"
+    },
+    "2144": {
+      "name": "Juguito de Aceleración",
+      "description": "",
+      "gold": 500,
+      "icon": "2144.png"
+    },
+    "2145": {
+      "name": "Dados de la Suerte",
+      "description": "",
+      "gold": 0,
+      "icon": "2145.png"
+    },
+    "2146": {
+      "name": "Dados de la Suerte Mejorados",
+      "description": "",
+      "gold": 0,
+      "icon": "2146.png"
+    },
+    "2147": {
+      "name": "Nivel de Aumento",
+      "description": "",
+      "gold": 1250,
+      "icon": "2147.png"
+    },
+    "2150": {
+      "name": "Elixir de Habilidad",
+      "description": "",
+      "gold": 0,
+      "icon": "2150.png"
+    },
+    "2151": {
+      "name": "Elixir de Avaricia",
+      "description": "",
+      "gold": 50,
+      "icon": "2151.png"
+    },
+    "2152": {
+      "name": "Elixir de Fuerza",
+      "description": "",
+      "gold": 50,
+      "icon": "2152.png"
+    },
+    "2161": {
+      "name": "Juguito de Poder de Bandle",
+      "description": "",
+      "gold": 1000,
+      "icon": "2161.png"
+    },
+    "2162": {
+      "name": "Juguito de Vitalidad de Bandle",
+      "description": "",
+      "gold": 1000,
+      "icon": "2162.png"
+    },
+    "2163": {
+      "name": "Juguito de Aceleración de Bandle",
+      "description": "",
+      "gold": 1000,
+      "icon": "2163.png"
+    },
+    "2403": {
+      "name": "Desmaterializador de Súbditos",
+      "description": "",
+      "gold": 0,
+      "icon": "2403.png"
+    },
+    "2420": {
+      "name": "Guardabrazo del Buscador",
+      "description": "Actívalo para volverte invencible. No podrás realizar ninguna acción.",
+      "gold": 1600,
+      "icon": "2420.png"
+    },
+    "2421": {
+      "name": "Guardabrazo Fragmentado",
+      "description": "Mejora a Cronómetro",
+      "gold": 1600,
+      "icon": "2421.png"
+    },
+    "2422": {
+      "name": "Calzado Ligeramente Mágico",
+      "description": "",
+      "gold": 300,
+      "icon": "2422.png"
+    },
+    "2501": {
+      "name": "Cota Sangrienta del Soberano",
+      "description": "",
+      "gold": 3300,
+      "icon": "2501.png"
+    },
+    "2502": {
+      "name": "Desesperación Eterna",
+      "description": "",
+      "gold": 2800,
+      "icon": "2502.png"
+    },
+    "2503": {
+      "name": "Antorcha de Fuegoscuro",
+      "description": "",
+      "gold": 2800,
+      "icon": "2503.png"
+    },
+    "2504": {
+      "name": "Rukerno Kaénico",
+      "description": "",
+      "gold": 2900,
+      "icon": "2504.png"
+    },
+    "2508": {
+      "name": "Cenizas Predestinadas",
+      "description": "",
+      "gold": 900,
+      "icon": "2508.png"
+    },
+    "2510": {
+      "name": "Ocaso y Alba",
+      "description": "",
+      "gold": 3100,
+      "icon": "2510.png"
+    },
+    "2512": {
+      "name": "Proyectiles Cazademonios",
+      "description": "",
+      "gold": 2650,
+      "icon": "2512.png"
+    },
+    "2517": {
+      "name": "Hambre Infinita",
+      "description": "",
+      "gold": 3100,
+      "icon": "2517.png"
+    },
+    "2520": {
+      "name": "Rompebastiones",
+      "description": "",
+      "gold": 3200,
+      "icon": "2520.png"
+    },
+    "2522": {
+      "name": "Actualizador",
+      "description": "",
+      "gold": 2800,
+      "icon": "2522.png"
+    },
+    "2523": {
+      "name": "Hexóptica C44",
+      "description": "",
+      "gold": 2800,
+      "icon": "2523.png"
+    },
+    "2524": {
+      "name": "Flautas de Bandle",
+      "description": "",
+      "gold": 2300,
+      "icon": "2524.png"
+    },
+    "2525": {
+      "name": "Arnés de Protoplasma",
+      "description": "",
+      "gold": 2500,
+      "icon": "2525.png"
+    },
+    "2526": {
+      "name": "Tiara Susurrante",
+      "description": "",
+      "gold": 2250,
+      "icon": "2526.png"
+    },
+    "2530": {
+      "name": "Diadema Musical",
+      "description": "",
+      "gold": 2250,
+      "icon": "2530.png"
+    },
+    "3001": {
+      "name": "Manto del Ocaso",
+      "description": "Los enemigos cercanos reciben más daño mágico.",
+      "gold": 2300,
+      "icon": "3001.png"
+    },
+    "3002": {
+      "name": "Abrecaminos",
+      "description": "",
+      "gold": 2400,
+      "icon": "3002.png"
+    },
+    "3003": {
+      "name": "Báculo del Arcángel",
+      "description": "Aumenta el Poder de Habilidad según el Maná máximo.",
+      "gold": 2900,
+      "icon": "3003.png"
+    },
+    "3004": {
+      "name": "Manamune",
+      "description": "Aumenta el Daño de Ataque según el Maná máximo.",
+      "gold": 2900,
+      "icon": "3004.png"
+    },
+    "3005": {
+      "name": "Ghostcrawlers",
+      "description": "Aumenta el Daño de Ataque según la Vida máxima.",
+      "gold": 1000,
+      "icon": "3005.png"
+    },
+    "3006": {
+      "name": "Grebas del Berserker",
+      "description": "Mejora la Velocidad de Movimiento y la Velocidad de Ataque.",
+      "gold": 1100,
+      "icon": "3006.png"
+    },
+    "3008": {
+      "name": "Grebas Glotonas",
+      "description": "Aumenta el Daño de Ataque según el Maná máximo.",
+      "gold": 950,
+      "icon": "3008.png"
+    },
+    "3009": {
+      "name": "Botas de Rapidez",
+      "description": "Mejora la Velocidad de Movimiento y reduce el efecto de las ralentizaciones.",
+      "gold": 1000,
+      "icon": "3009.png"
+    },
+    "3010": {
+      "name": "Botas Simbióticas",
+      "description": "Gasta maná para recuperar vida.",
+      "gold": 900,
+      "icon": "3010.png"
+    },
+    "3011": {
+      "name": "Putrificador Quimtech",
+      "description": "",
+      "gold": 1900,
+      "icon": "3011.png"
+    },
+    "3012": {
+      "name": "Cáliz de Bendición",
+      "description": "",
+      "gold": 900,
+      "icon": "3012.png"
+    },
+    "3013": {
+      "name": "Botas Sincronizadas",
+      "description": "",
+      "gold": 900,
+      "icon": "3013.png"
+    },
+    "3020": {
+      "name": "Botas del Hechicero",
+      "description": "Mejora la Velocidad de Movimiento y el Daño Mágico.",
+      "gold": 1100,
+      "icon": "3020.png"
+    },
+    "3023": {
+      "name": "Pendiente del Pozo de Vida",
+      "description": "Invoca espectros que ralentizan y revelan a los campeones enemigos",
+      "gold": 1050,
+      "icon": "3023.png"
+    },
+    "3024": {
+      "name": "Escudo Glacial",
+      "description": "Aumenta la Armadura y la Reducción de Enfriamiento.",
+      "gold": 900,
+      "icon": "3024.png"
+    },
+    "3026": {
+      "name": "Ángel Guardián",
+      "description": "Revive periódicamente al campeón tras la muerte.",
+      "gold": 3200,
+      "icon": "3026.png"
+    },
+    "3031": {
+      "name": "Filo del Infinito",
+      "description": "Mejora enormemente los golpes críticos.",
+      "gold": 3500,
+      "icon": "3031.png"
+    },
+    "3032": {
+      "name": "Flechas Salvajes de Yun Tal",
+      "description": "",
+      "gold": 3100,
+      "icon": "3032.png"
+    },
+    "3033": {
+      "name": "Recordatorio Mortal",
+      "description": "Derrota a enemigos con mucha recuperación de Vida y Armadura.",
+      "gold": 3000,
+      "icon": "3033.png"
+    },
+    "3035": {
+      "name": "Último Suspiro",
+      "description": "Para contrarrestar a enemigos con mucha armadura.",
+      "gold": 1450,
+      "icon": "3035.png"
+    },
+    "3036": {
+      "name": "Recuerdos de Lord Dominik",
+      "description": "Derrota a enemigos con mucha Vida y Armadura.",
+      "gold": 3300,
+      "icon": "3036.png"
+    },
+    "3039": {
+      "name": "Juicio de Atma",
+      "description": "",
+      "gold": 2900,
+      "icon": "3039.png"
+    },
+    "3040": {
+      "name": "Abrazo del Serafín",
+      "description": "",
+      "gold": 2900,
+      "icon": "3040.png"
+    },
+    "3041": {
+      "name": "Robaalmas de Mejai",
+      "description": "Otorga Poder de Habilidad por muertes y asistencias.",
+      "gold": 1500,
+      "icon": "3041.png"
+    },
+    "3042": {
+      "name": "Muramaná",
+      "description": "",
+      "gold": 2900,
+      "icon": "3042.png"
+    },
+    "3044": {
+      "name": "Bacteriófago",
+      "description": "Los ataques y asesinatos otorgan una pequeña mejora de velocidad.",
+      "gold": 1100,
+      "icon": "3044.png"
+    },
+    "3046": {
+      "name": "Bailarín Espectral",
+      "description": "Te mueves más rápido cuando atacas a tus enemigos y obtienes un escudo cuando tienes poca vida.",
+      "gold": 2650,
+      "icon": "3046.png"
+    },
+    "3047": {
+      "name": "Punteras de Acero Revestidas",
+      "description": "Mejora la velocidad de movimiento y reduce el daño de ataque recibido.",
+      "gold": 1200,
+      "icon": "3047.png"
+    },
+    "3050": {
+      "name": "Convergencia de Zeke",
+      "description": "Un aliado y tú reciben bonificaciones al lanzar sus habilidades definitivas.",
+      "gold": 2200,
+      "icon": "3050.png"
+    },
+    "3051": {
+      "name": "Hacha Hogareña",
+      "description": "",
+      "gold": 1200,
+      "icon": "3051.png"
+    },
+    "3053": {
+      "name": "Guantelete de Sterak",
+      "description": "Protege frente a grandes descargas de daño.",
+      "gold": 3200,
+      "icon": "3053.png"
+    },
+    "3057": {
+      "name": "Brillo",
+      "description": "Otorga una bonificación al siguiente ataque tras lanzar un hechizo.",
+      "gold": 900,
+      "icon": "3057.png"
+    },
+    "3065": {
+      "name": "Apariencia Espiritual",
+      "description": "Aumenta la vida y los efectos de curación.",
+      "gold": 2700,
+      "icon": "3065.png"
+    },
+    "3066": {
+      "name": "Placa Lunar Alada",
+      "description": "",
+      "gold": 800,
+      "icon": "3066.png"
+    },
+    "3067": {
+      "name": "Gemaluz",
+      "description": "Aumenta la vida y la reducción de enfriamiento.",
+      "gold": 800,
+      "icon": "3067.png"
+    },
+    "3068": {
+      "name": "Égida de Fuego Solar",
+      "description": "Armadura alta. Inflige daño constante a los enemigos cercanos. Inmoviliza a los enemigos para lanzar una ola de fuego que inflige daño.",
+      "gold": 2700,
+      "icon": "3068.png"
+    },
+    "3070": {
+      "name": "Lágrima de la Diosa",
+      "description": "Aumenta el maná máximo a medida que se gasta maná.",
+      "gold": 400,
+      "icon": "3070.png"
+    },
+    "3071": {
+      "name": "Cuchilla Oscura",
+      "description": "Al causar daño físico a campeones enemigos, reduces su armadura.",
+      "gold": 3000,
+      "icon": "3071.png"
+    },
+    "3072": {
+      "name": "La Sanguinaria",
+      "description": "Otorga daño de ataque y robo de vida. Además, el robo de vida ahora sobrecura.",
+      "gold": 3400,
+      "icon": "3072.png"
+    },
+    "3073": {
+      "name": "Placa Hexperimental",
+      "description": "Aumenta el maná máximo a medida que se gasta maná.",
+      "gold": 3000,
+      "icon": "3073.png"
+    },
+    "3074": {
+      "name": "Hidra Voraz",
+      "description": "Los ataques melé afectan a los enemigos cercanos, infligiendo daño y restaurando vida.",
+      "gold": 3300,
+      "icon": "3074.png"
+    },
+    "3075": {
+      "name": "Cota de Espinas",
+      "description": "",
+      "gold": 2450,
+      "icon": "3075.png"
+    },
+    "3076": {
+      "name": "Vesta Espinosa",
+      "description": "",
+      "gold": 800,
+      "icon": "3076.png"
+    },
+    "3077": {
+      "name": "Tiamat",
+      "description": "Los ataques cuerpo a cuerpo golpean a los enemigos cercanos.",
+      "gold": 1200,
+      "icon": "3077.png"
+    },
+    "3078": {
+      "name": "Fuerza de la Trinidad",
+      "description": "Toneladas de daño.",
+      "gold": 3333,
+      "icon": "3078.png"
+    },
+    "3082": {
+      "name": "Cota del Guardabosques",
+      "description": "",
+      "gold": 1000,
+      "icon": "3082.png"
+    },
+    "3083": {
+      "name": "Armadura de Warmog",
+      "description": "Otorga una enorme cantidad de vida y regeneración de vida.",
+      "gold": 3100,
+      "icon": "3083.png"
+    },
+    "3084": {
+      "name": "Corazón de Acero",
+      "description": "Restaura vida al matar o asistir.",
+      "gold": 3000,
+      "icon": "3084.png"
+    },
+    "3085": {
+      "name": "Huracán de Runaan",
+      "description": "Los ataques a distancia disparan dos rayos a enemigos cercanos.",
+      "gold": 2650,
+      "icon": "3085.png"
+    },
+    "3086": {
+      "name": "Fervor",
+      "description": "Pequeña probabilidad de golpe crítico, de velocidad de movimiento y de velocidad de ataque.",
+      "gold": 1200,
+      "icon": "3086.png"
+    },
+    "3087": {
+      "name": "Daga de Statikk",
+      "description": "El movimiento genera cargas que liberan rayos con el ataque básico.",
+      "gold": 3000,
+      "icon": "3087.png"
+    },
+    "3089": {
+      "name": "Sombrero Mortífero de Rabadon",
+      "description": "Aumenta enormemente el poder de habilidad.",
+      "gold": 3500,
+      "icon": "3089.png"
+    },
+    "3091": {
+      "name": "Al Filo de la Cordura",
+      "description": "Resiste el daño mágico y aférrate a la vida.",
+      "gold": 2800,
+      "icon": "3091.png"
+    },
+    "3094": {
+      "name": "Cañón de Fuego Rápido",
+      "description": "El movimiento genera cargas que liberan un ataque de fuego de asedio.",
+      "gold": 2650,
+      "icon": "3094.png"
+    },
+    "3095": {
+      "name": "Objeto obsoleto",
+      "description": "Incrementa considerablemente el poder de otros efectos energizados.",
+      "gold": 3000,
+      "icon": "3095.png"
+    },
+    "3097": {
+      "name": "Filo de la Tormenta",
+      "description": "Mata súbditos enemigos de vez en cuando para otorgarle oro a un aliado cercano.",
+      "gold": 3200,
+      "icon": "3097.png"
+    },
+    "3100": {
+      "name": "Maldición del Liche",
+      "description": "Otorga una bonificación al siguiente ataque tras lanzar un hechizo.",
+      "gold": 2900,
+      "icon": "3100.png"
+    },
+    "3102": {
+      "name": "Velo de la Banshee",
+      "description": "Bloquea periódicamente las habilidades enemigas.",
+      "gold": 3000,
+      "icon": "3102.png"
+    },
+    "3105": {
+      "name": "Égida de la Legión",
+      "description": "Otorga Armadura y Resistencia Mágica.",
+      "gold": 1100,
+      "icon": "3105.png"
+    },
+    "3107": {
+      "name": "Redención",
+      "description": "Activa para curar aliados e infligir daño en área a enemigos.",
+      "gold": 2300,
+      "icon": "3107.png"
+    },
+    "3108": {
+      "name": "Códice Diabólico",
+      "description": "Aumenta el poder de habilidad y la reducción de enfriamiento.",
+      "gold": 850,
+      "icon": "3108.png"
+    },
+    "3109": {
+      "name": "Promesa del Caballero",
+      "description": "Únete a un aliado para protegerse mutuamente.",
+      "gold": 2300,
+      "icon": "3109.png"
+    },
+    "3110": {
+      "name": "Corazón de Hielo",
+      "description": "Aumenta considerablemente la armadura y ralentiza los ataques básicos del enemigo.",
+      "gold": 2500,
+      "icon": "3110.png"
+    },
+    "3111": {
+      "name": "Botas de Mercurio",
+      "description": "Aumenta la velocidad de movimiento y reduce la duración de efectos incapacitantes.",
+      "gold": 1250,
+      "icon": "3111.png"
+    },
+    "3112": {
+      "name": "Orbe del Guardián",
+      "description": "Buen objeto inicial para magos.",
+      "gold": 950,
+      "icon": "3112.png"
+    },
+    "3113": {
+      "name": "Brisa de Éter",
+      "description": "Aumenta el Poder de Habilidad y la Velocidad de Movimiento.",
+      "gold": 900,
+      "icon": "3113.png"
+    },
+    "3114": {
+      "name": "Ídolo Prohibido",
+      "description": "Aumenta el poder de curaciones y escudos, la regeneración de maná y la reducción de enfriamiento.",
+      "gold": 600,
+      "icon": "3114.png"
+    },
+    "3115": {
+      "name": "Diente de Nashor",
+      "description": "Aumenta la Velocidad de Ataque, el Poder de Habilidad y la Reducción de Enfriamiento.",
+      "gold": 2900,
+      "icon": "3115.png"
+    },
+    "3116": {
+      "name": "Cetro de Cristal de Rylai",
+      "description": "Las habilidades ralentizan a los enemigos.",
+      "gold": 2600,
+      "icon": "3116.png"
+    },
+    "3117": {
+      "name": "Botas de Movilidad",
+      "description": "Mejora en gran medida la Velocidad de Movimiento cuando no estás en combate.",
+      "gold": 1000,
+      "icon": "3117.png"
+    },
+    "3118": {
+      "name": "Maldad",
+      "description": "Únete a un aliado para protegerse mutuamente.",
+      "gold": 2700,
+      "icon": "3118.png"
+    },
+    "3119": {
+      "name": "Umbral del Invierno",
+      "description": "",
+      "gold": 2400,
+      "icon": "3119.png"
+    },
+    "3121": {
+      "name": "Invierno Nórdico",
+      "description": "",
+      "gold": 2400,
+      "icon": "3121.png"
+    },
+    "3123": {
+      "name": "El Llamado del Verdugo",
+      "description": "Derrota a enemigos con mucha ganancia de Vida.",
+      "gold": 800,
+      "icon": "3123.png"
+    },
+    "3124": {
+      "name": "Espadafuria de Guinsoo",
+      "description": "",
+      "gold": 3000,
+      "icon": "3124.png"
+    },
+    "3128": {
+      "name": "Garra de la Muerte Ígnea",
+      "description": "Puede activarse para aumentar todo el Daño Mágico causado a un campeón enemigo.",
+      "gold": 2900,
+      "icon": "3128.png"
+    },
+    "3131": {
+      "name": "Espada de los Dioses",
+      "description": "Al activarse, obtienes 100% de probabilidad de golpe crítico por unos momentos",
+      "gold": 2300,
+      "icon": "3131.png"
+    },
+    "3133": {
+      "name": "Martillo de Guerra de Caulfield",
+      "description": "Aumenta el daño de ataque y la reducción de enfriamiento.",
+      "gold": 1050,
+      "icon": "3133.png"
+    },
+    "3134": {
+      "name": "Puñal Serrado",
+      "description": "Aumenta el Daño de Ataque y la Letalidad.",
+      "gold": 1000,
+      "icon": "3134.png"
+    },
+    "3135": {
+      "name": "Báculo del Vacío",
+      "description": "Aumenta el Daño Mágico.",
+      "gold": 3000,
+      "icon": "3135.png"
+    },
+    "3137": {
+      "name": "Criptorretoño",
+      "description": "Puede activarse para quitar todas las debilitaciones y ganar una enorme cantidad de Velocidad de Movimiento.",
+      "gold": 3000,
+      "icon": "3137.png"
+    },
+    "3139": {
+      "name": "Cimitarra Mercurial",
+      "description": "Puede activarse para quitar todas las debilitaciones de control de masas y ganar una enorme cantidad de Velocidad de Movimiento.",
+      "gold": 3200,
+      "icon": "3139.png"
+    },
+    "3140": {
+      "name": "Fajín de Mercurio",
+      "description": "Puede activarse para quitar todas las debilitaciones de control de masas.",
+      "gold": 1300,
+      "icon": "3140.png"
+    },
+    "3142": {
+      "name": "Espada Fantasma de Youmuu",
+      "description": "Se activa para aumentar en gran cantidad la Velocidad de Movimiento.",
+      "gold": 2800,
+      "icon": "3142.png"
+    },
+    "3143": {
+      "name": "Presagio de Randuin",
+      "description": "Aumenta notablemente las defensas y puede activarse para ralentizar a los enemigos cercanos.",
+      "gold": 2700,
+      "icon": "3143.png"
+    },
+    "3144": {
+      "name": "Honda del Explorador",
+      "description": "Puede activarse para infligir daño mágico y ralentizar al campeón objetivo.",
+      "gold": 600,
+      "icon": "3144.png"
+    },
+    "3145": {
+      "name": "Alternador Hextech",
+      "description": "Aumenta el poder de habilidad. Inflige daño mágico extra periódicamente.",
+      "gold": 1100,
+      "icon": "3145.png"
+    },
+    "3146": {
+      "name": "Sablepistola Hextech",
+      "description": "Aumenta el Daño de Ataque y el Poder de Habilidad y se puede activar para ralentizar a un objetivo.",
+      "gold": 3000,
+      "icon": "3146.png"
+    },
+    "3147": {
+      "name": "Antifaz Embrujado",
+      "description": "Inflige daño físico adicional al emboscar enemigos.",
+      "gold": 1300,
+      "icon": "3147.png"
+    },
+    "3152": {
+      "name": "Cinturón Cohete Hextech",
+      "description": "Puede activarse para deslizarse hacia delante y desatar una explosión de fuego.",
+      "gold": 2650,
+      "icon": "3152.png"
+    },
+    "3153": {
+      "name": "Espada del Rey Arruinado",
+      "description": "Inflige daño según la vida del objetivo, puede robar velocidad de movimiento.",
+      "gold": 3200,
+      "icon": "3153.png"
+    },
+    "3155": {
+      "name": "Sorbechizos",
+      "description": "Aumenta el daño de ataque y la resistencia mágica.",
+      "gold": 1300,
+      "icon": "3155.png"
+    },
+    "3156": {
+      "name": "Fauces de Malmortius",
+      "description": "Otorga Daño de Ataque adicional cuando tienes poca Vida.",
+      "gold": 3100,
+      "icon": "3156.png"
+    },
+    "3157": {
+      "name": "Reloj de Arena de Zhonya",
+      "description": "Actívalo para volverte invencible. No podrás realizar ninguna acción.",
+      "gold": 3250,
+      "icon": "3157.png"
+    },
+    "3158": {
+      "name": "Botas Jonias de la Lucidez",
+      "description": "Aumenta la Velocidad de Movimiento y la Reducción de Enfriamiento.",
+      "gold": 900,
+      "icon": "3158.png"
+    },
+    "3161": {
+      "name": "Lanza de Shojin",
+      "description": "Reduce una cantidad fija del daño recibido de campeones. Atacar con varios campeones enemigos cercanos potencia este efecto durante un breve periodo.",
+      "gold": 3100,
+      "icon": "3161.png"
+    },
+    "3165": {
+      "name": "Morellonomicón",
+      "description": "Aumenta el daño mágico.",
+      "gold": 2850,
+      "icon": "3165.png"
+    },
+    "3168": {
+      "name": "Camino Inmortal",
+      "description": "",
+      "gold": 950,
+      "icon": "3168.png"
+    },
+    "3170": {
+      "name": "Botas de Marcha Rápida",
+      "description": "Mejora la defensa y reduce la duración de los efectos incapacitantes.",
+      "gold": 1000,
+      "icon": "3170.png"
+    },
+    "3171": {
+      "name": "Botas de Lucidez Carmesí ",
+      "description": "",
+      "gold": 900,
+      "icon": "3171.png"
+    },
+    "3172": {
+      "name": "Grebas de Armacero",
+      "description": "Movilidad y Tenacidad",
+      "gold": 1100,
+      "icon": "3172.png"
+    },
+    "3173": {
+      "name": "Trituradoras Aceradas",
+      "description": "Aumenta la Velocidad de Movimiento y la Reducción de Enfriamiento.",
+      "gold": 1250,
+      "icon": "3173.png"
+    },
+    "3174": {
+      "name": "Blindadas de Avance ",
+      "description": "Puedes infligir daño para alimentar tus curaciones y escudos.",
+      "gold": 1200,
+      "icon": "3174.png"
+    },
+    "3175": {
+      "name": "Zapatos de Lanzahechizos",
+      "description": "",
+      "gold": 1100,
+      "icon": "3175.png"
+    },
+    "3176": {
+      "name": "Avance Implacable",
+      "description": "",
+      "gold": 900,
+      "icon": "3176.png"
+    },
+    "3177": {
+      "name": "Espada del Guardián",
+      "description": "Un buen objeto inicial para atacantes",
+      "gold": 950,
+      "icon": "3177.png"
+    },
+    "3179": {
+      "name": "Espada de la Penumbra",
+      "description": "Otorga detección de trampas y centinelas periódicamente.",
+      "gold": 2800,
+      "icon": "3179.png"
+    },
+    "3181": {
+      "name": "Rompecascos",
+      "description": "",
+      "gold": 3000,
+      "icon": "3181.png"
+    },
+    "3184": {
+      "name": "Martillo del Guardián",
+      "description": "Buen objeto inicial para atacantes.",
+      "gold": 950,
+      "icon": "3184.png"
+    },
+    "3190": {
+      "name": "Relicario de los Solari de Hierro",
+      "description": "Se activa para proteger a aliados cercanos del daño.",
+      "gold": 2200,
+      "icon": "3190.png"
+    },
+    "3193": {
+      "name": "Armadura Pétrea",
+      "description": "Aumenta considerablemente la defensa cerca de múltiples enemigos.",
+      "gold": 3150,
+      "icon": "3193.png"
+    },
+    "3211": {
+      "name": "Hábito del Espectro",
+      "description": "Mejora la defensa y otorga regeneración al recibir daño.",
+      "gold": 1250,
+      "icon": "3211.png"
+    },
+    "3222": {
+      "name": "Bendición de Mikael",
+      "description": "Puede activarse para eliminar todos los efectos incapacitantes de un campeón aliado.",
+      "gold": 2300,
+      "icon": "3222.png"
+    },
+    "3302": {
+      "name": "Terminus",
+      "description": "Mata súbditos enemigos de vez en cuando para otorgarle oro a un aliado cercano.",
+      "gold": 3000,
+      "icon": "3302.png"
+    },
+    "3330": {
+      "name": "Efigie de Espantapájaros",
+      "description": "Coloca un Centinela Invisible periódicamente",
+      "gold": 0,
+      "icon": "3330.png"
+    },
+    "3340": {
+      "name": "Centinela Invisible",
+      "description": "Coloca periódicamente un Centinela Invisible.",
+      "gold": 0,
+      "icon": "3340.png"
+    },
+    "3348": {
+      "name": "Explorador Arcano",
+      "description": "Al activarse, revela una zona cercana del mapa.",
+      "gold": 0,
+      "icon": "3348.png"
+    },
+    "3349": {
+      "name": "Singularidad Brillante",
+      "description": "Lux crea una zona luminosa que <status>Ralentiza</status> en @Slow@ y revela la zona. Tras 5 seg o al <recast>volver a lanzar</recast> esta habilidad, detona, lo que inflige <magicDamage>@TotalDamage@ de daño mágico</magicDamage> y <status>Ralentiza</status> durante un @SlowLingerDuration@ seg adicional.",
+      "gold": 0,
+      "icon": "3349.png"
+    },
+    "3363": {
+      "name": "Alteración de Visión Lejana",
+      "description": "Otorga rango aumentado y revela la zona seleccionada.",
+      "gold": 0,
+      "icon": "3363.png"
+    },
+    "3364": {
+      "name": "Lente del Oráculo",
+      "description": "Desactiva los centinelas y las trampas invisibles cercanos durante cierto tiempo.",
+      "gold": 0,
+      "icon": "3364.png"
+    },
+    "3398": {
+      "name": "Recuerdito de fiesta pequeño",
+      "description": "",
+      "gold": 0,
+      "icon": "3398.png"
+    },
+    "3399": {
+      "name": "Recuerdito de fiesta",
+      "description": "",
+      "gold": 0,
+      "icon": "3399.png"
+    },
+    "3400": {
+      "name": "Tu parte",
+      "description": "",
+      "gold": 0,
+      "icon": "3400.png"
+    },
+    "3430": {
+      "name": "Rito de Ruina",
+      "description": "",
+      "gold": 2500,
+      "icon": "3430.png"
+    },
+    "3504": {
+      "name": "Pebetero Ardiente",
+      "description": "Los efectos de curación y escudos en otras unidades otorgan a ambos velocidad de ataque y sus ataques infligen daño mágico adicional al impacto.",
+      "gold": 2200,
+      "icon": "3504.png"
+    },
+    "3508": {
+      "name": "Saqueador de Esencias",
+      "description": "",
+      "gold": 3050,
+      "icon": "3508.png"
+    },
+    "3513": {
+      "name": "Ojo del Heraldo",
+      "description": "Ojo del Heraldo - Un Regalo del Vacío.",
+      "gold": 0,
+      "icon": "3513.png"
+    },
+    "3599": {
+      "name": "Lanza Negra de Kalista",
+      "description": "La lanza de Kalista que la vincula a un aliado Juramentado.",
+      "gold": 0,
+      "icon": "3599.png"
+    },
+    "3600": {
+      "name": "Lanza Negra de Kalista",
+      "description": "La lanza de Kalista que la vincula a un aliado Juramentado.",
+      "gold": 0,
+      "icon": "3600.png"
+    },
+    "3742": {
+      "name": "Placa del Hombre Muerto",
+      "description": "Ganas impulso al moverte antes de embestir a tus enemigos.",
+      "gold": 2900,
+      "icon": "3742.png"
+    },
+    "3748": {
+      "name": "Hidra Titánica",
+      "description": "Causa daño de área en función de la vida del propietario.",
+      "gold": 3300,
+      "icon": "3748.png"
+    },
+    "3801": {
+      "name": "Brazal Cristalino",
+      "description": "Otorga Vida y Regeneración de Vida.",
+      "gold": 800,
+      "icon": "3801.png"
+    },
+    "3802": {
+      "name": "Capítulo Perdido",
+      "description": "Restaura maná luego de subir de nivel.",
+      "gold": 1200,
+      "icon": "3802.png"
+    },
+    "3803": {
+      "name": "Catalizador de Eones",
+      "description": "",
+      "gold": 1300,
+      "icon": "3803.png"
+    },
+    "3814": {
+      "name": "Filo de la Noche",
+      "description": "Bloquea habilidades enemigas periódicamente.",
+      "gold": 3000,
+      "icon": "3814.png"
+    },
+    "3850": {
+      "name": "Filo del Robahechizos",
+      "description": "Otorga oro y se mejora cuando dañas campeones enemigos.",
+      "gold": 400,
+      "icon": "3850.png"
+    },
+    "3851": {
+      "name": "Colmillo de Escarcha",
+      "description": "",
+      "gold": 400,
+      "icon": "3851.png"
+    },
+    "3853": {
+      "name": "Fragmento de Hielo Puro",
+      "description": "",
+      "gold": 400,
+      "icon": "3853.png"
+    },
+    "3854": {
+      "name": "Hombreras de Acero",
+      "description": "Otorga oro y se mejora cuando ejecutas súbditos junto con aliados.",
+      "gold": 400,
+      "icon": "3854.png"
+    },
+    "3855": {
+      "name": "Hombreras de Acero Rúnico",
+      "description": "",
+      "gold": 400,
+      "icon": "3855.png"
+    },
+    "3857": {
+      "name": "Hombreras de Roca Blanca",
+      "description": "",
+      "gold": 400,
+      "icon": "3857.png"
+    },
+    "3858": {
+      "name": "Escudo Reliquia",
+      "description": "Otorga oro y se mejora cuando ejecutas súbditos junto con aliados.",
+      "gold": 400,
+      "icon": "3858.png"
+    },
+    "3859": {
+      "name": "Escudo de Targón",
+      "description": "",
+      "gold": 400,
+      "icon": "3859.png"
+    },
+    "3860": {
+      "name": "Baluarte de la Montaña",
+      "description": "",
+      "gold": 400,
+      "icon": "3860.png"
+    },
+    "3862": {
+      "name": "Hoz Espectral",
+      "description": "Otorga oro y se mejora cuando dañas campeones enemigos.",
+      "gold": 400,
+      "icon": "3862.png"
+    },
+    "3863": {
+      "name": "Creciente de Sombras",
+      "description": "",
+      "gold": 400,
+      "icon": "3863.png"
+    },
+    "3864": {
+      "name": "Guadaña de Niebla Oscura",
+      "description": "",
+      "gold": 400,
+      "icon": "3864.png"
+    },
+    "3865": {
+      "name": "Mapamundi",
+      "description": "",
+      "gold": 400,
+      "icon": "3865.png"
+    },
+    "3866": {
+      "name": "Brújula Rúnica",
+      "description": "",
+      "gold": 400,
+      "icon": "3866.png"
+    },
+    "3867": {
+      "name": "Recompensa Mundial",
+      "description": "",
+      "gold": 400,
+      "icon": "3867.png"
+    },
+    "3869": {
+      "name": "Oposición Celestial",
+      "description": "",
+      "gold": 400,
+      "icon": "3869.png"
+    },
+    "3870": {
+      "name": "Tejesueños",
+      "description": "",
+      "gold": 400,
+      "icon": "3870.png"
+    },
+    "3871": {
+      "name": "Espina Dimensional de Zaz'Zak",
+      "description": "",
+      "gold": 400,
+      "icon": "3871.png"
+    },
+    "3876": {
+      "name": "Trineo del Solsticio",
+      "description": "",
+      "gold": 400,
+      "icon": "3876.png"
+    },
+    "3877": {
+      "name": "Canción de Sangre",
+      "description": "",
+      "gold": 400,
+      "icon": "3877.png"
+    },
+    "3901": {
+      "name": "<rarityLegendary>Fuego a Discreción</rarityLegendary><br><subtitleLeft><silver>500 Serpientes de Plata</silver></subtitleLeft>",
+      "description": "Descarga de Cañones dispara a un ritmo creciente con el tiempo (6 oleadas adicionales a lo largo del efecto).",
+      "gold": 0,
+      "icon": "3901.png"
+    },
+    "3902": {
+      "name": "<rarityLegendary>Hija de la Muerte</rarityLegendary><br><subtitleLeft><silver>500 Serpientes de Plata</silver></subtitleLeft>",
+      "description": "<mainText>Descarga de Cañones dispara una bala de cañón gigante adicional al centro de la Descarga, la cual inflige <trueDamage>daño verdadero adicional</trueDamage> y <status>ralentiza</status>.</mainText>",
+      "gold": 0,
+      "icon": "3902.png"
+    },
+    "3903": {
+      "name": "<rarityLegendary>Subiendo la Moral</rarityLegendary><br><subtitleLeft><silver>500 Serpientes de Plata</silver></subtitleLeft>",
+      "description": "Los aliados en la Descarga de Cañones obtienen <speed>velocidad de movimiento adicional</speed>.",
+      "gold": 0,
+      "icon": "3903.png"
+    },
+    "3916": {
+      "name": "Orbe del Olvido",
+      "description": "Aumenta el daño mágico.",
+      "gold": 800,
+      "icon": "3916.png"
+    },
+    "4003": {
+      "name": "Salvavidas",
+      "description": "Marca el suelo y te lleva de vuelta a la marca tras unos segundos.",
+      "gold": 1600,
+      "icon": "4003.png"
+    },
+    "4004": {
+      "name": "Sable Espectral",
+      "description": "Marca el suelo y te lleva de vuelta a la marca tras unos segundos.",
+      "gold": 2800,
+      "icon": "4004.png"
+    },
+    "4005": {
+      "name": "Mandato Imperial",
+      "description": "Aplaza el daño recibido.",
+      "gold": 2250,
+      "icon": "4005.png"
+    },
+    "4010": {
+      "name": "Maldición de la Vampiresa",
+      "description": "Obtendrás un escudo antihechizos tras infligir daño a un enemigo con una habilidad.",
+      "gold": 2500,
+      "icon": "4010.png"
+    },
+    "4011": {
+      "name": "Espada del Amanecer Floreciente",
+      "description": "",
+      "gold": 2500,
+      "icon": "4011.png"
+    },
+    "4012": {
+      "name": "Devorador de pecados",
+      "description": "",
+      "gold": 3000,
+      "icon": "4012.png"
+    },
+    "4013": {
+      "name": "Trenza eléctrica",
+      "description": "",
+      "gold": 3000,
+      "icon": "4013.png"
+    },
+    "4014": {
+      "name": "Mazo de Hielo",
+      "description": "",
+      "gold": 3000,
+      "icon": "4014.png"
+    },
+    "4015": {
+      "name": "Perplejidad",
+      "description": "",
+      "gold": 2500,
+      "icon": "4015.png"
+    },
+    "4016": {
+      "name": "Promesa sin Palabras",
+      "description": "",
+      "gold": 2500,
+      "icon": "4016.png"
+    },
+    "4017": {
+      "name": "Hacha de Fuego Infernal",
+      "description": "",
+      "gold": 2500,
+      "icon": "4017.png"
+    },
+    "4401": {
+      "name": "Fuerza de la Naturaleza",
+      "description": "Velocidad de movimiento, resistencia mágica y regen. de vida máxima",
+      "gold": 2800,
+      "icon": "4401.png"
+    },
+    "4402": {
+      "name": "Relicario Enervante",
+      "description": "Lanza hechizos para curar",
+      "gold": 2950,
+      "icon": "4402.png"
+    },
+    "4403": {
+      "name": "La Espátula Dorada",
+      "description": "¡Lo hace TODO!",
+      "gold": 7187,
+      "icon": "4403.png"
+    },
+    "4628": {
+      "name": "Enfoque al Horizonte",
+      "description": "Inmovilizar a un campeón hace que le caiga un rayo.",
+      "gold": 2700,
+      "icon": "4628.png"
+    },
+    "4629": {
+      "name": "Impulso Cósmico",
+      "description": "Grandes cantidades de reducción de enfriamiento.",
+      "gold": 3000,
+      "icon": "4629.png"
+    },
+    "4630": {
+      "name": "Joya Maldita",
+      "description": "",
+      "gold": 1100,
+      "icon": "4630.png"
+    },
+    "4632": {
+      "name": "Barrera Esmeralda",
+      "description": "",
+      "gold": 1600,
+      "icon": "4632.png"
+    },
+    "4633": {
+      "name": "Agrietador",
+      "description": "",
+      "gold": 3100,
+      "icon": "4633.png"
+    },
+    "4635": {
+      "name": "Mirada Absorbente",
+      "description": "",
+      "gold": 1265,
+      "icon": "4635.png"
+    },
+    "4636": {
+      "name": "Cosechador Nocturno",
+      "description": "",
+      "gold": 2765,
+      "icon": "4636.png"
+    },
+    "4637": {
+      "name": "Abrazo Demoniaco",
+      "description": "",
+      "gold": 3000,
+      "icon": "4637.png"
+    },
+    "4638": {
+      "name": "Piedravigía Observadora",
+      "description": "",
+      "gold": 1100,
+      "icon": "4638.png"
+    },
+    "4641": {
+      "name": "Piedravigía Agitadora",
+      "description": "",
+      "gold": 350,
+      "icon": "4641.png"
+    },
+    "4642": {
+      "name": "Espejo de Vitrobandle",
+      "description": "",
+      "gold": 900,
+      "icon": "4642.png"
+    },
+    "4643": {
+      "name": "Piedravigía Alerta",
+      "description": "",
+      "gold": 2300,
+      "icon": "4643.png"
+    },
+    "4644": {
+      "name": "Corona de la Reina Fragmentada",
+      "description": "",
+      "gold": 2865,
+      "icon": "4644.png"
+    },
+    "4645": {
+      "name": "Lumbría",
+      "description": "",
+      "gold": 3200,
+      "icon": "4645.png"
+    },
+    "4646": {
+      "name": "Descarga Tormentosa",
+      "description": "",
+      "gold": 2800,
+      "icon": "4646.png"
+    },
+    "6029": {
+      "name": "Látigo Férreo",
+      "description": "",
+      "gold": 1100,
+      "icon": "6029.png"
+    },
+    "6032": {
+      "name": "Estadística adicional",
+      "description": "",
+      "gold": 750,
+      "icon": "6032.png"
+    },
+    "6035": {
+      "name": "Amanecer Plateado",
+      "description": "",
+      "gold": 3000,
+      "icon": "6035.png"
+    },
+    "6333": {
+      "name": "Danza de la Muerte",
+      "description": "",
+      "gold": 3300,
+      "icon": "6333.png"
+    },
+    "6609": {
+      "name": "Sierraespada Quimpunk",
+      "description": "",
+      "gold": 3000,
+      "icon": "6609.png"
+    },
+    "6610": {
+      "name": "Cielo Desgarrado",
+      "description": "",
+      "gold": 3100,
+      "icon": "6610.png"
+    },
+    "6616": {
+      "name": "Báculo de Agua Fluyente",
+      "description": "Tus curaciones y escudos reducen los efectos de control de masas y otorgan velocidad de movimiento.",
+      "gold": 2250,
+      "icon": "6616.png"
+    },
+    "6617": {
+      "name": "Renovador de Piedra Lunar",
+      "description": "Tus curaciones y escudos tienen un menor enfriamiento y un mayor efecto en aliados con vida baja.",
+      "gold": 2200,
+      "icon": "6617.png"
+    },
+    "6620": {
+      "name": "Ecos de Helia",
+      "description": "Inflige daño a enemigos con poca vida para activar una explosión maldita, que inflige daño y ralentiza a los enemigos cercanos.",
+      "gold": 2200,
+      "icon": "6620.png"
+    },
+    "6621": {
+      "name": "Esfera del Amanecer",
+      "description": "",
+      "gold": 2500,
+      "icon": "6621.png"
+    },
+    "6630": {
+      "name": "Bebedor de Sangre",
+      "description": "",
+      "gold": 3200,
+      "icon": "6630.png"
+    },
+    "6631": {
+      "name": "Rompeavances",
+      "description": "",
+      "gold": 3300,
+      "icon": "6631.png"
+    },
+    "6632": {
+      "name": "Cercenador Divino",
+      "description": "",
+      "gold": 3450,
+      "icon": "6632.png"
+    },
+    "6653": {
+      "name": "El Tormento de Liandry",
+      "description": "Cárgalo en combate para infligir una gran cantidad de daño prolongado, en especial contra enemigos resistentes.",
+      "gold": 3000,
+      "icon": "6653.png"
+    },
+    "6655": {
+      "name": "Eco de Luden",
+      "description": "Daño súbito alto, útil contra enemigos frágiles.",
+      "gold": 2750,
+      "icon": "6655.png"
+    },
+    "6656": {
+      "name": "Hielo Eterno",
+      "description": "",
+      "gold": 2865,
+      "icon": "6656.png"
+    },
+    "6657": {
+      "name": "Vara de las Edades",
+      "description": "",
+      "gold": 2600,
+      "icon": "6657.png"
+    },
+    "6660": {
+      "name": "Ceniza de Bami",
+      "description": "",
+      "gold": 900,
+      "icon": "6660.png"
+    },
+    "6662": {
+      "name": "Guantelete del Hijo del Hielo",
+      "description": "Resistencia mágica alta. Ralentiza de forma pasiva a los enemigos cercanos. Cuando se lancen hechizos cerca de ti, lanza una ola de energía que inflige daño y ralentiza.",
+      "gold": 2900,
+      "icon": "6662.png"
+    },
+    "6664": {
+      "name": "Resplandor Vacío",
+      "description": "Inmoviliza a los enemigos para obtener un escudo. Actívalo para correr más rápido hacia los oponentes.",
+      "gold": 2800,
+      "icon": "6664.png"
+    },
+    "6665": {
+      "name": "Jak'Sho, el Proteico",
+      "description": "",
+      "gold": 3200,
+      "icon": "6665.png"
+    },
+    "6667": {
+      "name": "Virtud Radiante",
+      "description": "",
+      "gold": 2600,
+      "icon": "6667.png"
+    },
+    "6670": {
+      "name": "Carcaj de Mediodía",
+      "description": "",
+      "gold": 1300,
+      "icon": "6670.png"
+    },
+    "6671": {
+      "name": "Fuerza del Viento",
+      "description": "",
+      "gold": 3500,
+      "icon": "6671.png"
+    },
+    "6672": {
+      "name": "Matakrakens",
+      "description": "",
+      "gold": 3000,
+      "icon": "6672.png"
+    },
+    "6673": {
+      "name": "Arcoescudo Inmortal",
+      "description": "",
+      "gold": 3000,
+      "icon": "6673.png"
+    },
+    "6675": {
+      "name": "Cuchilla Rauda de Navori",
+      "description": "",
+      "gold": 2650,
+      "icon": "6675.png"
+    },
+    "6676": {
+      "name": "El Coleccionista",
+      "description": "",
+      "gold": 3000,
+      "icon": "6676.png"
+    },
+    "6677": {
+      "name": "Cuchillo de Furia",
+      "description": "",
+      "gold": 1100,
+      "icon": "6677.png"
+    },
+    "6690": {
+      "name": "Rectriz",
+      "description": "",
+      "gold": 775,
+      "icon": "6690.png"
+    },
+    "6691": {
+      "name": "Hoja Crepuscular de Draktharr",
+      "description": "",
+      "gold": 2950,
+      "icon": "6691.png"
+    },
+    "6692": {
+      "name": "Eclipse",
+      "description": "",
+      "gold": 2900,
+      "icon": "6692.png"
+    },
+    "6693": {
+      "name": "Garra del Merodeador",
+      "description": "",
+      "gold": 2850,
+      "icon": "6693.png"
+    },
+    "6694": {
+      "name": "Rencor de Serylda",
+      "description": "",
+      "gold": 3000,
+      "icon": "6694.png"
+    },
+    "6695": {
+      "name": "Colmillo de Serpiente",
+      "description": "",
+      "gold": 2500,
+      "icon": "6695.png"
+    },
+    "6696": {
+      "name": "Arco Axiomático",
+      "description": "",
+      "gold": 2750,
+      "icon": "6696.png"
+    },
+    "6697": {
+      "name": "Arrogancia",
+      "description": "",
+      "gold": 2800,
+      "icon": "6697.png"
+    },
+    "6698": {
+      "name": "Hidra Profana",
+      "description": "",
+      "gold": 2850,
+      "icon": "6698.png"
+    },
+    "6699": {
+      "name": "Cicloespada Voltaica",
+      "description": "",
+      "gold": 2900,
+      "icon": "6699.png"
+    },
+    "6700": {
+      "name": "Escudo de los Rakkor",
+      "description": "",
+      "gold": 2675,
+      "icon": "6700.png"
+    },
+    "6701": {
+      "name": "Oportunidades",
+      "description": "",
+      "gold": 2700,
+      "icon": "6701.png"
+    },
+    "6702": {
+      "name": "Exploración de Avanzada",
+      "description": "",
+      "gold": 0,
+      "icon": "6702.png"
+    },
+    "7050": {
+      "name": "Marcador de Gangplank",
+      "description": "¡Próximamente vendrá una nueva interfaz al estilo de Gangplank!",
+      "gold": 0,
+      "icon": "7050.png"
+    },
+    "8001": {
+      "name": "Cadenas de Anatema",
+      "description": "",
+      "gold": 2500,
+      "icon": "8001.png"
+    },
+    "8010": {
+      "name": "Maldición de la Vampiresa",
+      "description": "",
+      "gold": 2900,
+      "icon": "8010.png"
+    },
+    "8020": {
+      "name": "Máscara Abisal",
+      "description": "",
+      "gold": 2650,
+      "icon": "8020.png"
+    },
+    "9168": {
+      "name": "Ranura de arma bloqueada",
+      "description": "",
+      "gold": 0,
+      "icon": "9168.png"
+    },
+    "9171": {
+      "name": "Shurikens Ciclónicos",
+      "description": "",
+      "gold": 0,
+      "icon": "9171.png"
+    },
+    "9172": {
+      "name": "Bot Yuumi",
+      "description": "",
+      "gold": 0,
+      "icon": "9172.png"
+    },
+    "9173": {
+      "name": "Campo Radiante",
+      "description": "",
+      "gold": 0,
+      "icon": "9173.png"
+    },
+    "9174": {
+      "name": "Espada de Statikk",
+      "description": "",
+      "gold": 0,
+      "icon": "9174.png"
+    },
+    "9175": {
+      "name": "Lamento de la Leona",
+      "description": "",
+      "gold": 0,
+      "icon": "9175.png"
+    },
+    "9176": {
+      "name": "Rotocañón Conejo",
+      "description": "",
+      "gold": 0,
+      "icon": "9176.png"
+    },
+    "9177": {
+      "name": "Arco Corto Abrasador",
+      "description": "",
+      "gold": 0,
+      "icon": "9177.png"
+    },
+    "9178": {
+      "name": "Annichilatus",
+      "description": "",
+      "gold": 0,
+      "icon": "9178.png"
+    },
+    "9179": {
+      "name": "Ballesta de Conejita Guerrera",
+      "description": "",
+      "gold": 0,
+      "icon": "9179.png"
+    },
+    "9180": {
+      "name": "Bláster UwU",
+      "description": "",
+      "gold": 0,
+      "icon": "9180.png"
+    },
+    "9181": {
+      "name": "Guante del Vórtice",
+      "description": "",
+      "gold": 0,
+      "icon": "9181.png"
+    },
+    "9183": {
+      "name": "Búmespada",
+      "description": "",
+      "gold": 0,
+      "icon": "9183.png"
+    },
+    "9184": {
+      "name": "Estación Orbital Conejo",
+      "description": "",
+      "gold": 0,
+      "icon": "9184.png"
+    },
+    "9185": {
+      "name": "Mina Marina Antitiburones",
+      "description": "",
+      "gold": 0,
+      "icon": "9185.png"
+    },
+    "9187": {
+      "name": "T.I.B.B.E.R.S.",
+      "description": "",
+      "gold": 0,
+      "icon": "9187.png"
+    },
+    "9188": {
+      "name": "C-4nejo",
+      "description": "",
+      "gold": 0,
+      "icon": "9188.png"
+    },
+    "9189": {
+      "name": "El Desarmador",
+      "description": "",
+      "gold": 0,
+      "icon": "9189.png"
+    },
+    "9190": {
+      "name": "Econavajas",
+      "description": "",
+      "gold": 0,
+      "icon": "9190.png"
+    },
+    "9192": {
+      "name": "Envenenacaminos",
+      "description": "",
+      "gold": 0,
+      "icon": "9192.png"
+    },
+    "9193": {
+      "name": "Escarcharmadura",
+      "description": "",
+      "gold": 0,
+      "icon": "9193.png"
+    },
+    "9271": {
+      "name": "Ciclón Incesante",
+      "description": "",
+      "gold": 0,
+      "icon": "9271.png"
+    },
+    "9272": {
+      "name": "YuumiBot_Final_FINAL",
+      "description": "",
+      "gold": 0,
+      "icon": "9272.png"
+    },
+    "9273": {
+      "name": "Abrazo Explosivo",
+      "description": "",
+      "gold": 0,
+      "icon": "9273.png"
+    },
+    "9274": {
+      "name": "Electrogubia de Prumbis",
+      "description": "",
+      "gold": 0,
+      "icon": "9274.png"
+    },
+    "9275": {
+      "name": "Luz Envolvente",
+      "description": "",
+      "gold": 0,
+      "icon": "9275.png"
+    },
+    "9276": {
+      "name": "Rotocañón Conejo Doble",
+      "description": "",
+      "gold": 0,
+      "icon": "9276.png"
+    },
+    "9277": {
+      "name": "Tirabraza Evolucionado",
+      "description": "",
+      "gold": 0,
+      "icon": "9277.png"
+    },
+    "9278": {
+      "name": "Apocalyptus",
+      "description": "",
+      "gold": 0,
+      "icon": "9278.png"
+    },
+    "9279": {
+      "name": "Balista Conejita Suprema",
+      "description": "",
+      "gold": 0,
+      "icon": "9279.png"
+    },
+    "9280": {
+      "name": "Bláster OwO",
+      "description": "",
+      "gold": 0,
+      "icon": "9280.png"
+    },
+    "9281": {
+      "name": "Guantelete de la Tempestad",
+      "description": "",
+      "gold": 0,
+      "icon": "9281.png"
+    },
+    "9283": {
+      "name": "Búmeran Cuádruple",
+      "description": "",
+      "gold": 0,
+      "icon": "9283.png"
+    },
+    "9284": {
+      "name": "Cañón Conejo Cuántico",
+      "description": "",
+      "gold": 0,
+      "icon": "9284.png"
+    },
+    "9285": {
+      "name": "Machacahordas Infinito",
+      "description": "",
+      "gold": 0,
+      "icon": "9285.png"
+    },
+    "9287": {
+      "name": "T.I.B.B.E.R.S. (Modo M.A.C.I.Z.O.)",
+      "description": "",
+      "gold": 0,
+      "icon": "9287.png"
+    },
+    "9288": {
+      "name": "Trinamita de Jinx",
+      "description": "",
+      "gold": 0,
+      "icon": "9288.png"
+    },
+    "9289": {
+      "name": "Expreso GG",
+      "description": "",
+      "gold": 0,
+      "icon": "9289.png"
+    },
+    "9290": {
+      "name": "Flechas Cromáticas de Vayne",
+      "description": "",
+      "gold": 0,
+      "icon": "9290.png"
+    },
+    "9292": {
+      "name": "Dispensador VenenOso",
+      "description": "",
+      "gold": 0,
+      "icon": "9292.png"
+    },
+    "9293": {
+      "name": "Congelación Profunda",
+      "description": "",
+      "gold": 0,
+      "icon": "9293.png"
+    },
+    "9300": {
+      "name": "Miau Miau",
+      "description": "",
+      "gold": 0,
+      "icon": "9300.png"
+    },
+    "9301": {
+      "name": "Escudazo",
+      "description": "",
+      "gold": 0,
+      "icon": "9301.png"
+    },
+    "9302": {
+      "name": "Onda Sonora",
+      "description": "",
+      "gold": 0,
+      "icon": "9302.png"
+    },
+    "9303": {
+      "name": "Patada de Tiburón",
+      "description": "",
+      "gold": 0,
+      "icon": "9303.png"
+    },
+    "9304": {
+      "name": "Tempestad de Acero",
+      "description": "",
+      "gold": 0,
+      "icon": "9304.png"
+    },
+    "9305": {
+      "name": "Ataque de Tentáculo",
+      "description": "",
+      "gold": 0,
+      "icon": "9305.png"
+    },
+    "9306": {
+      "name": "Daga Alada",
+      "description": "",
+      "gold": 0,
+      "icon": "9306.png"
+    },
+    "9307": {
+      "name": "Maleficio Guiado",
+      "description": "",
+      "gold": 0,
+      "icon": "9307.png"
+    },
+    "9308": {
+      "name": "Salto de Conejo",
+      "description": "",
+      "gold": 0,
+      "icon": "9308.png"
+    },
+    "9400": {
+      "name": "Salva de Michi Guerrera",
+      "description": "",
+      "gold": 0,
+      "icon": "9400.png"
+    },
+    "9401": {
+      "name": "Luz del León",
+      "description": "",
+      "gold": 0,
+      "icon": "9401.png"
+    },
+    "9402": {
+      "name": "Eco Animalia",
+      "description": "",
+      "gold": 0,
+      "icon": "9402.png"
+    },
+    "9403": {
+      "name": "Corte Salvaje",
+      "description": "",
+      "gold": 0,
+      "icon": "9403.png"
+    },
+    "9404": {
+      "name": "Tormentas Errantes",
+      "description": "",
+      "gold": 0,
+      "icon": "9404.png"
+    },
+    "9405": {
+      "name": "Impacto Grizzly",
+      "description": "",
+      "gold": 0,
+      "icon": "9405.png"
+    },
+    "9406": {
+      "name": "Daga del Amor",
+      "description": "",
+      "gold": 0,
+      "icon": "9406.png"
+    },
+    "9407": {
+      "name": "Maleficio Mejorado",
+      "description": "",
+      "gold": 0,
+      "icon": "9407.png"
+    },
+    "9408": {
+      "name": "Zanahoriazo",
+      "description": "",
+      "gold": 0,
+      "icon": "9408.png"
+    },
+    "123430": {
+      "name": "Rito de Ruina",
+      "description": "",
+      "gold": 3000,
+      "icon": "123430.png"
+    },
+    "124011": {
+      "name": "Espada del Amanecer Floreciente",
+      "description": "",
+      "gold": 2350,
+      "icon": "124011.png"
+    },
+    "126697": {
+      "name": "Arrogancia",
+      "description": "",
+      "gold": 2950,
+      "icon": "126697.png"
+    },
+    "220000": {
+      "name": "Estadística adicional",
+      "description": "",
+      "gold": 750,
+      "icon": "220000.png"
+    },
+    "220001": {
+      "name": "Objeto de Peleador Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220001.png"
+    },
+    "220002": {
+      "name": "Objeto de Tirador Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220002.png"
+    },
+    "220003": {
+      "name": "Objeto de Asesino Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220003.png"
+    },
+    "220004": {
+      "name": "Objeto de Mago Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220004.png"
+    },
+    "220005": {
+      "name": "Objeto de Tanque Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220005.png"
+    },
+    "220006": {
+      "name": "Objeto de Soporte Legendario",
+      "description": "",
+      "gold": 2250,
+      "icon": "220006.png"
+    },
+    "220007": {
+      "name": "Objeto Prismático",
+      "description": "",
+      "gold": 4000,
+      "icon": "220007.png"
+    },
+    "220008": {
+      "name": "Cupón de Yunques",
+      "description": "",
+      "gold": 750,
+      "icon": "220008.png"
+    },
+    "220009": {
+      "name": "Cupón de Yunque de estadísticas de Oro",
+      "description": "",
+      "gold": 750,
+      "icon": "220009.png"
+    },
+    "220010": {
+      "name": "Cupón de Estadísticas Prismático",
+      "description": "",
+      "gold": 750,
+      "icon": "220010.png"
+    },
+    "220011": {
+      "name": "Cupón de Valentía",
+      "description": "",
+      "gold": 750,
+      "icon": "220011.png"
+    },
+    "220012": {
+      "name": "Espada Fragmentada",
+      "description": "",
+      "gold": 2500,
+      "icon": "220012.png"
+    },
+    "221011": {
+      "name": "Cinturón de Gigante",
+      "description": "",
+      "gold": 500,
+      "icon": "221011.png"
+    },
+    "221026": {
+      "name": "Varita Explosiva",
+      "description": "",
+      "gold": 500,
+      "icon": "221026.png"
+    },
+    "221031": {
+      "name": "Cota de Malla",
+      "description": "",
+      "gold": 500,
+      "icon": "221031.png"
+    },
+    "221038": {
+      "name": "Espadón",
+      "description": "",
+      "gold": 1300,
+      "icon": "221038.png"
+    },
+    "221043": {
+      "name": "Arco Recurvado",
+      "description": "",
+      "gold": 500,
+      "icon": "221043.png"
+    },
+    "221053": {
+      "name": "Cetro Vampírico",
+      "description": "",
+      "gold": 500,
+      "icon": "221053.png"
+    },
+    "221057": {
+      "name": "Capa de Negatrones",
+      "description": "",
+      "gold": 450,
+      "icon": "221057.png"
+    },
+    "221058": {
+      "name": "Vara Innecesariamente Grande",
+      "description": "",
+      "gold": 500,
+      "icon": "221058.png"
+    },
+    "222022": {
+      "name": "Mena Brillante",
+      "description": "",
+      "gold": 250,
+      "icon": "222022.png"
+    },
+    "222051": {
+      "name": "Cuerno del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "222051.png"
+    },
+    "222065": {
+      "name": "Canto de Guerra de Shurelya",
+      "description": "",
+      "gold": 2500,
+      "icon": "222065.png"
+    },
+    "222141": {
+      "name": "Juguito de Gorrito",
+      "description": "",
+      "gold": 500,
+      "icon": "222141.png"
+    },
+    "222502": {
+      "name": "Desesperación Eterna",
+      "description": "",
+      "gold": 2500,
+      "icon": "222502.png"
+    },
+    "222503": {
+      "name": "Antorcha de Fuegoscuro",
+      "description": "",
+      "gold": 2500,
+      "icon": "222503.png"
+    },
+    "222504": {
+      "name": "Rukerno Kaénico",
+      "description": "",
+      "gold": 2500,
+      "icon": "222504.png"
+    },
+    "222510": {
+      "name": "Ocaso y Alba",
+      "description": "",
+      "gold": 2500,
+      "icon": "222510.png"
+    },
+    "222512": {
+      "name": "Proyectiles Cazademonios",
+      "description": "",
+      "gold": 2500,
+      "icon": "222512.png"
+    },
+    "222517": {
+      "name": "Hambre Infinita",
+      "description": "",
+      "gold": 2500,
+      "icon": "222517.png"
+    },
+    "222522": {
+      "name": "Actualizador",
+      "description": "",
+      "gold": 2500,
+      "icon": "222522.png"
+    },
+    "222523": {
+      "name": "Hexóptica C44",
+      "description": "",
+      "gold": 2500,
+      "icon": "222523.png"
+    },
+    "222524": {
+      "name": "Flautas de Bandle",
+      "description": "",
+      "gold": 2500,
+      "icon": "222524.png"
+    },
+    "222525": {
+      "name": "Arnés de Protoplasma",
+      "description": "",
+      "gold": 2500,
+      "icon": "222525.png"
+    },
+    "222526": {
+      "name": "Tiara Susurrante",
+      "description": "",
+      "gold": 2500,
+      "icon": "222526.png"
+    },
+    "222530": {
+      "name": "Diadema Musical",
+      "description": "",
+      "gold": 2500,
+      "icon": "222530.png"
+    },
+    "223001": {
+      "name": "Manto del Ocaso",
+      "description": "",
+      "gold": 2500,
+      "icon": "223001.png"
+    },
+    "223002": {
+      "name": "Abrecaminos",
+      "description": "",
+      "gold": 2500,
+      "icon": "223002.png"
+    },
+    "223003": {
+      "name": "Báculo del Arcángel",
+      "description": "",
+      "gold": 2500,
+      "icon": "223003.png"
+    },
+    "223004": {
+      "name": "Manamune",
+      "description": "",
+      "gold": 2500,
+      "icon": "223004.png"
+    },
+    "223005": {
+      "name": "Ghostcrawlers",
+      "description": "",
+      "gold": 500,
+      "icon": "223005.png"
+    },
+    "223006": {
+      "name": "Grebas del Berserker",
+      "description": "",
+      "gold": 500,
+      "icon": "223006.png"
+    },
+    "223008": {
+      "name": "Grebas Glotonas",
+      "description": "",
+      "gold": 500,
+      "icon": "223008.png"
+    },
+    "223009": {
+      "name": "Botas de Rapidez",
+      "description": "",
+      "gold": 500,
+      "icon": "223009.png"
+    },
+    "223011": {
+      "name": "Putrificador Quimtech",
+      "description": "",
+      "gold": 1900,
+      "icon": "223011.png"
+    },
+    "223020": {
+      "name": "Botas del Hechicero",
+      "description": "",
+      "gold": 500,
+      "icon": "223020.png"
+    },
+    "223026": {
+      "name": "Ángel Guardián",
+      "description": "",
+      "gold": 2500,
+      "icon": "223026.png"
+    },
+    "223031": {
+      "name": "Filo del Infinito",
+      "description": "",
+      "gold": 2500,
+      "icon": "223031.png"
+    },
+    "223032": {
+      "name": "Flechas Salvajes de Yun Tal",
+      "description": "",
+      "gold": 2500,
+      "icon": "223032.png"
+    },
+    "223033": {
+      "name": "Recordatorio Mortal",
+      "description": "",
+      "gold": 2500,
+      "icon": "223033.png"
+    },
+    "223036": {
+      "name": "Recuerdos de Lord Dominik",
+      "description": "",
+      "gold": 2500,
+      "icon": "223036.png"
+    },
+    "223039": {
+      "name": "Juicio de Atma",
+      "description": "",
+      "gold": 2500,
+      "icon": "223039.png"
+    },
+    "223040": {
+      "name": "Abrazo del Serafín",
+      "description": "",
+      "gold": 2500,
+      "icon": "223040.png"
+    },
+    "223042": {
+      "name": "Muramaná",
+      "description": "",
+      "gold": 2500,
+      "icon": "223042.png"
+    },
+    "223046": {
+      "name": "Bailarín Espectral",
+      "description": "",
+      "gold": 2500,
+      "icon": "223046.png"
+    },
+    "223047": {
+      "name": "Punteras de Acero Revestidas",
+      "description": "",
+      "gold": 500,
+      "icon": "223047.png"
+    },
+    "223050": {
+      "name": "Convergencia de Zeke",
+      "description": "",
+      "gold": 2500,
+      "icon": "223050.png"
+    },
+    "223053": {
+      "name": "Guantelete de Sterak",
+      "description": "",
+      "gold": 2500,
+      "icon": "223053.png"
+    },
+    "223057": {
+      "name": "Brillo",
+      "description": "",
+      "gold": 2500,
+      "icon": "223057.png"
+    },
+    "223065": {
+      "name": "Apariencia Espiritual",
+      "description": "",
+      "gold": 2500,
+      "icon": "223065.png"
+    },
+    "223067": {
+      "name": "Gemaluz",
+      "description": "",
+      "gold": 500,
+      "icon": "223067.png"
+    },
+    "223068": {
+      "name": "Égida de Fuego Solar",
+      "description": "",
+      "gold": 2500,
+      "icon": "223068.png"
+    },
+    "223069": {
+      "name": "Inmolación del Vacío",
+      "description": "",
+      "gold": 6000,
+      "icon": "223069.png"
+    },
+    "223071": {
+      "name": "Cuchilla Oscura",
+      "description": "",
+      "gold": 2500,
+      "icon": "223071.png"
+    },
+    "223072": {
+      "name": "La Sanguinaria",
+      "description": "",
+      "gold": 2500,
+      "icon": "223072.png"
+    },
+    "223073": {
+      "name": "Placa Hexperimental",
+      "description": "",
+      "gold": 2500,
+      "icon": "223073.png"
+    },
+    "223074": {
+      "name": "Hidra Voraz",
+      "description": "",
+      "gold": 2500,
+      "icon": "223074.png"
+    },
+    "223075": {
+      "name": "Cota de Espinas",
+      "description": "",
+      "gold": 2500,
+      "icon": "223075.png"
+    },
+    "223078": {
+      "name": "Fuerza de la Trinidad",
+      "description": "",
+      "gold": 2500,
+      "icon": "223078.png"
+    },
+    "223084": {
+      "name": "Corazón de Acero",
+      "description": "",
+      "gold": 2500,
+      "icon": "223084.png"
+    },
+    "223085": {
+      "name": "Huracán de Runaan",
+      "description": "",
+      "gold": 2500,
+      "icon": "223085.png"
+    },
+    "223087": {
+      "name": "Daga de Statikk",
+      "description": "",
+      "gold": 2500,
+      "icon": "223087.png"
+    },
+    "223089": {
+      "name": "Sombrero Mortífero de Rabadon",
+      "description": "",
+      "gold": 2500,
+      "icon": "223089.png"
+    },
+    "223091": {
+      "name": "Al Filo de la Cordura",
+      "description": "",
+      "gold": 2500,
+      "icon": "223091.png"
+    },
+    "223094": {
+      "name": "Cañón de Fuego Rápido",
+      "description": "",
+      "gold": 2500,
+      "icon": "223094.png"
+    },
+    "223095": {
+      "name": "Filo de la Tormenta",
+      "description": "",
+      "gold": 2500,
+      "icon": "223095.png"
+    },
+    "223100": {
+      "name": "Maldición del Liche",
+      "description": "",
+      "gold": 2500,
+      "icon": "223100.png"
+    },
+    "223102": {
+      "name": "Velo de la Banshee",
+      "description": "",
+      "gold": 2500,
+      "icon": "223102.png"
+    },
+    "223105": {
+      "name": "Égida de la Legión",
+      "description": "",
+      "gold": 500,
+      "icon": "223105.png"
+    },
+    "223107": {
+      "name": "Redención",
+      "description": "",
+      "gold": 2500,
+      "icon": "223107.png"
+    },
+    "223109": {
+      "name": "Promesa del Caballero",
+      "description": "",
+      "gold": 2500,
+      "icon": "223109.png"
+    },
+    "223110": {
+      "name": "Corazón de Hielo",
+      "description": "",
+      "gold": 2500,
+      "icon": "223110.png"
+    },
+    "223111": {
+      "name": "Botas de Mercurio",
+      "description": "",
+      "gold": 500,
+      "icon": "223111.png"
+    },
+    "223112": {
+      "name": "Orbe del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "223112.png"
+    },
+    "223115": {
+      "name": "Diente de Nashor",
+      "description": "",
+      "gold": 2500,
+      "icon": "223115.png"
+    },
+    "223116": {
+      "name": "Cetro de Cristal de Rylai",
+      "description": "",
+      "gold": 2500,
+      "icon": "223116.png"
+    },
+    "223118": {
+      "name": "Maldad",
+      "description": "",
+      "gold": 2500,
+      "icon": "223118.png"
+    },
+    "223119": {
+      "name": "Umbral del Invierno",
+      "description": "",
+      "gold": 2500,
+      "icon": "223119.png"
+    },
+    "223121": {
+      "name": "Invierno Nórdico",
+      "description": "",
+      "gold": 2500,
+      "icon": "223121.png"
+    },
+    "223124": {
+      "name": "Espadafuria de Guinsoo",
+      "description": "",
+      "gold": 2500,
+      "icon": "223124.png"
+    },
+    "223135": {
+      "name": "Báculo del Vacío",
+      "description": "",
+      "gold": 2500,
+      "icon": "223135.png"
+    },
+    "223137": {
+      "name": "Criptorretoño",
+      "description": "",
+      "gold": 2500,
+      "icon": "223137.png"
+    },
+    "223139": {
+      "name": "Cimitarra Mercurial",
+      "description": "",
+      "gold": 2500,
+      "icon": "223139.png"
+    },
+    "223142": {
+      "name": "Espada Fantasma de Youmuu",
+      "description": "",
+      "gold": 2500,
+      "icon": "223142.png"
+    },
+    "223143": {
+      "name": "Presagio de Randuin",
+      "description": "",
+      "gold": 2500,
+      "icon": "223143.png"
+    },
+    "223146": {
+      "name": "Sablepistola Hextech",
+      "description": "",
+      "gold": 2500,
+      "icon": "223146.png"
+    },
+    "223152": {
+      "name": "Cinturón Cohete Hextech",
+      "description": "",
+      "gold": 2500,
+      "icon": "223152.png"
+    },
+    "223153": {
+      "name": "Espada del Rey Arruinado",
+      "description": "",
+      "gold": 2500,
+      "icon": "223153.png"
+    },
+    "223156": {
+      "name": "Fauces de Malmortius",
+      "description": "",
+      "gold": 2500,
+      "icon": "223156.png"
+    },
+    "223157": {
+      "name": "Reloj de Arena de Zhonya",
+      "description": "",
+      "gold": 2500,
+      "icon": "223157.png"
+    },
+    "223158": {
+      "name": "Botas Jonias de la Lucidez",
+      "description": "",
+      "gold": 500,
+      "icon": "223158.png"
+    },
+    "223161": {
+      "name": "Lanza de Shojin",
+      "description": "",
+      "gold": 2500,
+      "icon": "223161.png"
+    },
+    "223165": {
+      "name": "Morellonomicón",
+      "description": "",
+      "gold": 2500,
+      "icon": "223165.png"
+    },
+    "223172": {
+      "name": "Céfiro",
+      "description": "",
+      "gold": 2500,
+      "icon": "223172.png"
+    },
+    "223177": {
+      "name": "Espada del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "223177.png"
+    },
+    "223181": {
+      "name": "Rompecascos",
+      "description": "",
+      "gold": 2500,
+      "icon": "223181.png"
+    },
+    "223184": {
+      "name": "Martillo del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "223184.png"
+    },
+    "223185": {
+      "name": "Daga del Guardián",
+      "description": "",
+      "gold": 500,
+      "icon": "223185.png"
+    },
+    "223190": {
+      "name": "Relicario de los Solari de Hierro",
+      "description": "",
+      "gold": 2500,
+      "icon": "223190.png"
+    },
+    "223193": {
+      "name": "Armadura Pétrea",
+      "description": "",
+      "gold": 2500,
+      "icon": "223193.png"
+    },
+    "223222": {
+      "name": "Bendición de Mikael",
+      "description": "",
+      "gold": 2500,
+      "icon": "223222.png"
+    },
+    "223302": {
+      "name": "Terminus",
+      "description": "",
+      "gold": 2500,
+      "icon": "223302.png"
+    },
+    "223504": {
+      "name": "Pebetero Ardiente",
+      "description": "",
+      "gold": 2500,
+      "icon": "223504.png"
+    },
+    "223508": {
+      "name": "Saqueador de Esencias",
+      "description": "",
+      "gold": 2500,
+      "icon": "223508.png"
+    },
+    "223742": {
+      "name": "Placa del Hombre Muerto",
+      "description": "",
+      "gold": 2500,
+      "icon": "223742.png"
+    },
+    "223748": {
+      "name": "Hidra Titánica",
+      "description": "",
+      "gold": 2500,
+      "icon": "223748.png"
+    },
+    "223814": {
+      "name": "Filo de la Noche",
+      "description": "",
+      "gold": 2500,
+      "icon": "223814.png"
+    },
+    "224004": {
+      "name": "Sable Espectral",
+      "description": "",
+      "gold": 2500,
+      "icon": "224004.png"
+    },
+    "224005": {
+      "name": "Mandato Imperial",
+      "description": "",
+      "gold": 2500,
+      "icon": "224005.png"
+    },
+    "224401": {
+      "name": "Fuerza de la Naturaleza",
+      "description": "",
+      "gold": 2500,
+      "icon": "224401.png"
+    },
+    "224403": {
+      "name": "La Espátula Dorada",
+      "description": "",
+      "gold": 2500,
+      "icon": "224403.png"
+    },
+    "224628": {
+      "name": "Enfoque al Horizonte",
+      "description": "",
+      "gold": 2500,
+      "icon": "224628.png"
+    },
+    "224629": {
+      "name": "Impulso Cósmico",
+      "description": "",
+      "gold": 2500,
+      "icon": "224629.png"
+    },
+    "224633": {
+      "name": "Agrietador",
+      "description": "",
+      "gold": 2500,
+      "icon": "224633.png"
+    },
+    "224636": {
+      "name": "Cosechador Nocturno",
+      "description": "",
+      "gold": 2500,
+      "icon": "224636.png"
+    },
+    "224637": {
+      "name": "Abrazo Demoníaco",
+      "description": "",
+      "gold": 2500,
+      "icon": "224637.png"
+    },
+    "224644": {
+      "name": "Corona de la Reina Fragmentada",
+      "description": "",
+      "gold": 2500,
+      "icon": "224644.png"
+    },
+    "224645": {
+      "name": "Lumbría",
+      "description": "",
+      "gold": 2500,
+      "icon": "224645.png"
+    },
+    "224646": {
+      "name": "Descarga Tormentosa",
+      "description": "",
+      "gold": 2500,
+      "icon": "224646.png"
+    },
+    "226035": {
+      "name": "Amanecer Plateado",
+      "description": "",
+      "gold": 2500,
+      "icon": "226035.png"
+    },
+    "226333": {
+      "name": "Danza de la Muerte",
+      "description": "",
+      "gold": 2500,
+      "icon": "226333.png"
+    },
+    "226609": {
+      "name": "Sierraespada Quimpunk",
+      "description": "",
+      "gold": 2500,
+      "icon": "226609.png"
+    },
+    "226610": {
+      "name": "Cielo Desgarrado",
+      "description": "",
+      "gold": 2500,
+      "icon": "226610.png"
+    },
+    "226616": {
+      "name": "Báculo de Agua Fluyente",
+      "description": "",
+      "gold": 2500,
+      "icon": "226616.png"
+    },
+    "226617": {
+      "name": "Renovador de Piedra Lunar",
+      "description": "",
+      "gold": 2500,
+      "icon": "226617.png"
+    },
+    "226620": {
+      "name": "Ecos de Helia",
+      "description": "",
+      "gold": 2500,
+      "icon": "226620.png"
+    },
+    "226621": {
+      "name": "Esfera del Amanecer",
+      "description": "",
+      "gold": 2500,
+      "icon": "226621.png"
+    },
+    "226630": {
+      "name": "Bebedor de Sangre",
+      "description": "",
+      "gold": 2750,
+      "icon": "226630.png"
+    },
+    "226631": {
+      "name": "Rompeavances",
+      "description": "",
+      "gold": 2500,
+      "icon": "226631.png"
+    },
+    "226632": {
+      "name": "Cercenador Divino",
+      "description": "",
+      "gold": 2500,
+      "icon": "226632.png"
+    },
+    "226653": {
+      "name": "Angustia de Liandry",
+      "description": "",
+      "gold": 2500,
+      "icon": "226653.png"
+    },
+    "226655": {
+      "name": "Eco de Luden",
+      "description": "",
+      "gold": 2500,
+      "icon": "226655.png"
+    },
+    "226656": {
+      "name": "Hielo Eterno",
+      "description": "",
+      "gold": 2500,
+      "icon": "226656.png"
+    },
+    "226657": {
+      "name": "Vara de las Edades",
+      "description": "",
+      "gold": 2500,
+      "icon": "226657.png"
+    },
+    "226660": {
+      "name": "Ceniza de Bami",
+      "description": "",
+      "gold": 0,
+      "icon": "226660.png"
+    },
+    "226662": {
+      "name": "Guantelete del Hijo del Hielo",
+      "description": "",
+      "gold": 2500,
+      "icon": "226662.png"
+    },
+    "226664": {
+      "name": "Resplandor Vacío",
+      "description": "",
+      "gold": 2500,
+      "icon": "226664.png"
+    },
+    "226665": {
+      "name": "Jak'Sho, el Proteico",
+      "description": "",
+      "gold": 2500,
+      "icon": "226665.png"
+    },
+    "226667": {
+      "name": "Virtud Radiante",
+      "description": "",
+      "gold": 2500,
+      "icon": "226667.png"
+    },
+    "226671": {
+      "name": "Fuerza del Viento",
+      "description": "",
+      "gold": 2500,
+      "icon": "226671.png"
+    },
+    "226672": {
+      "name": "Matakrakens",
+      "description": "",
+      "gold": 2500,
+      "icon": "226672.png"
+    },
+    "226673": {
+      "name": "Arcoescudo Inmortal",
+      "description": "",
+      "gold": 2500,
+      "icon": "226673.png"
+    },
+    "226675": {
+      "name": "Cuchillas Raudas de Navori",
+      "description": "",
+      "gold": 2500,
+      "icon": "226675.png"
+    },
+    "226676": {
+      "name": "El Coleccionista",
+      "description": "",
+      "gold": 2500,
+      "icon": "226676.png"
+    },
+    "226691": {
+      "name": "Hoja Crepuscular de Draktharr",
+      "description": "",
+      "gold": 2500,
+      "icon": "226691.png"
+    },
+    "226692": {
+      "name": "Eclipse",
+      "description": "",
+      "gold": 2500,
+      "icon": "226692.png"
+    },
+    "226693": {
+      "name": "Garra del Merodeador",
+      "description": "",
+      "gold": 2750,
+      "icon": "226693.png"
+    },
+    "226694": {
+      "name": "Rencor de Serylda",
+      "description": "",
+      "gold": 2500,
+      "icon": "226694.png"
+    },
+    "226695": {
+      "name": "Colmillo de Serpiente",
+      "description": "",
+      "gold": 2500,
+      "icon": "226695.png"
+    },
+    "226696": {
+      "name": "Arco Axiomático",
+      "description": "",
+      "gold": 2500,
+      "icon": "226696.png"
+    },
+    "226697": {
+      "name": "Arrogancia",
+      "description": "",
+      "gold": 2500,
+      "icon": "226697.png"
+    },
+    "226698": {
+      "name": "Hidra Profana",
+      "description": "",
+      "gold": 2500,
+      "icon": "226698.png"
+    },
+    "226699": {
+      "name": "Cicloespada Voltaica",
+      "description": "",
+      "gold": 2500,
+      "icon": "226699.png"
+    },
+    "226701": {
+      "name": "Oportunidad",
+      "description": "",
+      "gold": 2500,
+      "icon": "226701.png"
+    },
+    "228001": {
+      "name": "Cadenas de Anatema",
+      "description": "",
+      "gold": 2500,
+      "icon": "228001.png"
+    },
+    "228002": {
+      "name": "Sombrero de Wooglet",
+      "description": "",
+      "gold": 6000,
+      "icon": "228002.png"
+    },
+    "228003": {
+      "name": "Filo de la muerte",
+      "description": "",
+      "gold": 9000,
+      "icon": "228003.png"
+    },
+    "228004": {
+      "name": "Yelmo Adaptable",
+      "description": "",
+      "gold": 6000,
+      "icon": "228004.png"
+    },
+    "228005": {
+      "name": "Cuchilla de Obsidiana",
+      "description": "",
+      "gold": 3000,
+      "icon": "228005.png"
+    },
+    "228006": {
+      "name": "Hoja Carmesí",
+      "description": "",
+      "gold": 3000,
+      "icon": "228006.png"
+    },
+    "228008": {
+      "name": "Hoja Rúnica",
+      "description": "",
+      "gold": 9000,
+      "icon": "228008.png"
+    },
+    "228009": {
+      "name": "Multiherramienta",
+      "description": "",
+      "gold": 2500,
+      "icon": "228009.png"
+    },
+    "228020": {
+      "name": "Máscara Abisal",
+      "description": "",
+      "gold": 2500,
+      "icon": "228020.png"
+    },
+    "322065": {
+      "name": "Canto de Guerra de Shurelya",
+      "description": "",
+      "gold": 2600,
+      "icon": "322065.png"
+    },
+    "322526": {
+      "name": "Tiara Susurrante",
+      "description": "",
+      "gold": 2250,
+      "icon": "322526.png"
+    },
+    "322530": {
+      "name": "Diadema Musical",
+      "description": "",
+      "gold": 2250,
+      "icon": "322530.png"
+    },
+    "323002": {
+      "name": "Abrecaminos",
+      "description": "",
+      "gold": 2600,
+      "icon": "323002.png"
+    },
+    "323003": {
+      "name": "Báculo del Arcángel",
+      "description": "",
+      "gold": 2900,
+      "icon": "323003.png"
+    },
+    "323004": {
+      "name": "Manamune",
+      "description": "",
+      "gold": 2900,
+      "icon": "323004.png"
+    },
+    "323040": {
+      "name": "Abrazo del Serafín",
+      "description": "",
+      "gold": 2900,
+      "icon": "323040.png"
+    },
+    "323042": {
+      "name": "Muramaná",
+      "description": "",
+      "gold": 2900,
+      "icon": "323042.png"
+    },
+    "323050": {
+      "name": "Convergencia de Zeke",
+      "description": "",
+      "gold": 2300,
+      "icon": "323050.png"
+    },
+    "323070": {
+      "name": "Lágrima de la Diosa",
+      "description": "",
+      "gold": 400,
+      "icon": "323070.png"
+    },
+    "323075": {
+      "name": "Cota de Espinas",
+      "description": "",
+      "gold": 2650,
+      "icon": "323075.png"
+    },
+    "323107": {
+      "name": "Redención",
+      "description": "",
+      "gold": 2800,
+      "icon": "323107.png"
+    },
+    "323109": {
+      "name": "Promesa del Caballero",
+      "description": "",
+      "gold": 2900,
+      "icon": "323109.png"
+    },
+    "323110": {
+      "name": "Corazón de Hielo",
+      "description": "",
+      "gold": 2700,
+      "icon": "323110.png"
+    },
+    "323119": {
+      "name": "Umbral del Invierno",
+      "description": "",
+      "gold": 2400,
+      "icon": "323119.png"
+    },
+    "323121": {
+      "name": "Invierno Nórdico",
+      "description": "",
+      "gold": 2400,
+      "icon": "323121.png"
+    },
+    "323190": {
+      "name": "Relicario de los Solari de Hierro",
+      "description": "",
+      "gold": 2600,
+      "icon": "323190.png"
+    },
+    "323222": {
+      "name": "Bendición de Mikael",
+      "description": "",
+      "gold": 2800,
+      "icon": "323222.png"
+    },
+    "323504": {
+      "name": "Pebetero Ardiente",
+      "description": "",
+      "gold": 2600,
+      "icon": "323504.png"
+    },
+    "324005": {
+      "name": "Mandato Imperial",
+      "description": "",
+      "gold": 2750,
+      "icon": "324005.png"
+    },
+    "326616": {
+      "name": "Báculo de Agua Fluyente",
+      "description": "",
+      "gold": 2600,
+      "icon": "326616.png"
+    },
+    "326617": {
+      "name": "Renovador de Piedra Lunar",
+      "description": "",
+      "gold": 2900,
+      "icon": "326617.png"
+    },
+    "326620": {
+      "name": "Ecos de Helia",
+      "description": "",
+      "gold": 2600,
+      "icon": "326620.png"
+    },
+    "326621": {
+      "name": "Esfera del Amanecer",
+      "description": "",
+      "gold": 2900,
+      "icon": "326621.png"
+    },
+    "326657": {
+      "name": "Vara de las Edades",
+      "description": "",
+      "gold": 2600,
+      "icon": "326657.png"
+    },
+    "328020": {
+      "name": "Máscara Abisal",
+      "description": "",
+      "gold": 2850,
+      "icon": "328020.png"
+    },
+    "443054": {
+      "name": "Garras de Acero Oscuro",
+      "description": "",
+      "gold": 2750,
+      "icon": "443054.png"
+    },
+    "443055": {
+      "name": "Fulminación",
+      "description": "",
+      "gold": 2750,
+      "icon": "443055.png"
+    },
+    "443056": {
+      "name": "La Corona del Rey Demonio",
+      "description": "",
+      "gold": 2750,
+      "icon": "443056.png"
+    },
+    "443058": {
+      "name": "Escudo de Roca Fundida",
+      "description": "",
+      "gold": 2750,
+      "icon": "443058.png"
+    },
+    "443059": {
+      "name": "Manto de la Noche Estrellada",
+      "description": "",
+      "gold": 2750,
+      "icon": "443059.png"
+    },
+    "443060": {
+      "name": "Espada de los Dioses",
+      "description": "",
+      "gold": 2750,
+      "icon": "443060.png"
+    },
+    "443061": {
+      "name": "Fuerza de la Entropía",
+      "description": "",
+      "gold": 2750,
+      "icon": "443061.png"
+    },
+    "443062": {
+      "name": "Regalo Sanguinario",
+      "description": "",
+      "gold": 2750,
+      "icon": "443062.png"
+    },
+    "443063": {
+      "name": "Milagro de Eleisa",
+      "description": "",
+      "gold": 2750,
+      "icon": "443063.png"
+    },
+    "443064": {
+      "name": "Talismán de Ascensión",
+      "description": "",
+      "gold": 2750,
+      "icon": "443064.png"
+    },
+    "443069": {
+      "name": "Anulador",
+      "description": "",
+      "gold": 2750,
+      "icon": "443069.png"
+    },
+    "443079": {
+      "name": "Quimotanque Turbo",
+      "description": "",
+      "gold": 2750,
+      "icon": "443079.png"
+    },
+    "443080": {
+      "name": "Máscara Gemela",
+      "description": "",
+      "gold": 2750,
+      "icon": "443080.png"
+    },
+    "443081": {
+      "name": "Compañero de Hexproyectil",
+      "description": "",
+      "gold": 2750,
+      "icon": "443081.png"
+    },
+    "443083": {
+      "name": "Armadura de Warmog",
+      "description": "",
+      "gold": 2750,
+      "icon": "443083.png"
+    },
+    "443090": {
+      "name": "Cuota del Segador",
+      "description": "",
+      "gold": 2750,
+      "icon": "443090.png"
+    },
+    "443193": {
+      "name": "Armadura Pétrea",
+      "description": "",
+      "gold": 2750,
+      "icon": "443193.png"
+    },
+    "444636": {
+      "name": "Cosechador Nocturno",
+      "description": "",
+      "gold": 2750,
+      "icon": "444636.png"
+    },
+    "444637": {
+      "name": "Abrazo Demoniaco",
+      "description": "",
+      "gold": 2750,
+      "icon": "444637.png"
+    },
+    "444644": {
+      "name": "Corona de la Reina Fragmentada",
+      "description": "",
+      "gold": 2750,
+      "icon": "444644.png"
+    },
+    "446632": {
+      "name": "Cercenador Divino",
+      "description": "",
+      "gold": 2750,
+      "icon": "446632.png"
+    },
+    "446656": {
+      "name": "Hielo Eterno",
+      "description": "",
+      "gold": 2750,
+      "icon": "446656.png"
+    },
+    "446667": {
+      "name": "Virtud Radiante",
+      "description": "",
+      "gold": 2750,
+      "icon": "446667.png"
+    },
+    "446671": {
+      "name": "Fuerza del Viento",
+      "description": "",
+      "gold": 2750,
+      "icon": "446671.png"
+    },
+    "446691": {
+      "name": "Hoja Crepuscular de Draktharr",
+      "description": "",
+      "gold": 2750,
+      "icon": "446691.png"
+    },
+    "446693": {
+      "name": "Garra del Merodeador",
+      "description": "",
+      "gold": 1000,
+      "icon": "446693.png"
+    },
+    "447100": {
+      "name": "Espada Espejismo",
+      "description": "",
+      "gold": 2750,
+      "icon": "447100.png"
+    },
+    "447101": {
+      "name": "Espada del Apostador",
+      "description": "",
+      "gold": 2750,
+      "icon": "447101.png"
+    },
+    "447102": {
+      "name": "Fractura de la Realidad",
+      "description": "",
+      "gold": 2750,
+      "icon": "447102.png"
+    },
+    "447103": {
+      "name": "Casco del Hemomante",
+      "description": "",
+      "gold": 2750,
+      "icon": "447103.png"
+    },
+    "447104": {
+      "name": "Relicario Enervante",
+      "description": "",
+      "gold": 2750,
+      "icon": "447104.png"
+    },
+    "447105": {
+      "name": "Promesa Empírea",
+      "description": "",
+      "gold": 2750,
+      "icon": "447105.png"
+    },
+    "447106": {
+      "name": "Corazón Dracónico",
+      "description": "",
+      "gold": 2750,
+      "icon": "447106.png"
+    },
+    "447107": {
+      "name": "Decapitador",
+      "description": "",
+      "gold": 2750,
+      "icon": "447107.png"
+    },
+    "447108": {
+      "name": "Escultor de Runas",
+      "description": "",
+      "gold": 2750,
+      "icon": "447108.png"
+    },
+    "447109": {
+      "name": "Crueldad",
+      "description": "",
+      "gold": 2750,
+      "icon": "447109.png"
+    },
+    "447110": {
+      "name": "Espada Encantada por la Luna",
+      "description": "",
+      "gold": 2750,
+      "icon": "447110.png"
+    },
+    "447111": {
+      "name": "Cota Sangrienta del Soberano",
+      "description": "",
+      "gold": 2500,
+      "icon": "447111.png"
+    },
+    "447112": {
+      "name": "Caníbal",
+      "description": "",
+      "gold": 2750,
+      "icon": "447112.png"
+    },
+    "447113": {
+      "name": "Orbe de detonación",
+      "description": "",
+      "gold": 2750,
+      "icon": "447113.png"
+    },
+    "447114": {
+      "name": "Reverberación",
+      "description": "",
+      "gold": 2750,
+      "icon": "447114.png"
+    },
+    "447115": {
+      "name": "Regicidio",
+      "description": "",
+      "gold": 2750,
+      "icon": "447115.png"
+    },
+    "447116": {
+      "name": "Jitte Kinkou",
+      "description": "",
+      "gold": 2750,
+      "icon": "447116.png"
+    },
+    "447118": {
+      "name": "Capa del Piromante",
+      "description": "",
+      "gold": 2750,
+      "icon": "447118.png"
+    },
+    "447119": {
+      "name": "Vara del Rayo",
+      "description": "",
+      "gold": 2750,
+      "icon": "447119.png"
+    },
+    "447120": {
+      "name": "Lanza con Punta de Diamante",
+      "description": "",
+      "gold": 2750,
+      "icon": "447120.png"
+    },
+    "447121": {
+      "name": "Filo del Crepúsculo",
+      "description": "",
+      "gold": 2750,
+      "icon": "447121.png"
+    },
+    "447122": {
+      "name": "Guantelete del Agujero Negro",
+      "description": "",
+      "gold": 2750,
+      "icon": "447122.png"
+    },
+    "447123": {
+      "name": "Titiritero",
+      "description": "",
+      "gold": 2750,
+      "icon": "447123.png"
+    },
+    "550001": {
+      "name": "Color de la barra de vida: Azul",
+      "description": "",
+      "gold": 0,
+      "icon": "550001.png"
+    },
+    "550002": {
+      "name": "Color de la barra de vida: Naranja",
+      "description": "",
+      "gold": 0,
+      "icon": "550002.png"
+    },
+    "550003": {
+      "name": "Color de la barra de vida: Verde",
+      "description": "",
+      "gold": 0,
+      "icon": "550003.png"
+    },
+    "550004": {
+      "name": "Color de la barra de vida: Rosa",
+      "description": "",
+      "gold": 0,
+      "icon": "550004.png"
+    },
+    "550005": {
+      "name": "Efecto de la barra de vida: Restablecer color",
+      "description": "",
+      "gold": 0,
+      "icon": "550005.png"
+    },
+    "550006": {
+      "name": "Color de la barra de vida: Arcoíris",
+      "description": "",
+      "gold": 0,
+      "icon": "550006.png"
+    },
+    "550007": {
+      "name": "Recuerdito de fiesta",
+      "description": "",
+      "gold": 10,
+      "icon": "550007.png"
+    },
+    "663039": {
+      "name": "Juicio de Atma",
+      "description": "",
+      "gold": 2500,
+      "icon": "663039.png"
+    },
+    "663056": {
+      "name": "La Corona del Rey Demonio",
+      "description": "",
+      "gold": 2500,
+      "icon": "663056.png"
+    },
+    "663058": {
+      "name": "Escudo de Roca Fundida",
+      "description": "",
+      "gold": 2500,
+      "icon": "663058.png"
+    },
+    "663059": {
+      "name": "Manto de la Noche Estrellada",
+      "description": "",
+      "gold": 2500,
+      "icon": "663059.png"
+    },
+    "663060": {
+      "name": "Espada de los Dioses",
+      "description": "",
+      "gold": 2500,
+      "icon": "663060.png"
+    },
+    "663064": {
+      "name": "Talismán de Ascensión de Veigar",
+      "description": "",
+      "gold": 900,
+      "icon": "663064.png"
+    },
+    "663146": {
+      "name": "Sablepistola Hextech",
+      "description": "",
+      "gold": 2500,
+      "icon": "663146.png"
+    },
+    "663172": {
+      "name": "Céfiro",
+      "description": "",
+      "gold": 2500,
+      "icon": "663172.png"
+    },
+    "663193": {
+      "name": "Armadura Pétrea",
+      "description": "",
+      "gold": 2500,
+      "icon": "663193.png"
+    },
+    "664011": {
+      "name": "Espada del Amanecer Floreciente",
+      "description": "",
+      "gold": 2500,
+      "icon": "664011.png"
+    },
+    "664403": {
+      "name": "La Espátula Dorada",
+      "description": "",
+      "gold": 2500,
+      "icon": "664403.png"
+    },
+    "664644": {
+      "name": "Corona de la Reina Fragmentada",
+      "description": "",
+      "gold": 2500,
+      "icon": "664644.png"
+    },
+    "667101": {
+      "name": "Espada del Apostador",
+      "description": "",
+      "gold": 2500,
+      "icon": "667101.png"
+    },
+    "667109": {
+      "name": "Crueldad",
+      "description": "",
+      "gold": 2500,
+      "icon": "667109.png"
+    },
+    "667112": {
+      "name": "Caníbal",
+      "description": "",
+      "gold": 2500,
+      "icon": "667112.png"
+    },
+    "667666": {
+      "name": "El Coleccionista",
+      "description": "",
+      "gold": 3000,
+      "icon": "667666.png"
+    },
+    "994403": {
+      "name": "Espátula Dorada",
+      "description": "",
+      "gold": 2500,
+      "icon": "994403.png"
+    }
+  },
+  "shards": {
+    "5001": {
+      "name": "Armadura",
+      "icon": "StatMods/StatModsArmorIcon.png"
+    },
+    "5002": {
+      "name": "Armadura",
+      "icon": "StatMods/StatModsArmorIcon.png"
+    },
+    "5003": {
+      "name": "Resistencia Mágica",
+      "icon": "StatMods/StatModsMagicResIcon.png"
+    },
+    "5005": {
+      "name": "Velocidad de Ataque",
+      "icon": "StatMods/StatModsAttackSpeedIcon.png"
+    },
+    "5007": {
+      "name": "Aceleración de Habilidad",
+      "icon": "StatMods/StatModsCDRIcon.png"
+    },
+    "5008": {
+      "name": "Fuerza Adaptable",
+      "icon": "StatMods/StatModsAdaptiveForceIcon.png"
+    },
+    "5011": {
+      "name": "Vida",
+      "icon": "StatMods/StatModsHealthScalingIcon.png"
+    },
+    "5013": {
+      "name": "Tenacidad y Vida",
+      "icon": "StatMods/StatModsHealthScalingIcon.png"
+    }
+  },
+  "runeToStyle": {
+    "8005": 8000,
+    "8008": 8000,
+    "8009": 8000,
+    "8010": 8000,
+    "8014": 8000,
+    "8017": 8000,
+    "8021": 8000,
+    "8105": 8100,
+    "8106": 8100,
+    "8112": 8100,
+    "8126": 8100,
+    "8128": 8100,
+    "8135": 8100,
+    "8137": 8100,
+    "8139": 8100,
+    "8140": 8100,
+    "8141": 8100,
+    "8143": 8100,
+    "8210": 8200,
+    "8214": 8200,
+    "8224": 8200,
+    "8226": 8200,
+    "8229": 8200,
+    "8230": 8200,
+    "8232": 8200,
+    "8233": 8200,
+    "8234": 8200,
+    "8236": 8200,
+    "8237": 8200,
+    "8242": 8400,
+    "8275": 8200,
+    "8299": 8000,
+    "8304": 8300,
+    "8306": 8300,
+    "8313": 8300,
+    "8316": 8300,
+    "8321": 8300,
+    "8345": 8300,
+    "8347": 8300,
+    "8351": 8300,
+    "8352": 8300,
+    "8360": 8300,
+    "8369": 8300,
+    "8401": 8400,
+    "8410": 8300,
+    "8429": 8400,
+    "8437": 8400,
+    "8439": 8400,
+    "8444": 8400,
+    "8446": 8400,
+    "8451": 8400,
+    "8453": 8400,
+    "8463": 8400,
+    "8465": 8400,
+    "8473": 8400,
+    "8992": 8200,
+    "9101": 8000,
+    "9103": 8000,
+    "9104": 8000,
+    "9105": 8000,
+    "9111": 8000,
+    "9923": 8100
+  }
+}

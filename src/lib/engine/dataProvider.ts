@@ -59,10 +59,12 @@ export function initializeEngineData() {
     if (!extra) {
         console.warn(`⚠️ No hay data extra para ${name} (buscado como ${internalName}).`);
     }
-
+    
+    
     // Calculamos el scaling basado en la curva que scrapeamos
     const curve = extra?.combat?.winrateCurve || [];
     const scaling = calculateScalingType(curve);
+
 
     ENRICHED_DB[name] = {
       ...baseChamp,

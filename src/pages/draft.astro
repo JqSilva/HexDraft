@@ -119,10 +119,9 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-    import { getProcessedRecommendations } from '../lib/engine/engine';
     import { ENRICHED_DB } from '../lib/engine/dataProvider';
-    import { getNameFromId } from '../lib/engine/engine';
-
+    import { getNameFromId, getSingleChampionBuild, getProcessedRecommendations } from '../lib/engine/engine';
+   
 
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
@@ -147,6 +146,17 @@ import Layout from '../layouts/Layout.astro';
     };
 
     let lastPicksState = "";
+    
+    let version = '';
+    try {
+          const res = await fetch('/api/game-version');
+          if (res.ok) {
+            const v = await res.json();
+            version = v.short;
+          }
+      } catch (e) {
+          console.error("Error detectando versión:", e);
+      }
 
     /**
      * Limpia profundamente la interfaz y resetea estados
@@ -185,61 +195,153 @@ import Layout from '../layouts/Layout.astro';
         }
     }
 
-    function renderBuild(championName) {
-        const champData = ENRICHED_DB[championName];
-        if (!champData?.buildData) return;
-
-        const { runes, items, skills } = champData.buildData;
-
-        // --- RENDER SIMPLIFICADO ---
+    function renderBuild(build, championName) {
+        const version = '16.9.1';
         const buildView = document.getElementById('build-view');
-        if (!buildView) return;
+        if (!buildView || !build) {
+            console.error("❌ [DEBUG] No se encontró build-view o el objeto build es nulo", build);
+            return;
+        }
+
+        const { runes, items, skillOrder } = build;
+        console.log("Build:",build);
+        const styleIcons = {
+            8000: "styles/7201_precision.png",
+            8100: "styles/7200_domination.png",
+            8200: "styles/7202_sorcery.png",
+            8300: "styles/7203_whimsy.png",
+            8400: "styles/7204_resolve.png"
+        };
+        
+        // HELPER CRÍTICO: Construye la URL de Community Dragon
+        const getCDIcon = (path) => {
+            if (!path) return "";
+            let cleanPath = path.toLowerCase().trim();
+            if (cleanPath.includes('perk-images/')) {
+                cleanPath = cleanPath.split('perk-images/')[1];
+            }
+            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+            
+            return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/${cleanPath}`;
+        };
+
+        const secondaryStyleId = runes.secondaryStyle?.id || runes.secondaryStyle;
+        const secondaryIconPath = styleIcons[secondaryStyleId] || "styles/runesicon.png";
 
         buildView.innerHTML = `
-            <div class="flex flex-col gap-6 p-4 bg-black/20 rounded-sm border border-slate-800">
+            <div class="relative z-[100] flex flex-col gap-6 p-6 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl animate-in fade-in slide-in-from-bottom-4">
                 
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
                     <div class="flex gap-4 items-center">
-                        <div class="relative">
-                            proximamente...
+                        <div class="relative flex items-center">
+                            <div class="w-14 h-14 rounded-full bg-slate-800 border border-blue-500/50 p-2 shadow-lg shadow-blue-900/20">
+                                <img src="${getCDIcon(runes.keystone.icon)}" title="${runes.keystone.name}" class="w-full h-full object-contain" />
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-slate-950 rounded-full border border-slate-700 p-1.5 shadow-xl">
+                                <img src="${getCDIcon(secondaryIconPath)}" class="w-full h-full object-contain" />
+                            </div>
                         </div>
                         <div>
-                            <span class="block text-xs font-black text-white uppercase tracking-tighter">Configuración Meta</span>
-                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">WR: ${champData.meta.winRate}%</span>
+                            <h3 class="text-white font-black text-sm uppercase tracking-wider">${championName}</h3>
+                            <p class="text-[10px] text-green-400 font-bold uppercase tracking-tighter">
+                                Orden: ${skillOrder}
+                            </p>
                         </div>
                     </div>
                     
-                    <div class="text-right">
-                        <span class="block text-[10px] text-slate-500 uppercase font-bold">Prioridad</span>
-                        <span class="text-lg font-black text-green-400 italic">proximamente</span>
-                    </div>
+                    <button id="btn-import-runes" 
+                            class="cursor-pointer pointer-events-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-[10px] rounded transition-all shadow-lg shadow-blue-900/40">
+                        Importar al Cliente
+                    </button>
                 </div>
 
-                <div>
-                    <span class="text-[10px] text-slate-500 uppercase font-black mb-3 block tracking-widest">Core Items (Power Spike)</span>
-                    <div class="flex gap-3">
-                        proximamente
-                        <div class="flex items-center ml-2">
-                            <span class="text-slate-700 font-black text-xl">+</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Selecciones</span>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            ${runes.selections.slice(1).map(r => `
+                                <div class="w-8 h-8 rounded-full bg-slate-800/50 border border-slate-800 p-1 mt-2" title="${r.name}">
+                                    <img src="${getCDIcon(r.icon)}" class="w-full h-full object-contain grayscale hover:grayscale-0 transition-all" />
+                                </div>
+                            `).join('')}
+                            
+                            <div class="w-[1px] h-6 bg-slate-800 mx-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-2">Build Sugerida</span>
+                        <div class="flex gap-2 items-center">
+                            ${items.core.map(i => `
+                                <div class="relative group">
+                                    <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${i.id}.png" 
+                                        title="${i.name}"
+                                        class="w-10 h-10 border border-slate-700 rounded hover:border-blue-500 transition-colors" />
+                                </div>
+                            `).join('')}
+                            <div class="text-slate-700 font-bold px-1">+</div>
+                            <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${items.boots.id}.png" 
+                                title="${items.boots.name}"
+                                class="w-10 h-10 border border-slate-700 rounded shadow-md shadow-black/50" />
                         </div>
                     </div>
                 </div>
-
-                <button id="import-lcu" class="w-full mt-2 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase text-xs tracking-widest transition-all">
-                    Importar Runas al Cliente
-                </button>
             </div>
         `;
-        
-        // Re-vincular el evento del botón (lo haremos dsp)
+
+        // Vinculación del evento
+        const btn = document.getElementById('btn-import-runes');
+        if (btn) {
+            btn.onclick = () => importToLCU(build.runes, championName);
+        }
     }
 
+    async function importToLCU(runes, champName) {
+        const btn = document.getElementById('btn-import-runes');
+        const keystoneId = parseInt(runes.selections[0]);
+
+        
+        
+        // 3. Re-calculamos los estilos para que coincidan SI O SI con las runas
+        const payload = {
+            name: `HexDraft: ${champName.toUpperCase()}`,
+            primaryStyleId: runes.primaryStyle,
+            subStyleId: runes.secondaryStyle,
+            selectedPerkIds: [
+                ...runes.selections.map(r => r.id || r),
+                ...runes.shards.map(s => s.id || s)
+            ]
+        };
+
+        console.log("📤 [IMPORT] Payload validado:", payload)
+
+        try {
+            const res = await fetch('/api/set-runes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (res.ok) {
+                console.log("✅ Runas aplicadas");
+            } else {
+                const err = await res.json();
+                console.error("❌ Error LCU:", err);
+            }
+        } catch (e) {
+            console.error("❌ Error de red:", e);
+        }
+    }
+
+    let currentRecommendations = [];
     async function updateDraftStatus() {
         let isBuildViewActive = false;
         try {
             const res = await fetch('/api/champ-select');
             const status = document.getElementById('status-text');
 
+
+            
             if (!res.ok) {
                 if (status) {
                     status.innerText = "Desconectado";
@@ -256,6 +358,7 @@ import Layout from '../layouts/Layout.astro';
             }
             const data = await res.json();
             
+            console.log(data);
             
             if (data.inDraft) {
                 const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
@@ -279,23 +382,38 @@ import Layout from '../layouts/Layout.astro';
                     const meData = await resMe.json();
                     const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
 
-                    const myPos = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+                    const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+                   
 
-                    console.log(myPlayer)
+
+                    // 3. Procesar Recomendaciones
+                    const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                    //showRecomendaciones();
+
+                    currentRecommendations = recommendations;
+
+                    console.log(recommendations)
                     if (myPlayer){
                         if (myPlayer.championId !== 0 && !isBuildViewActive) {
                             const champname = getNameFromId(myPlayer.championId);
-                            renderBuild(champname);
-                            showBuildView(champname || "Desconocido", );
-                            isBuildViewActive = true;
+                            console.log("🔍 Detectado pick propio:", champname);
+
+
+                            const pickData = getSingleChampionBuild(myPlayer.championId);
+
+    
+                            if (pickData) {
+                                isBuildViewActive = true;
+                                showBuildView(champname);
+                                renderBuild(pickData.build, champname); 
+                                console.log("✅ Build renderizada para", champname);
+                            }
                         }
                     }
-
-                    // 3. Procesar Recomendaciones
-                    const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myPos);
-                    console.log("📊 Recomendaciones generadas:", recs.length);
                     
-                    renderGrid(recs.slice(0, 20));
+
+    
+                    renderGrid(recommendations.slice(0, 20));
 
                     // 4. Actualizar slots
                     data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
@@ -304,7 +422,17 @@ import Layout from '../layouts/Layout.astro';
                     console.groupEnd();
                 }
             } else {
-                if (lastPicksState !== "") {
+
+                const game_status = await fetch('/api/game-status');
+                const { phase } = await game_status.json();
+
+                if (phase === 'InProgress' || phase === 'WaitingForStats' || phase === 'PreEndOfGame') {
+                    console.log("🎮 Partida en curso: Manteniendo UI bloqueada.");
+                    setTimeout(updateDraftStatus, 60000);
+                    return; // Salimos sin hacer nada más
+                }
+
+                if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby') {
                     console.log("🏳️ El draft ha terminado o se ha cancelado.");
                     isBuildViewActive = false;
                     clearDraftUI();
@@ -400,13 +528,12 @@ import Layout from '../layouts/Layout.astro';
         });
     }
 
-
     function showRecomendaciones() {
         const gridRecomendations = document.getElementById('recommendations-grid');
         const buildView = document.getElementById('build-view');
         const title = document.getElementById('view-title');
         const subtitle = document.getElementById('view-subtitle');
-        console.log("🔙 Volviendo a Recomendaciones");
+        console.log("Mostrando Recomendaciones");
         // Cambiar textos del header
         title.innerText = `Recomendaciones`;
         subtitle.innerText = "Basado en composiciones y counters";
@@ -422,7 +549,6 @@ import Layout from '../layouts/Layout.astro';
             }, 50);
         }, 300);
     }
-
 
     function showBuildView(championName) {
         const grid = document.getElementById('recommendations-grid');
@@ -445,8 +571,6 @@ import Layout from '../layouts/Layout.astro';
             }, 50);
         }, 300);
         
-        // Aquí llamarías a una función que busque en ENRICHED_DB[championName].buildData 
-        // y pinte las imágenes en runes-content y items-content
     }
 
     // Manejo de Popup corregido
