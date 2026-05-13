@@ -224,7 +224,7 @@ export async function syncShortCycle(version: string) {
                     boots: { id: bestBootsId },
                     coreSlots: bestCoreItems.map((id: number) => ({ id }))
                 },
-
+                
                 skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
             };
         } catch (e) { console.error(`Error DPM ${name}:`, e); }

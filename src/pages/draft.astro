@@ -162,7 +162,6 @@ import Layout from '../layouts/Layout.astro';
      * Limpia profundamente la interfaz y resetea estados
      */
     function clearDraftUI() {
-        console.log("🧹 [UI] Limpiando interfaz completa...");
         showRecomendaciones(); 
         const container = document.getElementById('recommendations-grid');
         if (container) {
@@ -204,7 +203,7 @@ import Layout from '../layouts/Layout.astro';
         }
 
         const { runes, items, skillOrder } = build;
-        console.log("Build:",build);
+        
         const styleIcons = {
             8000: "styles/7201_precision.png",
             8100: "styles/7200_domination.png",
@@ -306,15 +305,13 @@ import Layout from '../layouts/Layout.astro';
             } finally {
                 setTimeout(() => {
                     btn.disabled = false;
-                    btn.innerText = "Importar Todo (Runas + Build)";
-                    btn.className = "cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-xs rounded transition-all";
                 }, 3000);
             }
         };
     }
 
     async function importAll(runes, buildItems, championName, championId, skillOrder) {
-        console.log("🚀 Iniciando importación masiva para", championName);
+        console.log("🚀 Iniciando importación masiva para", championName, championId);
 
         try {
             // 1. Payload de Runas (el que ya tenías) [cite: 525, 526]
@@ -335,6 +332,8 @@ import Layout from '../layouts/Layout.astro';
                 items: buildItems,
                 skillOrder: skillOrder
             };
+
+            
 
             // Ejecutar ambas peticiones [cite: 527, 630]
             const [resRunes, resItems] = await Promise.all([
@@ -362,107 +361,89 @@ import Layout from '../layouts/Layout.astro';
     async function updateDraftStatus() {
         let isBuildViewActive = false;
         try {
-            const res = await fetch('/api/champ-select');
-            const status = document.getElementById('status-text');
 
+            const game_status = await fetch('/api/game-status');
+            const { phase } = await game_status.json();
 
-            
-            if (!res.ok) {
-                if (status) {
-                    status.innerText = "Desconectado";
-                    status.className = "text-xs uppercase tracking-widest font-bold text-red-500";
+            if (phase === 'ChampSelect'){
+                const res = await fetch('/api/champ-select');
+                const status = document.getElementById('status-text');
+
+                if (!res.ok) {
+                    if (status) {
+                        status.innerText = "Desconectado";
+                        status.className = "text-xs uppercase tracking-widest font-bold text-red-500";
+                    }
+                    clearDraftUI();
+                    setTimeout(updateDraftStatus, 5000);
+                    return;
                 }
-                clearDraftUI();
-                setTimeout(updateDraftStatus, 5000);
-                return;
-            }
 
-            if (status) {
-                status.innerText = "Conectado";
-                status.classList.replace("text-red-500", "text-green-500");
-            }
-            const data = await res.json();
-            
-            console.log(data);
-            
-            if (data.inDraft) {
-                const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
-                                        data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
+                const data = await res.json();
 
-                if (currentPicksState !== lastPicksState) {
-                    console.group("🎮 [DRAFT UPDATE] Cambio detectado");
-                    lastPicksState = currentPicksState;
+                if (data.inDraft) {
+                    const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
+                                            data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
 
-                    // 1. Limpieza de IDs para el motor
-                    const cleanMyTeam = data.myTeam
-                        .map(p => p.championId || p.championPickIntent)
-                        .filter(id => id !== 0);
+                    if (currentPicksState !== lastPicksState) {
+                        console.group("🎮 [DRAFT UPDATE] Cambio detectado");
+                        lastPicksState = currentPicksState;
 
-                    const cleanTheirTeam = data.theirTeam
-                        .map(p => p.championId || p.championPickIntent)
-                        .filter(id => id !== 0);
+                        // 1. Limpieza de IDs para el motor
+                        const cleanMyTeam = data.myTeam
+                            .map(p => p.championId || p.championPickIntent)
+                            .filter(id => id !== 0);
 
-                    // 2. Obtener mi posición
-                    const resMe = await fetch('/api/me');
-                    const meData = await resMe.json();
-                    const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
+                        const cleanTheirTeam = data.theirTeam
+                            .map(p => p.championId || p.championPickIntent)
+                            .filter(id => id !== 0);
 
-                    const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-                   
+                        // 2. Obtener mi posición
+                        const resMe = await fetch('/api/me');
+                        const meData = await resMe.json();
+                        const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
 
+                        const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
-                    // 3. Procesar Recomendaciones
-                    const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
-                    //showRecomendaciones();
+                        // Procesar Recomendaciones
+                        const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                       
 
-                    currentRecommendations = recommendations;
+                        currentRecommendations = recommendations;
 
-                    console.log(recommendations)
-                    if (myPlayer){
-                        if (myPlayer.championId !== 0 && !isBuildViewActive) {
-                            const champname = getNameFromId(myPlayer.championId);
-                            console.log("🔍 Detectado pick propio:", champname);
+                        if (myPlayer){
+                            if (myPlayer.championId !== 0 && !isBuildViewActive) {
+                                const champname = getNameFromId(myPlayer.championId);
+                                console.log("🔍 Detectado pick propio:", champname);
 
+                                const pickData = getSingleChampionBuild(myPlayer.championId);
 
-                            const pickData = getSingleChampionBuild(myPlayer.championId);
-
-    
-                            if (pickData) {
-                                isBuildViewActive = true;
-                                showBuildView(champname);
-                                renderBuild(pickData.build, champname, myPlayer.championId); 
-                                console.log("✅ Build renderizada para", champname);
+                                if (pickData) {
+                                    isBuildViewActive = true;
+                                    showBuildView(champname);
+                                    renderBuild(pickData.build, champname, myPlayer.championId); 
+                                    console.log("✅ Build renderizada para", champname);
+                                }
                             }
                         }
+                        renderGrid(recommendations.slice(0, 20));
+
+                        //Actualizar slots
+                        data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+                        data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
+                        
+                        console.groupEnd();
                     }
-                    
-
-    
-                    renderGrid(recommendations.slice(0, 20));
-
-                    // 4. Actualizar slots
-                    data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
-                    data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
-                    
-                    console.groupEnd();
                 }
-            } else {
-
-                const game_status = await fetch('/api/game-status');
-                const { phase } = await game_status.json();
-
-                if (phase === 'InProgress' || phase === 'WaitingForStats' || phase === 'PreEndOfGame') {
-                    console.log("🎮 Partida en curso: Manteniendo UI bloqueada.");
-                    setTimeout(updateDraftStatus, 60000);
-                    return; // Salimos sin hacer nada más
-                }
-
-                if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby') {
-                    console.log("🏳️ El draft ha terminado o se ha cancelado.");
-                    isBuildViewActive = false;
-                    clearDraftUI();
-                }
+            } else if (phase === 'InProgress' || phase === 'WaitingForStats' || phase === 'PreEndOfGame'){
+                console.log("🎮 Partida en curso: Manteniendo UI bloqueada.");
+                setTimeout(updateDraftStatus, 60000);
+                return;
             }
+            if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby') {
+                isBuildViewActive = false;
+                clearDraftUI();
+            }  
         } catch (e) {
             console.error("❌ Error en ciclo de draft:", e);
         } finally {
@@ -558,7 +539,7 @@ import Layout from '../layouts/Layout.astro';
         const buildView = document.getElementById('build-view');
         const title = document.getElementById('view-title');
         const subtitle = document.getElementById('view-subtitle');
-        console.log("Mostrando Recomendaciones");
+        
         // Cambiar textos del header
         title.innerText = `Recomendaciones`;
         subtitle.innerText = "Basado en composiciones y counters";

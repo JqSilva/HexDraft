@@ -5,10 +5,10 @@ import { getLockfileData } from '../../lib/lcu';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export const POST: APIRoute = async ({ request }) => {
-    const lcu = getLockfileData(); [cite: 131, 590]
+    const lcu = getLockfileData(); 
     if (!lcu) return new Response(JSON.stringify({ error: "LCU no encontrado" }), { status: 404 });
 
-    const auth = btoa(`riot:${lcu.token}`); [cite: 592, 623]
+    const auth = btoa(`riot:${lcu.token}`); 
     const baseUrl = `https://127.0.0.1:${lcu.port}`;
 
     try {
@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ request }) => {
             blocks: [
                 {
                     type: "Items Iniciales",
-                    items: items.starter.map((id: any) => ({ id: String(id), count: 1 }))
+                    items: items.starter.map((i: any) => ({ id: String(i.id || i), count: 1 }))
                 },
                 {
                     type: "Build Recomendada",
@@ -42,10 +42,6 @@ export const POST: APIRoute = async ({ request }) => {
                 },
                 {
                     type: `Orden de habilidades: ${skillOrder}`,
-                    items: [] // Bloque informativo
-                },
-                {
-                    type: "Pociones y opcionales",
                     items: [
                         { id: "2003", count: 1 }, { id: "2031", count: 1 },
                         { id: "2138", count: 1 }, { id: "2139", count: 1 },
@@ -70,6 +66,8 @@ export const POST: APIRoute = async ({ request }) => {
             itemSets: [...otherSets, payload]
         };
 
+        console.log(finalPayload);
+
         // 4. Enviar actualización al cliente [cite: 630]
         const response = await fetch(`${baseUrl}/lol-item-sets/v1/item-sets/${summonerId}/sets`, {
             method: 'PUT',
@@ -82,8 +80,12 @@ export const POST: APIRoute = async ({ request }) => {
 
         if (!response.ok) throw new Error("Error LCU al guardar items");
 
-        return new Response(JSON.stringify({ success: true }), { status: 200 });
+        return new Response(JSON.stringify({
+            success: true,
+            debug_received: finalPayload 
+        }),{ status: 200 });
     } catch (e: any) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });
     }
 };
+
