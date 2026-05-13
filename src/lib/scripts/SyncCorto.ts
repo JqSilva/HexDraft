@@ -4,6 +4,20 @@ import * as cheerio from 'cheerio';
 import fs from 'fs';
 import assetsMap from '../data/assets-map.json';
 
+
+const getBestSummoners = (arr: any[]) => {
+    if (!arr || arr.length === 0) return [4, 11]; // Fallback a Flash/Smite o similar
+    
+    // Filtramos para asegurar que tengan estadísticas mínimas si lo deseas, 
+    const valid = arr.filter(i => i.pickrate > 0.3);
+    const source = valid.length > 0 ? valid : arr;
+    const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
+    
+    return [sorted[0].summonerId1, sorted[0].summonerId2];
+};
+
+
+
 // --- UTILIDADES DE MAPEÓ (Mantenerlas aquí para lógica de negocio) ---
 function getStyleOfRune(runeId: number) {
     // Buscamos directamente en el mapa de relaciones que nos dio Riot
@@ -111,16 +125,23 @@ const getMostPopularItem = (items: any[], key: string) => {
     return [...items].sort((a, b) => b.pickrate - a.pickrate)[0][key];
 };
 
+
+const API_NAME_MAP: Record<string, string> = {
+    "Wukong": "MonkeyKing",
+    "Maestro Yi": "MasterYi",
+    "Nunu y Willump": "Nunu",
+    "Renata Glasc": "Renata",
+    "Bardo": "Bard"
+};
+
 export async function syncShortCycle(version: string) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const cachePath = './src/lib/data/meta-cache.json';
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
     
     
-    //const champions = Object.keys(db);
+    const champions = Object.keys(db);
 
-    const champions = ["Smolder"]
-    
 
     console.log(`🚀 INICIANDO CICLO CORTO - Versión: ${version}`);
 
@@ -130,9 +151,11 @@ export async function syncShortCycle(version: string) {
 
     for (const role of roles) {
         console.log(`🔍 Scrapeando OP.GG: ${role}`);
-        const pos = role === 'support' ? 'utility' : (role === 'adc' ? 'bottom' : role);
+        
+        const pos = role === 'utility' ? 'support' : (role === 'adc' ? 'bottom' : role);
+        console.log(`https://www.op.gg/champions?region=global&tier=emerald_plus&position=${pos}`)
         try {
-            const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=master&position=${pos}`, {
+            const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=emerald_plus&position=${pos}`, {
                 headers: { 'User-Agent': 'Mozilla/5.0' }
             });
             const $ = cheerio.load(html);
@@ -163,11 +186,15 @@ export async function syncShortCycle(version: string) {
 
     for (const name of champions) {
         const lane = db[name].lane;
-        const urlName = name.replace(/\s/g, "");
+
+        const internalName = API_NAME_MAP[name] || name;
+        const urlName = internalName.replace(/\s/g, "");
+
         console.log(`⚡ Actualizando Build/Meta: ${name}`);
         console.log(`API: https://dpm.lol/v1/builds/${urlName}?lane=${lane.toLowerCase()}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`)
 
         try {
+            
             const url = `https://dpm.lol/v1/builds/${urlName}?lane=${lane.toLowerCase()}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
             await page.goto(url, { waitUntil: 'networkidle2' });
             const data = JSON.parse(await page.evaluate(() => document.body.innerText));
@@ -198,10 +225,13 @@ export async function syncShortCycle(version: string) {
             const bestBootsId = getMostPopularItem(data.boots, 'itemId');
             const bestCoreItems = getBestCoreBuild(data.coreBuilds);
 
+            // --- EXTRACCIÓN DE SPELLS ---
+            const bestSummoners = getBestSummoners(data.summoners);
+
             db[name].buildData = {
                 patch: version,
                 lastUpdate: new Date().toISOString(),
-                
+                summoners: bestSummoners,
                 runes: {
                     primaryStyleId: primaryStyleId,
                     subStyleId: subStyleId,
@@ -234,4 +264,5 @@ export async function syncShortCycle(version: string) {
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
     await browser.close();
     console.log("🏁 CICLO CORTO FINALIZADO");
+    return "Script Finalizado";
 }

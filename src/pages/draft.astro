@@ -146,7 +146,8 @@ import Layout from '../layouts/Layout.astro';
     };
 
     let lastPicksState = "";
-    
+    let lastImportedChampionId = 0;
+
     let version = '';
     try {
           const res = await fetch('/api/game-version');
@@ -162,7 +163,6 @@ import Layout from '../layouts/Layout.astro';
      * Limpia profundamente la interfaz y resetea estados
      */
     function clearDraftUI() {
-        showRecomendaciones(); 
         const container = document.getElementById('recommendations-grid');
         if (container) {
             container.innerHTML = `
@@ -194,7 +194,7 @@ import Layout from '../layouts/Layout.astro';
         }
     }
 
-    function renderBuild(build, championName, championId) {
+    function renderBuild(build, summoners, championName, championId) {
         const version = '16.9.1';
         const buildView = document.getElementById('build-view');
         if (!buildView || !build) {
@@ -228,59 +228,77 @@ import Layout from '../layouts/Layout.astro';
         const secondaryIconPath = styleIcons[secondaryStyleId] || "styles/runesicon.png";
 
         buildView.innerHTML = `
-            <div class="relative z-[100] flex flex-col gap-6 p-6 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+            <div class="relative z-[300] flex flex-col gap-8 p-8 bg-slate-900/80 border border-slate-700 rounded-lg shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-full">
                 
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <div class="flex gap-4 items-center">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-6">
+                    <div class="flex gap-6 items-center">
                         <div class="relative flex items-center">
-                            <div class="w-14 h-14 rounded-full bg-slate-800 border border-blue-500/50 p-2 shadow-lg shadow-blue-900/20">
+                            <div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-blue-500/50 p-2 shadow-lg shadow-blue-900/20">
                                 <img src="${getCDIcon(runes.keystone.icon)}" title="${runes.keystone.name}" class="w-full h-full object-contain" />
                             </div>
-                            <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-slate-950 rounded-full border border-slate-700 p-1.5 shadow-xl">
+                            <div class="absolute -bottom-1 -right-1 w-10 h-10 bg-slate-950 rounded-full border-2 border-slate-700 p-2 shadow-xl">
                                 <img src="${getCDIcon(secondaryIconPath)}" class="w-full h-full object-contain" />
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-white font-black text-sm uppercase tracking-wider">${championName}</h3>
-                            <p class="text-[10px] text-green-400 font-bold uppercase tracking-tighter">
-                                Orden: ${skillOrder}
-                            </p>
+                            <h3 class="text-white font-black text-2xl uppercase tracking-tighter italic">${championName}</h3>
+                            <div class="flex gap-4 mt-1">
+                                <p class="text-xs text-green-400 font-bold uppercase tracking-widest">Orden: ${skillOrder}</p>
+                                <span class="text-slate-600">|</span>
+                                <p class="text-xs text-blue-400 font-bold uppercase tracking-widest">Sincronizado</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <button id="btn-import-all" class="cursor-pointer pointer-events-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-[10px] rounded transition-all shadow-lg shadow-blue-900/40">
-                        Importar Todo
+                    <button id="btn-import-all" class="cursor-pointer px-8 py-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-xs tracking-widest rounded-sm transition-all shadow-xl shadow-blue-900/40">
+                        Importar Todo al Cliente
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-3">
-                        <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Selecciones</span>
-                        <div class="flex flex-wrap gap-2 items-center">
-                            ${runes.selections.slice(1).map(r => `
-                                <div class="w-8 h-8 rounded-full bg-slate-800/50 border border-slate-800 p-1 mt-2" title="${r.name}">
-                                    <img src="${getCDIcon(r.icon)}" class="w-full h-full object-contain grayscale hover:grayscale-0 transition-all" />
-                                </div>
-                            `).join('')}
-                            
-                            <div class="w-[1px] h-6 bg-slate-800 mx-2"></div>
-                        </div>
-                    </div>
+                <div class="flex flex-col gap-12 mt-2 mb-2">
+                    
 
-                    <div class="space-y-3">
-                        <span class="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-2">Build Sugerida</span>
-                        <div class="flex gap-2 items-center">
-                            ${items.core.map(i => `
-                                <div class="relative group">
-                                    <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${i.id}.png" 
-                                        title="${i.name}"
-                                        class="w-10 h-10 border border-slate-700 rounded hover:border-blue-500 transition-colors" />
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm text-orange-400 font-black uppercase tracking-[0.4em] italic pl-2">Ruta de Objetos</span>
+                            <div class="h-px flex-1 bg-gradient-to-r from-orange-500/30 to-transparent"></div>
+                        </div>
+
+                        <div class="bg-orange-950/10 border border-orange-500/10 p-10 rounded-sm relative shadow-inner">
+                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_80%)] from-orange-500/5 to-transparent"></div>
+                            
+                            <div class="flex flex-wrap items-center justify-center gap-4 relative z-10">
+                                ${items.core.map((i, index) => `
+                                    <div class="flex items-center">
+                                        <div class="relative group/item" title="${i.name}">
+                                            <div class="absolute -inset-2 bg-orange-500/20 blur-md opacity-0 group-hover/item:opacity-100 transition-all"></div>
+                                            <div class="relative">
+                                                <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${i.id}.png" 
+                                                    class="w-13 h-13 border-2 border-slate-700 rounded-sm shadow-2xl transition-transform group-hover/item:scale-110" />
+                                                <div class="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 text-[8px] font-bold px-1.5 py-0.5 rounded-full text-slate-400">
+                                                    ${index + 1}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ${index < items.core.length - 1 ? `
+                                            <div class="px-4 text-orange-500/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-sm"><path d="m9 18 6-6-6-6"/></svg>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+
+                                <div class="h-12 w-px bg-slate-800 mx-6"></div>
+
+                                <div class="flex flex-col items-center gap-2">
+                                    
+                                    <div class="relative group/boot" title="${items.boots.name}">
+                                        <div class="absolute -inset-2 bg-white/5 blur-md opacity-0 group-hover/boot:opacity-100 transition-all"></div>
+                                        <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${items.boots.id}.png" 
+                                            class="w-13 h-13 border-2 border-slate-600 rounded-sm relative z-10 shadow-2xl transition-transform group-hover/boot:rotate-3" />
+                                    </div>
                                 </div>
-                            `).join('')}
-                            <div class="text-slate-700 font-bold px-1">+</div>
-                            <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${items.boots.id}.png" 
-                                title="${items.boots.name}"
-                                class="w-10 h-10 border border-slate-700 rounded shadow-md shadow-black/50" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -295,7 +313,7 @@ import Layout from '../layouts/Layout.astro';
 
             try {
                 // 1. Importar Todo
-                await importAll(runes,items,championName,championId,skillOrder);
+                await importAll(runes,items,summoners,championName,championId,skillOrder);
                 
                 btn.innerText = "¡Completado!";
                 btn.classList.replace('bg-blue-600', 'bg-green-600');
@@ -310,11 +328,11 @@ import Layout from '../layouts/Layout.astro';
         };
     }
 
-    async function importAll(runes, buildItems, championName, championId, skillOrder) {
+    async function importAll(runes, buildItems, summoners, championName, championId, skillOrder) {
         console.log("🚀 Iniciando importación masiva para", championName, championId);
 
         try {
-            // 1. Payload de Runas (el que ya tenías) [cite: 525, 526]
+            // Payload de Runas 
             const runePayload = {
                 name: `HexDraft: ${championName}`,
                 primaryStyleId: runes.primaryStyle,
@@ -325,7 +343,7 @@ import Layout from '../layouts/Layout.astro';
                 ]
             };
 
-            // 2. Payload de Items (basado en tu estructura solicitada)
+            // Payload de Items 
             const itemPayload = {
                 championId: championId,
                 championName: championName,
@@ -333,10 +351,14 @@ import Layout from '../layouts/Layout.astro';
                 skillOrder: skillOrder
             };
 
-            
+            // Payload de Spells
+            const summonerPayload = {
+            spell1Id: summoners[0].id,
+            spell2Id: summoners[1].id
+        };
 
-            // Ejecutar ambas peticiones [cite: 527, 630]
-            const [resRunes, resItems] = await Promise.all([
+            // Ejecutar  peticiones en paralelo
+            const [resRunes, resItems, resSpells] = await Promise.all([
                 fetch('/api/set-runes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -346,10 +368,15 @@ import Layout from '../layouts/Layout.astro';
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(itemPayload)
+                }),
+                fetch('/api/set-spells', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(summonerPayload)
                 })
             ]);
 
-            if (resRunes.ok && resItems.ok) {
+            if (resRunes.ok && resItems.ok && resSpells.ok) {
                 console.log("✅ Configuración completa aplicada");
             }
         } catch (e) {
@@ -364,7 +391,7 @@ import Layout from '../layouts/Layout.astro';
 
             const game_status = await fetch('/api/game-status');
             const { phase } = await game_status.json();
-
+            console.log(phase)
             if (phase === 'ChampSelect'){
                 const res = await fetch('/api/champ-select');
                 const status = document.getElementById('status-text');
@@ -412,18 +439,33 @@ import Layout from '../layouts/Layout.astro';
                         currentRecommendations = recommendations;
 
                         if (myPlayer){
-                            if (myPlayer.championId !== 0 && !isBuildViewActive) {
+                            if (myPlayer.championId !== 0) {
                                 const champname = getNameFromId(myPlayer.championId);
                                 console.log("🔍 Detectado pick propio:", champname);
 
-                                const pickData = getSingleChampionBuild(myPlayer.championId);
+                                if (myPlayer.championId !== lastImportedChampionId) {
+                                    const champname = getNameFromId(myPlayer.championId);
+                                    const pickData = getSingleChampionBuild(myPlayer.championId);
 
-                                if (pickData) {
-                                    isBuildViewActive = true;
-                                    showBuildView(champname);
-                                    renderBuild(pickData.build, champname, myPlayer.championId); 
-                                    console.log("✅ Build renderizada para", champname);
+                                    if (pickData) {
+                                        lastImportedChampionId = myPlayer.championId;
+
+                                        console.log(`🚀 [AUTO-IMPORT] Importando configuración para ${champname}...`);
+                                        importAll(
+                                            pickData.build.runes,
+                                            pickData.build.items,
+                                            pickData.build.summoners, 
+                                            champname,
+                                            myPlayer.championId,
+                                            pickData.build.skillOrder
+                                        );
+                                        isBuildViewActive = true;
+                                        showBuildView(champname);
+                                        renderBuild(pickData.build, pickData.build.summoners, champname, myPlayer.championId); 
+                                        console.log("✅ Build renderizada para", champname);
+                                    }
                                 }
+
                             }
                         }
                         renderGrid(recommendations.slice(0, 20));
@@ -437,11 +479,14 @@ import Layout from '../layouts/Layout.astro';
                 }
             } else if (phase === 'InProgress' || phase === 'WaitingForStats' || phase === 'PreEndOfGame'){
                 console.log("🎮 Partida en curso: Manteniendo UI bloqueada.");
+                console.log("TimeMout puesto de :" , 60000 )
                 setTimeout(updateDraftStatus, 60000);
                 return;
             }
-            if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby') {
+            if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby' || phase === 'Matchmaking') {
                 isBuildViewActive = false;
+                lastImportedChampionId = 0;
+                console.log("Grid Limpia");
                 clearDraftUI();
             }  
         } catch (e) {
@@ -455,17 +500,16 @@ import Layout from '../layouts/Layout.astro';
         const container = document.getElementById('recommendations-grid');
         if (!container) return;
         
-        container.className = "grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-10 gap-3 w-full justify-items-center content-start";
+        container.className = "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5 w-full justify-items-center content-start";
         container.innerHTML = recs.map(r => {
             const scoreColor = r.score >= 8 ? 'text-green-400' : (r.score >= 6 ? 'text-yellow-400' : 'text-red-400');
-            const reasonsStr = r.reasons.join('|');
-
+            
             return `
-                <div class="recommendation-item group relative w-14 h-14 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
+                <div class="recommendation-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
                     data-name="${r.name}" data-reasons="${r.reasons.join('|')}" data-score="${r.score.toFixed(1)}">
                     <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
                     <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
-                        <span class="text-[9px] font-black px-1 py-0.5 rounded border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
+                        <span class="text-[13px] font-black px-2 py-1 rounded rounded-full border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
                             ${r.score.toFixed(1)}
                         </span>
                     </div>

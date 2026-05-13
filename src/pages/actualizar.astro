@@ -125,7 +125,7 @@ import Layout from '../layouts/Layout.astro';
       writeToTerminal(`FALLO DE RED: No se pudo contactar con la API`, 'error');
     } finally {
       // Re-habilitamos después de un pequeño delay para evitar spam
-      setTimeout(() => btn.disabled = false, 5000);
+      setTimeout(() => btn.disabled = false, 50000);
     }
   }
 

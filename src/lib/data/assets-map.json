@@ -4603,5 +4603,79 @@
     "9105": 8000,
     "9111": 8000,
     "9923": 8100
+  },
+  "summoners": {
+    "1": {
+      "name": "Purificación",
+      "icon": "SummonerBoost.png"
+    },
+    "3": {
+      "name": "Extenuación",
+      "icon": "SummonerExhaust.png"
+    },
+    "4": {
+      "name": "Destello",
+      "icon": "SummonerFlash.png"
+    },
+    "6": {
+      "name": "Fantasma",
+      "icon": "SummonerHaste.png"
+    },
+    "7": {
+      "name": "Curación",
+      "icon": "SummonerHeal.png"
+    },
+    "11": {
+      "name": "Castigo",
+      "icon": "SummonerSmite.png"
+    },
+    "12": {
+      "name": "Teleportación",
+      "icon": "SummonerTeleport.png"
+    },
+    "13": {
+      "name": "Claridad",
+      "icon": "SummonerMana.png"
+    },
+    "14": {
+      "name": "Ignición",
+      "icon": "SummonerDot.png"
+    },
+    "21": {
+      "name": "Barrera",
+      "icon": "SummonerBarrier.png"
+    },
+    "30": {
+      "name": "¡Por el Rey!",
+      "icon": "SummonerPoroRecall.png"
+    },
+    "31": {
+      "name": "Disporo",
+      "icon": "SummonerPoroThrow.png"
+    },
+    "32": {
+      "name": "Marca",
+      "icon": "SummonerSnowball.png"
+    },
+    "39": {
+      "name": "Marca",
+      "icon": "SummonerSnowURFSnowball_Mark.png"
+    },
+    "54": {
+      "name": "Marcador",
+      "icon": "Summoner_UltBookPlaceholder.png"
+    },
+    "55": {
+      "name": "Placeholder y Castigo de ataque",
+      "icon": "Summoner_UltBookSmitePlaceholder.png"
+    },
+    "2201": {
+      "name": "Huida",
+      "icon": "SummonerCherryHold.png"
+    },
+    "2202": {
+      "name": "Destello",
+      "icon": "SummonerCherryFlash.png"
+    }
   }
 }

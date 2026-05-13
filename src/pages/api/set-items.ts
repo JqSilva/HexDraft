@@ -66,7 +66,6 @@ export const POST: APIRoute = async ({ request }) => {
             itemSets: [...otherSets, payload]
         };
 
-        console.log(finalPayload);
 
         // 4. Enviar actualización al cliente [cite: 630]
         const response = await fetch(`${baseUrl}/lol-item-sets/v1/item-sets/${summonerId}/sets`, {
@@ -81,8 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (!response.ok) throw new Error("Error LCU al guardar items");
 
         return new Response(JSON.stringify({
-            success: true,
-            debug_received: finalPayload 
+            success: true
         }),{ status: 200 });
     } catch (e: any) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });

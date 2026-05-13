@@ -16,6 +16,7 @@ export const GET: APIRoute = async ({ url }) => {
         // para que la conexión no se pierda por timeout
         if (type === 'short') {
             syncShortCycle(version); 
+            
         } else {
             syncLongCycle(version);
         }

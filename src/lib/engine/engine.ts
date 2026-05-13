@@ -65,7 +65,7 @@ export function getProcessedRecommendations(
 
         const rawBuild = c.buildData;
 
-        console.log(rawBuild);
+
         
         const hydratedBuild = {
             runes: {
@@ -93,7 +93,7 @@ export function getProcessedRecommendations(
         });
     }
     console.log(`📊 [ENGINE] Procesados: ${results.length} | Omitidos por línea: ${filteredCount}`);
-    return results.sort((a, b) => b.score - a.score).slice(0, 15);
+    return results.sort((a, b) => b.score - a.score).slice(0, 30);
 }
 
 /**
@@ -342,10 +342,11 @@ export function getSingleChampionBuild(championId: number): any {
     : "Q > W > E";
 
 
-    console.log(b.runes.primaryStyleId,"BEBESITA");
+   
     return {
         name: champ.name,
         build: {
+            summoners: b.summoners.map((id: number) => hydrateAsset('summoners', id)),
             runes: {
                 // USA LAS PROPIEDADES PLANAS QUE GENERA TU SCRAPER
                 primaryStyle: b.runes.primaryStyleId,

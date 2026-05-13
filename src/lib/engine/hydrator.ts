@@ -4,7 +4,7 @@ import assets from '../data/assets-map.json';
 const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/";
 const DD_BASE = "https://ddragon.leagueoflegends.com/cdn/14.9.1/img/item/";
 
-export function hydrateAsset(type: 'runes' | 'items' | 'shards', id: number | string) {
+export function hydrateAsset(type: 'runes' | 'items' | 'shards' | 'summoners', id: number | string) {
     
     const idStr = id.toString();
 
@@ -31,6 +31,15 @@ export function hydrateAsset(type: 'runes' | 'items' | 'shards', id: number | st
             icon: data ? `${CD_BASE}${data.icon}` : ""
         };
     }
+
+    if (type === 'summoners'){
+        const spell = assets.summoners[idStr as keyof typeof assets.summoners];
+        return {
+            id: Number(id),
+            name: spell?.name || "Hechizo",
+            icon: `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/spell/${spell?.icon}`
+        };
+    } 
 
     return null;
 }
