@@ -4,9 +4,17 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="HexDraft | LCU Real-Time">
   <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#010a13] text-slate-200">
-    <a href="/" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
-      ← Volver al Inicio
-    </a>
+        
+    <div class="flex justify-between">
+        <a href="/" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
+        ← Volver al Inicio
+        </a>
+
+        <a href="/actualizar" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
+        Actualizar Meta → 
+        </a>
+
+    </div>
 
     <div id="lcu-status" class="w-fit mx-auto mb-6 text-center py-2 px-3 bg-slate-900/80 border border-slate-800 rounded-sm">
       <span class="text-xs uppercase tracking-widest font-bold text-slate-500">Estado del Cliente: </span>
@@ -145,6 +153,8 @@ import Layout from '../layouts/Layout.astro';
         7204: "7204_resolve.png"
     };
 
+    let isPolling = false;
+    let pollingInterval = 2000;
     let lastPicksState = "";
     let lastImportedChampionId = 0;
 
@@ -385,114 +395,103 @@ import Layout from '../layouts/Layout.astro';
     }
 
     let currentRecommendations = [];
+    
     async function updateDraftStatus() {
-        let isBuildViewActive = false;
-        try {
+        if (isPolling) return; 
+        isPolling = true;
 
+        try {
             const game_status = await fetch('/api/game-status');
             const { phase } = await game_status.json();
-            console.log(phase)
-            if (phase === 'ChampSelect'){
-                const res = await fetch('/api/champ-select');
-                const status = document.getElementById('status-text');
 
-                if (!res.ok) {
-                    if (status) {
-                        status.innerText = "Desconectado";
-                        status.className = "text-xs uppercase tracking-widest font-bold text-red-500";
-                    }
+            if (phase === 'ChampSelect') {
+                pollingInterval = 2000; // Rápido en selección
+                await handleChampSelectLogic(); 
+            } 
+            else if (['InProgress', 'WaitingForStats', 'PreEndOfGame'].includes(phase)) {
+                pollingInterval = 120000; // Lento en partida
+                console.log("🎮 Partida en curso: Modo ahorro.");
+            } 
+            else {
+                pollingInterval = 5000; // Medio en Lobby
+                if (lastPicksState !== "") {
+                    lastImportedChampionId = 0;
                     clearDraftUI();
-                    setTimeout(updateDraftStatus, 5000);
-                    return;
+                    lastPicksState = "";
                 }
+            }
+        } catch (e) {
+            console.error("❌ Error en ciclo:", e);
+            pollingInterval = 5000;
+        } finally {
+            isPolling = false;
+            setTimeout(updateDraftStatus, pollingInterval);
+        }
+    }
+    let isBuildViewActive = false; 
+    async function handleChampSelectLogic() {
+        const res = await fetch('/api/champ-select');
+        if (!res.ok) {
+            const status = document.getElementById('status-text');
+            if (status) status.innerText = "Desconectado";
+            clearDraftUI();
+            return;
+        }
 
-                const data = await res.json();
+        const data = await res.json();
+        if (!data.inDraft) return;
 
-                if (data.inDraft) {
-                    const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
-                                            data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
+        // Generamos la llave para saber si algo cambió
+        const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
+                                data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
 
-                    if (currentPicksState !== lastPicksState) {
-                        console.group("🎮 [DRAFT UPDATE] Cambio detectado");
-                        lastPicksState = currentPicksState;
+        if (currentPicksState !== lastPicksState) {
+            lastPicksState = currentPicksState;
 
-                        // 1. Limpieza de IDs para el motor
-                        const cleanMyTeam = data.myTeam
-                            .map(p => p.championId || p.championPickIntent)
-                            .filter(id => id !== 0);
+            const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+            const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
 
-                        const cleanTheirTeam = data.theirTeam
-                            .map(p => p.championId || p.championPickIntent)
-                            .filter(id => id !== 0);
+            const resMe = await fetch('/api/me');
+            const meData = await resMe.json();
+            const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
+            const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
-                        // 2. Obtener mi posición
-                        const resMe = await fetch('/api/me');
-                        const meData = await resMe.json();
-                        const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
+            // Actualizar slots visuales
+            data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+            data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
 
-                        const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+            // Lógica de Auto-Import cuando eliges campeón
+            if (myPlayer && myPlayer.championId !== 0) {
+                if (myPlayer.championId !== lastImportedChampionId) {
+                    const champname = getNameFromId(myPlayer.championId);
+                    const pickData = getSingleChampionBuild(myPlayer.championId);
 
-                        // Procesar Recomendaciones
-                        const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
-                       
+                    if (pickData) {
+                        isBuildViewActive = true;
+                        lastImportedChampionId = myPlayer.championId;
 
-                        currentRecommendations = recommendations;
-
-                        if (myPlayer){
-                            if (myPlayer.championId !== 0) {
-                                const champname = getNameFromId(myPlayer.championId);
-                                console.log("🔍 Detectado pick propio:", champname);
-
-                                if (myPlayer.championId !== lastImportedChampionId) {
-                                    const champname = getNameFromId(myPlayer.championId);
-                                    const pickData = getSingleChampionBuild(myPlayer.championId);
-
-                                    if (pickData) {
-                                        lastImportedChampionId = myPlayer.championId;
-
-                                        console.log(`🚀 [AUTO-IMPORT] Importando configuración para ${champname}...`);
-                                        importAll(
-                                            pickData.build.runes,
-                                            pickData.build.items,
-                                            pickData.build.summoners, 
-                                            champname,
-                                            myPlayer.championId,
-                                            pickData.build.skillOrder
-                                        );
-                                        isBuildViewActive = true;
-                                        showBuildView(champname);
-                                        renderBuild(pickData.build, pickData.build.summoners, champname, myPlayer.championId); 
-                                        console.log("✅ Build renderizada para", champname);
-                                    }
-                                }
-
-                            }
-                        }
-                        renderGrid(recommendations.slice(0, 20));
-
-                        //Actualizar slots
-                        data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
-                        data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
-                        
-                        console.groupEnd();
+                        importAll(pickData.build.runes, pickData.build.items, pickData.build.summoners, champname, myPlayer.championId, pickData.build.skillOrder);
+                        showBuildView(champname);
+                        renderBuild(pickData.build, pickData.build.summoners, champname, myPlayer.championId);
                     }
                 }
-            } else if (phase === 'InProgress' || phase === 'WaitingForStats' || phase === 'PreEndOfGame'){
-                console.log("🎮 Partida en curso: Manteniendo UI bloqueada.");
-                console.log("TimeMout puesto de :" , 60000 )
-                setTimeout(updateDraftStatus, 60000);
-                return;
-            }
-            if (lastPicksState !== "" && phase == 'None' || phase === 'Lobby' || phase === 'Matchmaking') {
+            } else{
                 isBuildViewActive = false;
                 lastImportedChampionId = 0;
-                console.log("Grid Limpia");
-                clearDraftUI();
-            }  
-        } catch (e) {
-            console.error("❌ Error en ciclo de draft:", e);
-        } finally {
-            setTimeout(updateDraftStatus, 2000);
+
+                const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+                const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+                const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+                
+                const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+
+                const grid = document.getElementById('recommendations-grid');
+                if (grid && grid.classList.contains('hidden')) {
+                    showRecomendaciones();
+                }
+                renderGrid(recommendations.slice(0, 20));
+
+            }
         }
     }
 
@@ -579,6 +578,7 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function showRecomendaciones() {
+        isBuildViewActive = false;
         const gridRecomendations = document.getElementById('recommendations-grid');
         const buildView = document.getElementById('build-view');
         const title = document.getElementById('view-title');
