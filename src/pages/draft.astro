@@ -3,90 +3,106 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
-  <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#010a13] text-slate-200">
-        
-    <div class="flex justify-between">
-        <a href="/" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
-        ← Volver al Inicio
+  <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#020617] text-slate-200 overflow-hidden font-sans">
+    
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-purple-900/5 blur-[160px] rounded-full pointer-events-none"></div>
+
+    <div class="flex justify-between relative z-10 mb-8">
+        <a href="/" class="text-slate-500 hover:text-white transition-colors text-xs inline-block uppercase tracking-[0.2em] font-black group">
+          <span class="inline-block transform group-hover:-translate-x-1 transition-transform">←</span> Inicio
         </a>
 
-        <a href="/actualizar" class="text-white/50 hover:text-white transition-colors text-sm mb-8 inline-block uppercase tracking-widest font-bold">
-        Actualizar Meta → 
+        <a href="/actualizar" class="text-slate-500 hover:text-white transition-colors text-xs inline-block uppercase tracking-[0.2em] font-black">
+          Configuración <span class="text-purple-600">Sync</span> → 
         </a>
-
     </div>
 
-    <div id="lcu-status" class="w-fit mx-auto mb-6 text-center py-2 px-3 bg-slate-900/80 border border-slate-800 rounded-sm">
-      <span class="text-xs uppercase tracking-widest font-bold text-slate-500">Estado del Cliente: </span>
-      <span id="status-text" class="text-xs uppercase tracking-widest font-bold text-red-500">Desconectado</span>
+    <div id="lcu-status" class="w-fit mx-auto mb-10 flex items-center gap-3 py-2.5 px-4 bg-slate-900/80 border border-slate-800 rounded-sm relative z-10">
+      <div id="status-indicator" class="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.5)]"></div>
+      <span id="status-text" class="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">LCU Desconectado</span>
     </div>
 
-    <div class="grid grid-cols-12 gap-8">
+    <div class="flex flex-row gap-6 w-full overflow-x-auto pb-4 justify-between items-start relative z-10">
       
-        <div class="col-span-12 lg:col-span-3 space-y-4">
-            <h3 class="text-blue-400 font-bold uppercase tracking-tighter border-b border-blue-900 pb-2">Tu Equipo</h3>
+        <div class="w-72 shrink space-y-4 min-w-[200px]">
+            <h3 class="text-cyan-500 font-black text-xs uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center gap-2">
+                <span class="w-3 h-px bg-cyan-500"></span> Tu Equipo
+            </h3>
             {Array(5).fill(0).map((_, i) => (
-            <div id={`ally-slot-${i}`} class="h-24 bg-blue-900/10 border border-blue-900/30 flex items-center px-4 rounded-sm transition-all overflow-hidden relative group">
-                <div class="relative w-16 h-16 bg-slate-800 border border-blue-500/30 overflow-hidden">
+            <div id={`ally-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-l-4 border-l-cyan-600 flex items-center px-4 rounded-sm transition-all overflow-hidden relative group backdrop-blur-md">
+                <div class="relative w-16 h-16 bg-slate-950 border border-slate-800 overflow-hidden shrink-0 rounded-sm">
                 <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
-                <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-blue-500/20">?</div>
+                <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-800">?</div>
                 </div>
-                <div class="ml-4 flex flex-col">
-                <span class="summoner-name text-xs font-bold text-blue-400 uppercase tracking-tight truncate w-32">Buscando...</span>
-                <span class="champ-name text-[10px] text-slate-500 uppercase font-black">Esperando Pick</span>
+                <div class="ml-4 flex flex-col min-w-0">
+                <span class="summoner-name text-xs font-bold text-cyan-500 uppercase tracking-wide truncate w-full">Buscando...</span>
+                <span class="champ-name text-[11px] text-slate-300 uppercase font-black italic tracking-wide truncate">Esperando Pick</span>
                 </div>
-                <div class="absolute right-1 mr-4">
-                    <img class="role-icon w-10 h-10 hidden" />
+                <div class="absolute right-1 mr-2 shrink-0">
+                    <img class="role-icon w-8 h-8 hidden opacity-50 brightness-200" />
                 </div>
             </div>
             ))}
         </div>
 
-        <div class="col-span-12 lg:col-span-6">
-            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden">
-                <header class="mb-8 flex justify-between items-end border-b border-slate-800 pb-4">
-                    <div>
-                        <h2 id="view-title" class="text-2xl font-black text-white uppercase italic tracking-tighter">Recomendaciones</h2>
-                        <p id="view-subtitle" class="text-[10px] text-slate-500 uppercase">Basado en composiciones y counters</p>
+        <div class="flex-1 min-w-[750px]">
+            <div class="bg-slate-900/50 border border-slate-800 p-8 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden shadow-2xl">
+                <header class="mb-10 flex justify-between items-end border-b border-slate-800 pb-5">
+                    <div> 
+                        <h2 id="view-title" class="text-xl font-black uppercase tracking-[0.3em] text-white italic">
+                            ANALISIS <span class="text-purple-600">SUGERIDO</span>
+                        </h2> 
+                        <p id="view-subtitle" class="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-2">
+                            MOTOR DE RECOMENDACIÓN ACTIVO
+                        </p> 
                     </div>
-                    <div class="text-xs text-blue-400 font-bold uppercase tracking-widest">
-                        Fase: <span id="timer-display">00</span>
+                    <div class="text-[10px] text-purple-500 font-black uppercase tracking-[0.2em] bg-purple-950/20 px-3 py-1 border border-purple-900/30 rounded-sm">
+                        Fase: <span id="phase" class="text-white">Picks</span>
                     </div>
                 </header>
 
-                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative transition-all duration-500">
-                    <p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">
-                        Esperando Fase de Selección...
-                    </p>
+                <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 max-w-fit w-full mx-auto relative transition-all duration-500">
+                    <div class="absolute top-[15vh] left-1/2 -translate-x-1/2 text-center w-full">
+                         <div class="w-10 h-10 border-2 border-slate-800 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-slate-500 uppercase font-black tracking-[0.3em] text-[10px] animate-pulse">
+                            Escaneando sesión de juego...
+                        </p>
+                    </div>
+                </div>
+
+                <div id="bans-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 max-w-fit w-full mx-auto relative transition-all duration-500 hidden">
                 </div>
 
                 <div id="build-view" class="hidden opacity-0 translate-y-4 transition-all duration-500">
-                    <div class="flex justify-between items-start mb-6">
-                        <button id="back-to-grid" class="text-[10px] text-slate-500 hover:text-white uppercase font-bold transition-colors">
-                            ← Volver a Recomendaciones
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <button id="back-to-grid" class="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-widest transition-colors flex items-center gap-2">
+                            <span class="text-lg">←</span> Volver al Análisis
                         </button>
-                        <button id="import-lcu" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 uppercase tracking-tighter transition-all shadow-lg shadow-blue-900/20">
-                            Importar al Cliente (LCU)
+                        <button id="import-lcu" class="bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black px-6 py-3 uppercase tracking-[0.2em] rounded-sm transition-all shadow-lg active:scale-95">
+                            Aplicar al Cliente
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-12 gap-6">
-                        <div id="runes-display" class="col-span-12 md:col-span-7 bg-black/40 p-4 border border-slate-800">
-                            <h4 class="text-[10px] text-blue-400 font-bold uppercase mb-4 tracking-widest">Configuración de Runas</h4>
-                            <div id="runes-content" class="grid grid-cols-4 gap-4">
-                                </div>
+                    <div class="grid grid-cols-12 gap-8">
+                        <div id="runes-display" class="col-span-7 bg-black/30 p-6 border border-slate-800 rounded-sm">
+                            <h4 class="text-[10px] text-cyan-500 font-black uppercase mb-6 tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Configuración de Runas
+                            </h4>
+                            <div id="runes-content" class="grid grid-cols-4 gap-6"></div>
                         </div>
 
-                        <div class="col-span-12 md:col-span-5 space-y-6">
-                            <div id="items-display" class="bg-black/40 p-4 border border-slate-800">
-                                <h4 class="text-[10px] text-orange-400 font-bold uppercase mb-4 tracking-widest">Build Sugerida</h4>
-                                <div id="items-content" class="flex flex-wrap gap-2">
-                                    </div>
+                        <div class="col-span-5 space-y-6">
+                            <div id="items-display" class="bg-black/30 p-6 border border-slate-800 rounded-sm">
+                                <h4 class="text-[10px] text-orange-500 font-black uppercase mb-6 tracking-[0.2em] flex items-center gap-2">
+                                     <span class="w-2 h-2 bg-orange-500 rounded-full"></span> Build Sugerida
+                                </h4>
+                                <div id="items-content" class="flex flex-wrap gap-3"></div>
                             </div>
-                            <div id="skills-display" class="bg-black/40 p-4 border border-slate-800">
-                                <h4 class="text-[10px] text-green-400 font-bold uppercase mb-2 tracking-widest">Orden de Habilidades</h4>
-                                <div id="skills-content" class="text-xl font-black text-white italic tracking-tighter">
-                                    </div>
+                            <div id="skills-display" class="bg-black/30 p-6 border border-slate-800 rounded-sm">
+                                <h4 class="text-[10px] text-green-500 font-black uppercase mb-4 tracking-[0.2em] flex items-center gap-2">
+                                     <span class="w-2 h-2 bg-green-500 rounded-full"></span> Secuencia Óptima
+                                </h4>
+                                <div id="skills-content" class="text-3xl font-black text-white italic tracking-tighter"></div>
                             </div>
                         </div>
                     </div>
@@ -94,32 +110,35 @@ import Layout from '../layouts/Layout.astro';
             </div>
         </div>
 
-      <div class="col-span-12 lg:col-span-3 space-y-4 text-right">
-        <h3 class="text-red-400 font-bold uppercase tracking-tighter border-b border-red-900 pb-2">Enemigos</h3>
+        <div class="w-72 shrink space-y-4 min-w-[200px] text-right">
+        <h3 class="text-red-500 font-black text-xs uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center justify-end gap-2">
+           Enemigos <span class="w-3 h-px bg-red-500"></span>
+        </h3>
         {Array(5).fill(0).map((_, i) => (
-          <div id={`enemy-slot-${i}`} class="h-24 bg-red-900/10 border border-red-900/30 flex flex-row-reverse items-center px-4 rounded-sm transition-all overflow-hidden relative group">
-            <div class="relative w-16 h-16 bg-slate-800 border border-red-500/30 overflow-hidden">
+          <div id={`enemy-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-r-4 border-r-red-700 flex flex-row-reverse items-center px-4 rounded-sm transition-all overflow-hidden relative group backdrop-blur-md">
+            <div class="relative w-16 h-16 bg-slate-950 border border-slate-800 overflow-hidden shrink-0 rounded-sm">
               <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
-              <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-red-500/20">?</div>
+              <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-800">?</div>
             </div>
-            <div class="mr-4 flex flex-col">
-              <span class="summoner-name text-xs font-bold text-red-400 uppercase tracking-tight truncate w-32">Enemigo</span>
-              <span class="champ-name text-[10px] text-slate-500 uppercase font-black">Esperando Pick</span>
+            <div class="mr-4 flex flex-col min-w-0">
+              <span class="summoner-name text-xs font-bold text-red-500 uppercase  truncate w-full">Enemigo</span>
+              <span class="champ-name text-[11px] text-slate-300 uppercase font-black italic tracking-wide truncate">Esperando Pick</span>
             </div>
           </div>
         ))}
       </div>
     </div>
-    <div id="reason-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 hidden p-4">
-        <div class="bg-[#010a13] border border-blue-900/50 p-6 max-w-sm w-full rounded-sm shadow-2xl">
-            <div class="flex justify-between items-start mb-4">
+
+    <div id="reason-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#020617]/90 backdrop-blur-md hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 p-10 max-w-md w-full rounded-sm shadow-2xl relative">
+            <div class="flex justify-between items-start mb-8 border-b border-slate-800 pb-4">
                 <div>
-                    <h4 id="popup-champ-name" class="text-xl font-black text-white uppercase italic">Nombre</h4>
-                    <p class="text-xs text-blue-400 font-bold uppercase tracking-widest">Score: <span id="popup-score">0.0</span></p>
+                    <h4 id="popup-champ-name" class="text-2xl font-black text-white uppercase italic tracking-tighter">Nombre</h4>
+                    <p class="text-[10px] text-purple-500 font-black uppercase tracking-[0.2em] mt-1">Nivel de Amenaza: <span id="popup-score" class="text-white">0.0</span></p>
                 </div>
-                <button id="close-popup" class="text-slate-500 hover:text-white font-bold">✕</button>
+                <button id="close-popup" class="text-slate-500 hover:text-white font-black text-xs p-2">✕</button>
             </div>
-            <ul id="popup-reasons-list" class="space-y-3">
+            <ul id="popup-reasons-list" class="space-y-4 font-mono text-xs">
                 </ul>
         </div>
     </div>
@@ -127,15 +146,14 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
+    import { base64 } from 'astro:schema';
     import { ENRICHED_DB } from '../lib/engine/dataProvider';
-    import { getNameFromId, getSingleChampionBuild, getProcessedRecommendations } from '../lib/engine/engine';
+    import { getNameFromId, getSingleChampionBuild, getProcessedRecommendations, getProcessedBans } from '../lib/engine/engine';
    
-
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
     const ITEM_IMG_BASE = "https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/";
     const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/";
-
     const posMapping = {
         "top": "icon-position-top.png",
         "jungle": "icon-position-jungle.png",
@@ -144,19 +162,18 @@ import Layout from '../layouts/Layout.astro';
         "bottom": "icon-position-bottom.png",
         "utility": "icon-position-utility.png"
     };
-
     const RUNE_STYLE_MAP = {
         7200: "7200_domination.png",
         7201: "7201_precision.png",
         7202: "7202_sorcery.png",
-        7203: "7203_whimsy.png", // Inspiración
+        7203: "7203_whimsy.png",
         7204: "7204_resolve.png"
     };
-
     let isPolling = false;
     let pollingInterval = 2000;
     let lastPicksState = "";
     let lastImportedChampionId = 0;
+    let isBuildViewActive = false;
 
     let version = '';
     try {
@@ -169,25 +186,58 @@ import Layout from '../layouts/Layout.astro';
           console.error("Error detectando versión:", e);
       }
 
-    /**
-     * Limpia profundamente la interfaz y resetea estados
-     */
     function clearDraftUI() {
-        const container = document.getElementById('recommendations-grid');
-        if (container) {
-            container.innerHTML = `
-                <p class="absolute top-[20vh] left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-600 uppercase font-bold animate-pulse text-center w-70">
-                    Esperando Fase de Selección...
-                </p>`;
+        // 1. Reiniciar variables globales de control de estado
+        isBuildViewActive = false;
+        lastImportedChampionId = 0;
+        lastPicksState = "";
+
+        // 2. Controlar la visibilidad de los contenedores principales
+        const recsGrid = document.getElementById('recommendations-grid');
+        const bansGrid = document.getElementById('bans-grid');
+        const buildView = document.getElementById('build-view'); // Asegúrate de usar el ID real de tu contenedor de builds
+        const fase = document.getElementById('phase');
+        const title = document.getElementById('view-title');
+        const subtitle = document.getElementById('view-subtitle');
+
+        // Restauramos el texto de la cabecera por defecto
+        if (fase) fase.innerText = 'Lobby';
+
+        // Ocultamos bans y builds, y nos aseguramos de que el grid principal esté visible
+        if (bansGrid) bansGrid.classList.add('hidden');
+        if (buildView) buildView.classList.add('hidden');
+        
+        if (recsGrid) {
+            recsGrid.classList.remove('hidden');
+            // Restablecemos las clases de grilla estándar por si el render de la build las alteró
+            recsGrid.className = "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-4 w-full relative min-h-[50vh]";
+            
+
+            title.innerHTML = 'HEX<span class="text-purple-500">DRAFT</span>';
+            title.className = "text-xl font-black uppercase tracking-[0.3em] text-white italic";
+
+            subtitle.innerText = 'MOTOR DE RECOMENDACIÓN ACTIVO';
+            subtitle.className = "text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-2";
+            // Renderizamos un mensaje de espera elegante, centrado y estilizado
+            recsGrid.innerHTML = `
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin mb-4"></div>
+                    <p class="text-slate-400 uppercase font-black tracking-widest text-sm animate-pulse max-w-xs">
+                        Esperando Fase de Selección...
+                    </p>
+                    <p class="text-slate-600 text-xs mt-1 lowercase first-letter:uppercase">
+                        Conéctate a una sala de emparejamiento o personalizada
+                    </p>
+                </div>`;
         }
         
-        // Limpiar slots visuales
+        // 3. Limpiar slots visuales de ambos equipos
         for (let i = 0; i < 5; i++) {
             resetSlot(`ally-slot-${i}`);
             resetSlot(`enemy-slot-${i}`);
         }
         
-        lastPicksState = "";
+        console.log("🧹 [UI] Estado del draft reiniciado por completo.");
     }
 
     function resetSlot(id) {
@@ -200,7 +250,7 @@ import Layout from '../layouts/Layout.astro';
         if (roleIcon) roleIcon.classList.add('hidden');
         if (cName) {
             cName.innerText = "Esperando...";
-            cName.className = "text-[10px] text-slate-500 uppercase font-black";
+            cName.className = "text-[11px] text-slate-400 uppercase font-medium tracking-wider";
         }
     }
 
@@ -213,7 +263,6 @@ import Layout from '../layouts/Layout.astro';
         }
 
         const { runes, items, skillOrder } = build;
-        
         const styleIcons = {
             8000: "styles/7201_precision.png",
             8100: "styles/7200_domination.png",
@@ -221,8 +270,6 @@ import Layout from '../layouts/Layout.astro';
             8300: "styles/7203_whimsy.png",
             8400: "styles/7204_resolve.png"
         };
-        
-        // HELPER CRÍTICO: Construye la URL de Community Dragon
         const getCDIcon = (path) => {
             if (!path) return "";
             let cleanPath = path.toLowerCase().trim();
@@ -233,79 +280,72 @@ import Layout from '../layouts/Layout.astro';
             
             return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/${cleanPath}`;
         };
-
         const secondaryStyleId = runes.secondaryStyle?.id || runes.secondaryStyle;
         const secondaryIconPath = styleIcons[secondaryStyleId] || "styles/runesicon.png";
-
         buildView.innerHTML = `
-            <div class="relative z-[300] flex flex-col gap-8 p-8 bg-slate-900/80 border border-slate-700 rounded-lg shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-full">
+            <div class="relative z-[300] flex flex-col gap-8 p-10 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl animate-in fade-in slide-in-from-bottom-4 w-full backdrop-blur-md">
                 
-                <div class="flex items-center justify-between border-b border-slate-800 pb-6">
-                    <div class="flex gap-6 items-center">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-8">
+                    <div class="flex gap-8 items-center">
                         <div class="relative flex items-center">
-                            <div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-blue-500/50 p-2 shadow-lg shadow-blue-900/20">
+                            <div class="w-20 h-20 bg-slate-900 border-2 border-purple-600 p-2 shadow-lg rounded-sm">
                                 <img src="${getCDIcon(runes.keystone.icon)}" title="${runes.keystone.name}" class="w-full h-full object-contain" />
                             </div>
-                            <div class="absolute -bottom-1 -right-1 w-10 h-10 bg-slate-950 rounded-full border-2 border-slate-700 p-2 shadow-xl">
+                            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-950 border border-slate-700 p-1.5 shadow-2xl rounded-sm">
                                 <img src="${getCDIcon(secondaryIconPath)}" class="w-full h-full object-contain" />
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-white font-black text-2xl uppercase tracking-tighter italic">${championName}</h3>
-                            <div class="flex gap-4 mt-1">
-                                <p class="text-xs text-green-400 font-bold uppercase tracking-widest">Orden: ${skillOrder}</p>
-                                <span class="text-slate-600">|</span>
-                                <p class="text-xs text-blue-400 font-bold uppercase tracking-widest">Sincronizado</p>
+                            <h3 class="text-white font-black text-3xl uppercase tracking-tighter italic">${championName}</h3>
+                            <div class="flex gap-4 mt-2">
+                                <p class="text-[10px] text-green-500 font-black uppercase tracking-[0.2em]">Secuencia: ${skillOrder}</p>
+                                <span class="text-slate-800">|</span>
+                                <p class="text-[10px] text-cyan-400 font-black uppercase tracking-[0.2em]">Protocolo Sincronizado</p>
                             </div>
                         </div>
                     </div>
                     
-                    <button id="btn-import-all" class="cursor-pointer px-8 py-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black uppercase text-xs tracking-widest rounded-sm transition-all shadow-xl shadow-blue-900/40">
-                        Importar Todo al Cliente
+                    <button id="btn-import-all" class="cursor-pointer px-10 py-5 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-sm transition-all shadow-xl border-none">
+                        Importar al Cliente
                     </button>
                 </div>
 
-                <div class="flex flex-col gap-12 mt-2 mb-2">
-                    
-
+                <div class="flex flex-col gap-8">
                     <div class="space-y-6">
-                        <div class="flex items-center gap-4">
-                            <span class="text-sm text-orange-400 font-black uppercase tracking-[0.4em] italic pl-2">Ruta de Objetos</span>
-                            <div class="h-px flex-1 bg-gradient-to-r from-orange-500/30 to-transparent"></div>
+                        <div class="flex items-center gap-6">
+                            <h4 class="text-[10px] text-purple-500 font-black uppercase tracking-[0.4em] italic pl-2">Ruta de Armamento</h4>
+                            <div class="h-[1px] flex-1 bg-slate-800"></div>
                         </div>
 
-                        <div class="bg-orange-950/10 border border-orange-500/10 p-10 rounded-sm relative shadow-inner">
-                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_80%)] from-orange-500/5 to-transparent"></div>
-                            
-                            <div class="flex flex-wrap items-center justify-center gap-4 relative z-10">
+                        <div class="bg-slate-900/40 border border-slate-800 p-12 rounded-sm relative">
+                            <div class="flex flex-wrap items-center justify-center gap-6 relative z-10">
                                 ${items.core.map((i, index) => `
                                     <div class="flex items-center">
                                         <div class="relative group/item" title="${i.name}">
-                                            <div class="absolute -inset-2 bg-orange-500/20 blur-md opacity-0 group-hover/item:opacity-100 transition-all"></div>
+                                            <div class="absolute -inset-1 bg-purple-600/20 opacity-0 group-hover/item:opacity-100 transition-all rounded-sm"></div>
                                             <div class="relative">
                                                 <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${i.id}.png" 
-                                                    class="w-13 h-13 border-2 border-slate-700 rounded-sm shadow-2xl transition-transform group-hover/item:scale-110" />
-                                                <div class="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 text-[8px] font-bold px-1.5 py-0.5 rounded-full text-slate-400">
-                                                    ${index + 1}
+                                                    class="w-14 h-14 border border-slate-700 rounded-sm shadow-2xl transition-transform group-hover/item:scale-105" />
+                                                <div class="absolute -top-2 -right-2 bg-slate-950 border border-slate-700 text-[8px] font-black px-1.5 py-0.5 rounded-sm text-slate-400">
+                                                    0${index + 1}
                                                 </div>
                                             </div>
                                         </div>
                                         ${index < items.core.length - 1 ? `
-                                            <div class="px-4 text-orange-500/30">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-sm"><path d="m9 18 6-6-6-6"/></svg>
+                                            <div class="px-5 text-slate-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                                             </div>
                                         ` : ''}
                                     </div>
                                 `).join('')}
 
-                                <div class="h-12 w-px bg-slate-800 mx-6"></div>
+                                <div class="h-14 w-[1px] bg-slate-800 mx-8"></div>
 
                                 <div class="flex flex-col items-center gap-2">
-                                    
                                     <div class="relative group/boot" title="${items.boots.name}">
-                                        <div class="absolute -inset-2 bg-white/5 blur-md opacity-0 group-hover/boot:opacity-100 transition-all"></div>
+                                        <div class="absolute -inset-1 bg-cyan-400/10 opacity-0 group-hover/boot:opacity-100 transition-all rounded-sm"></div>
                                         <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${items.boots.id}.png" 
-                                            class="w-13 h-13 border-2 border-slate-600 rounded-sm relative z-10 shadow-2xl transition-transform group-hover/boot:rotate-3" />
+                                            class="w-14 h-14 border border-slate-700 rounded-sm relative z-10 shadow-2xl transition-transform group-hover/boot:-rotate-2" />
                                     </div>
                                 </div>
                             </div>
@@ -314,17 +354,13 @@ import Layout from '../layouts/Layout.astro';
                 </div>
             </div>
         `;
-
-        // Vinculación del evento
         document.getElementById('btn-import-all').onclick = async () => {
             const btn = document.getElementById('btn-import-all');
             btn.innerText = "Importando...";
             btn.disabled = true;
 
             try {
-                // 1. Importar Todo
                 await importAll(runes,items,summoners,championName,championId,skillOrder);
-                
                 btn.innerText = "¡Completado!";
                 btn.classList.replace('bg-blue-600', 'bg-green-600');
             } catch (e) {
@@ -340,9 +376,7 @@ import Layout from '../layouts/Layout.astro';
 
     async function importAll(runes, buildItems, summoners, championName, championId, skillOrder) {
         console.log("🚀 Iniciando importación masiva para", championName, championId);
-
         try {
-            // Payload de Runas 
             const runePayload = {
                 name: `HexDraft: ${championName}`,
                 primaryStyleId: runes.primaryStyle,
@@ -352,22 +386,16 @@ import Layout from '../layouts/Layout.astro';
                     ...runes.shards.map(s => s.id || s)
                 ]
             };
-
-            // Payload de Items 
             const itemPayload = {
                 championId: championId,
                 championName: championName,
                 items: buildItems,
                 skillOrder: skillOrder
             };
-
-            // Payload de Spells
             const summonerPayload = {
-            spell1Id: summoners[0].id,
-            spell2Id: summoners[1].id
-        };
-
-            // Ejecutar  peticiones en paralelo
+                spell1Id: summoners[0].id,
+                spell2Id: summoners[1].id
+            };
             const [resRunes, resItems, resSpells] = await Promise.all([
                 fetch('/api/set-runes', {
                     method: 'POST',
@@ -385,7 +413,6 @@ import Layout from '../layouts/Layout.astro';
                     body: JSON.stringify(summonerPayload)
                 })
             ]);
-
             if (resRunes.ok && resItems.ok && resSpells.ok) {
                 console.log("✅ Configuración completa aplicada");
             }
@@ -394,26 +421,31 @@ import Layout from '../layouts/Layout.astro';
         }
     }
 
-    let currentRecommendations = [];
-    
     async function updateDraftStatus() {
         if (isPolling) return; 
         isPolling = true;
-
         try {
             const game_status = await fetch('/api/game-status');
             const { phase } = await game_status.json();
+            console.log(phase);
+            const LcuStatus = document.getElementById('status-text');
+            const LcuIndicador = document.getElementById('status-indicator');
 
+            if (LcuStatus) {
+                LcuStatus.innerText = "Conectado";
+                LcuIndicador?.classList.replace('bg-red-600', 'bg-green-500')
+            }
             if (phase === 'ChampSelect') {
-                pollingInterval = 2000; // Rápido en selección
-                await handleChampSelectLogic(); 
+                pollingInterval = 2000;
+                await handleChampSelectLogic();
             } 
             else if (['InProgress', 'WaitingForStats', 'PreEndOfGame'].includes(phase)) {
-                pollingInterval = 120000; // Lento en partida
+                pollingInterval = 120000;
                 console.log("🎮 Partida en curso: Modo ahorro.");
             } 
             else {
-                pollingInterval = 5000; // Medio en Lobby
+                pollingInterval = 5000;
+                clearDraftUI();
                 if (lastPicksState !== "") {
                     lastImportedChampionId = 0;
                     clearDraftUI();
@@ -428,7 +460,7 @@ import Layout from '../layouts/Layout.astro';
             setTimeout(updateDraftStatus, pollingInterval);
         }
     }
-    let isBuildViewActive = false; 
+
     async function handleChampSelectLogic() {
         const res = await fetch('/api/champ-select');
         if (!res.ok) {
@@ -441,13 +473,19 @@ import Layout from '../layouts/Layout.astro';
         const data = await res.json();
         if (!data.inDraft) return;
 
-        // Generamos la llave para saber si algo cambió
-        const currentPicksState = data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
-                                data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
+        const isBanPhase = data.isBanPhase;
+        const bansGrid = document.getElementById('bans-grid');
+        if (!isBanPhase && bansGrid && !bansGrid.classList.contains('hidden')) {
+            console.log("[DRAFT] Terminaron los bloqueos. Forzando paso a fase de Picks.");
+            lastPicksState = ""; 
+        }
 
+        const currentPicksState = `${isBanPhase}|` + 
+        data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' + 
+        data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
+        
         if (currentPicksState !== lastPicksState) {
             lastPicksState = currentPicksState;
-
             const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
             const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
 
@@ -455,42 +493,58 @@ import Layout from '../layouts/Layout.astro';
             const meData = await resMe.json();
             const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
             const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+            const fase = document.getElementById('phase');
 
-            // Actualizar slots visuales
             data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
             data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
-
-            // Lógica de Auto-Import cuando eliges campeón
-            if (myPlayer && myPlayer.championId !== 0) {
-                if (myPlayer.championId !== lastImportedChampionId) {
-                    const champname = getNameFromId(myPlayer.championId);
-                    const pickData = getSingleChampionBuild(myPlayer.championId);
-
-                    if (pickData) {
-                        isBuildViewActive = true;
-                        lastImportedChampionId = myPlayer.championId;
-
-                        importAll(pickData.build.runes, pickData.build.items, pickData.build.summoners, champname, myPlayer.championId, pickData.build.skillOrder);
-                        showBuildView(champname);
-                        renderBuild(pickData.build, pickData.build.summoners, champname, myPlayer.championId);
-                    }
+            
+            if (isBanPhase) {
+                const bansGrid = document.getElementById('bans-grid');
+                if (bansGrid && bansGrid.classList.contains('hidden')) {
+                    showBans();
                 }
-            } else{
-                isBuildViewActive = false;
-                lastImportedChampionId = 0;
+                document.getElementById('recommendations-grid')?.classList.add('hidden');
+                bansGrid?.classList.remove('hidden');
 
-                const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
-                const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
-                const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-                
                 const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                const banRecommendations = getProcessedBans(recommendations);
+                renderBans(banRecommendations);
 
+                if (fase) fase.innerText = 'Bans';
+                console.log("ENTRANDO EN FASE DE BANS");
+
+            } else {
                 const grid = document.getElementById('recommendations-grid');
                 if (grid && grid.classList.contains('hidden')) {
                     showRecomendaciones();
                 }
-                renderGrid(recommendations.slice(0, 20));
+                document.getElementById('bans-grid')?.classList.add('hidden');
+                grid?.classList.remove('hidden');
+                if (fase) fase.innerText = 'Picks';
 
+                if (myPlayer && myPlayer.championId !== 0){
+                    isBuildViewActive = true;
+                    if (myPlayer.championId !== lastImportedChampionId) {
+                        const champname = getNameFromId(myPlayer.championId);
+                        const pickData = getSingleChampionBuild(myPlayer.championId);
+
+                        if (pickData) {
+                            isBuildViewActive = true;
+                            lastImportedChampionId = myPlayer.championId;
+
+                            importAll(pickData.build.runes, pickData.build.items, pickData.build.summoners, champname, myPlayer.championId, pickData.build.skillOrder);
+                            showBuildView(champname);
+                            renderBuild(pickData.build, pickData.build.summoners, champname, myPlayer.championId);
+                        }
+                    }
+                } else {
+                    isBuildViewActive = false;
+                    lastImportedChampionId = 0;
+                    const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                    renderGrid(recommendations.slice(0, 20));
+
+                    console.log("ENTRANDO EN FASE DE PICKS");
+                }
             }
         }
     }
@@ -499,13 +553,36 @@ import Layout from '../layouts/Layout.astro';
         const container = document.getElementById('recommendations-grid');
         if (!container) return;
         
-        container.className = "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5 w-full justify-items-center content-start";
+        container.className = "grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative transition-all duration-500";
         container.innerHTML = recs.map(r => {
             const scoreColor = r.score >= 8 ? 'text-green-400' : (r.score >= 6 ? 'text-yellow-400' : 'text-red-400');
             
             return `
                 <div class="recommendation-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
                     data-name="${r.name}" data-reasons="${r.reasons.join('|')}" data-score="${r.score.toFixed(1)}">
+                    <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
+                    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
+                        <span class="text-[13px] font-black px-2 py-1 rounded rounded-full border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
+                            ${r.score.toFixed(1)}
+                        </span>
+                    </div>
+                </div>`;
+        }).join('');
+
+        attachReasonEvents();
+    }
+
+    function renderBans(recs){
+        const container = document.getElementById('bans-grid');
+        if (!container) return;
+        
+        container.className = "grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 max-w-fit w-full mx-auto relative transition-all duration-500";
+        container.innerHTML = recs.map(r => {
+            const scoreColor = r.score >= 8 ? 'text-green-400' : (r.score >= 6 ? 'text-yellow-400' : 'text-red-400');
+            
+            return `
+                <div class="bans-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
+                    data-name="${r.name}" data-reasons="Counter peligroso del meta sugerido" data-score="${r.score.toFixed(1)}">
                     <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
                     <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
                         <span class="text-[13px] font-black px-2 py-1 rounded rounded-full border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
@@ -526,11 +603,9 @@ import Layout from '../layouts/Layout.astro';
         const sName = el.querySelector('.summoner-name');
         const cName = el.querySelector('.champ-name');
         const roleIcon = el.querySelector('.role-icon');
-
         if (sName) sName.innerText = player.displayName || player.gameName || "Invocador";
 
         const cid = player.championId || player.championPickIntent;
-
         if (cid > 0) {
             if (img) {
                 img.src = `${IMG_BASE}${cid}.png`;
@@ -579,23 +654,48 @@ import Layout from '../layouts/Layout.astro';
 
     function showRecomendaciones() {
         isBuildViewActive = false;
+        const gridbans = document.getElementById('bans-grid');
         const gridRecomendations = document.getElementById('recommendations-grid');
         const buildView = document.getElementById('build-view');
         const title = document.getElementById('view-title');
         const subtitle = document.getElementById('view-subtitle');
-        
-        // Cambiar textos del header
+        gridbans?.classList.add('hidden');
         title.innerText = `Recomendaciones`;
         subtitle.innerText = "Basado en composiciones y counters";
 
-        // Animación de salida y entrada
         buildView.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => {
+            gridbans?.classList.add('hidden');
             buildView.classList.add('hidden');
             gridRecomendations.classList.remove('hidden');
             setTimeout(() => {
                 gridRecomendations.classList.remove('opacity-0', 'translate-y-4');
                 gridRecomendations.classList.add('opacity-100', 'translate-y-0');
+            }, 50);
+        }, 300);
+    }
+
+    function showBans() {
+        isBuildViewActive = false;
+        const gridbans = document.getElementById('bans-grid');
+        const gridRecomendations = document.getElementById('recommendations-grid');
+        const buildView = document.getElementById('build-view');
+        const title = document.getElementById('view-title');
+        const subtitle = document.getElementById('view-subtitle');
+
+        title.innerHTML = 'Bans<span class="text-purple-500"> Recomendados</span>';
+        
+        subtitle.innerText = "Basado en tus counters";
+
+        buildView?.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+            gridRecomendations?.classList.add('hidden');
+            buildView?.classList.add('hidden');
+            gridbans?.classList.remove('hidden');
+
+            setTimeout(() => {
+                gridbans?.classList.remove('opacity-0', 'translate-y-4');
+                gridbans?.classList.add('opacity-100', 'translate-y-0');
             }, 50);
         }, 300);
     }
@@ -606,11 +706,10 @@ import Layout from '../layouts/Layout.astro';
         const title = document.getElementById('view-title');
         const subtitle = document.getElementById('view-subtitle');
 
-        // Cambiar textos del header
-        title.innerText = `Build: ${championName}`;
+        title.innerHTML = `Build: <span class="text-purple-500"> ${championName}</span>`;
+       
         subtitle.innerText = "Sincronizado con meta actual";
 
-        // Animación de salida y entrada
         grid.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => {
             grid.classList.add('hidden');
@@ -620,10 +719,8 @@ import Layout from '../layouts/Layout.astro';
                 buildView.classList.add('opacity-100', 'translate-y-0');
             }, 50);
         }, 300);
-        
     }
 
-    // Manejo de Popup corregido
     const closeBtn = document.getElementById('close-popup');
     if (closeBtn) {
         closeBtn.onclick = () => {
@@ -638,8 +735,6 @@ import Layout from '../layouts/Layout.astro';
             popup.classList.add('hidden');
         }
     });
-
-    // Iniciar
     console.log("🚀 HexDraft UI Ready");
     updateDraftStatus();
 </script>

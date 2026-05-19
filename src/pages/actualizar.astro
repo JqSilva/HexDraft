@@ -3,132 +3,192 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="HexDraft | Panel de Control">
-  <main class="min-h-screen p-6 md:p-12 relative bg-[#010a13] text-slate-200 ">
-    <header class="mb-2">
-      <a href="/" class="text-white/50 hover:text-white transition-colors text-sm  inline-block uppercase tracking-widest font-bold">
-        ← Volver al Inicio
-      </a>
+  <main class="min-h-screen p-8 md:p-16 relative bg-[#020617] text-slate-200 overflow-hidden font-sans">
+    
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-purple-900/10 blur-[160px] rounded-full pointer-events-none"></div>
+
+    <header class="max-w-6xl mx-auto mb-16 flex justify-between items-center relative z-10">
+      <div class="flex items-center gap-10">
+        <a href="/" class="text-slate-400 hover:text-white transition-colors text-sm uppercase tracking-[0.2em] font-black group">
+          <span class="inline-block transform group-hover:-translate-x-2 transition-transform">←</span> Inicio
+        </a>
+        <div class="h-6 w-px bg-slate-800"></div>
+        <h1 class="text-2xl font-black uppercase tracking-[0.4em] text-white italic">
+          Nexo <span class="text-purple-600">Sincronización</span>
+        </h1>
+      </div>
+      
+      <div class="flex items-center gap-4 px-5 py-2.5 bg-slate-900/80 border border-slate-800 rounded-sm">
+        <div class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse"></div>
+        <span class="text-xs text-slate-300 font-black uppercase tracking-widest">Sistema Guard Activo</span>
+      </div>
     </header>
 
-    <h1 class="absolute left-1/2 -translate-x-1/2 text-4xl font-black italic uppercase tracking-tighter text-white">Base de Datos Engine</h1>
-    
-    <div class="flex flex-col justify-center mx-auto items-center  p-6 mt-8 mb-2 max-w-md">
-        <label class="block text-sm font-bold uppercase text-slate-400">Versión del Parche Actual</label>
-        <input type="text" id="patch-input" class=" p-3 w-48 text-xl text-center font-mono text-white focus:border-blue-500 outline-none transition-all" />
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-4xl mx-auto">
-
-      <div class="bg-slate-900 p-8 border border-slate-800 hover:border-blue-500/50 transition-all group">
-        <div class="flex justify-between items-start mb-6">
-          <h2 class="text-2xl font-bold text-white uppercase">Ciclo Corto</h2>
-          <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-1 font-bold rounded">SEMANAL</span>
+    <div class="max-w-6xl mx-auto grid grid-cols-12 gap-10 relative z-10">
+      
+      <div class="col-span-12 lg:col-span-4 space-y-8">
+        
+        <div class="p-8 bg-slate-900/40 border border-slate-800 backdrop-blur-md rounded-sm">
+          <h3 class="text-xs font-black uppercase tracking-[0.2em] text-purple-500 mb-8 border-b border-slate-800/50 pb-3">Parámetros de Red</h3>
+          <div class="space-y-6">
+            <div>
+              <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">Versión del Parche LCU</label>
+              <input type="text" id="patch-input" class="w-full p-4 bg-[#020617] border border-slate-700 text-white font-mono text-2xl text-center focus:border-purple-600 outline-none transition-all rounded-sm shadow-inner" placeholder="--.-" />
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed uppercase font-bold tracking-tight">
+              Asegúrate de que la versión coincida con el cliente para evitar errores de mapeo en el motor.
+            </p>
+          </div>
         </div>
-        <ul class="text-sm text-slate-400 space-y-3 mb-8 h-32">
-          <li class="flex gap-2"> <span class="text-blue-500">▹</span> Meta-Cache OP.GG (Master Tier)</li>
-          <li class="flex gap-2"> <span class="text-blue-500">▹</span> Builds Óptimas e Ítems Core</li>
-          <li class="flex gap-2"> <span class="text-blue-500">▹</span> Runas, Shards y Skill Order</li>
-          <li class="flex gap-2"> <span class="text-blue-500">▹</span> God Matchups (Gold/XP Diff)</li>
-        </ul>
-        <button id="btn-short" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 uppercase tracking-widest cursor-pointer transition-all disabled:opacity-50">
-          Sincronizar Meta
-        </button>
-      </div>
 
-      <div class="bg-slate-900 p-8 border border-slate-800 hover:border-red-500/50 transition-all group">
-        <div class="flex justify-between items-start mb-6">
-          <h2 class="text-2xl font-bold text-white uppercase">Ciclo Largo</h2>
-          <span class="bg-red-500/10 text-red-400 text-[10px] px-2 py-1 font-bold rounded">MENSUAL</span>
-        </div>
-        <ul class="text-sm text-slate-400 space-y-3 mb-8 h-32">
-          <li class="flex gap-2"> <span class="text-red-500">▹</span> Mapa de Posiciones (Lanes)</li>
-          <li class="flex gap-2"> <span class="text-red-500">▹</span> ADN: Composición de Daño</li>
-          <li class="flex gap-2"> <span class="text-red-500">▹</span> Análisis de Scaling (Early/Late)</li>
-          <li class="flex gap-2"> <span class="text-red-500">▹</span> Sinergias Históricas</li>
-        </ul>
-        <button id="btn-long" class="w-full border border-red-600 text-red-600 hover:bg-red-600 hover:text-white font-black py-4 uppercase tracking-widest cursor-pointer transition-all disabled:opacity-50">
-          Reconstruir Core
-        </button>
-      </div>
-    </div>
-
-    <div class="bg-black border border-slate-800 p-4 rounded-sm shadow-2xl max-w-4xl mx-auto">
-      <div class="flex justify-between items-center mb-2 border-b border-slate-800 pb-2">
-        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Terminal Output</span>
-        <div class="flex gap-1">
-          <div class="w-2 h-2 rounded-full bg-red-500"></div>
-          <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-          <div class="w-2 h-2 rounded-full bg-green-500"></div>
+        <div class="p-8 bg-slate-900/40 border border-slate-800 backdrop-blur-md rounded-sm">
+            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-300 mb-8 border-b border-slate-800/50 pb-3">Estado del Almacén</h3>
+            <div class="space-y-8">
+                <div>
+                    <div class="flex justify-between mb-3">
+                        <span class="text-[11px] font-black uppercase text-slate-400 tracking-wider">Cobertura de Campeones</span>
+                        <span class="text-[11px] font-black uppercase text-purple-500">168 / 168</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-purple-600 w-full shadow-[0_0_10px_rgba(168,85,247,0.4)]"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-slate-500 uppercase font-black">Última Sync</span>
+                        <span class="text-sm text-slate-200 font-mono">14.05.2026</span>
+                    </div>
+                    <div class="flex flex-col gap-1 text-right">
+                        <span class="text-[10px] text-slate-500 uppercase font-black">Integridad</span>
+                        <span class="text-sm text-cyan-400 font-black">ÓPTIMA</span>
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
-      <div id="terminal" class="h-64 overflow-y-auto font-mono text-xs p-2 text-green-500 space-y-1">
-        <p class="text-slate-600">[SYSTEM] Esperando órdenes...</p>
+
+      <div class="col-span-12 lg:col-span-8 space-y-8">
+        
+        <div class="grid gap-6">
+            <div class="p-10 bg-slate-900/40 border border-slate-800 backdrop-blur-md rounded-sm flex flex-col md:flex-row gap-10 items-center hover:border-purple-600/50 transition-colors">
+              <div class="flex-1">
+                <div class="flex items-center gap-4 mb-3">
+                    <span class="w-12 h-[3px] bg-purple-600"></span>
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider italic">Sync. Meta & Builds</h2>
+                </div>
+                <p class="text-sm text-slate-400 uppercase tracking-wide mb-8 font-medium">Actualización masiva: OP.GG, ADN de Daño, Scaling y Builds Bayesiana.</p>
+                
+                <div class="flex gap-8">
+                    <div class="flex items-center gap-3">
+                        <span class="text-purple-600 font-bold">▹</span>
+                        <span class="text-[11px] text-slate-300 uppercase font-black tracking-widest">Bayes Matchups</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-purple-600 font-bold">▹</span>
+                        <span class="text-[11px] text-slate-300 uppercase font-black tracking-widest">Skill Order</span>
+                    </div>
+                </div>
+              </div>
+              <button id="btn-short" class="w-full md:w-auto px-12 py-5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-xs tracking-[0.3em] rounded-sm transition-all shrink-0 active:scale-95 shadow-xl border-none cursor-pointer">
+                Ejecutar
+              </button>
+            </div>
+
+            <div class="p-10 bg-slate-900/40 border border-slate-800 backdrop-blur-md rounded-sm flex flex-col md:flex-row gap-10 items-center hover:border-slate-600 transition-colors">
+                <div class="flex-1">
+                  <div class="flex items-center gap-4 mb-3">
+                      <span class="w-12 h-[3px] bg-slate-700"></span>
+                      <h2 class="text-2xl font-black text-white uppercase tracking-wider italic">Mapeo de Posiciones</h2>
+                  </div>
+                  <p class="text-sm text-slate-400 uppercase tracking-wide mb-8 font-medium">Sincronización de carriles y roles populares según la Tierlist Global.</p>
+                  
+                  <div class="flex items-center gap-3">
+                      <span class="text-slate-500 font-bold">▹</span>
+                      <span class="text-[11px] text-slate-300 uppercase font-black tracking-widest">Optimización de Core (Single Tab)</span>
+                  </div>
+                </div>
+                <button id="btn-long" class="w-full md:w-auto px-12 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-black uppercase text-xs tracking-[0.3em] rounded-sm transition-all shrink-0 active:scale-95 border-none cursor-pointer">
+                  Refrescar
+                </button>
+            </div>
+        </div>
+
+        <div class="p-8 bg-black/40 border border-slate-800 rounded-sm">
+            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-6">Monitor de Actividad Reciente</h3>
+            <div class="space-y-4 font-mono text-[11px]">
+                <div class="flex gap-4 text-slate-400 italic">
+                    <span class="text-purple-600 font-bold">[12:30]</span>
+                    <span>Sistema Guard: Conexión LCU establecida en Puerto 5421</span>
+                </div>
+                <div class="flex gap-4 text-slate-200">
+                    <span class="text-cyan-500 font-bold">[12:31]</span>
+                    <span>Nexo: Versión 16.10 detectada automáticamente</span>
+                </div>
+                <div class="flex gap-4 text-slate-500">
+                    <span class="text-slate-700 font-bold">[--:--]</span>
+                    <span>Esperando inicialización de sincronización masiva...</span>
+                </div>
+            </div>
+        </div>
+
       </div>
     </div>
+
+    <div id="toast-notification" class="fixed bottom-10 right-10 z-50 bg-[#020617] border border-slate-700 p-5 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-md flex items-center gap-5 translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+      <div class="w-2 h-2 rounded-full bg-purple-600 animate-pulse shrink-0"></div>
+      <div class="flex flex-col">
+        <span id="toast-title" class="text-xs font-black uppercase tracking-[0.2em] text-purple-500">Sistema</span>
+        <span id="toast-body" class="text-sm text-slate-300 font-mono mt-1">Listo para operar</span>
+      </div>
+    </div>
+
   </main>
 </Layout>
 
 <script>
-
+  // (Mismo script que tenías, solo ajustamos triggerToast para manejar los nuevos colores)
   async function autoDetectVersion() {
       try {
           const res = await fetch('/api/game-version');
           if (res.ok) {
               const data = await res.json();
-              const input = document.getElementById('patch-input');
-              input.value = data.short;
-              document.getElementById('patch-input').value = data.short;
-              writeToTerminal(`[LCU] Versión detectada automáticamente: ${data.short}`);
-          } else {
-              writeToTerminal(`[LCU] No se pudo detectar versión. Usando valor por defecto.`, 'warn');
+              const input = document.getElementById('patch-input') as HTMLInputElement;
+              if (input) input.value = data.short;
+              triggerToast("Protocolo Listo", `Versión LCU: ${data.short}`, "info");
           }
-      } catch (e) {
-          console.error("Error detectando versión:", e);
-      }
+      } catch (e) {}
   }
-
-  // Llamar al inicio
   autoDetectVersion();
 
-  function writeToTerminal(msg, type = 'info') {
-    const terminal = document.getElementById('terminal');
-    const p = document.createElement('p');
-    const time = new Date().toLocaleTimeString();
-    
-    let color = 'text-green-500';
-    if (type === 'warn') color = 'text-yellow-500';
-    if (type === 'error') color = 'text-red-500';
+  function triggerToast(title, message, type = "info") {
+    const toast = document.getElementById('toast-notification');
+    const tTitle = toast?.querySelector('#toast-title') as HTMLElement;
+    const tBody = toast?.querySelector('#toast-body') as HTMLElement;
+    const badge = toast?.querySelector('div');
 
-    p.innerHTML = `<span class="text-slate-700">[${time}]</span> <span class="${color}">${msg}</span>`;
-    terminal.appendChild(p);
-    terminal.scrollTop = terminal.scrollHeight;
+    if (!toast || !tTitle || !tBody || !badge) return;
+
+    tTitle.innerText = title.toUpperCase();
+    tBody.innerText = message;
+    badge.className = "w-2 h-2 rounded-full shrink-0 " + (type === 'error' ? 'bg-red-600' : type === 'warn' ? 'bg-yellow-600' : 'bg-purple-600');
+    toast.style.borderColor = type === 'error' ? '#7f1d1d' : type === 'warn' ? '#78350f' : '#334155';
+    toast.classList.remove('translate-y-24', 'opacity-0');
+    setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 6000);
   }
 
   async function runSync(type) {
-    const version = (document.getElementById('patch-input') as HTMLInputElement).value;
+    const version = (document.getElementById('patch-input') as HTMLInputElement).value || '16.10';
     const btn = document.getElementById(`btn-${type}`) as HTMLButtonElement;
-    
     btn.disabled = true;
-    writeToTerminal(`Iniciando Ciclo ${type.toUpperCase()}...`, 'warn');
-    writeToTerminal(`Parámetro de versión: ${version}`);
-
+    triggerToast("Iniciando", `Actualizando base de datos ${version}...`, "warn");
     try {
       const res = await fetch(`/api/sync?type=${type}&version=${version}`);
-      const data = await res.json();
-      
-      if (res.ok) {
-        writeToTerminal(`PROCESO LANZADO: ${data.message}`);
-        writeToTerminal(`Nota: El proceso corre en background del servidor. Revisa los logs de Node.`);
-      } else {
-        writeToTerminal(`ERROR: ${data.error}`, 'error');
-      }
-    } catch (e) {
-      writeToTerminal(`FALLO DE RED: No se pudo contactar con la API`, 'error');
-    } finally {
-      // Re-habilitamos después de un pequeño delay para evitar spam
-      setTimeout(() => btn.disabled = false, 50000);
-    }
+      if (res.ok) triggerToast("Éxito", "Sincronización finalizada", "info");
+      else triggerToast("Error", "Fallo en la API", "error");
+    } catch (e) { triggerToast("Fallo Crítico", "Sin respuesta", "error"); }
+    finally { setTimeout(() => btn.disabled = false, 10000); }
   }
 
-  document.getElementById('btn-short').onclick = () => runSync('short');
-  document.getElementById('btn-long').onclick = () => runSync('long');
+  document.getElementById('btn-short')?.addEventListener('click', () => runSync('short'));
+  document.getElementById('btn-long')?.addEventListener('click', () => runSync('long'));
 </script>

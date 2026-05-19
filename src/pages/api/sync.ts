@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { syncShortCycle } from '../../lib/scripts/SyncCorto';
-import { syncLongCycle } from '../../lib/scripts/SyncLargo';
+import { syncMetaAndBuilds } from '../../lib/scripts/SyncMetaYBuilds';
+import { SyncEstructuraLanes } from '../../lib/scripts/meta-map';
 
 export const GET: APIRoute = async ({ url }) => {
     const type = url.searchParams.get('type');
@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ url }) => {
         // Ejecutamos de forma asíncrona pero respondemos al cliente 
         // para que la conexión no se pierda por timeout
         if (type === 'short') {
-            syncShortCycle(version); 
+            syncMetaAndBuilds(version); 
             
         } else {
             syncLongCycle(version);

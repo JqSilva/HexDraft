@@ -2,12 +2,10 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/lcu';
 
-// ESTO ES VITAL para conectar con el LCU local
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export const GET: APIRoute = async () => {
   const lcu = getLockfileData();
-  
   if (!lcu) {
     return new Response(JSON.stringify({ error: "LCU no encontrado" }), { status: 404 });
   }
@@ -27,23 +25,38 @@ export const GET: APIRoute = async () => {
       }
     );
 
-    // Si el endpoint devuelve 404, es que no estás en una fase de selección de campeones
     if (response.status === 404) {
       return new Response(JSON.stringify({ inDraft: false }), { status: 200 });
     }
     
     const data = await response.json();
+
+    // === DETECTOR REAL DE FASE DE BANS ===
+    // El LCU usa bloques de "actions". Buscamos la acción que esté activa en este milisegundo (type: 'ban' o 'pick')
+    let isBanPhase = false;
+    if (data.actions && Array.isArray(data.actions)) {
+      const activeActionGroup = data.actions.find((group: any) => 
+        Array.isArray(group) && group.some((action: any) => action.isInProgress)
+      );
+      
+      if (activeActionGroup) {
+        const currentAction = activeActionGroup.find((a: any) => a.isInProgress);
+        if (currentAction && currentAction.type === 'ban') {
+          isBanPhase = true;
+        }
+      }
+    }
     
-    // Mapeo básico para que el frontend reciba lo que espera
     return new Response(JSON.stringify({ 
       inDraft: true, 
       myTeam: data.myTeam || [], 
       theirTeam: data.theirTeam || [],
-      timer: data.timer || {}
+      timer: data.timer || {},
+      isBanPhase: isBanPhase // <-- Enviamos esto masticado al frontend
     }), { status: 200 });
-    
+
   } catch (e) {
-    console.error("Error detallado:", e); // Esto saldrá en tu terminal de VS Code
+    console.error("Error detallado:", e);
     return new Response(JSON.stringify({ error: "Error de conexión", details: e.message }), { status: 500 });
   }
 };

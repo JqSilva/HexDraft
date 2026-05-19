@@ -20,6 +20,13 @@ export interface Recommendation {
   };
 }
 
+
+export interface BansRecommendation {
+  id: number;
+  score: number;
+  name: string;
+}
+
 // Inicializamos la DB al cargar el módulo
 initializeEngineData();
 
@@ -95,6 +102,60 @@ export function getProcessedRecommendations(
     console.log(`📊 [ENGINE] Procesados: ${results.length} | Omitidos por línea: ${filteredCount}`);
     return results.sort((a, b) => b.score - a.score).slice(0, 30);
 }
+
+
+export function getProcessedBans(
+    topRecommendations: Recommendation[]
+): BansRecommendation[] {
+    console.log("🔍 [ENGINE] Calculando Bans basados en los mejores picks sugeridos.");
+    
+    const banScores: Record<string, { id: number; score: number; count: number }> = {};
+
+    // 1. Tomamos los top 5 o 10 picks recomendados para no saturar con counters de picks malos
+    const targetPicks = topRecommendations.slice(0, 10);
+
+    targetPicks.forEach(pick => {
+        const champData = ENRICHED_DB[pick.name];
+        if (!champData || !champData.counters) return;
+
+        // 2. Iteramos sobre los counters reales de nuestros mejores picks sugeridos
+        champData.counters.forEach((counter: any) => {
+            const counterName = counter.name;
+            const counterId = NAME_TO_ID[counterName];
+            if (!counterId) return;
+
+            // Convertimos el winrate del counter a número para usarlo como métrica de peligro
+            const wr = parseFloat(counter.winrate.replace('%', ''));
+            
+            // Cuanto mayor sea el WinRate del counter contra nuestro pick, mayor prioridad de ban
+            const dangerWeight = wr > 50 ? (wr - 50) * 2 : 0.5;
+
+            if (!banScores[counterName]) {
+                banScores[counterName] = {
+                    id: counterId,
+                    score: dangerWeight * (pick.score / 10), // Ponderado por lo bueno que es nuestro pick
+                    count: 1
+                };
+            } else {
+                // Si es counter de múltiples picks recomendados, su prioridad se acumula
+                banScores[counterName].score += dangerWeight * (pick.score / 10);
+                banScores[counterName].count += 1;
+            }
+        });
+    });
+
+    // 3. Transformar el mapa en el array de salida requerido por tu interfaz
+    const results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
+        id: data.id,
+        name: name,
+        // Damos un pequeño bono si es counter repetido de varios de tus campeones
+        score: parseFloat(Math.min(Math.max(data.score + (data.count * 0.5), 0.1), 10.0).toFixed(2))
+    }));
+
+    // Ordenar de mayor peligro a menor
+    return results.sort((a, b) => b.score - a.score).slice(0, 30);
+}
+
 
 /**
  * EL CORAZÓN DEL CÁLCULO: Aquí usamos los DELTAS
