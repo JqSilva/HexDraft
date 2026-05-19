@@ -1,4 +1,4 @@
-import { ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
+import { DATA_BY_LANE,ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
 import { NAME_TO_ID } from './constants';
 import { hydrateAsset } from './hydrator';
 
@@ -38,8 +38,8 @@ export function getProcessedRecommendations(
     theirTeamIds: number[], 
     myRole: string
 ): Recommendation[] {
-    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, role: myRole });
-    const allPickedIds = [...myTeamIds, ...theirTeamIds];
+    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, role: myRole }); 
+    const allPickedIds = [...myTeamIds, ...theirTeamIds]; 
     const results: Recommendation[] = [];
 
     const posMap: Record<string, string> = {
@@ -50,57 +50,46 @@ export function getProcessedRecommendations(
         "utility": "UTILITY"
     };
 
-    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
-    console.log(`📍 [ENGINE] Buscando para la línea: ${targetLane}`);
-    // Convertimos IDs a nombres para facilitar las búsquedas en la ENRICHED_DB
-    const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase(); 
+    console.log(`📍 [ENGINE] Usando pool pre-filtrado para: ${targetLane}`);
+
+    const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[]; 
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
-    let filteredCount = 0;
-    // Iteramos sobre todos los campeones enriquecidos
-    for (const [name, champ] of Object.entries(ENRICHED_DB)) {
-        const c = champ as any;
+    // OPTIMIZACIÓN: En lugar de iterar ENRICHED_DB (160+), iteramos solo la línea específica (~30)
+    const pool = DATA_BY_LANE[targetLane] || [];
 
-        if (c.lane !== targetLane) {
-            filteredCount++;
-            continue;
-        }
-
-        if (allPickedIds.includes(c.id)) continue;
+    for (const c of pool) {
+        // Ya no necesitamos el "if (c.lane !== targetLane) continue" porque el pool es exclusivo
         
-        const { score, reasons } = calculateScore(c, allies, enemies);
-
-        const rawBuild = c.buildData;
-
-
+        if (allPickedIds.includes(c.id)) continue; 
         
+        const { score, reasons } = calculateScore(c, allies, enemies); 
+        const rawBuild = c.buildData; 
+
         const hydratedBuild = {
             runes: {
-                // Hidratamos los Estilos (Ramas)
-                primaryStyle: hydrateAsset('runes', rawBuild.runes.primaryStyleId),
-                subStyle: hydrateAsset('runes', rawBuild.runes.subStyleId),
-                
-                // Hidratamos las 6 selecciones (Keystone + 3 principales + 2 secundarias)
-                selections: rawBuild.runes.selections.map((id: number) => hydrateAsset('runes', id)),
-                
-                // Hidratamos los 3 Shards
-                shards: rawBuild.runes.shards.map((id: number) => hydrateAsset('shards', id))
+                primaryStyle: hydrateAsset('runes', rawBuild.runes.primaryStyleId), 
+                subStyle: hydrateAsset('runes', rawBuild.runes.subStyleId), 
+                selections: rawBuild.runes.selections.map((id: number) => hydrateAsset('runes', id)), 
+                shards: rawBuild.runes.shards.map((id: number) => hydrateAsset('shards', id)) 
             },
-
-            // Obtenemos la letra de la habilidad (Q, W, E) basada en el primer maxeo
-            skillMax: rawBuild.skills ? ["Q", "W", "E"][rawBuild.skills.skillLevelUp1 - 1] : "Q"
+            skillMax: rawBuild.skills ? ["Q", "W", "E"][rawBuild.skills.skillLevelUp1 - 1] : "Q" 
         };
 
         results.push({
-            id: c.id,
-            name: c.name,
-            score: score,
-            reasons: reasons,
-            build: hydratedBuild
+            id: c.id, 
+            name: c.name, 
+            score: score, 
+            reasons: reasons, 
+            build: hydratedBuild 
         });
     }
-    console.log(`📊 [ENGINE] Procesados: ${results.length} | Omitidos por línea: ${filteredCount}`);
-    return results.sort((a, b) => b.score - a.score).slice(0, 30);
+
+    console.log(`📊 [ENGINE] Recomendaciones generadas: ${results.length}`); 
+    // No hace falta volver a ordenar si el pool ya venía ordenado por Tier, pero 
+    // lo mantenemos para priorizar el 'score' dinámico calculado en tiempo real.
+    return results.sort((a, b) => b.score - a.score).slice(0, 30); 
 }
 
 

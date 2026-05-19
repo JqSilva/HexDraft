@@ -42,3 +42,13 @@ export function getStoredSpikes() {
     return null;
   }
 }
+
+export function saveMetaCache(data: any) {
+  try {
+    // Usamos CACHE_PATH que ya está definido en tu archivo
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    console.log("✅ meta-cache.json actualizado correctamente.");
+  } catch (error) {
+    console.error("❌ Error al guardar meta-cache.json:", error);
+  }
+}

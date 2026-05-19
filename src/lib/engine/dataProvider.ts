@@ -37,56 +37,68 @@ const CHAMPION_ALIAS: Record<string, string> = {
     "Renata Glasc": "Renata"
 };
 
-
+export const DATA_BY_LANE: Record<string, EnrichedChampion[]> = {
+    "TOP": [], "JUNGLE": [], "MIDDLE": [], "BOTTOM": [], "UTILITY": []
+};
 
 export function initializeEngineData() {
-    // 1. Creamos un mapa del Super JSON con llaves normalizadas
+    // 0. Limpiar datos previos para evitar duplicados en memoria
+    Object.keys(DATA_BY_LANE).forEach(lane => DATA_BY_LANE[lane] = []);
+    
+    // 1. Mapa del Super JSON con llaves normalizadas 
     const normalizedSynergies: any = {};
     Object.keys(counterSynergies).forEach(key => {
         normalizedSynergies[normalizeKey(key)] = (counterSynergies as any)[key];
     });
 
-  console.log("🧬 Sincronizando datos masivos al Engine...");
+    console.log("🧬 Sincronizando datos masivos al Engine...");
 
-  Object.values(CHAMPIONS_DB).forEach((baseChamp) => {
-    const name = baseChamp.name;
+    Object.values(CHAMPIONS_DB).forEach((baseChamp) => {
+        const name = baseChamp.name;
+        const internalName = CHAMPION_ALIAS[name] || name;
+        const extra = normalizedSynergies[normalizeKey(internalName)];
+        const opgg = findInMetaCache(name); 
 
-    const internalName = CHAMPION_ALIAS[name] || name;
+        // Cálculo de scaling [cite: 383, 388]
+        const curve = extra?.combat?.winrateCurve || [];
+        const scaling = calculateScalingType(curve);
 
-    const extra = normalizedSynergies[normalizeKey(internalName)];
-    const opgg = findInMetaCache(name);
+        // Crear el objeto enriquecido [cite: 383, 386]
+        const enrichedChamp = {
+            ...baseChamp,
+            lane: extra?.lane || "UNKNOWN",
+            tags: extra?.tags || baseChamp.tags || [],
+            combat: {
+                damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
+                winrateCurve: curve
+            },
+            buildData: extra?.buildData || null,
+            counters: extra?.counters || [],
+            synergies: extra?.synergies || {},
+            godMatchups: extra?.godMatchups || [],
+            meta: {
+                winRate: opgg ? parseFloat(opgg.winRate) : 50.0,
+                tier: opgg ? parseInt(opgg.rank) : 5
+            },
+            scalingType: scaling
+        };
 
-    if (!extra) {
-        console.warn(`⚠️ No hay data extra para ${name} (buscado como ${internalName}).`);
-    }
-    
-    
-    // Calculamos el scaling basado en la curva que scrapeamos
-    const curve = extra?.combat?.winrateCurve || [];
-    const scaling = calculateScalingType(curve);
+        // Guardar en el buffer global principal 
+        ENRICHED_DB[name] = enrichedChamp;
 
+        // --- OPTIMIZACIÓN: Clasificación por carril ---
+        const laneKey = enrichedChamp.lane.toUpperCase();
+        if (DATA_BY_LANE[laneKey]) {
+            DATA_BY_LANE[laneKey].push(enrichedChamp);
+        }
+    });
 
-    ENRICHED_DB[name] = {
-      ...baseChamp,
-      lane: extra?.lane || "UNKNOWN",
-      tags: extra?.tags || baseChamp.tags || [],
-      combat: {
-        damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
-        winrateCurve: curve
-      },
-      buildData: extra?.buildData || null,
-      counters: extra?.counters || [],
-      synergies: extra?.synergies || {},
-      godMatchups: extra?.godMatchups || [],
-      meta: {
-        winRate: opgg ? parseFloat(opgg.winRate) : 50.0,
-        tier: opgg ? parseInt(opgg.rank) : 5
-      },
-      scalingType: scaling
-    };
-  });
+    // Opcional: Ordenar cada línea por Tier al inicio para ahorrar CPU en el draft
+    Object.keys(DATA_BY_LANE).forEach(lane => {
+        DATA_BY_LANE[lane].sort((a, b) => a.meta.tier - b.meta.tier);
+    });
 
-  console.log(`✅ Engine listo: ${Object.keys(ENRICHED_DB).length} campeones cargados.`);
+    console.log(`✅ Engine listo: ${Object.keys(ENRICHED_DB).length} campeones cargados.`);
 }
 
 

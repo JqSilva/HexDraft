@@ -29,7 +29,7 @@ import Layout from '../layouts/Layout.astro';
                 <span class="w-3 h-px bg-cyan-500"></span> Tu Equipo
             </h3>
             {Array(5).fill(0).map((_, i) => (
-            <div id={`ally-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-l-4 border-l-cyan-600 flex items-center px-4 rounded-sm transition-all overflow-hidden relative group backdrop-blur-md">
+            <div id={`ally-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-l-4 border-l-cyan-600 flex items-center px-4 rounded-sm transition-all overflow-hidden relative group">
                 <div class="relative w-16 h-16 bg-slate-950 border border-slate-800 overflow-hidden shrink-0 rounded-sm">
                 <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
                 <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-800">?</div>
@@ -115,7 +115,7 @@ import Layout from '../layouts/Layout.astro';
            Enemigos <span class="w-3 h-px bg-red-500"></span>
         </h3>
         {Array(5).fill(0).map((_, i) => (
-          <div id={`enemy-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-r-4 border-r-red-700 flex flex-row-reverse items-center px-4 rounded-sm transition-all overflow-hidden relative group backdrop-blur-md">
+          <div id={`enemy-slot-${i}`} class="h-24 bg-slate-900/40 border border-slate-800 border-r-4 border-r-red-700 flex flex-row-reverse items-center px-4 rounded-sm transition-all overflow-hidden relative group">
             <div class="relative w-16 h-16 bg-slate-950 border border-slate-800 overflow-hidden shrink-0 rounded-sm">
               <img src="" class="champ-img hidden w-full h-full object-cover z-10 relative" />
               <div class="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-800">?</div>
@@ -144,6 +144,14 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </main>
 </Layout>
+
+
+<style>
+  #recommendations-grid {
+    content-visibility: auto;
+  }
+</style>
+
 
 <script>
     import { base64 } from 'astro:schema';
@@ -427,7 +435,7 @@ import Layout from '../layouts/Layout.astro';
         try {
             const game_status = await fetch('/api/game-status');
             const { phase } = await game_status.json();
-            console.log(phase);
+            
             const LcuStatus = document.getElementById('status-text');
             const LcuIndicador = document.getElementById('status-indicator');
 
@@ -435,26 +443,24 @@ import Layout from '../layouts/Layout.astro';
                 LcuStatus.innerText = "Conectado";
                 LcuIndicador?.classList.replace('bg-red-600', 'bg-green-500')
             }
-            if (phase === 'ChampSelect') {
-                pollingInterval = 2000;
+            console.log(phase);
+            if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
+                pollingInterval = 1500; // Fase crítica: rápido
                 await handleChampSelectLogic();
-            } 
-            else if (['InProgress', 'WaitingForStats', 'PreEndOfGame'].includes(phase)) {
-                pollingInterval = 120000;
-                console.log("🎮 Partida en curso: Modo ahorro.");
-            } 
-            else {
-                pollingInterval = 5000;
-                clearDraftUI();
+            } else if (phase === 'None' || phase === 'Offline' || phase === 'Lobby' || phase === 'Matchmaking' || phase == 'EndOfGame'){
+                pollingInterval = 10000; // Lobby/Cerrado: lento
                 if (lastPicksState !== "") {
                     lastImportedChampionId = 0;
-                    clearDraftUI();
                     lastPicksState = "";
                 }
+                clearDraftUI();
+            } else {
+                // Partida en curso: casi no consultamos
+                pollingInterval = 60000;
             }
         } catch (e) {
             console.error("❌ Error en ciclo:", e);
-            pollingInterval = 5000;
+            pollingInterval = 10000;
         } finally {
             isPolling = false;
             setTimeout(updateDraftStatus, pollingInterval);
@@ -560,7 +566,7 @@ import Layout from '../layouts/Layout.astro';
             return `
                 <div class="recommendation-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
                     data-name="${r.name}" data-reasons="${r.reasons.join('|')}" data-score="${r.score.toFixed(1)}">
-                    <img src="${IMG_BASE}${r.id}.png" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
+                    <img src="${IMG_BASE}${r.id}.png" loading="lazy" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
                     <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
                         <span class="text-[13px] font-black px-2 py-1 rounded rounded-full border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
                             ${r.score.toFixed(1)}

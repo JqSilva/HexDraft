@@ -38,7 +38,7 @@ class HexDraftGuard:
         try:
             # Iniciar Servidor Astro 
             subprocess.Popen(
-                ["npm.cmd", "run", "dev"],
+                ["node", "dist/server/entry.mjs"],
                 cwd=PROYECTO_DIR,
                 shell=True,
                 creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
@@ -81,16 +81,19 @@ def main():
     while True:
         try:
             lol_on = guard.is_lol_active()
-            
             if lol_on and not guard.server_active:
                 guard.start_services()
+                time.sleep(30)
             elif not lol_on and guard.server_active:
                 guard.stop_services()
-                
+            
+            interval = 20 if not guard.server_active else 45
+            time.sleep(interval)
         except Exception as e:
             guard.write_log(f"Error crítico en bucle: {e}")
+            time.sleep(60)
         
-        time.sleep(15) # (bajo impacto)
+        
 
 if __name__ == "__main__":
     main()
