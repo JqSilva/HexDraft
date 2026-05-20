@@ -36,10 +36,14 @@ initializeEngineData();
 export function getProcessedRecommendations(
     myTeamIds: number[], 
     theirTeamIds: number[], 
+    bannedIds: number[],
     myRole: string
 ): Recommendation[] {
-    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, role: myRole }); 
-    const allPickedIds = [...myTeamIds, ...theirTeamIds]; 
+    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole });
+
+    
+    const unavailableIds = [...myTeamIds, ...theirTeamIds, ...bannedIds];
+
     const results: Recommendation[] = [];
 
     const posMap: Record<string, string> = {
@@ -60,9 +64,8 @@ export function getProcessedRecommendations(
     const pool = DATA_BY_LANE[targetLane] || [];
 
     for (const c of pool) {
-        // Ya no necesitamos el "if (c.lane !== targetLane) continue" porque el pool es exclusivo
-        
-        if (allPickedIds.includes(c.id)) continue; 
+
+        if (unavailableIds.includes(c.id)) continue;
         
         const { score, reasons } = calculateScore(c, allies, enemies); 
         const rawBuild = c.buildData; 
@@ -87,8 +90,7 @@ export function getProcessedRecommendations(
     }
 
     console.log(`📊 [ENGINE] Recomendaciones generadas: ${results.length}`); 
-    // No hace falta volver a ordenar si el pool ya venía ordenado por Tier, pero 
-    // lo mantenemos para priorizar el 'score' dinámico calculado en tiempo real.
+
     return results.sort((a, b) => b.score - a.score).slice(0, 30); 
 }
 
