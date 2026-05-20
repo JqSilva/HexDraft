@@ -499,6 +499,11 @@ import Layout from '../layouts/Layout.astro';
         const data = await res.json();
         if (!data.inDraft) return;
 
+        const bannedIds = [
+            ...(data.myTeamBans || []), 
+            ...(data.theirTeamBans || [])
+        ].filter(id => id > 0);
+
         const isBanPhase = data.isBanPhase;
         const bansGrid = document.getElementById('bans-grid');
         if (!isBanPhase && bansGrid && !bansGrid.classList.contains('hidden')) {
@@ -532,7 +537,7 @@ import Layout from '../layouts/Layout.astro';
                 document.getElementById('recommendations-grid')?.classList.add('hidden');
                 bansGrid?.classList.remove('hidden');
 
-                const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, bannedIds, myRole);
                 const banRecommendations = getProcessedBans(recommendations);
                 renderBans(banRecommendations);
 
@@ -566,7 +571,7 @@ import Layout from '../layouts/Layout.astro';
                 } else {
                     isBuildViewActive = false;
                     lastImportedChampionId = 0;
-                    const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, myRole);
+                    const recommendations = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam,bannedIds, myRole);
                     renderGrid(recommendations.slice(0, 20));
 
                     console.log("ENTRANDO EN FASE DE PICKS");

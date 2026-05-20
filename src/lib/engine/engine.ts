@@ -152,86 +152,66 @@ export function getProcessedBans(
  * CALCULAR PUNTAJE 
  */
 function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
-    // 1. CONSTANTES DE PESO (Ajuste fino de experto)
+    // 1. CONSTANTES DE PESO REEQUILIBRADAS (Contexto > Meta)
     const WEIGHTS = {
-        META_BASE: 0.75,      // Peso por cada punto de WinRate sobre 50%
-        SYNERGY: 1.5,       // Multiplicador de Delta de sinergia
-        MATCHUP: 0.25,      // Multiplicador para dominanceScore
-        COUNTER: 0.30,       // Multiplicador de déficit de WR contra enemigos
-        COMPOSITION: 0.5,   // Puntos por cubrir huecos (AP/AD/Tank)
-        SCALING: 0.8,       // Puntos por equilibrar la curva de tiempo
+        META_BASE: 0.4,       
+        SYNERGY: 2.2,       
+        MATCHUP: 0.45,      
+        COUNTER: 0.35,       
+        COMPOSITION: 0.7,    
+        SCALING: 1.0,        
     };
 
-    let score = 5.0; // Base neutra
+    let score = 5.0; 
     const reasons: string[] = [];
     const rank = target.meta.tier || 50;
 
-    // --- CAPA 1: FORTALEZA INDIVIDUAL (TIER & WINRATE) ---
-    // Bonus por Tier 
+    // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
     if (rank <= 3) {
-        // GOD TIER: El top absoluto del meta
-        score += 1.8; 
-        reasons.push("Prioridad: God Tier en el meta actual");
+        score += 1.0; 
+        reasons.push("Prioridad: God Tier");
+    } else if (rank <= 12) {
+        score += 0.4;
+        reasons.push("Análisis: Pick estable");
+    } else if (rank > 25) {
+        score -= 1.5; 
+        reasons.push("Nota: Fuera del meta actual");
     }
 
-    else if (rank <= 12) {
-    // GOOD TIER: Picks sólidos y consistentes
-        score += 0.8;
-        reasons.push("Análisis: Pick fuerte y estable");
-    }
-
-    else if (rank > 25) {
-        // BAD TIER: Campeones fuera de balance o nerfeados
-        score -= 2.5;
-        reasons.push("Nota: Débil en el meta actual");
-    }
-
-    else {
-        // TIER INTERMEDIO: Penalización progresiva suave
-        // Si el rank es 13, la resta es mínima. Si es 25, se acerca a -0.5.
-        const rankPenalty = ((rank - 12) / 2.4) * 0.5; 
-        score -= rankPenalty;
-    }
-    // Winrate base de OPGG (Suavizado)
+    
     score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
 
+    
+    const effectivenessFactor = rank > 25 ? 0.75 : 1.0; 
 
-    const effectivenessFactor = rank > 25 ? 0.5 : 1.0;
-
-    // --- CAPA 2: SINERGIAS (DELTAS) ---
+    // --- CAPA 2: SINERGIAS (MÁS IMPACTO) ---
     allies.forEach(allyName => {
         for (const laneSynergies of Object.values(target.synergies)) {
             const match = (laneSynergies as any[]).find(s => s.name === allyName);
             if (match) {
                 const delta = parseFloat(match.delta);
-                if (delta > 1.5) { 
+                if (delta > 1.0) { 
                     const bonus = (delta / 10) * WEIGHTS.SYNERGY * effectivenessFactor;
                     score += bonus;
-                    reasons.push(`Sinergia: +${delta}% con ${allyName} ${effectivenessFactor < 1 ? '(Efectividad reducida)' : ''}`);
+                    reasons.push(`Sinergia: +${delta}% con ${allyName}`);
                 }
             }
         }
     });
 
-    // --- CAPA 3: GOD MATCHUPS  ---
+    // --- CAPA 3: GOD MATCHUPS ---
     enemies.forEach(enemyName => {
         const godMatch = target.godMatchups?.find(m => normalizeKey(m.name) === normalizeKey(enemyName));
         if (godMatch) {
             const dScore = godMatch.dominanceScore || 0;
-            
-            if (dScore > 2) {
-                const bonus = dScore * WEIGHTS.MATCHUP * effectivenessFactor;
+            if (dScore > 1.5) {
+                // Si el counter es muy fuerte, ignoramos parte de la debilidad del meta
+                const metaDefense = rank > 25 ? 1.2 : 1.0; 
+                const bonus = dScore * WEIGHTS.MATCHUP * effectivenessFactor * metaDefense;
                 score += bonus;
                 
-                const enemyMainPos = ENRICHED_DB[enemyName]?.lane || "";
-                const isDirect = enemyMainPos === target.lane;
-                reasons.push(`${isDirect ? 'Dominancia' : 'Caza'}: vs ${enemyName} ${effectivenessFactor < 1 ? '(Meta Desfavorable)' : ''}`);
-            }
-
-            const gDiff = parseInt(godMatch.goldDiff);
-            if (gDiff > 500) {
-                score += 0.4;
-                reasons.push(`Recursos: Gran ventaja de oro vs ${enemyName}`);
+                const isDirect = (ENRICHED_DB[enemyName]?.lane || "") === target.lane;
+                reasons.push(`${isDirect ? 'Dominancia' : 'Caza'}: Hard Counter de ${enemyName}`);
             }
         }
     });
@@ -241,98 +221,48 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         const match = target.counters.find(c => normalizeKey(c.name) === normalizeKey(enemyName));
         if (match) {
             const dScore = match.dominanceScore || 0; 
-            
             if (dScore < -1) {
-                // Penalizamos según qué tan negativo sea el dominance
                 const penalty = Math.abs(dScore) * WEIGHTS.COUNTER;
                 score -= penalty;
-                reasons.push(`Peligro: ${enemyName} es counter fuerte (${match.winrate} WR)`);
+                reasons.push(`Peligro: ${enemyName} te neutraliza`);
             }
         }
     });
 
-    // --- CAPA 5: BALANCE DE DAÑO (ANTIFULL-AD/AP) ---
+    // --- CAPA 5: BALANCE DE DAÑO ---
     const damage = target.combat.damageComposition;
-    const totalDmg = damage.physical + damage.magic + (damage.true || 0);
-    const physPct = (damage.physical / totalDmg) * 100;
-    const magicPct = (damage.magic / totalDmg) * 100;
-    
-    const teamAD = allies.filter(a => 
-        (ENRICHED_DB[a]?.combat.damageComposition.physical / 
-        (ENRICHED_DB[a]?.combat.damageComposition.physical + 
-        ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
+    const teamAD = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.physical / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
+    const teamAP = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.magic / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
 
-    const teamAP = allies.filter(a => 
-        (ENRICHED_DB[a]?.combat.damageComposition.magic / 
-        (ENRICHED_DB[a]?.combat.damageComposition.physical + 
-        ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
-
-    const isHybrid = physPct > 35 && magicPct > 35;
-     if (isHybrid && allies.length > 0) {
-
+    // Bono por adaptabilidad híbrida
+    if ((damage.physical > 35 && damage.magic > 35) && allies.length > 0) {
         if (teamAD >= 2 && teamAP === 0) {
-            score += 0.7;
-            reasons.push(`Adaptabilidad: El equipo necesita AP, puedes jugar ${target.name} AP`);
-        } else if (teamAP >= 3 && teamAD <= 1) {
-            score += 0.7;
-            reasons.push(`Adaptabilidad: El equipo necesita AD, puedes jugar ${target.name} AD`);
+            score += 0.8;
+            reasons.push(`Adaptabilidad: Necesidad de daño AP`);
         }
-
     }
 
-    // Penalización por equipo mono-daño
+    // Bono por cubrir hueco (Más agresivo)
     if (allies.length >= 2) {
-
-        if (teamAD >= 3 && physPct > 70) {
-            score -= 1.2;
-            reasons.push("Aviso: Exceso de daño físico en el equipo");
-        }
-        if (teamAP >= 3 && magicPct > 70) {
-            score -= 1.2;
-            reasons.push("Aviso: Exceso de daño mágico en el equipo");
-        }
-    }
-
-    // Bono por balancear el equipo
-
-    if (allies.length >= 2 && rank <= 25) {
-        if (teamAD >= 2 && teamAP === 0 && magicPct > 65) {
+        if (teamAD >= 2 && teamAP === 0 && damage.magic > 60) {
             score += WEIGHTS.COMPOSITION;
-            reasons.push("Balance: Aportas el daño mágico faltante");
+            reasons.push("Balance: Daño mágico faltante");
         }
-        if (teamAP >= 2 && teamAD === 0 && physPct > 65) {
+        if (teamAP >= 2 && teamAD === 0 && damage.physical > 60) {
             score += WEIGHTS.COMPOSITION;
-            reasons.push("Balance: Aportas el daño físico faltante");
+            reasons.push("Balance: Daño físico faltante");
         }
     }
 
+    // --- CAPA 6: VARIABILIDAD (ANTITUNNELING) ---
+    const entropy = Math.random() * 0.3;
+    score += entropy;
 
-    // --- CAPA 6: SINERGIAS POR TAGS (CLASES) ---
-
-    const earlyCount = allies.filter(a => ENRICHED_DB[a]?.scalingType === 'Early').length;
-    const lateCount = allies.filter(a => ENRICHED_DB[a]?.scalingType === 'Late').length;
-
-    if (earlyCount >= 2 && target.scalingType === 'Late') {
-        score += WEIGHTS.SCALING;
-        reasons.push("Escalado: Aseguras el juego tardío");
-    }
-
-    // --- CAPA 7: FRONT-LINE CHECK ---
-    const allyTags = allies.flatMap(name => ENRICHED_DB[name]?.tags || []);
-    const hasFrontline = allyTags.includes('Tank') || allyTags.includes('Fighter');
-    
-    if (target.tags.includes('Marksman') && !hasFrontline && allies.length >= 2) {
-        score -= 0.5; 
-        reasons.push("Aviso: Equipo sin frontline para protegerte");
-    }
-
-    // --- RENDIMIENTO DECRECIENTE (SOFT CAP) ---
-    // Evita que los puntajes se disparen a 15-20 puntos
+    // --- AJUSTE FINAL (SOFT CAP) ---
     if (score > 9.0) {
-        score = 9.0 + (score - 9.0) * 0.3;
+        score = 9.0 + (score - 9.0) * 0.25; 
     }
 
-    // --- AJUSTE FINAL ---
     const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
     return { score: finalScore, reasons };
 }
