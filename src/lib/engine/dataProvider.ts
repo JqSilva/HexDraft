@@ -8,25 +8,35 @@ export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0
 
 const ENRICHED_DB: any = {};
 
+export interface MatchupData {
+  name: string;
+  winrate: string;
+  goldDiff: string;
+  xpDiff: string;
+  csDiff: string;
+  count: number;
+  laneTag: "Good Lane" | "Bad Lane";
+  dominanceScore: number; 
+}
+
+
 export interface EnrichedChampion extends ChampionData {
-  // Data estratégica del Super JSON
   lane: string;
-  tags: string[]; // De DataDragon (Assassin, Tank, etc.)
+  tags: string[];
   combat: {
     damageComposition: { physical: number; magic: number; true: number };
     winrateCurve: number[];
   };
-  counters: Array<{ name: string; winrate: string }>;
-  godMatchups: Array<{ name: string; winrate: string; goldDiff: string; xpDiff: string }>;
+  counters: MatchupData[]; 
+  godMatchups: MatchupData[];
+  
   synergies: Record<string, Array<{ name: string; delta: string }>>;
 
-  // Data volátil de OPGG
   meta: {
     winRate: number;
     tier: number;
   };
   
-  // Atributo calculado para el Engine
   scalingType: 'Early' | 'Mid' | 'Late';
 }
 

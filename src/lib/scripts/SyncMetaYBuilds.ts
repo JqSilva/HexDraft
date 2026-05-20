@@ -159,8 +159,10 @@ export async function syncMetaAndBuilds(version: string) {
             $('table tbody tr').each((_, el) => {
                 const row = $(el);
                 if (row.hasClass('ad')) return;
+                const rank = row.find('td:first-child span.w-5').first().text().trim();
+
                 list.push({
-                    rank: row.find('td:nth-child(1)').text().trim(),
+                    rank: rank,
                     name: row.find('td:nth-child(2) strong').text().trim(),
                     winRate: row.find('td:nth-child(5)').text().trim(),
                     pickRate: row.find('td:nth-child(6)').text().trim(),

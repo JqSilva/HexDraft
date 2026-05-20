@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import importlib.util
+import shutil
 
 # --- CONFIGURACIÓN ---
 NOMBRE_SCRIPT = "automatizador-hexdraft.py"
@@ -11,34 +12,45 @@ DEPENDENCIAS = ["psutil", "pygetwindow", "pyinstaller"]
 def verificar_dependencias():
     print(">>> Verificando dependencias...")
     for dep in DEPENDENCIAS:
-        spec = importlib.util.find_spec(dep)
-        if spec is None:
-            print(f"⚠️  Instalando {dep}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
+        if dep == "pyinstaller":
+            if shutil.which(dep) is None:
+                 subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
+            else:
+                print(f"✅ {dep} detectada.")
         else:
-            print(f"✅ {dep} detectado.")
+            spec = importlib.util.find_spec(dep)
+            if spec is None:
+                print(f"⚠️  Instalando {dep}...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
+            else:
+                print(f"✅ {dep} detectado.")
 
 def build():
-    print(f"\n>>> Generando ejecutable único: {NOMBRE_EXE}.exe")
+    print(f"\n>>> Generando ejecutable único en carpeta independiente...")
     
-    # --onefile crea un solo archivo en /dist (más limpio para producción)
-    # --noconsole evita que se abra la ventana negra de CMD al iniciar
+    # Definimos una carpeta de salida distinta para el EXE
+    output_dir = "dist-exe" 
+    icon_path = os.path.join("public", "favicon.ico")
+
     command = [
         "pyinstaller",
         "--noconsole",
         "--onefile",
         f"--name={NOMBRE_EXE}",
+        f"--distpath={output_dir}", # Redirige el EXE final aquí 
+        f"--icon={icon_path}",
         "--clean",
         "--noconfirm",
         NOMBRE_SCRIPT
     ]
 
+
     try:
         subprocess.run(command, check=True)
         print("\n✅ Compilación exitosa.")
         
-        # Ruta al EXE único
-        exe_path = os.path.abspath(os.path.join("dist", f"{NOMBRE_EXE}.exe"))
+        # Actualizamos la ruta para la persistencia
+        exe_path = os.path.abspath(os.path.join(output_dir, f"{NOMBRE_EXE}.exe")) 
         
         if os.path.exists(exe_path):
             configurar_persistencia(exe_path)
@@ -47,6 +59,7 @@ def build():
             
     except subprocess.CalledProcessError as e:
         print(f"❌ Error en PyInstaller: {e}")
+
 
 def configurar_persistencia(path):
     task_name = "HexDraft_Guard_System"

@@ -26,6 +26,7 @@ pnpm-debug.log*
 
 build/
 dist/
+dist-exe/
 HexDraftGuard.spec
 hexdraft_log.txt
 guard_status.log
