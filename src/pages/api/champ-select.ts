@@ -1,6 +1,7 @@
 // src/pages/api/champ-select.ts
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/lcu';
+import { actions } from 'astro/fetch';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -31,6 +32,10 @@ export const GET: APIRoute = async () => {
     
     const data = await response.json();
 
+    const deadline = data.timer.phaseDeadline || 0;
+    const current = data.timer.internalNow || 0;
+    const diff = deadline - current;
+
     // === DETECTOR REAL DE FASE DE BANS ===
     // El LCU usa bloques de "actions". Buscamos la acción que esté activa en este milisegundo (type: 'ban' o 'pick')
     let isBanPhase = false;
@@ -51,7 +56,9 @@ export const GET: APIRoute = async () => {
       inDraft: true, 
       myTeam: data.myTeam || [], 
       theirTeam: data.theirTeam || [],
-      timer: data.timer || {},
+      timer: data.timer,
+      actions: data.actions || [],
+      localPlayerCellId: data.localPlayerCellId,
       isBanPhase: isBanPhase // <-- Enviamos esto masticado al frontend
     }), { status: 200 });
 
