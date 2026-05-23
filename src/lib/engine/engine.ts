@@ -34,14 +34,14 @@ initializeEngineData();
  * Función principal: Ahora mucho más limpia porque la data ya viene "cocinada"
  */
 export function getProcessedRecommendations(
-    myTeamIds: number[], 
-    theirTeamIds: number[], 
+    myTeamIds: number[],
+    theirTeamIds: number[],
     bannedIds: number[],
     myRole: string
 ): Recommendation[] {
-    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole });
+    //console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole });
 
-    
+
     const unavailableIds = [...myTeamIds, ...theirTeamIds, ...bannedIds];
 
     const results: Recommendation[] = [];
@@ -49,15 +49,15 @@ export function getProcessedRecommendations(
     const posMap: Record<string, string> = {
         "top": "TOP",
         "jungle": "JUNGLE",
-        "middle": "MIDDLE",   
-        "bottom": "BOTTOM", 
+        "middle": "MIDDLE",
+        "bottom": "BOTTOM",
         "utility": "UTILITY"
     };
 
-    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase(); 
-    console.log(`📍 [ENGINE] Usando pool pre-filtrado para: ${targetLane}`);
+    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
+    //console.log(`📍 [ENGINE] Usando pool pre-filtrado para: ${targetLane}`);
 
-    const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[]; 
+    const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
     // OPTIMIZACIÓN: En lugar de iterar ENRICHED_DB (160+), iteramos solo la línea específica (~30)
@@ -66,40 +66,40 @@ export function getProcessedRecommendations(
     for (const c of pool) {
 
         if (unavailableIds.includes(c.id)) continue;
-        
-        const { score, reasons } = calculateScore(c, allies, enemies); 
-        const rawBuild = c.buildData; 
+
+        const { score, reasons } = calculateScore(c, allies, enemies);
+        const rawBuild = c.buildData;
 
         const hydratedBuild = {
             runes: {
-                primaryStyle: hydrateAsset('runes', rawBuild.runes.primaryStyleId), 
-                subStyle: hydrateAsset('runes', rawBuild.runes.subStyleId), 
-                selections: rawBuild.runes.selections.map((id: number) => hydrateAsset('runes', id)), 
-                shards: rawBuild.runes.shards.map((id: number) => hydrateAsset('shards', id)) 
+                primaryStyle: hydrateAsset('runes', rawBuild.runes.primaryStyleId),
+                subStyle: hydrateAsset('runes', rawBuild.runes.subStyleId),
+                selections: rawBuild.runes.selections.map((id: number) => hydrateAsset('runes', id)),
+                shards: rawBuild.runes.shards.map((id: number) => hydrateAsset('shards', id))
             },
-            skillMax: rawBuild.skills ? ["Q", "W", "E"][rawBuild.skills.skillLevelUp1 - 1] : "Q" 
+            skillMax: rawBuild.skills ? ["Q", "W", "E"][rawBuild.skills.skillLevelUp1 - 1] : "Q"
         };
 
         results.push({
-            id: c.id, 
-            name: c.name, 
-            score: score, 
-            reasons: reasons, 
-            build: hydratedBuild 
+            id: c.id,
+            name: c.name,
+            score: score,
+            reasons: reasons,
+            build: hydratedBuild
         });
     }
 
-    console.log(`📊 [ENGINE] Recomendaciones generadas: ${results.length}`); 
+    //console.log(`📊 [ENGINE] Recomendaciones generadas: ${results.length}`);
 
-    return results.sort((a, b) => b.score - a.score).slice(0, 30); 
+    return results.sort((a, b) => b.score - a.score).slice(0, 30);
 }
 
 
 export function getProcessedBans(
     topRecommendations: Recommendation[]
 ): BansRecommendation[] {
-    console.log("🔍 [ENGINE] Calculando Bans basados en los mejores picks sugeridos.");
-    
+    //console.log("🔍 [ENGINE] Calculando Bans basados en los mejores picks sugeridos.");
+
     const banScores: Record<string, { id: number; score: number; count: number }> = {};
 
     // 1. Tomamos los top 5 o 10 picks recomendados para no saturar con counters de picks malos
@@ -117,7 +117,7 @@ export function getProcessedBans(
 
             // Convertimos el winrate del counter a número para usarlo como métrica de peligro
             const wr = parseFloat(counter.winrate.replace('%', ''));
-            
+
             // Cuanto mayor sea el WinRate del counter contra nuestro pick, mayor prioridad de ban
             const dangerWeight = wr > 50 ? (wr - 50) * 2 : 0.5;
 
@@ -149,40 +149,40 @@ export function getProcessedBans(
 
 
 /**
- * CALCULAR PUNTAJE 
+ * CALCULAR PUNTAJE
  */
 function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
     // 1. CONSTANTES DE PESO REEQUILIBRADAS (Contexto > Meta)
     const WEIGHTS = {
-        META_BASE: 0.4,       
-        SYNERGY: 2.2,       
-        MATCHUP: 0.45,      
-        COUNTER: 0.35,       
-        COMPOSITION: 0.7,    
-        SCALING: 1.0,        
+        META_BASE: 0.4,
+        SYNERGY: 2.2,
+        MATCHUP: 0.45,
+        COUNTER: 0.35,
+        COMPOSITION: 0.7,
+        SCALING: 1.0,
     };
 
-    let score = 5.0; 
+    let score = 5.0;
     const reasons: string[] = [];
     const rank = target.meta.tier || 50;
 
     // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
     if (rank <= 3) {
-        score += 1.0; 
+        score += 1.0;
         reasons.push("Prioridad: God Tier");
     } else if (rank <= 12) {
         score += 0.4;
         reasons.push("Análisis: Pick estable");
     } else if (rank > 25) {
-        score -= 1.5; 
+        score -= 1.5;
         reasons.push("Nota: Fuera del meta actual");
     }
 
-    
+
     score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
 
-    
-    const effectivenessFactor = rank > 25 ? 0.75 : 1.0; 
+
+    const effectivenessFactor = rank > 25 ? 0.75 : 1.0;
 
     // --- CAPA 2: SINERGIAS (MÁS IMPACTO) ---
     allies.forEach(allyName => {
@@ -190,7 +190,7 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
             const match = (laneSynergies as any[]).find(s => s.name === allyName);
             if (match) {
                 const delta = parseFloat(match.delta);
-                if (delta > 1.0) { 
+                if (delta > 1.0) {
                     const bonus = (delta / 10) * WEIGHTS.SYNERGY * effectivenessFactor;
                     score += bonus;
                     reasons.push(`Sinergia: +${delta}% con ${allyName}`);
@@ -206,10 +206,10 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
             const dScore = godMatch.dominanceScore || 0;
             if (dScore > 1.5) {
                 // Si el counter es muy fuerte, ignoramos parte de la debilidad del meta
-                const metaDefense = rank > 25 ? 1.2 : 1.0; 
+                const metaDefense = rank > 25 ? 1.2 : 1.0;
                 const bonus = dScore * WEIGHTS.MATCHUP * effectivenessFactor * metaDefense;
                 score += bonus;
-                
+
                 const isDirect = (ENRICHED_DB[enemyName]?.lane || "") === target.lane;
                 reasons.push(`${isDirect ? 'Dominancia' : 'Caza'}: Hard Counter de ${enemyName}`);
             }
@@ -220,7 +220,7 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     enemies.forEach(enemyName => {
         const match = target.counters.find(c => normalizeKey(c.name) === normalizeKey(enemyName));
         if (match) {
-            const dScore = match.dominanceScore || 0; 
+            const dScore = match.dominanceScore || 0;
             if (dScore < -1) {
                 const penalty = Math.abs(dScore) * WEIGHTS.COUNTER;
                 score -= penalty;
@@ -260,7 +260,7 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 
     // --- AJUSTE FINAL (SOFT CAP) ---
     if (score > 9.0) {
-        score = 9.0 + (score - 9.0) * 0.25; 
+        score = 9.0 + (score - 9.0) * 0.25;
     }
 
     const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
@@ -279,7 +279,7 @@ export function getSingleChampionBuild(championId: number): any {
     const skills = b.skills;
     const skillOrder = ["Q", "W", "E"];
 
-    const fullOrder = skills 
+    const fullOrder = skills
     ? [
         { key: "Q", pos: skills.skillLevelUp1 },
         { key: "W", pos: skills.skillLevelUp2 },
@@ -291,7 +291,7 @@ export function getSingleChampionBuild(championId: number): any {
     : "Q > W > E";
 
 
-   
+
     return {
         name: champ.name,
         build: {

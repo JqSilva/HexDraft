@@ -32,6 +32,7 @@ export const GET: APIRoute = async () => {
     
     const data = await response.json();
 
+    
     const deadline = data.timer.phaseDeadline || 0;
     const current = data.timer.internalNow || 0;
     const diff = deadline - current;

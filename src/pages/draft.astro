@@ -61,11 +61,6 @@ import Layout from '../layouts/Layout.astro';
                     </div>
                 </header>
 
-
-
-
-
-
                 <div id="recommendations-grid" class="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 max-w-fit w-full mx-auto relative transition-all duration-500">
                     <div class="absolute top-[15vh] left-1/2 -translate-x-1/2 text-center w-full">
                          <div class="w-10 h-10 border-2 border-slate-800 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -96,7 +91,7 @@ import Layout from '../layouts/Layout.astro';
                     </label>
                 </div>
 
-                <div id="build-view" class="hidden opacity-0 translate-y-4 transition-all duration-500">
+                <div id="build-view" class="hidden opacity-0 translate-y-4 transition-all duration-500 mb-12">
                     <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                         <button id="back-to-grid" class="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-widest transition-colors flex items-center gap-2">
                             <span class="text-lg">←</span> Volver al Análisis
@@ -130,7 +125,6 @@ import Layout from '../layouts/Layout.astro';
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -201,11 +195,13 @@ import Layout from '../layouts/Layout.astro';
     import { base64 } from 'astro:schema';
     import { ENRICHED_DB } from '../lib/engine/dataProvider';
     import { getNameFromId, getSingleChampionBuild, getProcessedRecommendations, getProcessedBans } from '../lib/engine/engine';
-
+    
     const IMG_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
     const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
     const ITEM_IMG_BASE = "https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/";
     const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/";
+
+
     const posMapping = {
         "top": "icon-position-top.png",
         "jungle": "icon-position-jungle.png",
@@ -226,6 +222,11 @@ import Layout from '../layouts/Layout.astro';
     let lastPicksState = "";
     let lastImportedChampionId = 0;
     let isBuildViewActive = false;
+
+    // CONTADOR Y DATOS DE SESIÓN
+    let localTimer = 0;
+    let timerInterval = null;
+    let currentDraftData = null;
 
     let autoPickEnabled = localStorage.getItem('autoPick') === 'true';
     let autoBanEnabled = localStorage.getItem('autoBan') === 'true';
@@ -283,7 +284,11 @@ import Layout from '../layouts/Layout.astro';
 
         // Ocultamos bans y builds, y nos aseguramos de que el grid principal esté visible
         if (bansGrid) bansGrid.classList.add('hidden');
-        if (buildView) buildView.classList.add('hidden');
+       
+        if (buildView) {
+            buildView.classList.add('hidden', 'opacity-0');
+            buildView.innerHTML = ""; 
+        }
 
         if (recsGrid) {
             recsGrid.classList.remove('hidden');
@@ -299,12 +304,23 @@ import Layout from '../layouts/Layout.astro';
             // Renderizamos un mensaje de espera elegante, centrado y estilizado
             recsGrid.innerHTML = `
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <div class="w-12 h-12 border-4 border-slate-700 border-t-purple-500 rounded-full animate-spin mb-4"></div>
-                    <p class="text-slate-400 uppercase font-black tracking-widest text-sm animate-pulse max-w-xs">
+                    <div class="relative w-20 h-20 mb-8 group">
+                        <div class="absolute inset-0 bg-purple-600/30 blur-xl rounded-full animate-pulse"></div>
+                        
+                        <div class="hextech-gem w-full h-full bg-gradient-to-br from-purple-400 via-purple-600 to-indigo-900 animate-[spin_10s_linear_infinite] relative z-10 shadow-[0_0_30px_rgba(168,85,247,0.5)]">
+                            <div class="absolute inset-[2px] bg-[#020617] clip-hex flex items-center justify-center">
+                                <div class="w-2/3 h-2/3 bg-purple-500/10 clip-hex animate-pulse"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="absolute inset-[-10px] border border-purple-500/20 clip-hex animate-[spin_15s_linear_infinite_reverse]"></div>
+                    </div>
+            
+                    <p class="text-slate-400 uppercase font-black tracking-[0.3em] text-xs animate-pulse max-w-xs">
                         Esperando Fase de Selección...
                     </p>
-                    <p class="text-slate-600 text-xs mt-1 lowercase first-letter:uppercase">
-                        Conéctate a una sala de emparejamiento o personalizada
+                    <p class="text-slate-600 text-[10px] mt-2 uppercase tracking-widest font-bold opacity-50">
+                    Inicia una partida para poder comenzar
                     </p>
                 </div>`;
         }
@@ -513,20 +529,39 @@ import Layout from '../layouts/Layout.astro';
                 LcuStatus.innerText = "Conectado";
                 LcuIndicador?.classList.replace('bg-red-600', 'bg-green-500')
             }
+            
             if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
                 pollingInterval = 1500; // Fase crítica: rápido
                 isUICleaned = false;
                 await handleChampSelectLogic();
-            } else if (phase === 'None' || phase === 'Offline' || phase === 'Lobby' || phase === 'Matchmaking' || phase == 'EndOfGame'){
+            } 
+            else if (phase === 'InProgress'){
+                pollingInterval = 30000; // Lobby/Cerrado: lento
+                console.log("🎮 Partida en curso: Manteniendo Build en pantalla.");
+                document.getElementById('recommendations-grid')?.classList.add('hidden');
+                document.getElementById('bans-grid')?.classList.add('hidden');
+                isBuildViewActive = true;
+                
+                if (isBuildViewActive) {
+                  console.log("isBuildViewActive");
+                    const buildView = document.getElementById('build-view');
+                    buildView?.classList.remove('hidden', 'opacity-0');
+                    buildView?.classList.add('opacity-100');
+                    
+                    const title = document.getElementById('view-title');
+                    if (title && !title.innerHTML.includes("PARTIDA")) {
+                        title.innerHTML = `ANÁLISIS <span class="text-purple-500">EN PARTIDA</span>`;
+                    }
+                }    
+            } 
+            else if (['None', 'Offline', 'Lobby', 'Matchmaking', 'EndOfGame'].includes(phase)) {
                 pollingInterval = 10000; // Lobby/Cerrado: lento
                 if (lastPicksState !== "") {
                     lastImportedChampionId = 0;
                     lastPicksState = "";
                 }
+                stopLocalTimer();
                 clearDraftUI();
-            } else {
-                // Partida en curso: casi no consultamos
-                pollingInterval = 60000;
             }
         } catch (e) {
             console.error("❌ Error en ciclo:", e);
@@ -537,156 +572,159 @@ import Layout from '../layouts/Layout.astro';
         }
     }
 
-    // CONTADOR
-    let localTimer = 0;
-    let timerInterval = null;
-    let currentDraftData = null;
 
     async function handleChampSelectLogic() {
-        const res = await fetch('/api/champ-select');
-        if (!res.ok) {
-            const status = document.getElementById('status-text');
-            if (status) status.innerText = "Desconectado";
-            clearDraftUI();
-            return;
-        }
+      const res = await fetch('/api/champ-select');
+      if (!res.ok) {
+          const status = document.getElementById('status-text');
+          if (status) status.innerText = "Desconectado";
+          clearDraftUI();
+          return;
+      }
 
-        const data = await res.json();
-        if (!data.inDraft) {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            localTimer = 0;
-            return;
-        }
-        currentDraftData = data; // Guardamos para la auto-acción
+      const data = await res.json();
+      if (!data.inDraft) {
+          stopLocalTimer();
+          return;
+      }
+      currentDraftData = data;
 
-        const isBanPhase = data.isBanPhase;
-        const bansGrid = document.getElementById('bans-grid');
+      // Detectar mi turno activo (Pick o Ban)
+      const myCellId = data.localPlayerCellId;
+      const myActiveAction = data.actions?.flat().find(a =>
+          a.actorCellId === myCellId && a.isInProgress && !a.completed
+      );
 
-        // Gestión de transiciones de fase
-        if (!isBanPhase && bansGrid && !bansGrid.classList.contains('hidden')) {
-            lastPicksState = "";
-        }
+      const isBanPhase = data.isBanPhase;
 
-        const currentPicksState = `${isBanPhase}|` +
-            data.myTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',') + '|' +
-            data.theirTeam.map(p => `${p.championId}-${p.championPickIntent}`).join(',');
+      const allActions = data.actions.flat();
+      const bannedIds = allActions
+        .filter(a => a.type === 'ban' && a.completed)
+        .map(a => a.championId)
+        .filter(id => id > 0);
+      const pickedIds = [
+        ...data.myTeam.map(p => p.championId),
+        ...data.theirTeam.map(p => p.championId)
+      ].filter(id => id > 0);
+      const unavailableIds = [...new Set([...bannedIds, ...pickedIds])];
+      
+      const currentPicksState = `${isBanPhase}|${data.myTeam.map(p => `${p.championId}`).join(',')}|${data.theirTeam.map(p => `${p.championId}`).join(',')}`;
 
-        if (currentPicksState !== lastPicksState) {
-            lastPicksState = currentPicksState;
 
-            // Reinicio del Cronómetro Local
-            if (timerInterval) clearInterval(timerInterval);
-            let rawTime = data.timer?.adjustedTimeLeftInPhase || 30000;
+      console.log(data);
+      if (currentPicksState !== lastPicksState) {
+          lastPicksState = currentPicksState;
 
-            localTimer = rawTime > 30000 ? rawTime - 5000 : rawTime;
-            // Ajuste preventivo: si el LCU reporta el inicio exacto, restamos un margen para sincronizar
-            if (localTimer > 5000) localTimer -= 1000;
+          // --- GESTIÓN DEL TIEMPO ---
+          if (myActiveAction) {
+              if (timerInterval) clearInterval(timerInterval);
+              let rawTime = data.timer?.adjustedTimeLeftInPhase || 30000;
+              localTimer = rawTime > 30000 ? rawTime - 5000 : rawTime;
 
-            timerInterval = setInterval(() => {
-                if (localTimer > 0) {
-                    localTimer -= 1000;
-                    console.log(localTimer);
-                    checkAutoActions(localTimer); // Ahora solo pasamos el tiempo
-                } else {
-                    clearInterval(timerInterval);
-                }
-            }, 1000);
+              timerInterval = setInterval(() => {
+                  if (localTimer > 0) {
+                      localTimer -= 1000;
+                      console.log(`⏱️ Tu Turno: ${localTimer / 1000}s`);
+                      checkAutoActions(localTimer, myActiveAction, unavailableIds);
+                  } else {
+                      stopLocalTimer();
+                  }
+              }, 1000);
+          } else {
+              stopLocalTimer();
+          }
 
-            // --- ACTUALIZACIÓN DE UI Y MOTOR ---
-            const bannedIds = [...(data.myTeamBans || []), ...(data.theirTeamBans || [])].filter(id => id > 0);
-            const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
-            const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+          // --- ACTUALIZACIÓN DE UI Y MOTOR ---
 
-            const resMe = await fetch('/api/me');
-            const meData = await resMe.json();
-            const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
-            const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-            const fase = document.getElementById('phase');
+          const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+          const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
 
-            data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
-            data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
+          const resMe = await fetch('/api/me');
+          const meData = await resMe.json();
+          const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
+          const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+          const fase = document.getElementById('phase');
 
-            // Lógica de visualización (Bans vs Picks)
-            if (isBanPhase) {
-                if (bansGrid?.classList.contains('hidden')) showBans();
-                const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, bannedIds, myRole);
-                renderBans(getProcessedBans(recs));
-                if (fase) fase.innerText = 'Bans';
-            } else {
-                const grid = document.getElementById('recommendations-grid');
-                if (grid?.classList.contains('hidden')) showRecomendaciones();
-                if (fase) fase.innerText = 'Picks';
+          data.myTeam.forEach((p, i) => updateSlot(`ally-slot-${i}`, p));
+          data.theirTeam.forEach((p, i) => updateSlot(`enemy-slot-${i}`, p));
 
-                if (myPlayer?.championId !== 0) {
-                    // Mostrar Build si ya tenemos campeón seleccionado
-                    const pickData = getSingleChampionBuild(myPlayer.championId);
-                    if (pickData) {
-                        isBuildViewActive = true;
-                        lastImportedChampionId = myPlayer.championId;
-                        importAll(pickData.build.runes, pickData.build.items, pickData.build.summoners, pickData.name, myPlayer.championId, pickData.build.skillOrder);
-                        showBuildView(pickData.name);
-                        renderBuild(pickData.build, pickData.build.summoners, pickData.name, myPlayer.championId);
-                    }
-                } else {
-                    // Mostrar sugerencias si aún no pickeamos
-                    const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, bannedIds, myRole);
-                    renderGrid(recs.slice(0, 20));
-                }
-            }
-        }
+          if (isBanPhase) {
+              const bansGrid = document.getElementById('bans-grid');
+              if (bansGrid?.classList.contains('hidden')) showBans();
+              const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
+
+              const banRecs = getProcessedBans(recs).filter(b => !unavailableIds.includes(b.id));
+              renderBans(getProcessedBans(banRecs));
+              if (fase) fase.innerText = 'Bans';
+          } else {
+              const grid = document.getElementById('recommendations-grid');
+              if (grid?.classList.contains('hidden')) showRecomendaciones();
+              if (fase) fase.innerText = 'Picks';
+
+              if (myPlayer && myPlayer.championId !== 0) {
+                  if (myPlayer.championId !== lastImportedChampionId) {
+                      const pickData = getSingleChampionBuild(myPlayer.championId);
+                      if (pickData) {
+                          isBuildViewActive = true;
+                          lastImportedChampionId = myPlayer.championId;
+                          importAll(pickData.build.runes, pickData.build.items, pickData.build.summoners, pickData.name, myPlayer.championId, pickData.build.skillOrder);
+                          showBuildView(pickData.name);
+                          renderBuild(pickData.build, pickData.build.summoners, pickData.name, myPlayer.championId);
+                      }
+                  }
+              } else {
+                  isBuildViewActive = false;
+                  console.log(unavailableIds);
+                  const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
+                  renderGrid(recs.slice(0, 20));
+              }
+          }
+      }
     }
 
     async function executeLcuAction(actionId, championId) {
-        try {
-            await fetch('/api/execute-action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ actionId, championId, completed: true })
-            });
-            console.log(`✅ Auto-Acción ejecutada: ID ${championId}`);
-        } catch (e) {
-            console.error("❌ Error en ejecución automática:", e);
-        }
-    }
+      try {
+          await fetch('/api/execute-action', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ actionId, championId, completed: true })
+          });
+          console.log(`✅ Acción automática completada: ${championId}`);
+      } catch (e) {
+          console.error("❌ Error en auto-acción:", e);
+      }
+  }
 
-    async function checkAutoActions(currentTime) {
-        if (currentTime <= 3500 && currentDraftData) {
-            const data = currentDraftData;
-            const myCellId = data.localPlayerCellId;
+    async function checkAutoActions(currentTime, activeAction, unavailableIds) {
+      // Disparamos a los 3.5s para asegurar que el LCU procese antes del fin de fase
+      if (currentTime <= 4000 && activeAction) {
+          
+          const cleanMyTeam = currentDraftData.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+          const cleanTheirTeam = currentDraftData.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
 
-            // Buscamos la acción activa para mi posición
-            const myActiveAction = data.actions.flat().find(a =>
-                a.actorCellId === myCellId && a.isInProgress && !a.completed
-            );
+          const resMe = await fetch('/api/me');
+          const meData = await resMe.json();
+          const myPlayer = currentDraftData.myTeam.find(p => p.gameName === meData.summoner);
+          const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
-            if (myActiveAction) {
-                // Recopilamos datos mínimos necesarios para el motor
-                const bannedIds = [...(data.myTeamBans || []), ...(data.theirTeamBans || [])].filter(id => id > 0);
-                const cleanMyTeam = data.myTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
-                const cleanTheirTeam = data.theirTeam.map(p => p.championId || p.championPickIntent).filter(id => id !== 0);
+          if (activeAction.type === 'ban' && autoBanEnabled) {
+              const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
+              const bestBan = getProcessedBans(recs).filter(b => !unavailableIds.includes(b.id))[0];
+              if (bestBan) await executeLcuAction(activeAction.id, bestBan.id);
+          }
+          else if (activeAction.type === 'pick' && autoPickEnabled) {
+              const bestPick = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole)[0];              
+              if (bestPick) await executeLcuAction(activeAction.id, bestPick.id);
+          }
+          stopLocalTimer();
+      }
+  }
 
-                const resMe = await fetch('/api/me');
-                const meData = await resMe.json();
-                const myPlayer = data.myTeam.find(p => p.gameName === meData.summoner);
-                const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-
-                if (myActiveAction.type === 'ban' && autoBanEnabled) {
-                    const recs = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, bannedIds, myRole);
-                    const bestBan = getProcessedBans(recs)[0];
-                    if (bestBan) await executeLcuAction(myActiveAction.id, bestBan.id);
-                }
-                else if (myActiveAction.type === 'pick' && autoPickEnabled) {
-                    const bestPick = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, bannedIds, myRole)[0];
-                    if (bestPick) await executeLcuAction(myActiveAction.id, bestPick.id);
-                }
-
-                clearInterval(timerInterval);
-            }
-        }
-    }
+  function stopLocalTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      localTimer = 0;
+  }
 
     function renderGrid(recs) {
         const container = document.getElementById('recommendations-grid');
@@ -697,9 +735,9 @@ import Layout from '../layouts/Layout.astro';
             const scoreColor = r.score >= 8 ? 'text-green-400' : (r.score >= 6 ? 'text-yellow-400' : 'text-red-400');
 
             return `
-                <div class="recommendation-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500 transition-all cursor-pointer"
+                <div class="recommendation-item group relative w-20 h-20 bg-slate-900 border border-blue-900/30 rounded-md hover:border-blue-500  cursor-pointer"
                     data-name="${r.name}" data-reasons="${r.reasons.join('|')}" data-score="${r.score.toFixed(1)}">
-                    <img src="${IMG_BASE}${r.id}.png" loading="lazy" class="w-full h-full object-cover rounded-md group-hover:opacity-40 transition-opacity" />
+                    <img src="${IMG_BASE}${r.id}.png" loading="lazy" class="w-full h-full object-cover rounded-md group-hover:opacity-40" />
                     <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20">
                         <span class="text-[13px] font-black px-2 py-1 rounded rounded-full border border-slate-900 bg-slate-800 ${scoreColor} shadow-md shadow-black/50">
                             ${r.score.toFixed(1)}
@@ -905,3 +943,21 @@ import Layout from '../layouts/Layout.astro';
     console.log("🚀 HexDraft UI Ready");
     updateDraftStatus();
 </script>
+
+
+<style is:global>
+  /* Clip-path para crear la forma de hexágono perfecta */
+  .clip-hex {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+
+  .hextech-gem {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+
+  /* Animación de pulsación suave para la "energía" */
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+</style>
