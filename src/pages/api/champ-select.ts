@@ -60,7 +60,8 @@ export const GET: APIRoute = async () => {
       timer: data.timer,
       actions: data.actions || [],
       localPlayerCellId: data.localPlayerCellId,
-      isBanPhase: isBanPhase // <-- Enviamos esto masticado al frontend
+      isBanPhase: isBanPhase,// <-- Enviamos esto masticado al frontend
+      data: data
     }), { status: 200 });
 
   } catch (e) {
