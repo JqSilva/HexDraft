@@ -4,8 +4,31 @@ import { DraftPage } from '../components/react/DraftPage';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
-  <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#020617] text-slate-200 overflow-hidden font-sans">
     
+  <main class="min-h-screen p-6 md:p-12 4xl:px-90 4xl:py-40 relative bg-[#020617] text-slate-200 overflow-hidden font-sans">
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
+
+    <header class="max-w-6xl mx-auto mb-2 flex justify-between items-center relative z-10">
+        <div class="w-36">
+            <a href="/" class="text-slate-400 hover:text-white transition-colors text-sm uppercase tracking-[0.2em] font-black group">
+            <span class="inline-block transform group-hover:-translate-x-2 transition-transform">←</span> Inicio
+            </a>
+        </div>
+
+        <div class="mx-auto">
+            <img 
+            src="/favicon.svg" 
+            alt="HexDraft Logo" 
+            class="w-8 h-8 md:w-12 md:h-12 block"
+            />
+        </div>
+
+        <div class="w-36 flex justify-end">
+            <a href="/actualizar" class="text-slate-400 hover:text-white transition-colors text-sm uppercase tracking-[0.2em] font-black group">
+            Actualizar<span class="inline-block transform group-hover:translate-x-2 transition-transform">→</span>
+            </a>
+        </div>
+    </header>
     {/* Fondo decorativo (gradientes) se quedan en Astro porque son estáticos */}
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-purple-900/5 blur-[160px] rounded-full pointer-events-none"></div>
 

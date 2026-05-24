@@ -65,102 +65,102 @@
     },
     "counters": [
       {
-        "name": "Fiora",
-        "winrate": "45.4%",
-        "goldDiff": "-189",
-        "xpDiff": "52",
-        "csDiff": "-2.0",
-        "count": 2300,
-        "laneTag": "Bad Lane",
-        "dominanceScore": -4.4
+        "name": "Singed",
+        "winrate": "45.1%",
+        "goldDiff": "405",
+        "xpDiff": "677",
+        "csDiff": "-1.5",
+        "count": 1828,
+        "laneTag": "Good Lane",
+        "dominanceScore": -4.6
       },
       {
-        "name": "Singed",
-        "winrate": "45.4%",
-        "goldDiff": "398",
-        "xpDiff": "682",
-        "csDiff": "-1.6",
-        "count": 1623,
+        "name": "Malzahar",
+        "winrate": "44.0%",
+        "goldDiff": "253",
+        "xpDiff": "471",
+        "csDiff": "-6.8",
+        "count": 327,
         "laneTag": "Good Lane",
-        "dominanceScore": -4.3
+        "dominanceScore": -4.6
       },
       {
         "name": "Heimerdinger",
-        "winrate": "45.4%",
-        "goldDiff": "-589",
-        "xpDiff": "-316",
-        "csDiff": "-19.1",
-        "count": 487,
+        "winrate": "45.5%",
+        "goldDiff": "-576",
+        "xpDiff": "-293",
+        "csDiff": "-18.7",
+        "count": 552,
         "laneTag": "Bad Lane",
         "dominanceScore": -3.8
       },
       {
-        "name": "Malzahar",
-        "winrate": "45.0%",
-        "goldDiff": "244",
-        "xpDiff": "454",
-        "csDiff": "-6.7",
-        "count": 302,
-        "laneTag": "Good Lane",
+        "name": "Fiora",
+        "winrate": "46.1%",
+        "goldDiff": "-186",
+        "xpDiff": "56",
+        "csDiff": "-1.9",
+        "count": 2595,
+        "laneTag": "Bad Lane",
         "dominanceScore": -3.7
       },
       {
-        "name": "MonkeyKing",
-        "winrate": "46.0%",
-        "goldDiff": "-325",
-        "xpDiff": "-238",
-        "csDiff": "1.7",
-        "count": 674,
-        "laneTag": "Bad Lane",
-        "dominanceScore": -3.5
-      },
-      {
         "name": "Malphite",
-        "winrate": "46.6%",
-        "goldDiff": "377",
-        "xpDiff": "53",
-        "csDiff": "16.5",
-        "count": 4000,
+        "winrate": "46.5%",
+        "goldDiff": "361",
+        "xpDiff": "39",
+        "csDiff": "16.2",
+        "count": 4458,
         "laneTag": "Good Lane",
-        "dominanceScore": -3.3
+        "dominanceScore": -3.4
       },
       {
-        "name": "Zaahen",
-        "winrate": "46.9%",
-        "goldDiff": "633",
-        "xpDiff": "612",
-        "csDiff": "15.4",
-        "count": 1451,
+        "name": "MonkeyKing",
+        "winrate": "46.4%",
+        "goldDiff": "-301",
+        "xpDiff": "-234",
+        "csDiff": "1.9",
+        "count": 774,
+        "laneTag": "Bad Lane",
+        "dominanceScore": -3.2
+      },
+      {
+        "name": "Sejuani",
+        "winrate": "45.1%",
+        "goldDiff": "569",
+        "xpDiff": "410",
+        "csDiff": "16.3",
+        "count": 175,
         "laneTag": "Good Lane",
-        "dominanceScore": -2.9
+        "dominanceScore": -3.1
       },
       {
         "name": "Swain",
-        "winrate": "46.1%",
-        "goldDiff": "342",
-        "xpDiff": "479",
-        "csDiff": "2.9",
-        "count": 280,
+        "winrate": "46.3%",
+        "goldDiff": "396",
+        "xpDiff": "529",
+        "csDiff": "4.0",
+        "count": 313,
         "laneTag": "Good Lane",
-        "dominanceScore": -2.9
+        "dominanceScore": -2.8
       },
       {
-        "name": "Vayne",
-        "winrate": "47.3%",
-        "goldDiff": "270",
-        "xpDiff": "609",
-        "csDiff": "-3.1",
-        "count": 2004,
-        "laneTag": "Good Lane",
-        "dominanceScore": -2.6
+        "name": "Naafiri",
+        "winrate": "46.5%",
+        "goldDiff": "-591",
+        "xpDiff": "-116",
+        "csDiff": "-16.4",
+        "count": 327,
+        "laneTag": "Bad Lane",
+        "dominanceScore": -2.7
       },
       {
-        "name": "Warwick",
+        "name": "Kennen",
         "winrate": "47.1%",
-        "goldDiff": "26",
-        "xpDiff": "65",
-        "csDiff": "4.1",
-        "count": 722,
+        "goldDiff": "16",
+        "xpDiff": "-14",
+        "csDiff": "-0.9",
+        "count": 1139,
         "laneTag": "Bad Lane",
         "dominanceScore": -2.6
       }
@@ -168,268 +168,268 @@
     "godMatchups": [
       {
         "name": "TwistedFate",
-        "winrate": "58.6%",
-        "goldDiff": "358",
-        "xpDiff": "1251",
-        "csDiff": "14.7",
-        "count": 210,
+        "winrate": "57.9%",
+        "goldDiff": "405",
+        "xpDiff": "1335",
+        "csDiff": "15.7",
+        "count": 235,
         "laneTag": "Good Lane",
-        "dominanceScore": 5.5
+        "dominanceScore": 5.2
       },
       {
         "name": "Vladimir",
-        "winrate": "55.9%",
-        "goldDiff": "462",
-        "xpDiff": "424",
-        "csDiff": "2.6",
-        "count": 767,
+        "winrate": "55.6%",
+        "goldDiff": "453",
+        "xpDiff": "431",
+        "csDiff": "2.5",
+        "count": 851,
         "laneTag": "Good Lane",
-        "dominanceScore": 5.1
-      },
-      {
-        "name": "Smolder",
-        "winrate": "56.0%",
-        "goldDiff": "1457",
-        "xpDiff": "1862",
-        "csDiff": "19.5",
-        "count": 348,
-        "laneTag": "Good Lane",
-        "dominanceScore": 4.5
+        "dominanceScore": 4.9
       },
       {
         "name": "DrMundo",
-        "winrate": "54.7%",
-        "goldDiff": "1122",
-        "xpDiff": "977",
+        "winrate": "54.5%",
+        "goldDiff": "1128",
+        "xpDiff": "979",
         "csDiff": "21.8",
-        "count": 1788,
+        "count": 1999,
         "laneTag": "Good Lane",
-        "dominanceScore": 4.4
+        "dominanceScore": 4.3
       },
       {
         "name": "Shyvana",
-        "winrate": "55.9%",
-        "goldDiff": "552",
-        "xpDiff": "499",
+        "winrate": "55.7%",
+        "goldDiff": "583",
+        "xpDiff": "534",
         "csDiff": "15.3",
-        "count": 279,
+        "count": 307,
         "laneTag": "Good Lane",
         "dominanceScore": 4.1
       },
       {
+        "name": "Smolder",
+        "winrate": "54.7%",
+        "goldDiff": "1437",
+        "xpDiff": "1833",
+        "csDiff": "19.1",
+        "count": 380,
+        "laneTag": "Good Lane",
+        "dominanceScore": 3.6
+      },
+      {
+        "name": "Nasus",
+        "winrate": "53.4%",
+        "goldDiff": "1228",
+        "xpDiff": "1112",
+        "csDiff": "30.4",
+        "count": 1845,
+        "laneTag": "Good Lane",
+        "dominanceScore": 3.2
+      },
+      {
         "name": "TahmKench",
-        "winrate": "53.1%",
-        "goldDiff": "820",
-        "xpDiff": "571",
-        "csDiff": "21.1",
-        "count": 1134,
+        "winrate": "53.2%",
+        "goldDiff": "848",
+        "xpDiff": "598",
+        "csDiff": "21.4",
+        "count": 1262,
+        "laneTag": "Good Lane",
+        "dominanceScore": 3
+      },
+      {
+        "name": "Poppy",
+        "winrate": "53.2%",
+        "goldDiff": "511",
+        "xpDiff": "363",
+        "csDiff": "11.6",
+        "count": 733,
         "laneTag": "Good Lane",
         "dominanceScore": 2.8
       },
       {
-        "name": "Nasus",
-        "winrate": "52.9%",
-        "goldDiff": "1243",
-        "xpDiff": "1125",
-        "csDiff": "30.6",
-        "count": 1638,
+        "name": "XinZhao",
+        "winrate": "52.7%",
+        "goldDiff": "515",
+        "xpDiff": "754",
+        "csDiff": "11.6",
+        "count": 964,
         "laneTag": "Good Lane",
-        "dominanceScore": 2.7
-      },
-      {
-        "name": "Poppy",
-        "winrate": "53.0%",
-        "goldDiff": "510",
-        "xpDiff": "355",
-        "csDiff": "11.7",
-        "count": 673,
-        "laneTag": "Good Lane",
-        "dominanceScore": 2.6
-      },
-      {
-        "name": "Sylas",
-        "winrate": "53.1%",
-        "goldDiff": "667",
-        "xpDiff": "661",
-        "csDiff": "19.7",
-        "count": 431,
-        "laneTag": "Good Lane",
-        "dominanceScore": 2.5
-      },
-      {
-        "name": "Varus",
-        "winrate": "52.5%",
-        "goldDiff": "-200",
-        "xpDiff": "180",
-        "csDiff": "-13.4",
-        "count": 883,
-        "laneTag": "Bad Lane",
-        "dominanceScore": 2.2
+        "dominanceScore": 2.4
       },
       {
         "name": "Sett",
-        "winrate": "52.3%",
-        "goldDiff": "259",
-        "xpDiff": "412",
+        "winrate": "52.2%",
+        "goldDiff": "257",
+        "xpDiff": "407",
         "csDiff": "9.0",
-        "count": 2981,
+        "count": 3293,
         "laneTag": "Good Lane",
         "dominanceScore": 2.2
       },
       {
-        "name": "Aurora",
-        "winrate": "52.6%",
-        "goldDiff": "-48",
-        "xpDiff": "36",
-        "csDiff": "-6.0",
-        "count": 321,
-        "laneTag": "Bad Lane",
-        "dominanceScore": 1.9
-      },
-      {
-        "name": "Ryze",
-        "winrate": "52.6%",
-        "goldDiff": "462",
-        "xpDiff": "795",
-        "csDiff": "-2.0",
-        "count": 310,
+        "name": "Sylas",
+        "winrate": "52.3%",
+        "goldDiff": "605",
+        "xpDiff": "599",
+        "csDiff": "18.3",
+        "count": 486,
         "laneTag": "Good Lane",
-        "dominanceScore": 1.9
+        "dominanceScore": 1.8
       },
       {
         "name": "Sion",
         "winrate": "51.9%",
-        "goldDiff": "636",
-        "xpDiff": "598",
-        "csDiff": "11.4",
-        "count": 3034,
+        "goldDiff": "639",
+        "xpDiff": "599",
+        "csDiff": "11.6",
+        "count": 3407,
         "laneTag": "Good Lane",
-        "dominanceScore": 1.9
+        "dominanceScore": 1.8
+      },
+      {
+        "name": "Varus",
+        "winrate": "51.7%",
+        "goldDiff": "-254",
+        "xpDiff": "112",
+        "csDiff": "-14.2",
+        "count": 986,
+        "laneTag": "Bad Lane",
+        "dominanceScore": 1.5
+      },
+      {
+        "name": "Chogath",
+        "winrate": "51.6%",
+        "goldDiff": "656",
+        "xpDiff": "603",
+        "csDiff": "15.1",
+        "count": 1255,
+        "laneTag": "Good Lane",
+        "dominanceScore": 1.5
       },
       {
         "name": "Zed",
-        "winrate": "52.6%",
-        "goldDiff": "-283",
-        "xpDiff": "-1",
-        "csDiff": "4.4",
-        "count": 251,
+        "winrate": "52.0%",
+        "goldDiff": "-313",
+        "xpDiff": "-66",
+        "csDiff": "3.9",
+        "count": 296,
         "laneTag": "Bad Lane",
-        "dominanceScore": 1.8
+        "dominanceScore": 1.4
       }
     ],
     "synergies": {
       "JUNGLE": [
         {
           "name": "Chogath",
-          "count": 229,
-          "delta": 4.26
-        },
-        {
-          "name": "Elise",
-          "count": 1247,
-          "delta": 3.12
-        },
-        {
-          "name": "Udyr",
-          "count": 1117,
-          "delta": 3.01
+          "count": 264,
+          "delta": 4.18
         },
         {
           "name": "Maokai",
-          "count": 171,
-          "delta": 2.71
+          "count": 191,
+          "delta": 3.3
         },
         {
-          "name": "Rammus",
-          "count": 1003,
-          "delta": 2.38
+          "name": "Elise",
+          "count": 1392,
+          "delta": 3.18
+        },
+        {
+          "name": "Udyr",
+          "count": 1264,
+          "delta": 2.68
+        },
+        {
+          "name": "Sejuani",
+          "count": 1124,
+          "delta": 2.5
         }
       ],
       "BOTTOM": [
         {
-          "name": "Xerath",
-          "count": 454,
-          "delta": 5.55
+          "name": "Malzahar",
+          "count": 111,
+          "delta": 5.56
         },
         {
-          "name": "Malzahar",
-          "count": 103,
-          "delta": 5.23
+          "name": "Xerath",
+          "count": 507,
+          "delta": 5.4
         },
         {
           "name": "Karthus",
-          "count": 491,
-          "delta": 4.46
-        },
-        {
-          "name": "Ziggs",
-          "count": 1028,
-          "delta": 3.55
+          "count": 556,
+          "delta": 4.84
         },
         {
           "name": "Viktor",
-          "count": 172,
-          "delta": 3.49
+          "count": 185,
+          "delta": 3.48
+        },
+        {
+          "name": "Lux",
+          "count": 553,
+          "delta": 3.36
         }
       ],
       "MIDDLE": [
         {
           "name": "Singed",
-          "count": 144,
-          "delta": 5.53
-        },
-        {
-          "name": "Rumble",
-          "count": 140,
-          "delta": 5.05
+          "count": 165,
+          "delta": 5.91
         },
         {
           "name": "Garen",
-          "count": 186,
-          "delta": 4.41
-        },
-        {
-          "name": "Quinn",
-          "count": 177,
-          "delta": 3.16
+          "count": 209,
+          "delta": 4.8
         },
         {
           "name": "Morgana",
-          "count": 234,
-          "delta": 2.99
+          "count": 270,
+          "delta": 4.44
+        },
+        {
+          "name": "Rumble",
+          "count": 159,
+          "delta": 4.09
+        },
+        {
+          "name": "Gragas",
+          "count": 309,
+          "delta": 3.02
         }
       ],
       "UTILITY": [
         {
-          "name": "Ivern",
-          "count": 102,
-          "delta": 7.59
+          "name": "TwistedFate",
+          "count": 110,
+          "delta": 5.24
         },
         {
-          "name": "TwistedFate",
-          "count": 101,
-          "delta": 5.13
+          "name": "Ivern",
+          "count": 112,
+          "delta": 5.24
         },
         {
           "name": "Galio",
-          "count": 300,
-          "delta": 2.93
+          "count": 331,
+          "delta": 3.53
         },
         {
-          "name": "Annie",
-          "count": 217,
-          "delta": 2.6
+          "name": "Lissandra",
+          "count": 110,
+          "delta": 3.43
         },
         {
-          "name": "Bard",
-          "count": 3570,
-          "delta": 2.29
+          "name": "Taric",
+          "count": 618,
+          "delta": 3.08
         }
       ]
     },
     "buildData": {
       "patch": "16.10",
-      "lastUpdate": "2026-05-23T05:12:58.051Z",
+      "lastUpdate": "2026-05-24T03:35:52.496Z",
       "summoners": [
         4,
         14
@@ -481,8 +481,8 @@
         "skillLevelUp1": 1,
         "skillLevelUp2": 3,
         "skillLevelUp3": 2,
-        "winrate": 49.8516458043579,
-        "pickrate": 98.89595979973225
+        "winrate": 49.85463069570187,
+        "pickrate": 98.88199063001672
       }
     }
   },

@@ -302,7 +302,7 @@ export const DraftPage = () => {
     return (
         <div className="flex flex-col gap-6 w-full">
             {/* STATUS BAR */}
-            <div className="w-fit mx-auto mb-10 flex items-center gap-3 py-2.5 px-4 bg-slate-900/80 border border-slate-800 rounded-sm relative z-10">
+            <div className="w-fit mx-auto mt-6 flex items-center gap-3 py-2.5 px-4 bg-slate-900/80 border border-slate-800 rounded-sm relative z-10">
                 <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-600'}`}></div>
                 <span className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">
                     {isConnected ? 'Conectado' : 'Desconectado'} 
@@ -344,10 +344,62 @@ export const DraftPage = () => {
                         <div className="relative min-h-[400px]">
                             {!inDraft ? (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center animate-in fade-in">
-                                    <div className="relative w-20 h-20 mb-8 group">
-                                        <div className="absolute inset-0 bg-purple-600/30 blur-xl rounded-full animate-pulse"></div>
-                                        <div className="hextech-gem w-full h-full bg-gradient-to-br from-purple-400 via-purple-600 to-indigo-900 animate-[spin_10s_linear_infinite] relative z-10 clip-hex"></div>
-                                    </div>
+                                    <div className="relative w-20 h-20 mb-8">
+                                        <svg
+                                            width="100%"
+                                            height="100%"
+                                            viewBox="0 0 100 100"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <style>{`
+                                            @keyframes hf1 { 0%,100%{opacity:.12} 0%{opacity:.12} 8%{opacity:1} 20%{opacity:.12} }
+                                            @keyframes hf2 { 0%,100%{opacity:.12} 16%{opacity:.12} 24%{opacity:1} 36%{opacity:.12} }
+                                            @keyframes hf3 { 0%,100%{opacity:.12} 32%{opacity:.12} 40%{opacity:1} 52%{opacity:.12} }
+                                            @keyframes hf4 { 0%,100%{opacity:.12} 48%{opacity:.12} 56%{opacity:1} 68%{opacity:.12} }
+                                            @keyframes hf5 { 0%,100%{opacity:.12} 64%{opacity:.12} 72%{opacity:1} 84%{opacity:.12} }
+                                            @keyframes hf6 { 0%,100%{opacity:.12} 80%{opacity:.12} 88%{opacity:1} 100%{opacity:.12} }
+                                            .hf1 { animation: hf1 3.6s ease-in-out infinite; }
+                                            .hf2 { animation: hf2 3.6s ease-in-out infinite; }
+                                            .hf3 { animation: hf3 3.6s ease-in-out infinite; }
+                                            .hf4 { animation: hf4 3.6s ease-in-out infinite; }
+                                            .hf5 { animation: hf5 3.6s ease-in-out infinite; }
+                                            .hf6 { animation: hf6 3.6s ease-in-out infinite; }
+                                            `}</style>
+
+                                            {/* Centro: 50,50 — Radio: 42
+                                                top:       50, 8
+                                                top-right: 86.4, 29
+                                                bot-right: 86.4, 71
+                                                bottom:    50, 92
+                                                bot-left:  13.6, 71
+                                                top-left:  13.6, 29
+                                            */}
+
+                                            {/* Líneas interiores de faceta — siempre visibles */}
+                                            <line x1="50" y1="50" x2="50"   y2="8"    stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+                                            <line x1="50" y1="50" x2="86.4" y2="29"   stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+                                            <line x1="50" y1="50" x2="86.4" y2="71"   stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+                                            <line x1="50" y1="50" x2="50"   y2="92"   stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+                                            <line x1="50" y1="50" x2="13.6" y2="71"   stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+                                            <line x1="50" y1="50" x2="13.6" y2="29"   stroke="#7c3aed" strokeWidth="0.5" strokeOpacity="0.35"/>
+
+                                            {/* Caras exteriores base — siempre visibles, tenues */}
+                                            <line x1="50"   y1="8"  x2="86.4" y2="29"  stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="86.4" y1="29" x2="86.4" y2="71"  stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="86.4" y1="71" x2="50"   y2="92"  stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="50"   y1="92" x2="13.6" y2="71"  stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="13.6" y1="71" x2="13.6" y2="29"  stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="13.6" y1="29" x2="50"   y2="8"   stroke="#4c1d95" strokeWidth="3.5" strokeLinecap="round"/>
+
+                                            {/* Caras animadas encima */}
+                                            <line x1="50"   y1="8"  x2="86.4" y2="29"  className="hf1" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="86.4" y1="29" x2="86.4" y2="71"  className="hf2" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="86.4" y1="71" x2="50"   y2="92"  className="hf3" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="50"   y1="92" x2="13.6" y2="71"  className="hf4" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="13.6" y1="71" x2="13.6" y2="29"  className="hf5" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                            <line x1="13.6" y1="29" x2="50"   y2="8"   className="hf6" stroke="#c4b5fd" strokeWidth="3.5" strokeLinecap="round"/>
+                                        </svg>
+                                        </div>
                                     <p className="text-slate-400 uppercase font-black tracking-[0.3em] text-xs animate-pulse">Esperando Selección...</p>
                                 </div>
                             ) : view === 'build' ? (

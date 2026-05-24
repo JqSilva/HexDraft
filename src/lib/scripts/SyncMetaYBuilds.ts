@@ -133,7 +133,7 @@ const API_NAME_MAP: Record<string, string> = {
     "Bardo": "Bard"
 };
 
-export async function syncMetaAndBuilds(version: string) {
+export async function syncMetaAndBuilds(version: string, checkAbort: () => boolean) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const cachePath = './src/lib/data/meta-cache.json';
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
@@ -182,6 +182,14 @@ export async function syncMetaAndBuilds(version: string) {
     const page = await browser.newPage();
 
     for (const name of champions) {
+
+
+        if (checkAbort()) {
+            console.log("🛑 CANCELACIÓN DETECTADA. Cerrando procesos...");
+            await browser.close();
+            return "Cancelado por el usuario";
+        }
+
         const lane = db[name].lane;
         const internalName = API_NAME_MAP[name] || name;
         const urlName = internalName.replace(/\s/g, "");

@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 
-export async function SyncEstructuraLanes(version: string) {
+export async function SyncEstructuraLanes(version: string, checkAbort: () => boolean) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const metaMapPath = './src/lib/data/meta-positions.json';
     
