@@ -53,13 +53,14 @@ export const DraftPage = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [gamePhase, setGamePhase] = useState('Offline');
     const [inDraft, setInDraft] = useState(false);
-    const [view, setView] = useState<'lobby' | 'picks' | 'bans' | 'build'>('lobby');
+    const [view, setView] = useState<'lobby' | 'picks' | 'bans' | 'build' | 'reasons'>('lobby');
     const [myTeam, setMyTeam] = useState<any[]>(Array(5).fill({}));
     const [theirTeam, setTheirTeam] = useState<any[]>(Array(5).fill({}));
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [banRecommendations, setBanRecommendations] = useState<BansRecommendation[]>([]);
     const [currentBuild, setCurrentBuild] = useState<any>(null);
     const [localTimeLeft, setLocalTimeLeft] = useState<number>(0);
+    const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
 
     // --- CONFIGURACIÓN ---
     const [autoPick, setAutoPick] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
@@ -218,7 +219,7 @@ export const DraftPage = () => {
                             const buildData = getSingleChampionBuild(myId);
                             if (buildData) {
                                 setCurrentBuild(buildData);
-                                setView('build'); // Forzamos la vista de build inmediatamente
+                                setView('build'); 
                                 await importToClient({ ...buildData, id: myId });
                             }
                         }
@@ -267,8 +268,21 @@ export const DraftPage = () => {
             } 
             else if (phase === 'InProgress'){
                 nextInterval = 30000;
-                if (view !== 'build' && currentBuild) {
-                    setView('build'); // Forzar vista de build para referencia rápida
+                const myFinalId = lastImportedIdRef.current;
+
+                if (myFinalId > 0) {
+                    const finalRec = recommendations.find(r => r.id === myFinalId);
+
+                    if (finalRec) {
+                        setSelectedRecommendation(finalRec);
+                        
+                        if (view !== 'reasons') {
+                            console.log("Partida en curso: Mostrando análisis táctico.");
+                            setView('reasons');
+                        }
+                    } else {
+                        if (view !== 'build') setView('build');
+                    }
                 }
             }
             else {
@@ -342,7 +356,8 @@ export const DraftPage = () => {
                         </header>
 
                         <div className="relative min-h-[400px]">
-                            {!inDraft ? (
+                            {/* 1. ESTADO: FUERA DE DRAFT (LOADING) */}
+                            {!inDraft && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center animate-in fade-in">
                                     <div className="relative w-20 h-20 mb-8">
                                         <svg
@@ -402,7 +417,67 @@ export const DraftPage = () => {
                                         </div>
                                     <p className="text-slate-400 uppercase font-black tracking-[0.3em] text-xs animate-pulse">Esperando Selección...</p>
                                 </div>
-                            ) : view === 'build' ? (
+                            )} 
+                            {/* 2. VISTA: RAZONES (REASONS) */}
+                            {inDraft && view === 'reasons' && selectedRecommendation && (
+                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="relative z-[300] flex flex-col gap-6 p-8 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl backdrop-blur-md">
+                                        <header className="flex items-center justify-between border-b border-slate-800 pb-6">
+                                            <div className="flex gap-6 items-center">
+                                                <div className="w-16 h-16 bg-slate-900 border-2 border-cyan-600 p-1 rounded-sm">
+                                                    <img 
+                                                    src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${selectedRecommendation.id}.png`} 
+                                                    className="w-full h-full object-cover" 
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-white font-black text-2xl uppercase tracking-tighter italic">
+                                                        Análisis: <span className="text-cyan-500">{selectedRecommendation.name}</span>
+                                                    </h3>
+                                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">
+                                                        Puntaje Estratégico: <span className="text-cyan-400">{selectedRecommendation.score.toFixed(1)}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setView(selectedRecommendation.type === 'ban' ? 'bans' : 'picks')} 
+                                                className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black uppercase text-[10px] tracking-widest rounded-sm transition-all border-none cursor-pointer"
+                                                >
+                                                Volver
+                                            </button>
+                                        </header>
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] text-cyan-500 font-black uppercase tracking-[0.4em] italic">Desglose de Argumentos</h4>
+                                        <div className="grid gap-3">
+                                            {selectedRecommendation.reasons?.map((reason: string, idx: number) => (
+                                                <div key={idx} className="flex items-center gap-4 p-4 bg-slate-900/40 border border-slate-800/50 rounded-sm group hover:border-cyan-900/50 transition-colors">
+                                                <span className="text-cyan-600 font-bold text-xs">0{idx + 1}</span>
+                                                <p className="text-sm text-slate-300 font-medium tracking-wide">
+                                                    {reason}
+                                                </p>
+                                                </div>
+                                            ))}
+                                            {(!selectedRecommendation.reasons || selectedRecommendation.reasons.length === 0) && (
+                                                <p className="text-slate-500 italic text-sm p-4">No hay razones detalladas para esta sugerencia.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                
+                                    {/* Botón opcional para ver la build desde aquí */}
+                                    <button 
+                                        onClick={() => {
+                                        setCurrentBuild(getSingleChampionBuild(selectedRecommendation.id));
+                                        setView('build');
+                                        }}
+                                        className="mt-4 w-full py-4 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-600/30 text-purple-400 font-black uppercase text-[10px] tracking-[0.3em] transition-all"
+                                    >
+                                        Ver Configuración de Build
+                                    </button>
+                                    </div>
+                                </div> 
+                            )} 
+                            {/* 3. VISTA: CONSTRUCCIÓN (BUILD) */}
+                            {inDraft && view === 'build' && currentBuild && (
                                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="relative z-[300] flex flex-col gap-8 p-10 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl backdrop-blur-md">
                                         <div className="flex items-center justify-between border-b border-slate-800 pb-8">
@@ -428,7 +503,7 @@ export const DraftPage = () => {
                                         </div>
                                         <div className="space-y-6">
                                             <h4 className="text-[10px] text-purple-500 font-black uppercase tracking-[0.4em] italic">Ruta de Armamento</h4>
-                                            <div className="bg-slate-900/40 border border-slate-800 p-12 rounded-sm flex flex-wrap items-center justify-center gap-6">
+                                            <div className="bg-slate-900/40 border border-slate-800 p-12 rounded-sm flex flex-wrap items-center justify-center">
                                                 {currentBuild?.build?.items?.core.map((item: any, idx: number) => (
                                                     <div key={idx} className="flex items-center">
                                                         <div className="relative group/item">
@@ -444,15 +519,18 @@ export const DraftPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
+                            )} 
+                            {/* 4. VISTA: RECOMENDACIONES (GRID PRINCIPAL) */}
+                            {inDraft && (view === 'picks' || view === 'bans') && (
                                 <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-2 gap-y-4 pb-4 max-w-fit w-full mx-auto relative animate-in zoom-in-95">
                                     {(view === 'bans' ? banRecommendations : recommendations).map((rec: any) => (
-                                        <div key={rec.id} onClick={() => { if (view !== 'bans') { setCurrentBuild(getSingleChampionBuild(rec.id)); setView('build'); } }}>
-                                            <RecommendationCard {...rec} />
+                                        <div key={rec.id} onClick={() => { if (view !== 'bans') { setSelectedRecommendation(rec); setView('reasons'); } }}>
+                                            <RecommendationCard {...rec} isBan={view === 'bans'} />
                                         </div>
                                     ))}
                                 </div>
-                            )}
+                                )
+                            }
                         </div>
 
                         {/* SWITCHES */}
