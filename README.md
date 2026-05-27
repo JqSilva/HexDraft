@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="logo.png" alt="HexDraft Logo" width="120" />
+</p>
+
+
 # HexDraft
 
 Análisis inteligente de draft en tiempo real para League of Legends.  
@@ -34,3 +39,46 @@ Instalar dependencias:
 
 ```bash
 npm install
+```
+Modo desarrollo:
+
+```bash
+npm run dev
+```
+Build de producción:
+
+```bash
+npm run build
+```
+Preview:
+
+```bash
+npm run preview
+```
+## Automation
+HexDraft incluye un servicio opcional que:
+
+- Detecta cuando se abre League of Legends
+- Inicia automáticamente el servidor
+- Abre la interfaz en modo app
+- Cierra todo al salir del juego
+
+
+Compilar ejecutable:
+
+```bash
+python compilar-hexdraft.py
+```
+## Architecture
+HexDraft incluye un servicio opcional que:
+
+- engine/ lógica de recomendaciones
+- data/ base de datos y meta
+- react/ interfaz interactiva
+- scripts/ sincronización y procesamiento
+
+#Status
+Proyecto en desarrollo activo.
+
+#License
+Private
