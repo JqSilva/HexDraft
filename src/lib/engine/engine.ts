@@ -37,12 +37,15 @@ export function getProcessedRecommendations(
     myTeamIds: number[],
     theirTeamIds: number[],
     bannedIds: number[],
-    myRole: string
+    myRole: string,
+    myPickId?: number
 ): Recommendation[] {
-    //console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole });
+    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole , pickId: myPickId});
 
-
-    const unavailableIds = [...myTeamIds, ...theirTeamIds, ...bannedIds];
+    const cleanMyTeamIds = myPickId 
+        ? myTeamIds.filter(id => id !== myPickId) 
+        : myTeamIds;
+    const unavailableIds = [...cleanMyTeamIds, ...theirTeamIds, ...bannedIds];
 
     const results: Recommendation[] = [];
 
@@ -55,7 +58,6 @@ export function getProcessedRecommendations(
     };
 
     const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
-    //console.log(`📍 [ENGINE] Usando pool pre-filtrado para: ${targetLane}`);
 
     const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
@@ -64,9 +66,7 @@ export function getProcessedRecommendations(
     const pool = DATA_BY_LANE[targetLane] || [];
 
     for (const c of pool) {
-
         if (unavailableIds.includes(c.id)) continue;
-
         const { score, reasons } = calculateScore(c, allies, enemies);
         const rawBuild = c.buildData;
 
@@ -153,20 +153,25 @@ export function getProcessedBans(
  */
 function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
     // 1. CONSTANTES DE PESO REEQUILIBRADAS (Contexto > Meta)
+    const isLatePick = enemies.length >= 4;
+
     const WEIGHTS = {
-        META_BASE: 0.4,
+        META_BASE: isLatePick ? 0.2 : 0.4,
         SYNERGY: 2.2,
-        MATCHUP: 0.45,
-        COUNTER: 0.35,
-        COMPOSITION: 0.7,
-        SCALING: 1.0,
+        MATCHUP: isLatePick ? 0.8 : 0.45,
+        COUNTER: isLatePick ? 0.6 : 0.35,
+        COMPOSITION: 0.8,
+        UTILITY: 0.5,
+        SCALING: 1.0
     };
 
     let score = 5.0;
     const reasons: string[] = [];
-    const rank = target.meta.tier || 50;
+    const targetLane = target.lane; // Ej: "TOP"
+    
 
     // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
+    const rank = target.meta.tier || 50;
     if (rank <= 3) {
         score += 1.0;
         reasons.push("Prioridad: God Tier");
@@ -177,8 +182,6 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         score -= 1.5;
         reasons.push("Nota: Fuera del meta actual");
     }
-
-
     score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
 
 
@@ -186,14 +189,42 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 
     // --- CAPA 2: SINERGIAS (MÁS IMPACTO) ---
     allies.forEach(allyName => {
+        const allyData = ENRICHED_DB[allyName];
+        if (!allyData) return;
+
+        // Buscamos el Delta en todas las líneas (por si el aliado está fuera de su posición habitual)
         for (const laneSynergies of Object.values(target.synergies)) {
             const match = (laneSynergies as any[]).find(s => s.name === allyName);
+            
             if (match) {
                 const delta = parseFloat(match.delta);
-                if (delta > 1.0) {
-                    const bonus = (delta / 10) * WEIGHTS.SYNERGY * effectivenessFactor;
-                    score += bonus;
-                    reasons.push(`Sinergia: +${delta}% con ${allyName}`);
+                if (delta <= 0) continue; // Si la sinergia es negativa o neutra, no sumamos nada
+
+                // 1. Multiplicador de Proximidad (Mapa)
+                const isCloseAlly = 
+                    (target.lane === 'BOTTOM' && allyData.lane === 'UTILITY') ||
+                    (target.lane === 'UTILITY' && allyData.lane === 'BOTTOM') ||
+                    (target.lane === 'JUNGLE' && (allyData.lane === 'TOP' || allyData.lane === 'MIDDLE'));
+                
+                const mapMult = isCloseAlly ? 1.4 : 1.0;
+
+                // 2. Multiplicador de Estructura (Tags)
+                // Si el Delta es positivo Y además las clases encajan, potenciamos la sinergia
+                let classMult = 1.0;
+                const isEngage = target.tags.includes("Tank") || target.tags.includes("Fighter");
+                const isFollowUp = allyData.tags.includes("Assassin") || allyData.tags.includes("Mage");
+                const isADC = allyData.tags.includes("Marksman");
+                const isPeel = target.tags.includes("Support") || target.tags.includes("Tank");
+
+                if (isEngage && isFollowUp) classMult += 0.2; // Combo de iniciación
+                if (isADC && isPeel) classMult += 0.3;      // Combo de protección
+
+                // 3. Cálculo Final de la Capa 2
+                const synergyBonus = (delta / 10) * WEIGHTS.SYNERGY * mapMult * classMult;
+                score += synergyBonus;
+
+                if (delta > 1.2) {
+                    reasons.push(`Sinergia: +${delta}% con ${allyName} (${classMult > 1 ? 'Combo de Clase' : 'Estadística'})`);
                 }
             }
         }
@@ -202,16 +233,14 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     // --- CAPA 3: GOD MATCHUPS ---
     enemies.forEach(enemyName => {
         const godMatch = target.godMatchups?.find(m => normalizeKey(m.name) === normalizeKey(enemyName));
-        if (godMatch) {
-            const dScore = godMatch.dominanceScore || 0;
-            if (dScore > 1.5) {
-                // Si el counter es muy fuerte, ignoramos parte de la debilidad del meta
-                const metaDefense = rank > 25 ? 1.2 : 1.0;
-                const bonus = dScore * WEIGHTS.MATCHUP * effectivenessFactor * metaDefense;
-                score += bonus;
-
-                const isDirect = (ENRICHED_DB[enemyName]?.lane || "") === target.lane;
-                reasons.push(`${isDirect ? 'Dominancia' : 'Caza'}: Hard Counter de ${enemyName}`);
+        const enemyData = ENRICHED_DB[enemyName];
+        if (godMatch && enemyData) {
+            const isSameLane = enemyData.lane === targetLane;
+            const proximityMult = isSameLane ? 2.0 : 0.7;
+            const bonus = (godMatch.dominanceScore || 0) * WEIGHTS.MATCHUP * proximityMult;
+            score += bonus;
+            if (bonus > 0.5) {
+                reasons.push(`${isSameLane ? 'Línea' : 'Global'}: Dominancia vs ${enemyName}`);
             }
         }
     });
@@ -219,17 +248,40 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     // --- CAPA 4: COUNTERS ---
     enemies.forEach(enemyName => {
         const match = target.counters.find(c => normalizeKey(c.name) === normalizeKey(enemyName));
+
         if (match) {
             const dScore = match.dominanceScore || 0;
-            if (dScore < -1) {
-                const penalty = Math.abs(dScore) * WEIGHTS.COUNTER;
-                score -= penalty;
-                reasons.push(`Peligro: ${enemyName} te neutraliza`);
-            }
+            const isBadLane = match.laneTag === "Bad Lane";
+            let penalty = Math.abs(dScore) * WEIGHTS.COUNTER;
+            if (isBadLane) penalty *= 1.4;
+            score -= penalty;
+            reasons.push(`Peligro: ${enemyName} (${isBadLane ? 'Fase de líneas crítica' : 'Dificultad media'})`);
         }
     });
 
-    // --- CAPA 5: BALANCE DE DAÑO ---
+    // --- CAPA 5: BALANCE DE EQUIPO (Utilidad/CC) ---
+    const teamHasTank = allies.some(a => ENRICHED_DB[a]?.tags.includes("Tank"));
+    const teamHasCC = allies.some(a => ENRICHED_DB[a]?.tags.includes("Support") || ENRICHED_DB[a]?.tags.includes("Mage"));
+    const teamHasUtility = allies.some(a => 
+        ENRICHED_DB[a]?.tags.includes("Support") || 
+        ENRICHED_DB[a]?.lane === "UTILITY"
+    );
+
+    if (!teamHasTank && target.tags.includes("Tank")) {
+        score += WEIGHTS.UTILITY * 1.5; // Gran bono por ser el único tanque
+        reasons.push("Balance: Necesidad de Frontline (Tank)");
+    }
+
+    if (!teamHasUtility && allies.length >= 2) {
+        const providesCC = target.tags.includes("Support") || target.lane === "UTILITY" || target.tags.includes("Mage");
+        if (providesCC) {
+            score += WEIGHTS.UTILITY; // Usamos el peso que definimos antes
+            reasons.push("Balance: Aporta el Control de Masas/Utilidad faltante");
+        }
+    }
+
+
+    // --- CAPA 6: BALANCE DE DAÑO ---
     const damage = target.combat.damageComposition;
     const teamAD = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.physical / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
     const teamAP = allies.filter(a => (ENRICHED_DB[a]?.combat.damageComposition.magic / (ENRICHED_DB[a]?.combat.damageComposition.physical + ENRICHED_DB[a]?.combat.damageComposition.magic)) * 100 > 65).length;
@@ -254,7 +306,40 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         }
     }
 
-    // --- CAPA 6: VARIABILIDAD (ANTITUNNELING) ---
+    // --- CAPA 7: ESCALADO (winrateCurve) ---
+    const getScalingMetrics = (champ: any) => {
+        const curve = champ.combat.winrateCurve;
+        // Buscamos los puntos exactos que me diste
+        const midGame = curve.find((p: any) => p.time === 1500)?.value || 50;
+        const lateGame = curve.find((p: any) => p.time === 2700)?.value || 50;
+        
+        return { midGame, lateGame };
+    };
+
+    
+    const enemyMetrics = enemies.map(e => getScalingMetrics(ENRICHED_DB[e]));
+    const enemyLateAvg = enemyMetrics.reduce((acc, m) => acc + m.lateGame, 0) / (enemies.length || 1);
+
+   
+    const targetMetrics = getScalingMetrics(target);
+
+    if (targetMetrics.lateGame > 53 && enemyLateAvg < 50) {
+        score += WEIGHTS.SCALING;
+        reasons.push(`Escalado: Superioridad en juego tardío (${targetMetrics.lateGame.toFixed(1)}% WR)`);
+    }
+
+    if (targetMetrics.lateGame < 47 && enemyLateAvg > 52) {
+        score -= WEIGHTS.SCALING * 0.7;
+        reasons.push("Riesgo: El enemigo escala mejor hacia el minuto 45");
+    }
+
+    if (targetMetrics.midGame > 54) {
+        score += 0.5;
+        reasons.push("Timing: Powerspike agresivo al minuto 25");
+    }
+
+
+    // --- CAPA 8: VARIABILIDAD (ANTITUNNELING) ---
     const entropy = Math.random() * 0.3;
     score += entropy;
 

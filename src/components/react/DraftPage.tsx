@@ -113,8 +113,8 @@ export const DraftPage = () => {
         console.log(`🚀 [AUTO] Ejecutando ${currentAction.type}...`);
 
         try {
-            const cleanMyTeam = data.myTeam.map((p: any) => p.championId || p.championPickIntent).filter((id: number) => id !== 0);
-            const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId || p.championPickIntent).filter((id: number) => id !== 0);
+            const cleanMyTeam = data.myTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
+            const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
             const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
             const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
             
@@ -144,6 +144,63 @@ export const DraftPage = () => {
         }
     };
 
+    const handleTimerSync = (data: any) => {
+        const myCellId = data.localPlayerCellId;
+        // Buscamos la acción que nos pertenece y que está ocurriendo ahora
+        const myAction = data.actions?.flat().find(
+            (a: any) => a.actorCellId === myCellId && a.isInProgress && !a.completed
+        );
+
+        if (myAction) {
+            const riotPhase = data.timer?.phase || "UNKNOWN";
+            const actionKey = `${myAction.id}-${myAction.type}-${riotPhase}`;
+
+            if (riotPhase === "PLANNING") {
+                timestampAtSyncRef.current = Date.now();
+                apiTimeAtSyncRef.current = 0;
+            }
+
+            // Si la fase o acción cambió, resincronizamos el ancla del tiempo
+            if (lastActionKeyRef.current !== actionKey && riotPhase !== "PLANNING") {
+                console.log(`Sincronizando ancla para: ${riotPhase}`);
+                
+                lastActionKeyRef.current = actionKey;
+                activeActionRef.current = myAction;
+
+                let apiTime = data.timer?.adjustedTimeLeftInPhase || 30000;
+                // Ajuste de latencia: si el tiempo es sospechosamente alto, restamos el margen de fase
+                let adjusted = apiTime > 30000 ? apiTime - 5000 : apiTime;
+
+                timestampAtSyncRef.current = Date.now();
+                apiTimeAtSyncRef.current = adjusted;
+            }
+        } else {
+            // Limpieza si no hay una acción activa para nosotros
+            activeActionRef.current = null;
+            lastActionKeyRef.current = "none";
+            timestampAtSyncRef.current = 0;
+        }
+    };
+
+
+    const resetDraftState = () => {
+        console.log("🧹 Limpiando estado del Nexo (Fin de Draft)");
+        
+        // Referencias
+        lastFingerprintRef.current = "";
+        lastImportedIdRef.current = 0;
+        lastActionKeyRef.current = "none";
+        timestampAtSyncRef.current = 0;
+        activeActionRef.current = null;
+
+        // Estados
+        setInDraft(false);
+        setRecommendations([]);
+        setBanRecommendations([]);
+        setMyTeam(Array(5).fill({}));
+        setTheirTeam(Array(5).fill({}));
+        setView('lobby');
+    };
     // =========================================================
     // BUCLE PRINCIPAL (POLLING DE FASES)
     // =========================================================
@@ -154,13 +211,13 @@ export const DraftPage = () => {
 
         try {
             const statusRes = await fetch('/api/game-status');
-            const statusData = await statusRes.json();
-            const phase = statusData.phase;
+            const { phase } = await statusRes.json();
 
             setGamePhase(phase);
             setIsConnected(phase !== 'Offline');
 
-            if (phase === 'ChampSelect' || phase === 'ReadyCheck'){
+            // --- CASO 1: SELECCIÓN DE CAMPEÓN ---
+            if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
                 nextInterval = 1500;
                 const draftRes = await fetch('/api/champ-select');
                 const data = await draftRes.json();
@@ -169,141 +226,103 @@ export const DraftPage = () => {
                     setInDraft(true);
                     currentDataRef.current = data;
 
-                    // 1. SINCRONIZACIÓN DE TURNO
-                    const myCellId = data.localPlayerCellId;
-                    const myAction = data.actions?.flat().find((a: any) => a.actorCellId === myCellId && a.isInProgress && !a.completed);
-                    
-                    if (myAction) {
-                        const riotPhase = data.timer?.phase || "UNKNOWN";
-                        const actionKey = `${myAction.id}-${myAction.type}-${riotPhase}`;
-                        
-                        if (riotPhase === "PLANNING") {
-                            timestampAtSyncRef.current = Date.now();
-                            apiTimeAtSyncRef.current = 0;
-                        }
-                        if (lastActionKeyRef.current !== actionKey && riotPhase != "PLANNING") {
-                            // === ESTO SE EJECUTA UNA PURA VEZ POR FASE ===
-                            console.log(`🆕 Fase Detectada: ${riotPhase}. Sincronizando ancla.`);
-    
-                            
-                            lastActionKeyRef.current = actionKey;
-                            activeActionRef.current = myAction;
+                    // 1. Sincronización de Turno/Timer
+                    handleTimerSync(data); 
 
-                            let apiTime = data.timer?.adjustedTimeLeftInPhase || 30000;
-                            let adjusted = apiTime > 30000 ? apiTime - 5000 : apiTime;
-                            
-                            // Asignamos a las variables de referencia y NO las tocamos más 
-                            // hasta que actionKey cambie de nuevo.
-                            timestampAtSyncRef.current = Date.now();
-                            apiTimeAtSyncRef.current = adjusted;
-                        }
-                    } else {
-                        activeActionRef.current = null;
-                        lastActionKeyRef.current = "none";
-                        timestampAtSyncRef.current = 0;
-                    }
-
-                    // 2. DETECCIÓN DE PICK MANUAL O AUTOMÁTICO
-                    // Obtenemos tu ID de campeón actual
-                    const meRes = await fetch('/api/me');
-                    const meData = await meRes.json();
-                    const myPlayer = data.myTeam.find((p: any) => p.gameName === meData.summoner);
+                    // 2. Identificar al Jugador Local (Solo un fetch a /api/me)
+                    const { summoner } = await (await fetch('/api/me')).json();
+                    const myPlayer = data.myTeam.find((p: any) => p.gameName === summoner);
                     const myId = myPlayer?.championId || 0;
+                    const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+                    const myHoverIntent = myPlayer?.championPickIntent || 0;
+                    const activeIdForEngine = myId > 0 ? myId : myHoverIntent;
 
+                    // 1. CALCULAMOS RECOMENDACIONES (Variable local 'picks')
+                    const cleanMyTeam = data.myTeam
+                        .filter((p: any) => p.gameName !== summoner) 
+                        .map((p: any) => p.championId || p.championPickIntent)
+                        .filter((id: number) => id !== 0);
+
+                    const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId || p.championPickIntent).filter((id: number) => id !== 0);
+                    const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
+                    const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
+
+                    // IMPORTANTE: Obtenemos 'picks' aquí
+                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole, activeIdForEngine);
+
+                    // 2. LÓGICA DE PICK (Usando 'picks' directamente, no el estado 'recommendations')
                     if (myId > 0) {
-                        // Si ya tienes un campeón (Pick completado)
                         if (myId !== lastImportedIdRef.current) {
-                            console.log(`🎯 Pick detectado: ${myId}. Importando configuración...`);
                             lastImportedIdRef.current = myId;
-                            
+                            console.log(`🎯 Pick detectado: ${myId}`);
+
+                            // BUSCAMOS EN LA VARIABLE LOCAL 'picks'
+                            console.log(picks);
+                            const pickedRec = picks.find(r => r.id === myId);
+                            console.log(pickedRec);
+                            if (pickedRec) {
+                                console.log("✅ Razones capturadas con éxito");
+                                setSelectedRecommendation(pickedRec);
+                                localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
+                            }
+
                             const buildData = getSingleChampionBuild(myId);
                             if (buildData) {
                                 setCurrentBuild(buildData);
-                                setView('build'); 
+                                setView('build');
                                 await importToClient({ ...buildData, id: myId });
                             }
                         }
                     } else {
-                        // Si aún no has pickeado (myId === 0), seguimos con las recomendaciones
-                        const fingerprint = `${data.isBanPhase}-${data.myTeam.map((p: any) => p.championId || p.championPickIntent).join(',')}`;
-                         
-                        // 2. HUELLA DIGITAL (RECOMENDACIONES)
+                        // Solo actualizamos el estado visual si no hemos pickeado
+                        const fingerprint = `${data.isBanPhase}-${cleanMyTeam.join(',')}-${myHoverIntent}`;
                         if (fingerprint !== lastFingerprintRef.current) {
                             lastFingerprintRef.current = fingerprint;
+                            
+                            const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id));
+
+                            setRecommendations(picks.slice(0, 20));
+                            setBanRecommendations(bans.slice(0, 20));
                             setMyTeam(data.myTeam);
                             setTheirTeam(data.theirTeam);
-
-                            const meRes = await fetch('/api/me');
-                            const meData = await meRes.json();
-                            const myPlayer = data.myTeam.find((p: any) => p.gameName === meData.summoner);
-                            const myId = myPlayer?.championId || 0;
-                            const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-
-                            if (myId > 0) {
-                                if (myId !== lastImportedIdRef.current) {
-                                    lastImportedIdRef.current = myId;
-                                    const buildData = getSingleChampionBuild(myId);
-                                    if (buildData) {
-                                        setCurrentBuild(buildData);
-                                        setView('build');
-                                        await importToClient({ ...buildData, id: myId });
-                                    }
-                                }
-                            } else {
-                                const cleanMyTeam = data.myTeam.map((p: any) => p.championId || p.championPickIntent).filter((id: number) => id !== 0);
-                                const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId || p.championPickIntent).filter((id: number) => id !== 0);
-                                const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
-                                const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
-
-                                const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
-                                const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id));
-
-                                setRecommendations(picks.slice(0, 20));
-                                setBanRecommendations(bans.slice(0, 20));
-                                setView(data.isBanPhase ? 'bans' : 'picks');
-                            }
+                            setView(data.isBanPhase ? 'bans' : 'picks');
                         }
                     }
                 }
             } 
-            else if (phase === 'InProgress'){
+            // --- CASO 2: PARTIDA EN CURSO ---
+            else if (phase === 'InProgress') {
                 nextInterval = 30000;
-                const myFinalId = lastImportedIdRef.current;
+                let currentRec = selectedRecommendation;
 
-                if (myFinalId > 0) {
-                    const finalRec = recommendations.find(r => r.id === myFinalId);
+                if (!currentRec) {
+                    const saved = localStorage.getItem('last_pick_analysis');
+                    if (saved) {
+                        currentRec = JSON.parse(saved);
+                        setSelectedRecommendation(currentRec);
+                    }
+                }
 
-                    if (finalRec) {
-                        setSelectedRecommendation(finalRec);
-                        
-                        if (view !== 'reasons') {
-                            console.log("Partida en curso: Mostrando análisis táctico.");
-                            setView('reasons');
-                        }
-                    } else {
-                        if (view !== 'build') setView('build');
+                if (currentRec && view !== 'reasons') {
+                    setView('reasons');
+                } else {
+                    setView('build');
+                }
+            }
+            // --- CASO 3: LOBBY / OFFLINE ---
+            else {
+                // Solo reseteamos si pasamos a una fase que definitivamente no es juego
+                if (phase === 'None' || phase === 'Lobby') {
+                    if (inDraft || lastFingerprintRef.current !== "") {
+                        resetDraftState();
+                        setSelectedRecommendation(null); // Aquí es donde sí se debe limpiar
+                        nextInterval = 10000;
                     }
                 }
             }
-            else {
-                // RESET TOTAL
-                if (inDraft || lastFingerprintRef.current !== "") {
-                    lastFingerprintRef.current = "";
-                    lastImportedIdRef.current = 0;
-                    lastActionKeyRef.current = "none";
-                    timestampAtSyncRef.current = 0;
-                    setInDraft(false);
-                    setRecommendations([]);
-                    setBanRecommendations([]);
-                    setMyTeam(Array(5).fill({}));
-                    setTheirTeam(Array(5).fill({}));
-                    setView('lobby');
-                    activeActionRef.current = null;
-                    nextInterval = 10000;
-                }
-            }
-        } catch (e) { console.error(e); }
-        finally {
+        } catch (e) {
+            console.error("Error en Nexo Loop:", e);
+        } finally {
             isPollingRef.current = false;
             setTimeout(updateLoop, nextInterval);
         }
@@ -420,7 +439,7 @@ export const DraftPage = () => {
                             )} 
                             {/* 2. VISTA: RAZONES (REASONS) */}
                             {inDraft && view === 'reasons' && selectedRecommendation && (
-                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 mb-8">
                                     <div className="relative z-[300] flex flex-col gap-6 p-8 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl backdrop-blur-md">
                                         <header className="flex items-center justify-between border-b border-slate-800 pb-6">
                                             <div className="flex gap-6 items-center">
@@ -432,7 +451,7 @@ export const DraftPage = () => {
                                                 </div>
                                                 <div>
                                                     <h3 className="text-white font-black text-2xl uppercase tracking-tighter italic">
-                                                        Análisis: <span className="text-cyan-500">{selectedRecommendation.name}</span>
+                                                        Análisis: <span className="text-purple-500">{selectedRecommendation.name}</span>
                                                     </h3>
                                                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">
                                                         Puntaje Estratégico: <span className="text-cyan-400">{selectedRecommendation.score.toFixed(1)}</span>
@@ -478,8 +497,8 @@ export const DraftPage = () => {
                             )} 
                             {/* 3. VISTA: CONSTRUCCIÓN (BUILD) */}
                             {inDraft && view === 'build' && currentBuild && (
-                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <div className="relative z-[300] flex flex-col gap-8 p-10 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl backdrop-blur-md">
+                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4">
+                                    <div className="relative z-[300] flex flex-col gap-8 p-10 mb-8 bg-[#020617] border border-slate-800 rounded-sm shadow-2xl backdrop-blur-md">
                                         <div className="flex items-center justify-between border-b border-slate-800 pb-8">
                                             <div className="flex gap-8 items-center">
                                                 <div className="relative flex items-center">
