@@ -77,8 +77,8 @@ HexDraft incluye un servicio opcional que:
 - react/ interfaz interactiva
 - scripts/ sincronización y procesamiento
 
-#Status
+##Status
 Proyecto en desarrollo activo.
 
-#License
+##License
 Private
