@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" alt="HexDraft Logo" width="120" />
+  <img src="public/favicon.svg" alt="HexDraft Logo" width="120" />
 </p>
 
 
