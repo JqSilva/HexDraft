@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 import datetime
+import sys
 import pygetwindow as gw
 
 # === CONFIGURACIÓN DE PRODUCCIÓN ===
@@ -11,6 +12,13 @@ LOL_PROCESS = "LeagueClientUx.exe"
 BRAVE_PATH = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
 APP_URL = "http://localhost:4321/draft"
 APP_TITLE = "HexDraft" 
+
+
+if getattr(sys, 'frozen', False):
+    PROYECTO_DIR = os.path.dirname(sys.executable)
+else:
+    PROYECTO_DIR = os.path.dirname(os.path.abspath(__file__))
+
 LOG_FILE = os.path.join(PROYECTO_DIR, "guard_status.log")
 
 class HexDraftGuard:
@@ -18,12 +26,18 @@ class HexDraftGuard:
         self.server_active = False
 
     def write_log(self, message):
-        """Escribe logs en un archivo para debuguear en modo invisible."""
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
+            # Aseguramos que la carpeta contenedora exista
+            log_dir = os.path.dirname(LOG_FILE)
+            if log_dir and not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+                
             with open(LOG_FILE, "a", encoding="utf-8") as f:
                 f.write(f"[{now}] {message}\n")
-        except: pass
+                
+        except Exception as e:
+            print(f"Error escribiendo log en {LOG_FILE}: {e}")
 
     def is_lol_active(self):
         for proc in psutil.process_iter(['name']):
