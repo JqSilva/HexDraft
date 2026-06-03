@@ -172,20 +172,37 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 
     // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
     const rank = target.meta.tier || 50;
-    if (rank <= 3) {
-        score += 1.0;
-        reasons.push("Prioridad: God Tier");
+    if (rank === 1) {
+        score += 4.0; // Rey del Meta: Bono absoluto para el Top 1
+        reasons.push("Meta: Prioridad Máxima (Top 1 Global)");
+    } else if (rank === 2) {
+        score += 3.5; // Excelente estado: Bono fuerte para el Top 2
+        reasons.push("Meta: Selección dominante (Top 2 Global)");
+    } else if (rank === 3) {
+        score += 3.0; // God Tier de cierre del podio
+        reasons.push("Meta: Selección muy fuerte (Top 3 Global)");
+    } else if (rank <= 6) {
+        score += 2.2; // Bloque alto del Top Tier (Top 4, 5, 6)
+        reasons.push("Meta: Selección Top Tier sólida");
     } else if (rank <= 12) {
+        score += 1.2; // Bloque medio/bajo del Top Tier (Rammus cae aquí, ya no empata con el podio)
+        reasons.push("Meta: Pick estable de la Tierlist");
+    } else if (rank <= 25) {
         score += 0.4;
-        reasons.push("Análisis: Pick estable");
-    } else if (rank > 25) {
-        score -= 1.5;
-        reasons.push("Nota: Fuera del meta actual");
+        reasons.push("Análisis: Pick situacional viable");
+    } else if (rank > 35) {
+        score -= 2.5; // Castigo más severo por estar completamente fuera del radar
+        reasons.push("Nota: Fuera del meta prioritario");
     }
+    
+    // Impacto directo del Win Rate global
     score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
 
-
-    const effectivenessFactor = rank > 25 ? 0.75 : 1.0;
+    // Modificador adaptativo por estado de Blind Pick (Solo si el campeón es genuinamente Top Tier)
+    if (allies.length <= 1 && enemies.length <= 2 && rank <= 6 && target.meta.winRate >= 51.0) {
+        score += 1.0;
+        reasons.push("Safe Pick: Excelente opción a ciegas para abrir el Draft");
+    }
 
     // --- CAPA 2: SINERGIAS (MÁS IMPACTO) ---
     allies.forEach(allyName => {
@@ -267,15 +284,17 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         ENRICHED_DB[a]?.lane === "UTILITY"
     );
 
-    if (!teamHasTank && target.tags.includes("Tank")) {
-        score += WEIGHTS.UTILITY * 1.5; // Gran bono por ser el único tanque
-        reasons.push("Balance: Necesidad de Frontline (Tank)");
+    const isTankRole = ["TOP", "JUNGLE", "UTILITY"].includes(targetLane);
+
+    if (allies.length >= 2 && isTankRole && !teamHasTank && target.tags.includes("Tank")) {
+        score += WEIGHTS.UTILITY * 1.5; 
+        reasons.push("Balance: Necesidad de Frontline (Falta Tanque en el equipo)");
     }
 
-    if (!teamHasUtility && allies.length >= 2) {
+    if (allies.length >= 2 && !teamHasUtility) {
         const providesCC = target.tags.includes("Support") || target.lane === "UTILITY" || target.tags.includes("Mage");
         if (providesCC) {
-            score += WEIGHTS.UTILITY; // Usamos el peso que definimos antes
+            score += WEIGHTS.UTILITY;
             reasons.push("Balance: Aporta el Control de Masas/Utilidad faltante");
         }
     }
@@ -296,13 +315,23 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 
     // Bono por cubrir hueco (Más agresivo)
     if (allies.length >= 2) {
-        if (teamAD >= 2 && teamAP === 0 && damage.magic > 60) {
-            score += WEIGHTS.COMPOSITION;
-            reasons.push("Balance: Daño mágico faltante");
+        if (teamAD === allies.length && teamAP === 0) {
+            if(damage.magic > 65) {
+                score += 2.5;
+                reasons.push("Balance: Daño mágico faltante");
+            } else if (damage.physical > 65) {
+                score -= 3.0;
+                reasons.push("Riesgo: Hay mucho daño físico");
+            }
         }
-        if (teamAP >= 2 && teamAD === 0 && damage.physical > 60) {
-            score += WEIGHTS.COMPOSITION;
-            reasons.push("Balance: Daño físico faltante");
+        if (teamAP === allies.length && teamAD === 0) {
+            if(damage.physical > 65) {
+                score += 2.5;
+                reasons.push("Balance: Daño físico faltante");
+            } else if (damage.magic > 65) {
+                score -= 3.0;
+                reasons.push("Riesgo: Hay mucho daño mágico");
+            }
         }
     }
 
