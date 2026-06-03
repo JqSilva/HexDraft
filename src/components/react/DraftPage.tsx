@@ -54,6 +54,7 @@ export const DraftPage = () => {
     const [gamePhase, setGamePhase] = useState('Offline');
     const [inDraft, setInDraft] = useState(false);
     const [view, setView] = useState<'lobby' | 'picks' | 'bans' | 'build' | 'reasons'>('lobby');
+    const [previewChamp, setPreviewChamp] = useState<any>(null);
     const [myTeam, setMyTeam] = useState<any[]>(Array(5).fill({}));
     const [theirTeam, setTheirTeam] = useState<any[]>(Array(5).fill({}));
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -555,7 +556,7 @@ export const DraftPage = () => {
                                 inDraft && (
                                     <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-2 gap-y-4 pb-4 max-w-fit w-full mx-auto animate-in zoom-in-95">
                                         {(view === 'bans' ? banRecommendations : recommendations).map((rec: any) => (
-                                            <div key={rec.id} onClick={() => { if (view !== 'bans') { setSelectedRecommendation(rec); setView('reasons'); } }}>
+                                            <div key={rec.id} onClick={() => { if (view !== 'bans') { setPreviewChamp(rec); } }}>
                                                 <RecommendationCard {...rec} isBan={view === 'bans'} />
                                             </div>
                                         ))}
@@ -581,6 +582,48 @@ export const DraftPage = () => {
                                     </div>
                                     <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300">Autoban</span>
                                 </label>
+                            </div>
+                        )}
+                        {previewChamp && (
+                            <div 
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+                                onClick={() => setPreviewChamp(null)}
+                            >
+                                <div 
+                                    className="w-full max-w-md p-6 bg-slate-950 border border-slate-800 rounded-sm shadow-2xl relative animate-in zoom-in-95 duration-150"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <button 
+                                        onClick={() => setPreviewChamp(null)}
+                                        className="absolute top-4 right-4 text-slate-500 hover:text-white font-bold transition-colors uppercase text-[10px] tracking-widest"
+                                    >
+                                        ✕ Cerrar
+                                    </button>
+
+                                    <div className="mb-6">
+                                        <span className="text-[10px] text-cyan-500 font-black uppercase tracking-[0.2em]">Evaluación del Motor</span>
+                                        <h3 className="text-xl font-black text-white uppercase tracking-wider mt-1">
+                                            {previewChamp.name}
+                                        </h3>
+                                        <div className="h-px bg-slate-800 w-full mt-3"></div>
+                                    </div>
+
+                                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                                        {previewChamp.reasons?.map((reason: string, i: number) => (
+                                            <div key={i} className="flex items-start gap-3 text-xs text-slate-300 bg-slate-900/40 border border-slate-900 p-3 rounded-sm">
+                                                <span className="text-cyan-500 font-bold mt-0.5 text-[10px]">◆</span>
+                                                <p className="leading-relaxed">{reason}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-6 pt-4 border-t border-slate-900 flex justify-between items-center">
+                                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Score proyectado:</span>
+                                        <span className="text-sm font-black px-2.5 py-1 bg-cyan-950/30 border border-cyan-900/20 text-cyan-400 rounded-sm">
+                                            {previewChamp.score?.toFixed(1)} / 10
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
