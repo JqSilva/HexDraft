@@ -5,8 +5,7 @@ import { DraftPage } from '../components/react/DraftPage';
 
 <Layout title="HexDraft | LCU Real-Time">
     
-  <main class="min-h-screen p-4 md:p-8 4xl:px-90 4xl:py-40 relative bg-bg-warm text-slate-200 overflow-x-hidden font-sans">
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1b1b1f_1px,transparent_1px),linear-gradient(to_bottom,#1b1b1f_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-25"></div>
+  <main class="min-h-screen p-4 md:p-8 4xl:px-90 4xl:py-40 relative text-slate-200 overflow-x-hidden font-sans">
 
     <header class="max-w-7xl mx-auto mb-4 flex justify-between items-center relative z-10">
         <div class="w-36">
@@ -29,10 +28,8 @@ import { DraftPage } from '../components/react/DraftPage';
             </a>
         </div>
     </header>
-    {/* Fondo decorativo (gradientes) se quedan en Astro porque son estáticos */}
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-[#9055ff]/5 blur-[160px] rounded-full pointer-events-none"></div>
 
-    {/* React toma el control de toda la lógica de la página */}
+    <!-- React toma el control de toda la lógica de la página -->
     <DraftPage client:only="react" />
 
   </main>

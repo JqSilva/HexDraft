@@ -23,7 +23,10 @@ export const SyncPanel = () => {
   ]);
   const [toast, setToast] = useState<ToastState>({ visible: false, title: '', body: '', type: 'info' });
 
-  // Auto-detección de versión al cargar
+  const [lolPath, setLolPath] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  // Auto-detección de versión y ruta al cargar
   useEffect(() => {
     fetch('/api/game-version')
       .then(res => res.json())
@@ -32,7 +35,36 @@ export const SyncPanel = () => {
         triggerToast("Protocolo Listo", `Versión LCU: ${data.short}`, "info");
       })
       .catch(() => triggerToast("Error", "No se pudo conectar con el LCU", "error"));
+
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        setLolPath(data.path);
+      })
+      .catch(() => console.error("No se pudo obtener la ruta del lockfile"));
   }, []);
+
+  const savePath = async () => {
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: lolPath })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLolPath(data.path);
+        setIsModalOpen(false);
+        triggerToast("Ruta Guardada", "Configuración de LoL actualizada", "info");
+        addLog(`ÉXITO: Ruta de LoL actualizada a: ${data.path}`, 'success');
+      } else {
+        throw new Error();
+      }
+    } catch (e) {
+      triggerToast("Error", "No se pudo actualizar la ruta", "error");
+      addLog("ERROR: Fallo al actualizar la ruta de LoL", "error");
+    }
+  };
 
   const triggerToast = (title: string, body: string, type: string) => {
     setToast({ visible: true, title, body, type });
@@ -119,6 +151,14 @@ export const SyncPanel = () => {
                   onChange={(e) => setVersion(e.target.value)}
                   className="w-full p-4 bg-input-warm border border-border-warm text-white font-mono text-2xl text-center focus:border-purple-accent outline-none transition-all duration-200 rounded-sm" 
                 />
+              </div>
+              <div className="pt-2 border-t border-border-warm/50 flex flex-col gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full py-2 bg-transparent border border-border-warm hover:border-purple-accent text-slate-400 hover:text-white font-bold uppercase text-[9px] tracking-widest transition-all duration-200 cursor-pointer rounded-sm"
+                >
+                  ⚙️ Configurar Ruta de LoL
+                </button>
               </div>
               <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold tracking-wider">
                 Asegúrate de que la versión coincida con el cliente para evitar errores de mapeo en el motor.
@@ -229,14 +269,59 @@ export const SyncPanel = () => {
         </div>
       </div>
 
-      {/* TOAST NOTIFICATION */}
-      <div className={`fixed bottom-8 right-8 z-50 bg-panel-warm border border-border-warm p-4 rounded-sm max-w-md flex items-center gap-4 transition-all duration-300 ${toast.visible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}>
-        <div className={`w-2.5 h-2.5 rounded-full animate-pulse shrink-0 ${toast.type === 'error' ? 'bg-red-500' : toast.type === 'warn' ? 'bg-yellow-500' : 'bg-purple-accent'}`}></div>
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-accent">{toast.title}</span>
-          <span className="text-xs text-slate-300 font-mono mt-1">{toast.body}</span>
+      {/* CONFIGURACIÓN RUTA HEXTECH MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg p-6 bg-panel-warm border border-border-warm rounded-sm relative animate-in zoom-in-95 duration-200 tech-corners">
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white font-bold transition-colors duration-200 uppercase text-[10px] tracking-widest cursor-pointer"
+            >
+              ✕ Cerrar
+            </button>
+
+            <div className="mb-6 border-b border-border-warm pb-3">
+              <span className="text-[10px] text-purple-accent font-black uppercase tracking-[0.2em]">// Configuración del Sistema</span>
+              <h3 className="text-lg font-black text-white uppercase tracking-wider mt-1">
+                Ruta de League of Legends
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Carpeta de Instalación o Archivo Lockfile
+                </label>
+                <input 
+                  type="text" 
+                  value={lolPath}
+                  onChange={(e) => setLolPath(e.target.value)}
+                  placeholder="C:\Riot Games\League of Legends"
+                  className="w-full p-3 bg-input-warm border border-border-warm text-slate-200 font-mono text-xs focus:border-purple-accent outline-none transition-all duration-200 rounded-sm" 
+                />
+              </div>
+              <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold tracking-wider">
+                Introduce la carpeta raíz del juego (ej: <code className="text-white font-mono lowercase">C:\Riot Games\League of Legends</code>) o la ruta directa al archivo <code className="text-white font-mono lowercase">lockfile</code>. El sistema detectará automáticamente el archivo para establecer la conexión con el cliente de LoL.
+              </p>
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-border-warm flex justify-end gap-3">
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="px-5 py-3 bg-transparent border border-border-warm hover:border-slate-500 text-slate-400 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={savePath}
+                className="px-6 py-3 bg-purple-accent hover:bg-purple-accent-hover text-white font-black uppercase text-[10px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer"
+              >
+                Guardar Ruta
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

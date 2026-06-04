@@ -108,6 +108,10 @@ export function initializeEngineData() {
         DATA_BY_LANE[lane].sort((a, b) => a.meta.tier - b.meta.tier);
     });
 
+    if (typeof window !== 'undefined') {
+        (window as any).__ENRICHED_DB = ENRICHED_DB;
+    }
+
     console.log(`✅ Engine listo: ${Object.keys(ENRICHED_DB).length} campeones cargados.`);
 }
 

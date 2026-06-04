@@ -2,8 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Ruta por defecto en Windows. Ajusta si tienes el juego en otro disco.
-const LOCKFILE_PATH = 'C:\\Riot Games\\League of Legends\\lockfile';
+const CONFIG_FILE = path.join(process.cwd(), 'hexdraft-config.json');
+const DEFAULT_PATH = 'C:\\Riot Games\\League of Legends\\lockfile';
 
 export interface LCUData {
   port: string;
@@ -11,14 +11,43 @@ export interface LCUData {
   protocol: string;
 }
 
+export function getLolPath(): string {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+      if (data && typeof data.lolPath === 'string') {
+        return data.lolPath;
+      }
+    }
+  } catch (error) {
+    console.error("Error leyendo hexdraft-config.json:", error);
+  }
+  return DEFAULT_PATH;
+}
+
+export function saveLolPath(inputPath: string): string {
+  let cleanPath = inputPath.trim();
+  if (cleanPath && !cleanPath.toLowerCase().endsWith('lockfile')) {
+    cleanPath = path.join(cleanPath, 'lockfile');
+  }
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify({ lolPath: cleanPath }, null, 2), 'utf8');
+    console.log(`✅ Configuración guardada: ${cleanPath}`);
+  } catch (error) {
+    console.error("Error guardando hexdraft-config.json:", error);
+  }
+  return cleanPath;
+}
+
 export function getLockfileData(): LCUData | null {
   try {
-    if (!fs.existsSync(LOCKFILE_PATH)) {
-      console.log("El cliente de LoL no parece estar abierto (lockfile no encontrado).");
+    const lockfilePath = getLolPath();
+    if (!fs.existsSync(lockfilePath)) {
+      console.log(`El cliente de LoL no parece estar abierto (lockfile no encontrado en: ${lockfilePath}).`);
       return null;
     }
 
-    const lockfileContent = fs.readFileSync(LOCKFILE_PATH, 'utf8');
+    const lockfileContent = fs.readFileSync(lockfilePath, 'utf8');
     const [name, pid, port, token, protocol] = lockfileContent.split(':');
 
     return { port, token, protocol };

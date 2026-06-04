@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Geist+Mono:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -22,8 +22,9 @@
 
 @theme {
   --breakpoint-4xl: 140rem;
-  --font-mono: 'Fira Code', monospace;
-  --font-sans: 'Fira Sans', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
   
   --color-bg-warm: #08080a;
   --color-panel-warm: #0f0f12;
@@ -114,4 +115,36 @@
   border-bottom: 2px solid #9055ff;
   border-right: 2px solid #9055ff;
   pointer-events: none;
+}
+
+/* Asignación global de tipografía para encabezados */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), sans-serif;
+}
+
+/* Fondo táctico de ultra-alto rendimiento (Cero blurs, única capa) */
+.premium-bg {
+  background-color: #08080a;
+  background-image: 
+    /* Vignette mask */
+    radial-gradient(circle at center, transparent 30%, #08080a 95%),
+    /* Ambient center glow */
+    radial-gradient(circle 600px at 50% 50%, rgba(144, 85, 255, 0.05), transparent),
+    /* Orb 1: Hextech Blue glow (top-left) */
+    radial-gradient(circle 800px at 0% 0%, rgba(0, 216, 255, 0.16), transparent),
+    /* Orb 2: Purple Accent glow (bottom-right) */
+    radial-gradient(circle 1000px at 100% 100%, rgba(144, 85, 255, 0.22), transparent),
+    /* Layer 2: Dot Matrix Pattern */
+    radial-gradient(#22222b 1.2px, transparent 1.2px),
+    /* Layer 1: Major Grid lines */
+    linear-gradient(to right, rgba(35, 35, 42, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(35, 35, 42, 0.35) 1px, transparent 1px);
+  background-size: 
+    100% 100%, 
+    100% 100%, 
+    100% 100%, 
+    100% 100%, 
+    24px 24px, 
+    72px 72px, 
+    72px 72px;
 }
