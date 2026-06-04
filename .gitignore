@@ -43,3 +43,8 @@ guard_status.log
 # --- Otros ---
 # Si usas uv, podrías querer ignorar la carpeta de herramientas
 .uv/
+
+# --- Agent Skills & Configuration ---
+.agents/
+.agent/
+skills-lock.json
