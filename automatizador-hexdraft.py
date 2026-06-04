@@ -47,20 +47,56 @@ class HexDraftGuard:
             except: continue
         return False
 
+    def get_browser_command(self, url):
+        # 1. Intentar Brave
+        brave = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+        if os.path.exists(brave):
+            return [brave, f"--app={url}"]
+        
+        # 2. Intentar Chrome
+        chrome_paths = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+        ]
+        for path in chrome_paths:
+            if os.path.exists(path):
+                return [path, f"--app={url}"]
+        
+        # 3. Intentar Edge (soporta --app para modo ventana)
+        edge = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+        if os.path.exists(edge):
+            return [edge, f"--app={url}"]
+        
+        # 4. Fallback al navegador predeterminado
+        import webbrowser
+        webbrowser.open(url)
+        return None
+
     def start_services(self):
         self.write_log("LoL detectado. Iniciando servicios...")
         try:
+            # Detectar si hay un node.exe portable en la carpeta bin/ o en la carpeta raíz
+            node_path = os.path.join(PROYECTO_DIR, "bin", "node.exe")
+            if not os.path.exists(node_path):
+                node_path = os.path.join(PROYECTO_DIR, "node.exe")
+            if not os.path.exists(node_path):
+                node_path = "node" # Usar el node global del sistema
+                
+            self.write_log(f"Iniciando Astro Server usando: {node_path}")
+            
             # Iniciar Servidor Astro 
             subprocess.Popen(
-                ["node", "dist/server/entry.mjs"],
+                [node_path, "dist/server/entry.mjs"],
                 cwd=PROYECTO_DIR,
                 shell=True,
                 creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
             )
             time.sleep(8) # Espera a que Astro levante el puerto
             
-            # Abrir Interfaz en Brave (Modo App)
-            subprocess.Popen([BRAVE_PATH, f"--app={APP_URL}"])
+            # Abrir Interfaz en el navegador detectado
+            cmd = self.get_browser_command(APP_URL)
+            if cmd:
+                subprocess.Popen(cmd)
             self.server_active = True
         except Exception as e:
             self.write_log(f"Error al iniciar: {e}")

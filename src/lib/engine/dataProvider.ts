@@ -55,13 +55,13 @@ export function initializeEngineData() {
     // 0. Limpiar datos previos para evitar duplicados en memoria
     Object.keys(DATA_BY_LANE).forEach(lane => DATA_BY_LANE[lane] = []);
     
-    // 1. Mapa del Super JSON con llaves normalizadas 
+    // 1. Mapeo de sinergias con llaves normalizadas
     const normalizedSynergies: any = {};
     Object.keys(counterSynergies).forEach(key => {
         normalizedSynergies[normalizeKey(key)] = (counterSynergies as any)[key];
     });
 
-    console.log("🧬 Sincronizando datos masivos al Engine...");
+    console.log("🧬 Cargando datos al motor...");
 
     Object.values(CHAMPIONS_DB).forEach((baseChamp) => {
         const name = baseChamp.name;
@@ -69,11 +69,11 @@ export function initializeEngineData() {
         const extra = normalizedSynergies[normalizeKey(internalName)];
         const opgg = findInMetaCache(name); 
 
-        // Cálculo de scaling [cite: 383, 388]
+        // Cálculo del tipo de escalado del campeón
         const curve = extra?.combat?.winrateCurve || [];
         const scaling = calculateScalingType(curve);
 
-        // Crear el objeto enriquecido [cite: 383, 386]
+        // Creación del objeto de datos enriquecido
         const enrichedChamp = {
             ...baseChamp,
             lane: extra?.lane || "UNKNOWN",
@@ -93,17 +93,17 @@ export function initializeEngineData() {
             scalingType: scaling
         };
 
-        // Guardar en el buffer global principal 
+        // Registro en el almacén de datos global
         ENRICHED_DB[name] = enrichedChamp;
 
-        // --- OPTIMIZACIÓN: Clasificación por carril ---
+        // Clasificación por carril
         const laneKey = enrichedChamp.lane.toUpperCase();
         if (DATA_BY_LANE[laneKey]) {
             DATA_BY_LANE[laneKey].push(enrichedChamp);
         }
     });
 
-    // Opcional: Ordenar cada línea por Tier al inicio para ahorrar CPU en el draft
+    // Ordenamiento de campeones por tier para optimizar el rendimiento en consultas
     Object.keys(DATA_BY_LANE).forEach(lane => {
         DATA_BY_LANE[lane].sort((a, b) => a.meta.tier - b.meta.tier);
     });
@@ -119,11 +119,10 @@ function calculateScalingType(curve: any[]): 'Early' | 'Mid' | 'Late' {
     const values = curve.map(p => typeof p === 'object' ? p.value : p);
 
     /**
-     * Mapeo de Índices basado en tu observación:
-     * [2] 900s  = 15 min (Early)
-     * [4] 1500s = 25 min (Mid)
-     * [7] 2400s = 40 min (Late Real)
-     * [8+] > 40 min (Ruido estadístico)
+     * Mapeo de Índices para análisis de curvas de winrate:
+     * - Índice [2] (900s) = Juego temprano (~15 min)
+     * - Índice [4] (1500s) = Juego medio (~25 min)
+     * - Índice [7] (2400s) = Juego tardío (~40 min)
      */
     const earlyWR = values[2] || 50; // Poder al minuto 15
     const lateWR = values[7] || values[values.length - 2] || 50; // Poder al minuto 40

@@ -4,24 +4,24 @@ import { SyncPanel } from '../components/react/SyncPanel';
 ---
 
 <Layout title="HexDraft | Panel de Control">
-  <main class="min-h-screen p-8 md:p-16 relative bg-[#020617] text-slate-200 overflow-hidden font-sans">
+  <main class="min-h-screen p-4 md:p-8 relative bg-bg-warm text-slate-200 overflow-x-hidden font-sans">
     {/* Fondos Decorativos */}
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-purple-900/10 blur-[160px] rounded-full pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1b1b1f_1px,transparent_1px),linear-gradient(to_bottom,#1b1b1f_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-25"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[800px] bg-[#9055ff]/5 blur-[160px] rounded-full pointer-events-none"></div>
 
-    <header class="max-w-6xl mx-auto mb-16 flex justify-between items-center relative z-10">
-      <div class="flex items-center gap-10">
-        <a href="/" class="text-slate-400 hover:text-white transition-colors text-sm uppercase tracking-[0.2em] font-black group">
-          <span class="inline-block transform group-hover:-translate-x-2 transition-transform">←</span> Inicio
+    <header class="max-w-7xl mx-auto mb-10 flex justify-between items-center relative z-10">
+      <div class="flex items-center gap-6">
+        <a href="/" class="text-slate-400 hover:text-white transition-colors duration-200 text-xs uppercase tracking-[0.2em] font-black group cursor-pointer">
+          <span class="inline-block transform group-hover:-translate-x-1.5 transition-transform duration-200">←</span> Inicio
         </a>
-        <div class="h-6 w-px bg-slate-800"></div>
-        <h1 class="text-2xl font-black uppercase tracking-[0.4em] text-white italic">
-          Nexo <span class="text-purple-600">Sincronización</span>
+        <div class="h-6 w-px bg-border-warm"></div>
+        <h1 class="text-lg md:text-2xl font-black uppercase tracking-[0.4em] text-white italic">
+          Nexo <span class="text-[#9055ff]">Sincronización</span>
         </h1>
       </div>
-      <div class="flex items-center gap-4 px-5 py-2.5 bg-slate-900/80 border border-slate-800 rounded-sm">
-        <div class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse"></div>
-        <span class="text-xs text-slate-300 font-black uppercase tracking-widest">Sistema Guard Activo</span>
+      <div class="flex items-center gap-3 px-4 py-2 bg-panel-warm border border-border-warm rounded-sm select-none">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#9055ff] animate-pulse"></div>
+        <span class="text-[9px] md:text-[10px] text-slate-300 font-black uppercase tracking-widest">Sistema Guard Activo</span>
       </div>
     </header>
 

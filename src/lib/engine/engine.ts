@@ -31,7 +31,7 @@ export interface BansRecommendation {
 initializeEngineData();
 
 /**
- * Función principal: Ahora mucho más limpia porque la data ya viene "cocinada"
+ * Procesa y retorna las recomendaciones de campeones ordenadas según sinergias, counters y el carril asignado.
  */
 export function getProcessedRecommendations(
     myTeamIds: number[],
@@ -62,7 +62,7 @@ export function getProcessedRecommendations(
     const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
-    // OPTIMIZACIÓN: En lugar de iterar ENRICHED_DB (160+), iteramos solo la línea específica (~30)
+    // Iteramos únicamente sobre el pool del carril seleccionado para optimizar búsquedas
     const pool = DATA_BY_LANE[targetLane] || [];
 
     for (const c of pool) {

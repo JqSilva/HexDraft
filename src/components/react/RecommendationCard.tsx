@@ -1,5 +1,5 @@
 // src/components/react/RecommendationCard.tsx
-import React from 'react';
+import React, { memo } from 'react';
 
 interface Props {
     name: string;
@@ -9,7 +9,7 @@ interface Props {
     isBan?: boolean;
 }
 
-export const RecommendationCard = ({ name, score, id, reasons = [], isBan = false }: Props) => {
+export const RecommendationCard = memo(({ name, score, id, reasons = [], isBan = false }: Props) => {
     const scoreColor = score >= 8 ? 'text-green-400' : (score >= 6 ? 'text-yellow-400' : 'text-red-400');
     const imgBase = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/";
 
@@ -22,7 +22,7 @@ export const RecommendationCard = ({ name, score, id, reasons = [], isBan = fals
 
     return (
         <div 
-        className={`recommendation-item group relative w-20 h-20 bg-slate-900 border ${borderColor} rounded-md ${hoverColor} cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95`}
+        className={`recommendation-item group relative w-20 h-20 bg-panel-warm border ${borderColor} rounded-md ${hoverColor} cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95`}
         title={tooltipText}
         >
         <img 
@@ -38,4 +38,4 @@ export const RecommendationCard = ({ name, score, id, reasons = [], isBan = fals
         </div>
         </div>
     );
-};
+});

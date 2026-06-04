@@ -1,13 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { PlayerSlot } from './PlayerSlot';
+import type { LcuPlayer } from './PlayerSlot';
 import { RecommendationCard } from './RecommendationCard';
 import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
 import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId } from '../../lib/engine/engine';
+import { TacticalDirectives } from './TacticalDirectives';
+
+// =========================================================
+// INTERFACES & TYPES
+// =========================================================
+interface LcuAction {
+  id: number;
+  actorCellId: number;
+  championId: number;
+  completed: boolean;
+  type: 'pick' | 'ban';
+  isInProgress: boolean;
+}
+
+interface LcuTimer {
+  phase: string;
+  adjustedTimeLeftInPhase: number;
+}
+
+interface LcuDraftData {
+  inDraft: boolean;
+  myTeam: LcuPlayer[];
+  theirTeam: LcuPlayer[];
+  actions: LcuAction[][];
+  localPlayerCellId: number;
+  timer: LcuTimer;
+  isBanPhase: boolean;
+}
 
 // =========================================================
 // HELPERS (Fuera del componente para eficiencia)
 // =========================================================
-const getCDIcon = (path: string) => {
+const getCDIcon = (path: string): string => {
     if (!path) return "";
     let cleanPath = path.toLowerCase().trim();
     if (cleanPath.includes('perk-images/')) cleanPath = cleanPath.split('perk-images/')[1];
@@ -50,32 +79,34 @@ const importToClient = async (buildData: any) => {
 
 export const DraftPage = () => {
     // --- ESTADOS ---
-    const [isConnected, setIsConnected] = useState(false);
-    const [gamePhase, setGamePhase] = useState('Offline');
-    const [inDraft, setInDraft] = useState(false);
+    const [isConnected, setIsConnected] = useState<boolean>(false);
+    const [gamePhase, setGamePhase] = useState<string>('Offline');
+    const [inDraft, setInDraft] = useState<boolean>(false);
     const [view, setView] = useState<'lobby' | 'picks' | 'bans' | 'build' | 'reasons'>('lobby');
-    const [previewChamp, setPreviewChamp] = useState<any>(null);
-    const [myTeam, setMyTeam] = useState<any[]>(Array(5).fill({}));
-    const [theirTeam, setTheirTeam] = useState<any[]>(Array(5).fill({}));
+    const [previewChamp, setPreviewChamp] = useState<Recommendation | null>(null);
+    const [myTeam, setMyTeam] = useState<LcuPlayer[]>(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
+    const [theirTeam, setTheirTeam] = useState<LcuPlayer[]>(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [banRecommendations, setBanRecommendations] = useState<BansRecommendation[]>([]);
     const [currentBuild, setCurrentBuild] = useState<any>(null);
     const [localTimeLeft, setLocalTimeLeft] = useState<number>(0);
-    const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+    const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
     const [tacticalData, setTacticalData] = useState<{skills: string[]} | null>(null);
     
+    // Responsividad: Modo compacto automático si la ventana mide menos de 1200px
+    const [isCompact, setIsCompact] = useState<boolean>(false);
 
     // --- CONFIGURACIÓN ---
-    const [autoPick, setAutoPick] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
-    const [autoBan, setAutoBan] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('autoBan') === 'true' : false));
+    const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
+    const [autoBan, setAutoBan] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoBan') === 'true' : false));
 
     // --- REFERENCIAS (Para evitar closures y fugas) ---
     const activeActionRef = useRef<any>(null);
     const lastActionKeyRef = useRef<string>("none");
-    const lastFingerprintRef = useRef("");
-    const lastImportedIdRef = useRef(0);
+    const lastFingerprintRef = useRef<string>("");
+    const lastImportedIdRef = useRef<number>(0);
     const currentDataRef = useRef<any>(null);
-    const isPollingRef = useRef(false);
+    const isPollingRef = useRef<boolean>(false);
     
     // Referencias para el cálculo síncrono del tiempo
     const apiTimeAtSyncRef = useRef<number>(0);
@@ -83,6 +114,24 @@ export const DraftPage = () => {
 
     const isPlaying = gamePhase === 'InProgress';
 
+    // Hook para detectar responsividad en el lado del cliente
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const media = window.matchMedia("(max-width: 1200px)");
+        const listener = (e: MediaQueryListEvent) => setIsCompact(e.matches);
+        setIsCompact(media.matches);
+        media.addEventListener("change", listener);
+        return () => media.removeEventListener("change", listener);
+    }, []);
+
+    // Guardar configuraciones en localStorage
+    useEffect(() => {
+        localStorage.setItem('autoPick', String(autoPick));
+    }, [autoPick]);
+
+    useEffect(() => {
+        localStorage.setItem('autoBan', String(autoBan));
+    }, [autoBan]);
 
     // =========================================================
     // RELOJ ÚNICO (Con limpieza estricta)
@@ -91,14 +140,12 @@ export const DraftPage = () => {
         const interval = setInterval(() => {
             if (activeActionRef.current && timestampAtSyncRef.current > 0) {
                 const now = Date.now();
-                // Calculamos cuánto ha pasado desde que capturamos el tiempo "una pura vez"
                 const elapsed = now - timestampAtSyncRef.current;
                 const remaining = Math.max(0, apiTimeAtSyncRef.current - elapsed);
                 
                 setLocalTimeLeft(Math.floor(remaining));
 
                 // Lógica de baneo automático (3.5s)
-                console.log(remaining);
                 if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
                     if ((activeActionRef.current.type === 'pick' && autoPick) || 
                         (activeActionRef.current.type === 'ban' && autoBan)) {
@@ -130,7 +177,6 @@ export const DraftPage = () => {
             const myRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
             let targetId = 0;
-            console.log(currentAction.type);
             if (currentAction.type === 'pick') {
                 const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
                 if (picks.length > 0) targetId = picks[0].id;
@@ -152,7 +198,6 @@ export const DraftPage = () => {
 
     const handleTimerSync = (data: any) => {
         const myCellId = data.localPlayerCellId;
-        // Buscamos la acción que nos pertenece y que está ocurriendo ahora
         const myAction = data.actions?.flat().find(
             (a: any) => a.actorCellId === myCellId && a.isInProgress && !a.completed
         );
@@ -166,7 +211,6 @@ export const DraftPage = () => {
                 apiTimeAtSyncRef.current = 0;
             }
 
-            // Si la fase o acción cambió, resincronizamos el ancla del tiempo
             if (lastActionKeyRef.current !== actionKey && riotPhase !== "PLANNING") {
                 console.log(`Sincronizando ancla para: ${riotPhase}`);
                 
@@ -174,39 +218,35 @@ export const DraftPage = () => {
                 activeActionRef.current = myAction;
 
                 let apiTime = data.timer?.adjustedTimeLeftInPhase || 30000;
-                // Ajuste de latencia: si el tiempo es sospechosamente alto, restamos el margen de fase
                 let adjusted = apiTime > 30000 ? apiTime - 5000 : apiTime;
 
                 timestampAtSyncRef.current = Date.now();
                 apiTimeAtSyncRef.current = adjusted;
             }
         } else {
-            // Limpieza si no hay una acción activa para nosotros
             activeActionRef.current = null;
             lastActionKeyRef.current = "none";
             timestampAtSyncRef.current = 0;
         }
     };
 
-
-    const resetDraftState = () => {
+    const resetDraftState = useCallback(() => {
         console.log("🧹 Limpiando estado del Nexo (Fin de Draft)");
         
-        // Referencias
         lastFingerprintRef.current = "";
         lastImportedIdRef.current = 0;
         lastActionKeyRef.current = "none";
         timestampAtSyncRef.current = 0;
         activeActionRef.current = null;
 
-        // Estados
         setInDraft(false);
         setRecommendations([]);
         setBanRecommendations([]);
-        setMyTeam(Array(5).fill({}));
-        setTheirTeam(Array(5).fill({}));
+        setMyTeam(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
+        setTheirTeam(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
         setView('lobby');
-    };
+    }, []);
+
     // =========================================================
     // BUCLE PRINCIPAL (POLLING DE FASES)
     // =========================================================
@@ -222,7 +262,6 @@ export const DraftPage = () => {
             setGamePhase(phase);
             setIsConnected(phase !== 'Offline');
 
-            // --- CASO 1: SELECCIÓN DE CAMPEÓN ---
             if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
                 nextInterval = 1500;
                 const draftRes = await fetch('/api/champ-select');
@@ -235,7 +274,6 @@ export const DraftPage = () => {
                     setTheirTeam(data.theirTeam);
                     handleTimerSync(data); 
 
-                    // 2. Identificar al Jugador Local (Solo un fetch a /api/me)
                     const { summoner } = await (await fetch('/api/me')).json();
                     const myPlayer = data.myTeam.find((p: any) => p.gameName === summoner);
                     const myId = myPlayer?.championId || 0;
@@ -243,7 +281,6 @@ export const DraftPage = () => {
                     const myHoverIntent = myPlayer?.championPickIntent || 0;
                     const activeIdForEngine = myId > 0 ? myId : myHoverIntent;
 
-                    // 1. CALCULAMOS RECOMENDACIONES (Variable local 'picks')
                     const cleanMyTeam = data.myTeam
                         .filter((p: any) => p.gameName !== summoner) 
                         .map((p: any) => p.championId || p.championPickIntent)
@@ -253,19 +290,14 @@ export const DraftPage = () => {
                     const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
                     const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
 
-                    // IMPORTANTE: Obtenemos 'picks' aquí
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole, activeIdForEngine);
 
-                    // 2. LÓGICA DE PICK (Usando 'picks' directamente, no el estado 'recommendations')
                     if (myId > 0) {
                         if (myId !== lastImportedIdRef.current) {
                             lastImportedIdRef.current = myId;
                             console.log(`🎯 Pick detectado: ${myId}`);
 
-                            // BUSCAMOS EN LA VARIABLE LOCAL 'picks'
-                            console.log(picks);
                             const pickedRec = picks.find(r => r.id === myId);
-                            console.log(pickedRec);
                             if (pickedRec) {
                                 console.log("✅ Razones capturadas con éxito");
                                 setSelectedRecommendation(pickedRec);
@@ -289,7 +321,6 @@ export const DraftPage = () => {
                                 .catch(err => console.error("Error táctico:", err));
                         }
                     } else {
-                        // Solo actualizamos el estado visual si no hemos pickeado
                         const fingerprint = `${data.isBanPhase}-${cleanMyTeam.join(',')}-${myHoverIntent}`;
                         if (fingerprint !== lastFingerprintRef.current) {
                             lastFingerprintRef.current = fingerprint;
@@ -303,7 +334,6 @@ export const DraftPage = () => {
                     }
                 }
             } 
-            // --- CASO 2: PARTIDA EN CURSO ---
             else if (phase === 'InProgress') {
                 nextInterval = 30000;
                 let currentRec = selectedRecommendation;
@@ -322,13 +352,11 @@ export const DraftPage = () => {
                     setView('build');
                 }
             }
-            // --- CASO 3: LOBBY / OFFLINE ---
             else {
-                // Solo reseteamos si pasamos a una fase que definitivamente no es juego
                 if (phase === 'None' || phase === 'Lobby') {
                     if (inDraft || lastFingerprintRef.current !== "") {
                         resetDraftState();
-                        setSelectedRecommendation(null); // Aquí es donde sí se debe limpiar
+                        setSelectedRecommendation(null);
                         nextInterval = 10000;
                     }
                 }
@@ -345,55 +373,75 @@ export const DraftPage = () => {
         updateLoop();
     }, []);
 
+    // Callbacks optimizados
+    const handleReImport = useCallback(() => {
+        if (currentBuild) {
+            importToClient(currentBuild);
+        }
+    }, [currentBuild]);
+
+    const handleSelectChamp = useCallback((rec: Recommendation) => {
+        if (view !== 'bans') {
+            setPreviewChamp(rec);
+        }
+    }, [view]);
+
     return (
-        <div className="flex flex-col gap-6 w-full overflow-hidden">
+        <div className="flex flex-col gap-4 w-full overflow-hidden">
             {/* STATUS BAR */}
-            <div className="w-fit mx-auto mt-6 flex items-center gap-3 py-2.5 px-4 bg-slate-900/80 border border-slate-800 rounded-sm relative z-10">
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-600'}`}></div>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">
+            <div className="w-fit mx-auto mt-2 flex items-center gap-3 py-2 px-4 bg-panel-warm border border-border-warm rounded-sm relative z-10 select-none">
+                <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-[9px] uppercase tracking-[0.2em] font-black text-slate-400">
                     {isConnected ? 'Conectado' : 'Desconectado'} 
                 </span>
             </div>
 
-            <div className={`flex flex-row w-full items-start relative z-10 px-4 transition-all duration-700 ${
-                isPlaying ? 'gap-0 justify-center' : 'gap-6 justify-between'
+            <div className={`flex flex-row w-full items-start relative z-10 px-2 md:px-4 transition-all duration-700 ${
+                isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
             }`}>
                 {/* ALIADOS */}
-                <div className={`w-72 shrink space-y-4 min-w-[200px] column-transition ${
-                    isPlaying ? 'ally-off-screen' : ''
+                <div className={`shrink space-y-3 column-transition ${
+                    isPlaying ? 'ally-off-screen' : (isCompact ? 'w-16' : 'w-64 xl:w-72')
                 }`}>
-                    <h3 className="text-cyan-500 font-black text-xs uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center gap-2"><span className="w-3 h-px bg-cyan-500"></span> Tu Equipo</h3>
-                    {myTeam.map((player, i) => <PlayerSlot key={`ally-${i}`} player={player} />)}
+                    {!isPlaying && (
+                        <h3 className="text-cyan-400 font-black text-xs uppercase tracking-widest border-b border-border-warm pb-3 flex items-center gap-2">
+                            <span className="w-2.5 h-px bg-cyan-400"></span> 
+                            {!isCompact && "Tu Equipo"}
+                        </h3>
+                    )}
+                    {myTeam.map((player, i) => (
+                        <PlayerSlot key={`ally-${i}`} player={player} compact={isCompact && !isPlaying} />
+                    ))}
                 </div>
 
                 {/* CENTRO */}
                 <div className={`transition-all duration-700 ease-in-out ${
                     isPlaying 
-                        ? 'flex-[10] w-full max-w-[1400px] mx-auto' // Usamos un flex alto para que le gane a cualquier residuo
-                        : 'flex-1 min-w-[750px] mx-6'
+                        ? 'flex-[10] w-full max-w-[1400px] mx-auto' 
+                        : 'flex-1 min-w-0 mx-2 md:mx-4'
                 }`}>
-                    <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden shadow-2xl flex flex-col">
+                    <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden flex flex-col tech-corners">
                         
                         {/* HEADER DINÁMICO */}
-                        <header className="mb-6 flex justify-between items-end border-b border-slate-800 pb-5">
+                        <header className="mb-6 flex justify-between items-end border-b border-border-warm pb-5">
                             <div>
-                                <h2 className="text-2xl font-black uppercase tracking-[0.3em] text-white italic">
+                                <h2 className="text-xl md:text-2xl font-black uppercase tracking-[0.3em] text-white italic">
                                     {isPlaying || view === 'build' || view === 'reasons' ? (
-                                        <>Análisis Táctico: <span className="text-purple-500">{currentBuild?.name || 'Cargando'}</span></>
+                                        <>Análisis Táctico: <span className="text-[#9055ff]">{currentBuild?.name || 'Cargando'}</span></>
                                     ) : (
                                         view === 'bans' ? (
-                                            <><span className="text-purple-500">Bans</span> Recomendados</>
+                                            <><span className="text-[#9055ff]">Bans</span> Recomendados</>
                                         ) : (
-                                            <>Hex<span className="text-purple-500">Draft</span></>
+                                            <>Hex<span className="text-[#9055ff]">Draft</span></>
                                         )
                                     )}
                                 </h2>
-                                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-2">
+                                <p className="text-[9px] md:text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-2 mt-2">
                                     {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
                                 </p>
                             </div>
-                            <div className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm ${
-                                isPlaying ? 'text-green-500 border-green-900/30 bg-green-950/10' : 'text-purple-500 border-purple-900/30 bg-purple-950/20'
+                            <div className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm select-none ${
+                                isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
                             }`}>
                                 Fase: <span className="text-white">{gamePhase}</span>
                             </div>
@@ -446,30 +494,30 @@ export const DraftPage = () => {
 
                             {/* 2. VISTA DE PARTIDA / BUILD / REASONS */}
                             {(isPlaying || view === 'build' || view === 'reasons') && currentBuild ? (
-                                <div className="grid grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="grid grid-cols-12 gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                                     
                                     {/* COLUMNA IZQUIERDA: HABILIDADES Y EQUIPO */}
-                                    <div className="col-span-12 lg:col-span-7 space-y-8">
+                                    <div className="col-span-12 lg:col-span-7 space-y-6 lg:space-y-8">
                                         
                                         {/* SKILL TIMELINE */}
-                                        <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-sm w-full">
+                                        <div className="p-6 bg-bg-warm border border-border-warm rounded-sm w-full relative tech-corners">
                                             <div className="flex justify-between items-center mb-6">
-                                                <h4 className="text-[12px] text-cyan-500 font-black uppercase tracking-[0.3em] italic">
+                                                <h4 className="text-[12px] text-cyan-400 font-black uppercase tracking-[0.3em] italic">
                                                     Evolución de Habilidades
                                                 </h4>
                                                 
                                                 {/* ORDEN DE MAXEO GLOBAL (Q > E > W) */}
                                                 {currentBuild?.build?.skillOrder && (
-                                                    <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-sm">
-                                                        <span className="text-[10px] text-cyan-500 font-black uppercase tracking-widest">Maxeo:</span>
-                                                        <span className="text-[10px] text-white font-black tracking-widest uppercase">
+                                                    <div className="flex items-center gap-2 px-3 py-1 bg-cyan-400/10 border border-cyan-400/20 rounded-sm">
+                                                        <span className="text-[9px] text-cyan-400 font-black uppercase tracking-widest">Maxeo:</span>
+                                                        <span className="text-[9px] text-white font-black tracking-widest uppercase">
                                                             {currentBuild.build.skillOrder} 
                                                         </span>
                                                     </div>
                                                 )}
                                             </div>
                                             
-                                            {/* Secuencia nivel a nivel (1-15) */}
+                                            {/* Orden de habilidades por nivel (1-15) */}
                                             <div className="flex flex-row justify-between items-center w-full gap-1 md:gap-2">
                                                 {tacticalData ? (
                                                     tacticalData.skills.map((skill: string, idx: number) => {
@@ -480,8 +528,8 @@ export const DraftPage = () => {
                                                                 <span className="text-[8px] md:text-[10px] font-bold text-slate-600">{lvl}</span>
                                                                 <div className={`w-full aspect-square max-w-[48px] border flex items-center justify-center font-black text-sm md:text-lg rounded-sm transition-all
                                                                     ${isUlt 
-                                                                        ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
-                                                                        : 'bg-slate-900 border-slate-700 text-slate-300'}
+                                                                        ? 'bg-purple-accent/10 border-purple-accent text-purple-accent' 
+                                                                        : 'bg-input-warm border-border-warm text-slate-300'}
                                                                 `}>
                                                                     {skill}
                                                                 </div>
@@ -491,72 +539,56 @@ export const DraftPage = () => {
                                                 ) : (
                                                     <div className="w-full py-4 text-center">
                                                         <p className="text-slate-500 text-xs animate-pulse tracking-widest uppercase">
-                                                            Sincronizando secuencia de combate...
+                                                            Obteniendo orden de habilidades...
                                                         </p>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* RUTA DE ARMAMENTO */}
-                                        <div className="p-6 bg-slate-950/50 border border-slate-800 rounded-sm">
+                                        {/* RUTA DE BUILD / ITEMS */}
+                                        <div className="p-6 bg-bg-warm border border-border-warm rounded-sm tech-corners">
                                             <div className="flex justify-between items-center mb-6">
-                                                <h4 className="text-[12px] text-purple-500 font-black uppercase tracking-[0.3em] italic">Equipamiento Sugerido</h4>
-                                                <button onClick={() => importToClient(currentBuild)} className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[10px] tracking-widest rounded-sm transition-all shadow-lg active:scale-95">Re-Importar</button>
+                                                <h4 className="text-[12px] text-purple-accent font-black uppercase tracking-[0.3em] italic">Build Recomendada</h4>
+                                                <button onClick={handleReImport} className="px-6 py-2 bg-purple-accent hover:bg-purple-accent-hover text-white font-black uppercase text-[10px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95 border-none">Re-Importar</button>
                                             </div>
-                                            <div className="flex flex-wrap gap-4 items-center justify-center bg-slate-900/30 p-8 rounded-sm">
+                                            <div className="flex flex-wrap gap-4 items-center justify-center bg-input-warm/50 p-6 md:p-8 rounded-sm border border-border-warm">
                                                 {currentBuild?.build?.items?.core.map((item: any, idx: number) => (
                                                     <div key={idx} className="relative group">
-                                                        <img src={`https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`} className="w-14 h-14 border border-slate-700 rounded-sm hover:border-purple-500 transition-colors" />
-                                                        <div className="absolute -top-2 -right-2 bg-slate-950 border border-slate-700 text-[8px] font-black px-1.5 py-0.5 rounded-sm text-slate-400">0{idx+1}</div>
+                                                        <img src={`https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`} className="w-12 h-12 md:w-14 md:h-14 border border-border-warm rounded-sm hover:border-purple-accent transition-colors duration-200 cursor-default" alt="item" />
+                                                        <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400">0{idx+1}</div>
                                                     </div>
                                                 ))}
-                                                <div className="h-10 w-px bg-slate-800 mx-4"></div>
-                                                <img src={`https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${currentBuild?.build?.items?.boots?.id}.png`} className="w-14 h-14 border border-slate-700 rounded-sm" />
+                                                <div className="h-10 w-px bg-border-warm mx-2 md:mx-4"></div>
+                                                <div className="relative">
+                                                    <img src={`https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${currentBuild?.build?.items?.boots?.id}.png`} className="w-12 h-12 md:w-14 md:h-14 border border-border-warm rounded-sm cursor-default" alt="boots" />
+                                                    <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400">B</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* COLUMNA DERECHA: CONSEJOS TÁCTICOS */}
                                     <div className="col-span-12 lg:col-span-5">
-                                        <div className="p-8 bg-[#020617]/80 border border-slate-800 rounded-sm shadow-inner h-full">
-                                            <h4 className="text-[12px] text-yellow-500 font-black uppercase tracking-[0.3em] mb-8 italic">Directivas de Combate</h4>
+                                        {(() => {
+                                            const champProfile = currentBuild ? (window as any).__ENRICHED_DB?.[currentBuild.name] || {} : {};
                                             
-                                            <div className="space-y-6">
-                                                <div className="flex gap-4 p-4 bg-yellow-500/5 border-l-2 border-yellow-500 rounded-r-sm">
-                                                    <p className="text-xs text-slate-300 leading-relaxed italic">
-                                                        <span className="text-yellow-500 font-black not-italic tracking-wider uppercase mr-2">Estrategia:</span>
-                                                        Juega agresivo en los primeros niveles. Tu oponente directo sufre contra el burst de {currentBuild.name}.
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex gap-4 p-4 bg-purple-500/5 border-l-2 border-purple-500 rounded-r-sm">
-                                                    <p className="text-xs text-slate-300 leading-relaxed italic">
-                                                        <span className="text-purple-500 font-black not-italic tracking-wider uppercase mr-2">Timing:</span>
-                                                        Poder máximo detectado al minuto <span className="text-white font-bold not-italic">22:00</span> con la obtención del segundo objeto principal.
-                                                    </p>
-                                                </div>
-
-                                                <div className="pt-6 space-y-3">
-                                                    <span className="text-[12px] text-slate-500 font-black uppercase tracking-[0.2em]">Factores de Composición:</span>
-                                                    {selectedRecommendation?.reasons?.map((r: string, i: number) => (
-                                                        <div key={i} className="flex items-start gap-3 text-[11px] mt-2 text-slate-400 group">
-                                                            <span className="text-cyan-600 mt-1 text-[8px] group-hover:scale-125 transition-transform">◆</span> 
-                                                            {r}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
+                                            return (
+                                                <TacticalDirectives 
+                                                    championName={currentBuild?.name || 'Tu Campeón'} 
+                                                    scalingType={champProfile.scalingType}
+                                                    reasons={selectedRecommendation?.reasons}
+                                                />
+                                            );
+                                        })()}
                                     </div>
-
                                 </div>
                             ) : (
                                 /* 3. GRID DE SELECCIÓN (Picks / Bans) */
                                 inDraft && (
                                     <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-2 gap-y-4 pb-4 max-w-fit w-full mx-auto animate-in zoom-in-95">
                                         {(view === 'bans' ? banRecommendations : recommendations).map((rec: any) => (
-                                            <div key={rec.id} onClick={() => { if (view !== 'bans') { setPreviewChamp(rec); } }}>
+                                            <div key={rec.id} onClick={() => handleSelectChamp(rec)}>
                                                 <RecommendationCard {...rec} isBan={view === 'bans'} />
                                             </div>
                                         ))}
@@ -567,59 +599,60 @@ export const DraftPage = () => {
 
                         {/* SWITCHES (Ocultos automáticamente en partida para centrar el dashboard) */}
                         {!isPlaying && (
-                            <div className="flex justify-center gap-12 mt-8 z-50 pt-8 border-t border-slate-800/30">
-                                <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="flex justify-center gap-12 mt-8 z-50 pt-8 border-t border-border-warm/50">
+                                <label className="flex items-center gap-3 cursor-pointer group select-none">
                                     <input type="checkbox" checked={autoPick} onChange={(e) => setAutoPick(e.target.checked)} className="hidden peer" />
-                                    <div className="w-5 h-5 border-2 border-slate-700 rounded-sm bg-slate-950 peer-checked:bg-purple-600 peer-checked:border-purple-600 transition-all flex items-center justify-center">
+                                    <div className="w-5 h-5 border border-border-warm rounded-sm bg-input-warm peer-checked:bg-purple-accent peer-checked:border-purple-accent transition-all duration-200 flex items-center justify-center">
                                         <span className="text-white text-xs opacity-0 peer-checked:opacity-100">✓</span>
                                     </div>
-                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300">Autopick</span>
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300 transition-colors duration-200">Autopick</span>
                                 </label>
-                                <label className="flex items-center gap-3 cursor-pointer group">
+                                <label className="flex items-center gap-3 cursor-pointer group select-none">
                                     <input type="checkbox" checked={autoBan} onChange={(e) => setAutoBan(e.target.checked)} className="hidden peer" />
-                                    <div className="w-5 h-5 border-2 border-slate-700 rounded-sm bg-slate-950 peer-checked:bg-red-600 peer-checked:border-red-600 transition-all flex items-center justify-center">
+                                    <div className="w-5 h-5 border border-border-warm rounded-sm bg-input-warm peer-checked:bg-[#ff4655] peer-checked:border-[#ff4655] transition-all duration-200 flex items-center justify-center">
                                         <span className="text-white text-xs opacity-0 peer-checked:opacity-100">✓</span>
                                     </div>
-                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300">Autoban</span>
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300 transition-colors duration-200">Autoban</span>
                                 </label>
                             </div>
                         )}
+
                         {previewChamp && (
                             <div 
-                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
                                 onClick={() => setPreviewChamp(null)}
                             >
                                 <div 
-                                    className="w-full max-w-md p-6 bg-slate-950 border border-slate-800 rounded-sm shadow-2xl relative animate-in zoom-in-95 duration-150"
+                                    className="w-full max-w-md p-6 bg-panel-warm border border-border-warm rounded-sm relative animate-in zoom-in-95 duration-150 tech-corners"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button 
                                         onClick={() => setPreviewChamp(null)}
-                                        className="absolute top-4 right-4 text-slate-500 hover:text-white font-bold transition-colors uppercase text-[10px] tracking-widest"
+                                        className="absolute top-4 right-4 text-slate-500 hover:text-white font-bold transition-colors duration-200 uppercase text-[10px] tracking-widest cursor-pointer"
                                     >
                                         ✕ Cerrar
                                     </button>
 
                                     <div className="mb-6">
-                                        <span className="text-[10px] text-cyan-500 font-black uppercase tracking-[0.2em]">Evaluación del Motor</span>
+                                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-[0.2em]">Evaluación del Motor</span>
                                         <h3 className="text-xl font-black text-white uppercase tracking-wider mt-1">
                                             {previewChamp.name}
                                         </h3>
-                                        <div className="h-px bg-slate-800 w-full mt-3"></div>
+                                        <div className="h-px bg-border-warm w-full mt-3"></div>
                                     </div>
 
                                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                                         {previewChamp.reasons?.map((reason: string, i: number) => (
-                                            <div key={i} className="flex items-start gap-3 text-xs text-slate-300 bg-slate-900/40 border border-slate-900 p-3 rounded-sm">
-                                                <span className="text-cyan-500 font-bold mt-0.5 text-[10px]">◆</span>
+                                            <div key={i} className="flex items-start gap-3 text-xs text-slate-300 bg-input-warm/40 border border-border-warm/50 p-3 rounded-sm">
+                                                <span className="text-purple-accent font-bold mt-0.5 text-[10px]">◆</span>
                                                 <p className="leading-relaxed">{reason}</p>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="mt-6 pt-4 border-t border-slate-900 flex justify-between items-center">
+                                    <div className="mt-6 pt-4 border-t border-border-warm flex justify-between items-center">
                                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Score proyectado:</span>
-                                        <span className="text-sm font-black px-2.5 py-1 bg-cyan-950/30 border border-cyan-900/20 text-cyan-400 rounded-sm">
+                                        <span className="text-sm font-black px-2.5 py-1 bg-purple-accent/10 border border-purple-accent/20 text-purple-accent rounded-sm">
                                             {previewChamp.score?.toFixed(1)} / 10
                                         </span>
                                     </div>
@@ -630,11 +663,18 @@ export const DraftPage = () => {
                 </div>
 
                 {/* ENEMIGOS */}
-                <div className={`w-72 shrink space-y-4 min-w-[200px] text-right column-transition ${
-                    isPlaying ? 'enemy-off-screen' : ''
+                <div className={`shrink space-y-3 text-right column-transition ${
+                    isPlaying ? 'enemy-off-screen' : (isCompact ? 'w-16' : 'w-64 xl:w-72')
                 }`}>
-                    <h3 className="text-red-500 font-black text-xs uppercase tracking-widest border-b border-slate-800 pb-3 flex items-center justify-end gap-2">Enemigos <span className="w-3 h-px bg-red-500"></span></h3>
-                    {theirTeam.map((player, i) => <PlayerSlot key={`enemy-${i}`} player={player} isEnemy={true} />)}
+                    {!isPlaying && (
+                        <h3 className="text-red-400 font-black text-xs uppercase tracking-widest border-b border-border-warm pb-3 flex items-center justify-end gap-2">
+                            {!isCompact && "Enemigos"} 
+                            <span className="w-2.5 h-px bg-red-400"></span>
+                        </h3>
+                    )}
+                    {theirTeam.map((player, i) => (
+                        <PlayerSlot key={`enemy-${i}`} player={player} isEnemy={true} compact={isCompact && !isPlaying} />
+                    ))}
                 </div>
             </div>
         </div>
