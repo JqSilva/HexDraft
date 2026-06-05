@@ -51,3 +51,6 @@ skills-lock.json
 
 # --- Binaries ---
 node.exe
+
+# --- Local launcher copies ---
+/*.vbs

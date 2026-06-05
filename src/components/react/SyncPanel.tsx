@@ -84,16 +84,13 @@ export const SyncPanel = () => {
 
     try {
       const res = await fetch(`/api/sync?type=${type}&version=${version}`);
-      if (res.ok) {
-        addLog(`ÉXITO: Sincronización ${type} finalizada.`, 'success');
-        triggerToast("Éxito", "Sincronización finalizada", "info");
-      } else {
+      if (!res.ok) {
         throw new Error();
       }
+      addLog(`MOTOR: Solicitud de sincronización ${type} enviada. Ejecutando en segundo plano...`, 'info');
     } catch (e) {
-      addLog(`ERROR: Fallo en la sincronización ${type}.`, 'error');
-      triggerToast("Error", "Fallo en la API", "error");
-    } finally {
+      addLog(`ERROR: Fallo al iniciar la sincronización ${type}.`, 'error');
+      triggerToast("Error", "Fallo al iniciar el motor", "error");
       setIsSyncing(null);
     }
   };
