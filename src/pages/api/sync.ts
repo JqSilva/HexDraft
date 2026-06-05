@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { syncMetaAndBuilds } from '../../lib/scripts/SyncMetaYBuilds';
 import { SyncEstructuraLanes } from '../../lib/scripts/meta-map';
+import { initializeEngineData } from '../../lib/engine/dataProvider';
 
 
 let isGlobalSyncing = false;
@@ -53,7 +54,12 @@ export const GET: APIRoute = async ({ url }) => {
         if (type === 'meta_builds') {
             syncMetaAndBuilds(version, () => shouldAbort, writeLog)
             .then(() => {
-                writeLog("✅ Sincronización finalizada correctamente");
+                try {
+                    initializeEngineData();
+                    writeLog("✅ Sincronización y recarga del motor en memoria completadas.");
+                } catch (e: any) {
+                    writeLog(`⚠️ Sincronización completada, pero falló la recarga en memoria: ${e.message || e}`);
+                }
             })
             .catch((err) => {
                 writeLog(`❌ Sincronización falló: ${err.message || err}`);
@@ -64,7 +70,12 @@ export const GET: APIRoute = async ({ url }) => {
         } else if (type === 'SyncEstructuraLanes') {
             SyncEstructuraLanes(version, () => shouldAbort, writeLog)
             .then(() => {
-                writeLog("✅ Mapeo de carriles finalizado correctamente");
+                try {
+                    initializeEngineData();
+                    writeLog("✅ Mapeo de carriles y recarga del motor en memoria completadas.");
+                } catch (e: any) {
+                    writeLog(`⚠️ Mapeo completado, pero falló la recarga en memoria: ${e.message || e}`);
+                }
             })
             .catch((err) => {
                 writeLog(`❌ Mapeo falló: ${err.message || err}`);

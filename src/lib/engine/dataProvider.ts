@@ -1,8 +1,12 @@
 // src/lib/engine/dataProvider.ts
 import { object } from 'astro:schema';
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
-import counterSynergies from '../data/counter-synergies.json';
-import metaCache from '../data/meta-cache.json';
+import defaultCounterSynergies from '../data/counter-synergies.json';
+import defaultMetaCache from '../data/meta-cache.json';
+import fs from 'fs';
+import path from 'path';
+
+let loadedMetaCache: any = defaultMetaCache;
 
 export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -54,6 +58,42 @@ export const DATA_BY_LANE: Record<string, EnrichedChampion[]> = {
 export function initializeEngineData() {
     // 0. Limpiar datos previos para evitar duplicados en memoria
     Object.keys(DATA_BY_LANE).forEach(lane => DATA_BY_LANE[lane] = []);
+    
+    // Cargar datos dinámicamente de los archivos si existen (solo del lado del servidor)
+    let counterSynergies: any = defaultCounterSynergies;
+    let activeMetaCache: any = defaultMetaCache;
+
+    if (typeof window === 'undefined') {
+        const getFilePath = (fileName: string) => {
+            return path.resolve(process.cwd(), 'src/lib/data', fileName);
+        };
+
+        try {
+            const synergiesPath = getFilePath('counter-synergies.json');
+            if (fs && fs.existsSync && fs.existsSync(synergiesPath)) {
+                console.log("📂 Cargando counter-synergies desde disco...");
+                counterSynergies = JSON.parse(fs.readFileSync(synergiesPath, 'utf-8'));
+            } else {
+                console.log("📂 Usando counter-synergies estático (fallback)...");
+            }
+        } catch (e: any) {
+            console.error("❌ Error cargando counter-synergies dinámico:", e);
+        }
+
+        try {
+            const cachePath = getFilePath('meta-cache.json');
+            if (fs && fs.existsSync && fs.existsSync(cachePath)) {
+                console.log("📂 Cargando meta-cache desde disco...");
+                activeMetaCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+            } else {
+                console.log("📂 Usando meta-cache estático (fallback)...");
+            }
+        } catch (e: any) {
+            console.error("❌ Error cargando meta-cache dinámico:", e);
+        }
+    }
+
+    loadedMetaCache = activeMetaCache;
     
     // 1. Mapeo de sinergias con llaves normalizadas
     const normalizedSynergies: any = {};
@@ -142,7 +182,7 @@ function calculateScalingType(curve: any[]): 'Early' | 'Mid' | 'Late' {
 
 function findInMetaCache(name: string) {
     const nName = normalizeKey(name);
-    const rolesData = Object.values(metaCache);
+    const rolesData = Object.values(loadedMetaCache);
     
     for (const championList of rolesData) {
       if (!Array.isArray(championList)) continue;
