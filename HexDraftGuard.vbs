@@ -6,7 +6,7 @@ Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
 ' Obtener la ruta del script
-scriptDir = fso.GetParentFolderName(Wscript.ScriptPosition)
+scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
 WshShell.CurrentDirectory = scriptDir
 
 ' Ruta del node.exe portable o global
