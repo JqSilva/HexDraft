@@ -16,34 +16,34 @@ def preparar_entorno_node():
     print("\n>>> Verificando entorno Node.js...")
     
     if not shutil.which("npm"):
-        print("❌ Error: npm no está instalado. Instala Node.js antes de continuar.")
+        print("[ERROR] npm no está instalado. Instala Node.js antes de continuar.")
         return False
 
     # 1. Verificar node_modules y package-lock.json
     if not os.path.exists("node_modules"):
         if os.path.exists("package-lock.json"):
-            print("⚠️ node_modules no encontrado. Ejecutando 'npm ci' (instalación segura)...")
+            print("[WARN] node_modules no encontrado. Ejecutando 'npm ci' (instalación segura)...")
             try:
                 # Usamos npm ci para respetar el lockfile y evitar ataques de suministro
                 subprocess.run(["npm", "ci"], shell=True, check=True)
             except subprocess.CalledProcessError:
-                print("❌ Error: 'npm ci' falló. Asegúrate de que package-lock.json sea válido.")
+                print("[ERROR] 'npm ci' falló. Asegúrate de que package-lock.json sea válido.")
                 return False
         else:
-            print("⚠️ No se encontró package-lock.json. Usando 'npm install' como respaldo...")
+            print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
     # 2. Verificar si hace falta el build de Node
     if not os.path.exists(CARPETA_BUILD_NODE):
-        print(f"⚠️ Carpeta {CARPETA_BUILD_NODE} no encontrada. Compilando proyecto...")
+        print(f"[WARN] Carpeta {CARPETA_BUILD_NODE} no encontrada. Compilando proyecto...")
         try:
             subprocess.run(["npm", "run", "build"], shell=True, check=True)
-            print("✅ Build de Node finalizado.")
+            print("[OK] Build de Node finalizado.")
         except subprocess.CalledProcessError:
-            print("❌ Error al ejecutar npm run build.")
+            print("[ERROR] al ejecutar npm run build.")
             return False
     else:
-        print(f"✅ Carpeta {CARPETA_BUILD_NODE} detectada.")
+        print(f"[OK] Carpeta {CARPETA_BUILD_NODE} detectada.")
     return True
 
 
@@ -52,13 +52,13 @@ def verificar_dependencias_python():
     for dep in DEPENDENCIAS_PY:
         spec = importlib.util.find_spec(dep) if dep != "pyinstaller" else shutil.which("pyinstaller")
         if spec is None:
-            print(f"⚠️ Instalando {dep}...")
+            print(f"[WARN] Instalando {dep}...")
             comando = [sys.executable, "-m", "pip", "install", dep]
             if sys.version_info >= (3, 11):
                 comando.append("--break-system-packages")
             subprocess.check_call(comando)
         else:
-            print(f"✅ {dep} detectada.")
+            print(f"[OK] {dep} detectada.")
 
 def build_python():
     print(f"\n>>> Generando ejecutable único {NOMBRE_EXE}...")
@@ -84,7 +84,7 @@ def build_python():
         if os.path.exists(exe_path):
             configurar_persistencia(exe_path)
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error en PyInstaller: {e}")
+        print(f"[ERROR] en PyInstaller: {e}")
 
 def configurar_persistencia(path):
     task_name = "HexDraft_Guard_System"
@@ -92,9 +92,9 @@ def configurar_persistencia(path):
     persistence_cmd = ["schtasks", "/Create", "/TN", task_name, "/TR", f'"{path}"', "/SC", "ONLOGON", "/RL", "HIGHEST", "/F"]
     result = subprocess.run(persistence_cmd, capture_output=True, text=True)
     if result.returncode == 0:
-        print(f"✅ ÉXITO: {NOMBRE_EXE} se iniciará con Windows.")
+        print(f"[OK] EXITO: {NOMBRE_EXE} se iniciará con Windows.")
     else:
-        print(f"⚠️ Ejecuta como ADMINISTRADOR para activar el inicio automático.")
+        print(f"[WARN] Ejecuta como ADMINISTRADOR para activar el inicio automático.")
 
 if __name__ == "__main__":
     # 1. Asegurar dependencias de Python para que este script corra
@@ -106,4 +106,4 @@ if __name__ == "__main__":
         if os.path.exists(NOMBRE_SCRIPT):
             build_python()
         else:
-            print(f"❌ No se encuentra {NOMBRE_SCRIPT}.")
+            print(f"[ERROR] No se encuentra {NOMBRE_SCRIPT}.")

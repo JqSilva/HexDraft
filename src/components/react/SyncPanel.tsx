@@ -135,7 +135,7 @@ export const SyncPanel = () => {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 relative z-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8 relative z-10 mt-25">
         {/* PARÁMETROS DE RED */}
         <div className="col-span-12 lg:col-span-4 space-y-8">
           <div className="p-6 md:p-8 bg-panel-warm border border-border-warm rounded-sm tech-corners">

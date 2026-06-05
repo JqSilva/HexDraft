@@ -412,7 +412,7 @@ export const DraftPage = () => {
     const isBuildOrReasonsView = isPlaying || view === 'build' || view === 'reasons';
 
     return (
-        <div className="flex flex-col gap-4 w-full overflow-hidden">
+        <div className="flex flex-col mt-24 gap-4 w-full overflow-hidden">
             {/* BARRA DE ESTADO */}
             <ConnectionStatus isConnected={isConnected} />
 

@@ -4,34 +4,9 @@ import { DraftPage } from '../components/react/DraftPage';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
-    
-  <main class="min-h-screen p-4 md:p-8 4xl:px-90 4xl:py-40 relative text-slate-200 overflow-x-hidden font-sans">
-
-    <header class="max-w-7xl mx-auto mb-4 flex justify-between items-center relative z-10">
-        <div class="w-36">
-            <a href="/" class="text-slate-400 hover:text-white transition-colors duration-200 text-xs uppercase tracking-[0.2em] font-black group cursor-pointer">
-            <span class="inline-block transform group-hover:-translate-x-1.5 transition-transform duration-200">←</span> Inicio
-            </a>
-        </div>
-
-        <div class="mx-auto">
-            <img 
-            src="/favicon.svg" 
-            alt="HexDraft Logo" 
-            class="w-8 h-8 md:w-10 md:h-10 block select-none"
-            />
-        </div>
-
-        <div class="w-36 flex justify-end">
-            <a href="/actualizar" class="text-slate-400 hover:text-white transition-colors duration-200 text-xs uppercase tracking-[0.2em] font-black group cursor-pointer">
-            Actualizar<span class="inline-block transform group-hover:translate-x-1.5 transition-transform duration-200">→</span>
-            </a>
-        </div>
-    </header>
-
+  <main class="w-full h-full p-4 md:p-6 flex flex-col relative text-slate-200 overflow-x-hidden font-sans">
     <!-- React toma el control de toda la lógica de la página -->
     <DraftPage client:only="react" />
-
   </main>
 </Layout>
 

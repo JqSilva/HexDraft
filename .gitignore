@@ -48,3 +48,6 @@ guard_status.log
 .agents/
 .agent/
 skills-lock.json
+
+# --- Binaries ---
+node.exe

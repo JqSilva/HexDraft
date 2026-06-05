@@ -1,0 +1,187 @@
+---
+// src/components/Sidebar.astro
+const activePath = Astro.url.pathname;
+---
+
+<aside id="sidebar" class="h-screen bg-[#0a0a0d] border-r border-[#1b1b1f] flex flex-col justify-between p-4 transition-all duration-300 w-64 select-none shrink-0 relative z-20 overflow-hidden">
+  <!-- Top / Logo and Navigation -->
+  <div class="flex flex-col gap-6">
+    <!-- Brand Header -->
+    <div id="brand-header" class="flex items-center justify-between">
+      <a href="/dashboard" id="sidebar-logo-link" class="flex items-center gap-3 overflow-hidden transition-all duration-300">
+        <!-- Hood/Assassin App Icon -->
+        <div id="logo-hexdraft" class="relative w-10 h-10 flex items-center justify-center  rounded-lg shadow-[0_0_15px_rgba(144,85,255,0.2)] shrink-0">
+          <img src="/favicon.svg" alt="Hood-icon" class="w-full h-full object-cover rounded-lg">
+        </div>
+        <!-- Logo Text -->
+        <div id="sidebar-logo-text" class="text-left whitespace-nowrap transition-all duration-300">
+          <span class="text-base font-black uppercase tracking-[0.2em] text-white">Hex<span class="text-[#9055ff]">Draft</span></span>
+          <span class="block text-[7px] text-slate-400 uppercase tracking-widest font-semibold">Análisis Composición</span>
+        </div>
+      </a>
+
+      <!-- Collapse Toggle Button -->
+      <button id="sidebar-toggle-btn" class="p-1.5 rounded bg-[#15151e]/80 border border-[#1b1b1f] text-slate-400 hover:text-white hover:border-[#9055ff]/40 transition-colors duration-200 cursor-pointer shrink-0">
+        <svg id="toggle-icon-arrow" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="flex flex-col gap-1 w-full">
+      <a href="/" class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === '/' ? 'bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'}`}>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+        </svg>
+        <span class="sidebar-text transition-all duration-200">Inicio</span>
+      </a>
+
+      <a href="/dashboard" class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === '/dashboard' ? 'bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'}`}>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+        </svg>
+        <span class="sidebar-text transition-all duration-200">Panel General</span>
+      </a>
+
+      <a href="/draft" class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === '/draft' ? 'bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'}`}>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+        </svg>
+        <span class="sidebar-text transition-all duration-200">Draft en Vivo</span>
+      </a>
+
+      <a href="/actualizar" class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === '/actualizar' ? 'bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'}`}>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        <span class="sidebar-text transition-all duration-200">Sincronización</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom / Level and XP bar -->
+  <div id="sidebar-level-section" class="border-t border-[#1b1b1f] pt-4 transition-all duration-300 overflow-hidden shrink-0">
+    <div class="flex justify-between items-center mb-1 sidebar-level-row">
+      <span class="text-[10px] uppercase font-bold tracking-widest text-[#9055ff] sidebar-level-text">Nivel <span id="sidebar-level-val">128</span></span>
+      <span id="sidebar-xp-pct" class="text-[9px] font-mono text-slate-400">43%</span>
+    </div>
+    <!-- Progress Bar -->
+    <div class="w-full bg-[#15151a] h-1.5 rounded-full overflow-hidden border border-[#22222b] relative sidebar-level-bar">
+      <div id="sidebar-level-fill" class="bg-gradient-to-r from-[#9055ff] to-purple-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(144,85,255,0.7)]" style="width: 43%"></div>
+    </div>
+    <div class="flex justify-between items-center mt-1.5 sidebar-level-row">
+      <span class="text-[7px] uppercase tracking-wider font-semibold text-slate-500">PROGRESO XP</span>
+      <span id="sidebar-xp-vals" class="text-[7px] font-mono font-bold text-slate-400">12,450 / 28,950 XP</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+  // DOM Elements
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle-btn');
+  const toggleIcon = document.getElementById('toggle-icon-arrow');
+  const logoHexdraft = document.getElementById('logo-hexdraft');
+  const logoText = document.getElementById('sidebar-logo-text');
+  const levelSection = document.getElementById('sidebar-level-section');
+  const brandHeader = document.getElementById('brand-header');
+
+  function updateSidebarState(isCollapsed) {
+    if (!sidebar || !toggleIcon || !logoText || !levelSection || !logoHexdraft || !brandHeader) return;
+
+    if (isCollapsed) {
+      // Collapse sidebar element
+      sidebar.classList.remove('w-64');
+      sidebar.classList.add('w-16', 'px-2', 'items-center');
+      sidebar.classList.remove('p-4');
+      sidebar.classList.add('py-4');
+      
+      // Hide logo text and bottom XP panel
+      logoText.style.display = 'none';
+      logoHexdraft.style.display = 'none';
+      levelSection.style.display = 'none';
+      brandHeader.classList.add('justify-center');
+      
+      // Hide link text labels
+      document.querySelectorAll('.sidebar-text').forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
+      
+      // Adjust navigation buttons spacing for icon-only representation
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('px-3');
+        el.classList.add('px-0', 'justify-center', 'w-10', 'h-10');
+      });
+      
+      // Rotate toggle icon arrow
+      toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+      // Expand sidebar element
+      sidebar.classList.add('w-64');
+      sidebar.classList.remove('w-16', 'px-2', 'items-center');
+      sidebar.classList.add('p-4');
+      sidebar.classList.remove('py-4');
+      
+      // Show logo text and bottom XP panel
+      logoHexdraft.style.display = 'block';
+      logoText.style.display = 'block';
+      levelSection.style.display = 'block';
+      brandHeader.classList.remove('justify-center');
+      
+      // Show link text labels
+      document.querySelectorAll('.sidebar-text').forEach(el => {
+        (el as HTMLElement).style.display = 'inline-block';
+      });
+      
+      // Reset navigation buttons padding
+      document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.add('px-3');
+        el.classList.remove('px-0', 'justify-center', 'w-10', 'h-10');
+      });
+      
+      // Reset toggle icon rotation
+      toggleIcon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  // Load Initial State from LocalStorage
+  let collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+  updateSidebarState(collapsed);
+
+  // Click toggle click listener
+  toggleBtn?.addEventListener('click', () => {
+    collapsed = !collapsed;
+    localStorage.setItem('sidebar-collapsed', String(collapsed));
+    updateSidebarState(collapsed);
+  });
+
+  // Dynamic profile updates from /api/me to keep XP tracker synced
+  async function fetchSidebarProfile() {
+    try {
+      const res = await fetch('/api/me');
+      if (res.ok) {
+        const data = await res.json();
+        const levelVal = document.getElementById('sidebar-level-val');
+        const xpPct = document.getElementById('sidebar-xp-pct');
+        const levelFill = document.getElementById('sidebar-level-fill');
+        const xpVals = document.getElementById('sidebar-xp-vals');
+        
+        if (levelVal) levelVal.textContent = data.level;
+        if (xpPct) xpPct.textContent = `${data.xpPercent}%`;
+        if (levelFill) {
+          levelFill.style.width = `${data.xpPercent}%`;
+        }
+        if (xpVals) {
+          xpVals.textContent = `${data.xpCurrent.toLocaleString()} / ${data.xpMax.toLocaleString()} XP`;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not poll stats dynamically for Sidebar profile:", e);
+    }
+  }
+
+  // Initial poll and schedule updates
+  fetchSidebarProfile();
+  setInterval(fetchSidebarProfile, 4000);
+</script>

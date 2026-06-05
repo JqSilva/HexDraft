@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DashboardHome } from '../components/react/DashboardHome';
+---
+
+<Layout title="HexDraft | Dashboard">
+  <main class="w-full h-full flex flex-col">
+    <DashboardHome client:only="react" />
+  </main>
+</Layout>
