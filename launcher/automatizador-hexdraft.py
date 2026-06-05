@@ -15,13 +15,21 @@ APP_TITLE = "HexDraft"
 
 
 if getattr(sys, 'frozen', False):
-    PROYECTO_DIR = os.path.dirname(sys.executable)
+    exe_dir = os.path.dirname(sys.executable)
+    # Si estamos en modo onedir y el exe está dentro de una subcarpeta
+    # y los recursos (dist, node.exe) en la carpeta principal.
+    if not os.path.exists(os.path.join(exe_dir, "dist")) and os.path.exists(os.path.join(os.path.dirname(exe_dir), "dist")):
+        PROYECTO_DIR = os.path.dirname(exe_dir)
+    else:
+        PROYECTO_DIR = exe_dir
 else:
     PROYECTO_DIR = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(PROYECTO_DIR) == "launcher":
+        PROYECTO_DIR = os.path.dirname(PROYECTO_DIR)
 
-LOG_FILE = os.path.join(PROYECTO_DIR, "guard_status.log")
+LOG_FILE = os.path.join(PROYECTO_DIR, "hexdraft.log")
 
-class HexDraftGuard:
+class HexDraft:
     def __init__(self):
         self.server_active = False
 
@@ -84,11 +92,19 @@ class HexDraftGuard:
                 
             self.write_log(f"Iniciando Astro Server usando: {node_path}")
             
-            # Iniciar Servidor Astro 
+            # Iniciar Servidor Astro redireccionando salida para depurar
+            node_log_path = os.path.join(PROYECTO_DIR, "node_error.log")
+            try:
+                node_log = open(node_log_path, "w", encoding="utf-8")
+            except:
+                node_log = subprocess.DEVNULL
+
             subprocess.Popen(
                 [node_path, "dist/server/entry.mjs"],
                 cwd=PROYECTO_DIR,
-                shell=True,
+                shell=False,
+                stdout=node_log,
+                stderr=node_log,
                 creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
             )
             time.sleep(8) # Espera a que Astro levante el puerto
@@ -125,7 +141,7 @@ class HexDraftGuard:
         self.write_log("Monitor en espera.")
 
 def main():
-    guard = HexDraftGuard()
+    guard = HexDraft()
     guard.write_log("=== MONITOR INICIADO EN SEGUNDO PLANO ===")
     
     while True:

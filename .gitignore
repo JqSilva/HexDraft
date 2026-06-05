@@ -54,3 +54,7 @@ node.exe
 
 # --- Local launcher copies ---
 /*.vbs
+
+# --- Installer & Release Outputs ---
+release/
+dist-installer/

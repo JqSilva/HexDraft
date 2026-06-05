@@ -14,6 +14,9 @@ export default defineConfig({
       watch: {
         ignored: ['**/src/lib/data/**'],
       }
+    },
+    ssr: {
+      noExternal: true
     }
   },
   output: 'server',
