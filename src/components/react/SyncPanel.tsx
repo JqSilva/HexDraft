@@ -101,16 +101,35 @@ export const SyncPanel = () => {
         const res = await fetch('/api/sync?type=status');
         const data = await res.json();
         
+        if (data.logs && data.logs.length > 0) {
+          const mappedLogs = data.logs.map((log: string) => {
+            const match = log.match(/^\[(\d{2}):(\d{2}):(\d{2})\]\s*(.*)$/);
+            if (match) {
+              const [_, hh, mm, ss, msg] = match;
+              let type = 'info';
+              if (msg.includes('❌') || msg.includes('Error') || msg.includes('falló')) type = 'error';
+              else if (msg.includes('🛑') || msg.includes('CANCEL')) type = 'error';
+              else if (msg.includes('✅') || msg.includes('🏁') || msg.includes('finalizado') || msg.includes('finalizada')) type = 'success';
+              else if (msg.includes('🚀') || msg.includes('Motor') || msg.includes('Iniciando') || msg.includes('Scrapeando') || msg.includes('⚡')) type = 'sync';
+              return {
+                time: `${hh}:${mm}:${ss}`,
+                msg: msg,
+                type: type
+              };
+            }
+            return { time: '--:--', msg: log, type: 'info' };
+          });
+          setLogs([...mappedLogs].reverse());
+        }
+
         if (data.syncing) {
           if (isSyncing !== 'Procesando...') {
             console.log("🔄 Re-vinculando o registrando proceso en curso...");
             setIsSyncing('Procesando...');
-            addLog("Motor en marcha: Re-vinculando monitor...", "info");
           }
         } else {
           if (isSyncing === 'Procesando...') {
-            addLog("Sincronización finalizada correctamente.", "success");
-            triggerToast("Éxito", "Base de datos actualizada", "info");
+            triggerToast("Finalizado", "Proceso de sincronización terminado", "info");
             setIsSyncing(null);
           }
         }

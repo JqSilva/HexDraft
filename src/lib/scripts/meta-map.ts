@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 
-export async function SyncEstructuraLanes(version: string, checkAbort: () => boolean) {
+export async function SyncEstructuraLanes(version: string, checkAbort: () => boolean, writeLog: (msg: string) => void) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const metaMapPath = './src/lib/data/meta-positions.json';
     
@@ -17,11 +17,16 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
     });
     const page = await browser.newPage();
 
-    console.log("🐘 INICIANDO CICLO LARGO - Análisis Estructural");
+    writeLog("🐘 INICIANDO CICLO LARGO - Análisis Estructural");
 
     try {
+        if (checkAbort()) {
+            writeLog("🛑 CANCELACIÓN DETECTADA. Deteniendo...");
+            await browser.close();
+            return;
+        }
         // --- PARTE 1: GENERAR META-MAP (Lanes) ---
-        console.log("📡 Generando Mapa de Posiciones...");
+        writeLog("📡 Generando Mapa de Posiciones...");
         await page.goto(`https://dpm.lol/v1/tierlist?tier=diamond&timeframe=${version}&gameMode=ranked`);
         const tierData = JSON.parse(await page.evaluate(() => document.body.innerText));
         

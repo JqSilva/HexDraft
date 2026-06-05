@@ -133,21 +133,21 @@ const API_NAME_MAP: Record<string, string> = {
     "Bardo": "Bard"
 };
 
-export async function syncMetaAndBuilds(version: string, checkAbort: () => boolean) {
+export async function syncMetaAndBuilds(version: string, checkAbort: () => boolean, writeLog: (msg: string) => void) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const cachePath = './src/lib/data/meta-cache.json';
     const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
     
     const champions = Object.keys(db);
 
-    console.log(`🚀 INICIANDO SINCRONIZACIÓN GENERAL - Versión Parche: ${version}`);
+    writeLog(`🚀 INICIANDO SINCRONIZACIÓN GENERAL - Versión Parche: ${version}`);
 
     // --- PARTE 1: OP.GG (Sin Puppeteer - Rápido) ---
     const roles = ['top', 'jungle', 'mid', 'adc', 'support'];
     const metaCache: Record<string, any[]> = {};
 
     for (const role of roles) {
-        console.log(`🔍 Scrapeando OP.GG: ${role}`);
+        writeLog(`🔍 Scrapeando OP.GG: ${role}`);
         const pos = role === 'utility' ? 'support' : (role === 'adc' ? 'bottom' : role);
         try {
             const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=emerald_plus&position=${pos}`, {
@@ -170,7 +170,7 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
                 });
             });
             metaCache[role] = list;
-        } catch (e) { console.error(`Error OP.GG ${role}:`, e); }
+        } catch (e: any) { writeLog(`Error OP.GG ${role}: ${e.message || e}`); }
     }
     fs.writeFileSync(cachePath, JSON.stringify(metaCache, null, 2));
 
@@ -185,7 +185,7 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
 
 
         if (checkAbort()) {
-            console.log("🛑 CANCELACIÓN DETECTADA. Cerrando procesos...");
+            writeLog("🛑 CANCELACIÓN DETECTADA. Cerrando motores de scraping...");
             await browser.close();
             return "Cancelado por el usuario";
         }
@@ -194,7 +194,7 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
         const internalName = API_NAME_MAP[name] || name;
         const urlName = internalName.replace(/\s/g, "");
 
-        console.log(`⚡ Extrayendo Datos Completos (Build + Matchups): ${name}`);
+        writeLog(`⚡ Extrayendo Datos Completos (Build + Matchups): ${name}`);
 
         try {
             const url = `https://dpm.lol/v1/builds/${urlName}?lane=${lane.toLowerCase()}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
@@ -370,7 +370,10 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
                 skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
             };
 
-        } catch (e) { console.error(`❌ Error procesando ${name}:`, e); }
+        } catch (e: any) { 
+            writeLog(`❌ Error procesando ${name}: ${e.message || e}`); 
+            if (checkAbort()) break;
+        }
         
         // Guardado preventivo cada 10 campeones por si se corta la luz o hay error de red
         if (champions.indexOf(name) % 10 === 0) {
@@ -382,6 +385,10 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
 
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
     await browser.close();
-    console.log("🏁 SINCRONIZACIÓN MASIVA COMPLETA");
+    if (checkAbort()) {
+        writeLog("🛑 CANCELACIÓN PROCESADA. Motores apagados.");
+        return "Cancelado por el usuario";
+    }
+    writeLog("🏁 SINCRONIZACIÓN MASIVA COMPLETA");
     return "Script Finalizado";
 }
