@@ -101,15 +101,18 @@ export const SyncPanel = () => {
         const res = await fetch('/api/sync?type=status');
         const data = await res.json();
         
-        if (data.syncing && !isSyncing) {
-          console.log("🔄 Re-vinculando con proceso en curso...");
-          setIsSyncing('Procesando...');
-          addLog("Motor en marcha: Re-vinculando monitor...", "info");
-        } 
-        else if (!data.syncing && isSyncing) {
-          addLog("Sincronización finalizada correctamente.", "success");
-          triggerToast("Éxito", "Base de datos actualizada", "info");
-          setIsSyncing(null);
+        if (data.syncing) {
+          if (isSyncing !== 'Procesando...') {
+            console.log("🔄 Re-vinculando o registrando proceso en curso...");
+            setIsSyncing('Procesando...');
+            addLog("Motor en marcha: Re-vinculando monitor...", "info");
+          }
+        } else {
+          if (isSyncing === 'Procesando...') {
+            addLog("Sincronización finalizada correctamente.", "success");
+            triggerToast("Éxito", "Base de datos actualizada", "info");
+            setIsSyncing(null);
+          }
         }
       } catch (e) { /* Error de red */ }
     };

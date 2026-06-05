@@ -35,7 +35,7 @@ Do
         ' Iniciar Astro Server en segundo plano mediante un wrapper de PowerShell (.NET Process)
         ' Esto permite ocultar la consola de Node sin propagar el show-state oculto (SW_HIDE) a Chrome/Puppeteer
         Dim psCommand
-        psCommand = "powershell -NoProfile -WindowStyle Hidden -Command ""$p = New-Object System.Diagnostics.Process; $p.StartInfo.FileName = '" & nodePath & "'; $p.StartInfo.Arguments = 'dist/server/entry.mjs'; $p.StartInfo.CreateNoWindow = $true; $p.StartInfo.UseShellExecute = $false; $p.Start()"""
+        psCommand = "powershell -NoProfile -WindowStyle Hidden -Command ""$p = New-Object System.Diagnostics.Process; $p.StartInfo.FileName = '" & nodePath & "'; $p.StartInfo.Arguments = 'dist/server/entry.mjs'; $p.StartInfo.WorkingDirectory = '" & scriptDir & "'; $p.StartInfo.CreateNoWindow = $true; $p.StartInfo.UseShellExecute = $false; $p.Start()"""
         WshShell.Run psCommand, 0, False
         Wscript.Sleep 6000 ' Esperar 6 segundos a que levante el servidor
         
