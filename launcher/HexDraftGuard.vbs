@@ -9,6 +9,24 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
 WshShell.CurrentDirectory = scriptDir
 
+' Crear acceso directo con icono si no existe
+Dim shortcutPath, shortcut
+shortcutPath = scriptDir & "\Iniciar HexDraft.lnk"
+If Not fso.FileExists(shortcutPath) Then
+    On Error Resume Next
+    Set shortcut = WshShell.CreateShortcut(shortcutPath)
+    shortcut.TargetPath = "wscript.exe"
+    shortcut.Arguments = """" & scriptDir & "\HexDraftGuard.vbs"""
+    shortcut.WorkingDirectory = scriptDir
+    If fso.FileExists(scriptDir & "\public\favicon.ico") Then
+        shortcut.IconLocation = scriptDir & "\public\favicon.ico"
+    ElseIf fso.FileExists(scriptDir & "\favicon.ico") Then
+        shortcut.IconLocation = scriptDir & "\favicon.ico"
+    End If
+    shortcut.Save
+    On Error GoTo 0
+End If
+
 ' Ruta del node.exe portable o global (sin comillas externas)
 If fso.FileExists(scriptDir & "\node.exe") Then
     nodePath = scriptDir & "\node.exe"
@@ -33,9 +51,9 @@ Do
     
     If lolActive And Not serverActive Then
         ' Iniciar Astro Server en segundo plano mediante un wrapper de PowerShell (.NET Process)
-        ' Esto permite ocultar la consola de Node sin propagar el show-state oculto (SW_HIDE) a Chrome/Puppeteer
+        ' Usamos UseShellExecute = true y WindowStyle = Hidden para evitar propagar el show-state oculto (SW_HIDE) a Chrome/Puppeteer
         Dim psCommand
-        psCommand = "powershell -NoProfile -WindowStyle Hidden -Command ""$p = New-Object System.Diagnostics.Process; $p.StartInfo.FileName = '" & nodePath & "'; $p.StartInfo.Arguments = 'dist/server/entry.mjs'; $p.StartInfo.WorkingDirectory = '" & scriptDir & "'; $p.StartInfo.CreateNoWindow = $true; $p.StartInfo.UseShellExecute = $false; $p.Start()"""
+        psCommand = "powershell -NoProfile -WindowStyle Hidden -Command ""$p = New-Object System.Diagnostics.Process; $p.StartInfo.FileName = '" & nodePath & "'; $p.StartInfo.Arguments = 'dist/server/entry.mjs'; $p.StartInfo.WorkingDirectory = '" & scriptDir & "'; $p.StartInfo.WindowStyle = 'Hidden'; $p.StartInfo.UseShellExecute = $true; $p.Start()"""
         WshShell.Run psCommand, 0, False
         Wscript.Sleep 6000 ' Esperar 6 segundos a que levante el servidor
         
