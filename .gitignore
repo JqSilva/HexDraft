@@ -58,3 +58,6 @@ node.exe
 # --- Installer & Release Outputs ---
 release/
 dist-installer/
+
+# --- Puppeteer Temporary Profiles ---
+.puppeteer_profiles/
