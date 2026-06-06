@@ -15,6 +15,8 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern dark
 PrivilegesRequired=lowest
+AppMutex=Global\HexDraft_App_Mutex_928F6DFD
+CloseApplications=yes
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
@@ -32,8 +34,6 @@ Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recurses
 Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"
 Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: desktopicon
 
-; Acceso directo para detener el servicio
-Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 
 ; Acceso directo de inicio automático (Startup)
 Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: startup
@@ -42,17 +42,4 @@ Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{
 ; Opción para ejecutar la aplicación al finalizar la instalación
 Filename: "{app}\HexDraft.exe"; Description: "{cm:LaunchProgram,HexDraft}"; Flags: nowait postinstall skipifsilent
 
-[UninstallRun]
-; Detener servicios de HexDraft al desinstalar
-Filename: "{app}\Detener-HexDraft.bat"; Flags: runhidden
 
-[Code]
-function InitializeSetup(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  // Detener ejecuciones previas de la aplicación y Node para evitar archivos bloqueados al sobreescribir
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM HexDraft.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM node.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Result := True;
-end;
