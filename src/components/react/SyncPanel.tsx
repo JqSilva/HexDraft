@@ -275,13 +275,13 @@ export const SyncPanel = () => {
           </div>
 
           {/* MONITOR DE ACTIVIDAD */}
-          <div className="p-6 md:p-8 bg-input-warm border border-border-warm rounded-sm max-h-[286px] tech-corners">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">
+          <div className="p-6 md:p-8 bg-input-warm border border-border-warm rounded-sm h-[286px] flex flex-col tech-corners">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex-shrink-0">
               <span className="text-purple-accent mr-2">//</span>Monitor de Actividad Reciente
             </h3>
             <div 
               ref={scrollRef}
-              className="space-y-3 font-mono text-[10px] md:text-[11px] max-h-60 overflow-y-auto pr-2"
+              className="space-y-3 font-mono text-[10px] md:text-[11px] flex-1 overflow-y-auto pr-2"
             >
               {logs.map((log, i) => (
                 <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-left-2">
