@@ -61,3 +61,5 @@ dist-installer/
 
 # --- Puppeteer Temporary Profiles ---
 .puppeteer_profiles/
+
+hexdraft-installer-repo/
