@@ -47,5 +47,3 @@ Filename: "{app}\HexDraft.exe"; Description: "{cm:LaunchProgram,HexDraft}"; Flag
 [UninstallRun]
 ; Detener servicios de HexDraft al desinstalar
 Filename: "{app}\Detener-HexDraft.bat"; Flags: runhidden
-
-
