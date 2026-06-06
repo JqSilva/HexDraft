@@ -80,8 +80,8 @@ def get_browser_command(url):
     webbrowser.open(url)
     return None
 
-def close_window_by_title(target_title):
-    """Busca ventanas con el título indicado usando APIs nativas de Windows y les envía WM_CLOSE."""
+def close_window_by_title(valid_titles):
+    """Busca ventanas con los títulos exactos indicados usando APIs nativas de Windows y les envía WM_CLOSE."""
     try:
         user32 = ctypes.windll.user32
         WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
@@ -91,8 +91,8 @@ def close_window_by_title(target_title):
             if length > 0:
                 buffer = ctypes.create_unicode_buffer(length + 1)
                 user32.GetWindowTextW(hwnd, buffer, length + 1)
-                # Si contiene el título objetivo
-                if target_title in buffer.value:
+                # Comparar por igualdad exacta para no interferir con pestañas abiertas en navegadores ordinarios
+                if buffer.value in valid_titles:
                     # Enviar mensaje WM_CLOSE (0x0010)
                     user32.PostMessageW(hwnd, 0x0010, 0, 0)
             return True
@@ -124,8 +124,9 @@ def start_services(node_path):
 def stop_services():
     global node_process
     try:
-        # 1. Cerrar la ventana del navegador
-        close_window_by_title(APP_TITLE)
+        # 1. Cerrar la ventana del navegador (solo si coincide exactamente con los títulos de la app)
+        valid_titles = {"HexDraft", "HexDraft | LCU Real-Time", "HexDraft | Dashboard", "HexDraft | Panel de Control"}
+        close_window_by_title(valid_titles)
         
         # 2. Terminar el servidor local
         if node_process:
