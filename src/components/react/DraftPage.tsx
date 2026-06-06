@@ -411,6 +411,10 @@ export const DraftPage = () => {
 
     const isBuildOrReasonsView = isPlaying || view === 'build' || view === 'reasons';
 
+    const hasPicked = useMemo(() => {
+        return inDraft && (view === 'build' || view === 'reasons') && currentBuild !== null;
+    }, [inDraft, view, currentBuild]);
+
     return (
         <div className="flex flex-col mt-24 gap-4 w-full overflow-hidden">
             {/* BARRA DE ESTADO */}
@@ -423,7 +427,7 @@ export const DraftPage = () => {
                 <TeamSidebar
                     team={myTeam}
                     isPlaying={isPlaying}
-                    isCompact={isCompact}
+                    isCompact={isCompact || hasPicked}
                     isEnemy={false}
                 />
 
@@ -538,7 +542,7 @@ export const DraftPage = () => {
                 <TeamSidebar
                     team={theirTeam}
                     isPlaying={isPlaying}
-                    isCompact={isCompact}
+                    isCompact={isCompact || hasPicked}
                     isEnemy={true}
                 />
             </div>

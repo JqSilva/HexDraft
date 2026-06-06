@@ -49,16 +49,43 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
               alt="champion"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-black text-purple-heart-900">?</div>
+            <div className="absolute inset-0 flex items-center justify-center bg-[#070709]/60 transition-all duration-300">
+              <svg width="13" height="22" className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA" />
+                    <stop offset="35%" stopColor="#7d2bcaff" />
+                    <stop offset="70%" stopColor="#62239cff" />
+                    <stop offset="100%" stopColor="#471972ff" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 6.5 6.5 H 17.5 V 12.5 L 12 18 V 21"
+                  stroke="url(#goldGrad)"
+                  strokeWidth="4.0"
+                  strokeLinejoin="miter"
+                  strokeLinecap="square"
+                />
+                <path
+                  d="M12 25.5 L15 28.5 L12 31.5 L9 28.5 Z"
+                  fill="url(#goldGrad)"
+                  stroke="#4d320c"
+                  strokeWidth="0.5"
+                />
+              </svg>
+            </div>
           )}
         </div>
 
         {/* Icono de Posición (Flotante) */}
         {!isEnemy && position && posMapping[position] && (
-          <div className="absolute -bottom-1 -right-1 bg-input-warm border border-border-warm rounded-sm p-0.5 z-20">
+          <div className="absolute -bottom-1.5 -right-1.5 bg-[#0c0d12] border border-slate-800 rounded-full p-1 z-20 shadow-md flex items-center justify-center w-7 h-7">
             <img
               src={`${POS_BASE}${posMapping[position]}`}
-              className="w-3.5 h-3.5 invert brightness-200"
+              className="w-[18px] h-[18px] select-none pointer-events-none"
+              style={{
+                filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)'
+              }}
               alt="role"
             />
           </div>
@@ -72,16 +99,56 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
       }`}>
 
       {/* Imagen del Campeón */}
-      <div className="relative w-14 h-14 bg-input-warm border border-border-warm overflow-hidden shrink-0 rounded-sm">
-        {hasChampion ? (
-          <img
-            src={`${IMG_BASE}${cid}.png`}
-            className="w-full h-full object-cover z-10 relative transition-opacity duration-300"
-            style={{ opacity: isLocked ? 1 : 0.5 }}
-            alt="champion"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-lg font-black text-purple-heart-900">?</div>
+      <div className="relative w-14 h-14 bg-input-warm border border-border-warm shrink-0 rounded-sm">
+        <div className="w-full h-full overflow-hidden rounded-sm relative">
+          {hasChampion ? (
+            <img
+              src={`${IMG_BASE}${cid}.png`}
+              className="w-full h-full object-cover z-10 relative transition-opacity duration-300"
+              style={{ opacity: isLocked ? 1 : 0.5 }}
+              alt="champion"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#070709]/60 transition-all duration-300">
+              <svg width="13" height="22" className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA" />
+                    <stop offset="35%" stopColor="#7d2bcaff" />
+                    <stop offset="70%" stopColor="#62239cff" />
+                    <stop offset="100%" stopColor="#471972ff" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 6.5 6.5 H 17.5 V 12.5 L 12 18 V 21"
+                  stroke="url(#goldGrad)"
+                  strokeWidth="4.0"
+                  strokeLinejoin="miter"
+                  strokeLinecap="square"
+                />
+                <path
+                  d="M12 25.5 L15 28.5 L12 31.5 L9 28.5 Z"
+                  fill="url(#goldGrad)"
+                  stroke="#4d320c"
+                  strokeWidth="0.5"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Icono de Posición (Flotante) */}
+        {!isEnemy && position && posMapping[position] && (
+          <div className="absolute -bottom-1.5 -right-1.5 bg-[#0c0d12] border border-slate-800 rounded-full p-1 z-20 shadow-md flex items-center justify-center w-7 h-7">
+            <img
+              src={`${POS_BASE}${posMapping[position]}`}
+              className="w-[18px] h-[18px] select-none pointer-events-none"
+              style={{
+                filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)'
+              }}
+              alt="role"
+            />
+          </div>
         )}
       </div>
 
@@ -94,17 +161,6 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
           {hasChampion ? (isLocked ? "Bloqueado" : "Eligiendo...") : "Esperando Pick"}
         </span>
       </div>
-
-      {/* Icono de Posición */}
-      {!isEnemy && position && posMapping[position] && (
-        <div className="absolute right-1 mr-2 shrink-0 select-none">
-          <img
-            src={`${POS_BASE}${posMapping[position]}`}
-            className="w-6 h-6 opacity-40 invert brightness-200"
-            alt="role"
-          />
-        </div>
-      )}
     </div>
   );
 });
