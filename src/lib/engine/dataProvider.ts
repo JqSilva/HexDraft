@@ -1,8 +1,8 @@
 // src/lib/engine/dataProvider.ts
 import { object } from 'astro:schema';
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
-import defaultCounterSynergies from '../data/counter-synergies.json';
-import defaultMetaCache from '../data/meta-cache.json';
+import defaultCounterSynergies from '../data/counter-synergies.json' with { type: 'json' };
+import defaultMetaCache from '../data/meta-cache.json' with { type: 'json' };
 import fs from 'fs';
 import path from 'path';
 

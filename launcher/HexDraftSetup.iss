@@ -39,13 +39,20 @@ Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: startup
 
 [Run]
-; Detener cualquier instancia previa antes de copiar (por seguridad)
-Filename: "taskkill"; Parameters: "/F /IM HexDraft.exe"; Flags: runhidden; StatusMsg: "Cerrando ejecuciones previas de HexDraft..."
-Filename: "taskkill"; Parameters: "/F /IM node.exe"; Flags: runhidden; StatusMsg: "Cerrando ejecuciones previas de Node..."
-
 ; Opción para ejecutar la aplicación al finalizar la instalación
 Filename: "{app}\HexDraft.exe"; Description: "{cm:LaunchProgram,HexDraft}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 ; Detener servicios de HexDraft al desinstalar
 Filename: "{app}\Detener-HexDraft.bat"; Flags: runhidden
+
+[Code]
+function InitializeSetup(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  // Detener ejecuciones previas de la aplicación y Node para evitar archivos bloqueados al sobreescribir
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM HexDraft.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM node.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := True;
+end;

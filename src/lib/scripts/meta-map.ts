@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 export async function SyncEstructuraLanes(version: string, checkAbort: () => boolean, writeLog: (msg: string) => void) {
     const dbPath = './src/lib/data/counter-synergies.json';
@@ -11,11 +13,29 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
     const champions = ['Aatrox'];
 
 
+    const profilesDir = path.join(process.cwd(), '.puppeteer_profiles');
+    if (!fs.existsSync(profilesDir)) {
+        fs.mkdirSync(profilesDir, { recursive: true });
+    }
+    const uniqueProfileDir = path.join(profilesDir, `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
     const browser = await puppeteer.launch({ 
-        headless: false, 
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        headless: true, 
+        userDataDir: uniqueProfileDir,
+        pipe: true,
+        ignoreDefaultArgs: ['--enable-automation'],
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-blink-features=AutomationControlled'
+        ] 
     });
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+    await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => false,
+        });
+    });
 
     writeLog("🐘 INICIANDO CICLO LARGO - Análisis Estructural");
 
@@ -23,6 +43,9 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
         if (checkAbort()) {
             writeLog("🛑 CANCELACIÓN DETECTADA. Deteniendo...");
             await browser.close();
+            try {
+                fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
+            } catch (e) {}
             return;
         }
         // --- PARTE 1: GENERAR META-MAP (Lanes) ---
@@ -44,5 +67,8 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
         fs.writeFileSync(metaMapPath, JSON.stringify(metaMap, null, 2));
     } finally {
         await browser.close();
+        try {
+            fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
+        } catch (e) {}
     }
 }

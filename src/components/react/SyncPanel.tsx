@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface LogItem {
   time: string;
@@ -25,6 +25,13 @@ export const SyncPanel = () => {
 
   const [lolPath, setLolPath] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [logs]);
 
   // Auto-detección de versión y ruta al cargar
   useEffect(() => {
@@ -74,7 +81,7 @@ export const SyncPanel = () => {
   const addLog = (msg: string, type: string) => {
     const now = new Date();
     const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-    setLogs(prev => [{ time, msg, type }, ...prev].slice(0, 5));
+    setLogs(prev => [{ time, msg, type }, ...prev].slice(0, 50));
   };
 
   const runSync = async (type: 'meta_builds' | 'SyncEstructuraLanes') => {
@@ -268,11 +275,14 @@ export const SyncPanel = () => {
           </div>
 
           {/* MONITOR DE ACTIVIDAD */}
-          <div className="p-6 md:p-8 bg-input-warm border border-border-warm rounded-sm min-h-[165px] tech-corners">
+          <div className="p-6 md:p-8 bg-input-warm border border-border-warm rounded-sm max-h-[286px] tech-corners">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">
               <span className="text-purple-accent mr-2">//</span>Monitor de Actividad Reciente
             </h3>
-            <div className="space-y-3 font-mono text-[10px] md:text-[11px]">
+            <div 
+              ref={scrollRef}
+              className="space-y-3 font-mono text-[10px] md:text-[11px] max-h-60 overflow-y-auto pr-2"
+            >
               {logs.map((log, i) => (
                 <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-left-2">
                   <span className={`${log.type === 'error' ? 'text-red-500' : log.type === 'sync' ? 'text-yellow-500' : log.type === 'guard' ? 'text-purple-accent' : 'text-[#00f0ff]'} font-bold`}>

@@ -36,17 +36,20 @@ def preparar_entorno_node():
             print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
-    # 2. Verificar si hace falta el build de Node
-    if not os.path.exists(CARPETA_BUILD_NODE):
-        print(f"[WARN] Carpeta {CARPETA_BUILD_NODE} no encontrada. Compilando proyecto...")
+    # 2. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
+    print("Limpiando compilación anterior y compilando proyecto Astro...")
+    if os.path.exists(CARPETA_BUILD_NODE):
         try:
-            subprocess.run(["npm", "run", "build"], shell=True, check=True)
-            print("[OK] Build de Node finalizado.")
-        except subprocess.CalledProcessError:
-            print("[ERROR] al ejecutar npm run build.")
-            return False
-    else:
-        print(f"[OK] Carpeta {CARPETA_BUILD_NODE} detectada.")
+            shutil.rmtree(CARPETA_BUILD_NODE)
+        except Exception as e:
+            print(f"[WARN] No se pudo eliminar la carpeta temporal {CARPETA_BUILD_NODE}: {e}")
+
+    try:
+        subprocess.run(["npm", "run", "build"], shell=True, check=True)
+        print("[OK] Build de Node finalizado.")
+    except subprocess.CalledProcessError:
+        print("[ERROR] al ejecutar npm run build.")
+        return False
     return True
 
 

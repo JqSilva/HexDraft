@@ -1,4 +1,4 @@
-import assets from '../data/assets-map.json';
+import assets from '../data/assets-map.json' with { type: 'json' };
 
 // URLs base para las imágenes
 const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/";

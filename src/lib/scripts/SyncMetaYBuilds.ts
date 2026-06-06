@@ -2,7 +2,9 @@ import puppeteer from 'puppeteer';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import fs from 'fs';
-import assetsMap from '../data/assets-map.json';
+import os from 'os';
+import path from 'path';
+import assetsMap from '../data/assets-map.json' with { type: 'json' };
 
 
 const getBestSummoners = (arr: any[]) => {
@@ -175,11 +177,29 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
     fs.writeFileSync(cachePath, JSON.stringify(metaCache, null, 2));
 
     // --- PARTE 2: DPM.LOL (Una sola pestaña de Puppeteer por Campeón para TODO) ---
+    const profilesDir = path.join(process.cwd(), '.puppeteer_profiles');
+    if (!fs.existsSync(profilesDir)) {
+        fs.mkdirSync(profilesDir, { recursive: true });
+    }
+    const uniqueProfileDir = path.join(profilesDir, `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
     const browser = await puppeteer.launch({ 
-        headless: false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        headless: true,
+        userDataDir: uniqueProfileDir,
+        pipe: true,
+        ignoreDefaultArgs: ['--enable-automation'],
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-blink-features=AutomationControlled'
+        ] 
     });
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+    await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => false,
+        });
+    });
 
     for (const name of champions) {
 
@@ -187,6 +207,9 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
         if (checkAbort()) {
             writeLog("🛑 CANCELACIÓN DETECTADA. Cerrando motores de scraping...");
             await browser.close();
+            try {
+                fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
+            } catch (e) {}
             return "Cancelado por el usuario";
         }
 
@@ -385,6 +408,9 @@ export async function syncMetaAndBuilds(version: string, checkAbort: () => boole
 
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
     await browser.close();
+    try {
+        fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
+    } catch (e) {}
     if (checkAbort()) {
         writeLog("🛑 CANCELACIÓN PROCESADA. Motores apagados.");
         return "Cancelado por el usuario";

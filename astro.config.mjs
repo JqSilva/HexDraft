@@ -15,9 +15,9 @@ export default defineConfig({
         ignored: ['**/src/lib/data/**'],
       }
     },
-    ssr: {
+    ssr: process.argv.includes('build') ? {
       noExternal: true
-    }
+    } : {}
   },
   output: 'server',
   adapter:node({

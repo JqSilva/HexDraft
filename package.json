@@ -6,10 +6,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev --host 127.0.0.1",
+    "dev": "node --experimental-sqlite node_modules/astro/bin/astro.mjs dev --host 127.0.0.1",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "node --experimental-sqlite node_modules/astro/bin/astro.mjs preview",
+    "astro": "node --experimental-sqlite node_modules/astro/bin/astro.mjs"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^0.5.0",

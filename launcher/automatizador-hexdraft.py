@@ -100,7 +100,7 @@ class HexDraft:
                 node_log = subprocess.DEVNULL
 
             subprocess.Popen(
-                [node_path, "dist/server/entry.mjs"],
+                [node_path, "--experimental-sqlite", "dist/server/entry.mjs"],
                 cwd=PROYECTO_DIR,
                 shell=False,
                 stdout=node_log,
