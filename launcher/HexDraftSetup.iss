@@ -34,6 +34,8 @@ Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recurses
 Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"
 Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: desktopicon
 
+; Acceso directo para detener el servicio
+Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 
 ; Acceso directo de inicio automático (Startup)
 Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: startup
@@ -41,5 +43,9 @@ Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{
 [Run]
 ; Opción para ejecutar la aplicación al finalizar la instalación
 Filename: "{app}\HexDraft.exe"; Description: "{cm:LaunchProgram,HexDraft}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+; Detener servicios de HexDraft al desinstalar
+Filename: "{app}\Detener-HexDraft.bat"; Flags: runhidden
 
 

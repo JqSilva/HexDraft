@@ -4,6 +4,7 @@ import subprocess
 import time
 import webbrowser
 import ctypes
+import json
 
 # === CONFIGURACIÓN ===
 APP_URL = "http://localhost:4321/draft"
@@ -21,84 +22,98 @@ else:
     if os.path.basename(PROYECTO_DIR) == "launcher":
         PROYECTO_DIR = os.path.dirname(PROYECTO_DIR)
 
-# Mantener la referencia global del mutex para evitar que el recolector de basura lo libere
 _mutex_holder = None
 
 def acquire_mutex():
-    """Intenta crear un named mutex para garantizar instancia única."""
+    """Garantiza que solo corra una instancia del monitor a la vez."""
     global _mutex_holder
     try:
-        # CreateMutexW de la API de Windows
         _mutex_holder = ctypes.windll.kernel32.CreateMutexW(None, True, MUTEX_NAME)
         err = ctypes.windll.kernel32.GetLastError()
         if err == 183:  # ERROR_ALREADY_EXISTS
             return False
     except Exception:
-        # Failsafe si ocurre un problema al invocar la API
         pass
     return True
 
+def get_lol_path():
+    """Lee la ruta configurada en el hexdraft-config.json."""
+    config_path = os.path.join(PROYECTO_DIR, 'hexdraft-config.json')
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and 'lolPath' in data:
+                    return data['lolPath']
+        except Exception:
+            pass
+    return 'C:\\Riot Games\\League of Legends\\lockfile'
+
+def is_lol_active():
+    """Verifica si LoL está abierto comprobando si existe su lockfile."""
+    lockfile_path = get_lol_path()
+    return os.path.exists(lockfile_path)
+
+node_process = None
+
+def start_services(node_path):
+    global node_process
+    try:
+        # Iniciar node ocultando la consola (CREATE_NO_WINDOW)
+        node_process = subprocess.Popen(
+            [node_path, "--experimental-sqlite", "dist/server/entry.mjs"],
+            cwd=PROYECTO_DIR,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        time.sleep(5)  # Esperar a que el servidor web local esté listo
+        webbrowser.open(APP_URL)
+    except Exception:
+        pass
+
+def stop_services():
+    global node_process
+    if node_process:
+        try:
+            # Terminar limpiamente el proceso hijo que iniciamos
+            node_process.terminate()
+            node_process.wait(timeout=3)
+        except Exception:
+            try:
+                node_process.kill()
+            except Exception:
+                pass
+        node_process = None
+
 def main():
-    # 1. Verificar si ya hay otra instancia activa
     if not acquire_mutex():
-        print("==================================================")
-        print("⚠️  ADVERTENCIA: HexDraft ya se está ejecutando.")
-        print("   Solo se permite una instancia activa a la vez.")
-        print("==================================================")
-        time.sleep(3)
         sys.exit(0)
 
-    print("==================================================")
-    print("                LAUNCHER HEXDRAFT                 ")
-    print("==================================================")
-    print(f"[*] Carpeta de trabajo: {PROYECTO_DIR}")
-    
-    # 2. Localizar node.exe portable o de sistema
     node_path = os.path.join(PROYECTO_DIR, "bin", "node.exe")
     if not os.path.exists(node_path):
         node_path = os.path.join(PROYECTO_DIR, "node.exe")
     if not os.path.exists(node_path):
         node_path = "node"
-        
-    print(f"[*] Iniciando servidor local con: {node_path}")
-    
-    # 3. Lanzar servidor Astro en la misma sesión de consola
-    try:
-        node_process = subprocess.Popen(
-            [node_path, "--experimental-sqlite", "dist/server/entry.mjs"],
-            cwd=PROYECTO_DIR
-        )
-    except Exception as e:
-        print(f"\n[ERROR] No se pudo iniciar el servidor backend: {e}")
-        print("Asegúrate de que node.exe se encuentra en el directorio.")
-        input("\nPresiona ENTER para salir...")
-        sys.exit(1)
-        
-    print("[*] Levantando el servidor local...")
-    time.sleep(3)
-    
-    # 4. Abrir la interfaz en el navegador por defecto
-    print(f"[*] Abriendo aplicación en el navegador: {APP_URL}")
-    webbrowser.open(APP_URL)
-    
-    print("\n==================================================")
-    print("          ¡HEXDRAFT SE ESTÁ EJECUTANDO!           ")
-    print("==================================================")
-    print(" -> El servidor local está activo en segundo plano.")
-    print(" -> Puedes minimizar esta ventana mientras juegas.")
-    print(" -> Para cerrar la aplicación, CIERRA esta ventana.")
-    print("==================================================\n")
-    
-    try:
-        # Esperar a que el proceso termine (o que el usuario cierre la consola)
-        node_process.wait()
-    except KeyboardInterrupt:
-        print("\n[*] Deteniendo servicios de forma ordenada...")
-        node_process.terminate()
+
+    server_active = False
+
+    while True:
         try:
-            node_process.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            node_process.kill()
+            lol_on = is_lol_active()
+            if lol_on and not server_active:
+                start_services(node_path)
+                server_active = True
+                # Esperar 30 segundos tras arrancar para estabilizar
+                time.sleep(30)
+            elif not lol_on and server_active:
+                stop_services()
+                server_active = False
+                time.sleep(10)
+            
+            # Chequear cada 8 segundos si no está activo, o cada 20 si ya está activo
+            interval = 8 if not server_active else 20
+            time.sleep(interval)
+        except Exception:
+            time.sleep(20)
 
 if __name__ == "__main__":
     main()

@@ -76,7 +76,7 @@ def build_python():
     # Usamos sys.executable para asegurar que use el mismo python
     command = [
         sys.executable, "-m", "PyInstaller",
-        "--console", "--onedir",
+        "--noconsole", "--onedir",
         f"--name={NOMBRE_EXE}",
         f"--distpath={temp_dist_dir}",
         f"--icon={icon_path}" if os.path.exists(icon_path) else "",
@@ -159,7 +159,11 @@ def copiar_recursos_release(release_dir):
             shutil.rmtree(target_public)
         shutil.copytree("public", target_public)
 
-
+    # 5. Copiar Detener-HexDraft.bat
+    bat_path = os.path.join("launcher", "Detener-HexDraft.bat")
+    if os.path.exists(bat_path):
+        print("Copiando Detener-HexDraft.bat...")
+        shutil.copy2(bat_path, os.path.join(release_dir, "Detener-HexDraft.bat"))
 
 
 
