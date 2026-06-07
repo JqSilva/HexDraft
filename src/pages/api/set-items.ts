@@ -1,6 +1,6 @@
 // src/pages/api/set-items.ts
 import type { APIRoute } from 'astro';
-import { getLockfileData } from '../../lib/lcu';
+import { getLockfileData } from '../../lib/services/lcu.service.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 

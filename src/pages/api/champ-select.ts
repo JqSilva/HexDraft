@@ -1,6 +1,6 @@
 // src/pages/api/champ-select.ts
 import type { APIRoute } from 'astro';
-import { getLockfileData } from '../../lib/lcu';
+import { getLockfileData } from '../../lib/services/lcu.service.js';
 import { actions } from 'astro/fetch';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';

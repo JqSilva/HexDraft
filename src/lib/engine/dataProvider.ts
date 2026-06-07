@@ -1,10 +1,27 @@
 // src/lib/engine/dataProvider.ts
 import { object } from 'astro:schema';
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
-import defaultCounterSynergies from '../data/counter-synergies.json' with { type: 'json' };
-import defaultMetaCache from '../data/meta-cache.json' with { type: 'json' };
 import fs from 'fs';
 import path from 'path';
+
+// Carga dinámica de los JSON de respaldo para evitar que Vite reinicie (reload) el dev server
+// en caliente al escribir los archivos en disco durante la sincronización.
+let defaultCounterSynergies: any = {};
+let defaultMetaCache: any = {};
+
+try {
+  const syncPath = path.resolve(process.cwd(), 'src/lib/data/counter-synergies.json');
+  if (fs.existsSync(syncPath)) {
+    defaultCounterSynergies = JSON.parse(fs.readFileSync(syncPath, 'utf8'));
+  }
+} catch (e) {}
+
+try {
+  const metaPath = path.resolve(process.cwd(), 'src/lib/data/meta-cache.json');
+  if (fs.existsSync(metaPath)) {
+    defaultMetaCache = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  }
+} catch (e) {}
 
 let loadedMetaCache: any = defaultMetaCache;
 
@@ -55,93 +72,101 @@ export const DATA_BY_LANE: Record<string, EnrichedChampion[]> = {
     "TOP": [], "JUNGLE": [], "MIDDLE": [], "BOTTOM": [], "UTILITY": []
 };
 
-export function initializeEngineData() {
+export function initializeEngineData(customChamps?: any[]) {
     // 0. Limpiar datos previos para evitar duplicados en memoria
     Object.keys(DATA_BY_LANE).forEach(lane => DATA_BY_LANE[lane] = []);
+    Object.keys(ENRICHED_DB).forEach(key => delete ENRICHED_DB[key]);
     
-    // Cargar datos dinámicamente de los archivos si existen (solo del lado del servidor)
-    let counterSynergies: any = defaultCounterSynergies;
-    let activeMetaCache: any = defaultMetaCache;
-
-    if (typeof window === 'undefined') {
-        const getFilePath = (fileName: string) => {
-            return path.resolve(process.cwd(), 'src/lib/data', fileName);
-        };
-
-        try {
-            const synergiesPath = getFilePath('counter-synergies.json');
-            if (fs && fs.existsSync && fs.existsSync(synergiesPath)) {
-                console.log("📂 Cargando counter-synergies desde disco...");
-                counterSynergies = JSON.parse(fs.readFileSync(synergiesPath, 'utf-8'));
-            } else {
-                console.log("📂 Usando counter-synergies estático (fallback)...");
+    if (customChamps && Array.isArray(customChamps)) {
+        console.log(`🧬 Cargando datos al motor desde la base de datos local SQLite (${customChamps.length} campeones)...`);
+        customChamps.forEach((champ) => {
+            ENRICHED_DB[champ.name] = champ;
+            
+            const laneKey = champ.lane.toUpperCase();
+            if (DATA_BY_LANE[laneKey]) {
+                DATA_BY_LANE[laneKey].push(champ);
             }
-        } catch (e: any) {
-            console.error("❌ Error cargando counter-synergies dinámico:", e);
+        });
+    } else {
+        console.log("🧬 Cargando datos al motor desde archivos JSON (De Respaldo)...");
+        // Cargar datos dinámicamente de los archivos si existen (solo del lado del servidor)
+        let counterSynergies: any = defaultCounterSynergies;
+        let activeMetaCache: any = defaultMetaCache;
+
+        if (typeof window === 'undefined') {
+            const getFilePath = (fileName: string) => {
+                return path.resolve(process.cwd(), 'src/lib/data', fileName);
+            };
+
+            try {
+                const synergiesPath = getFilePath('counter-synergies.json');
+                if (fs && fs.existsSync && fs.existsSync(synergiesPath)) {
+                    console.log("📂 Cargando counter-synergies desde disco...");
+                    counterSynergies = JSON.parse(fs.readFileSync(synergiesPath, 'utf-8'));
+                }
+            } catch (e: any) {
+                console.error("❌ Error cargando counter-synergies dinámico:", e);
+            }
+
+            try {
+                const cachePath = getFilePath('meta-cache.json');
+                if (fs && fs.existsSync && fs.existsSync(cachePath)) {
+                    console.log("📂 Cargando meta-cache desde disco...");
+                    activeMetaCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+                }
+            } catch (e: any) {
+                console.error("❌ Error cargando meta-cache dinámico:", e);
+            }
         }
 
-        try {
-            const cachePath = getFilePath('meta-cache.json');
-            if (fs && fs.existsSync && fs.existsSync(cachePath)) {
-                console.log("📂 Cargando meta-cache desde disco...");
-                activeMetaCache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
-            } else {
-                console.log("📂 Usando meta-cache estático (fallback)...");
+        loadedMetaCache = activeMetaCache;
+        
+        // Mapeo de sinergias con llaves normalizadas
+        const normalizedSynergies: any = {};
+        Object.keys(counterSynergies).forEach(key => {
+            normalizedSynergies[normalizeKey(key)] = (counterSynergies as any)[key];
+        });
+
+        Object.values(CHAMPIONS_DB).forEach((baseChamp) => {
+            const name = baseChamp.name;
+            const internalName = CHAMPION_ALIAS[name] || name;
+            const extra = normalizedSynergies[normalizeKey(internalName)];
+            const opgg = findInMetaCache(name); 
+
+            // Cálculo del tipo de escalado del campeón
+            const curve = extra?.combat?.winrateCurve || [];
+            const scaling = calculateScalingType(curve);
+
+            // Creación del objeto de datos enriquecido
+            const enrichedChamp = {
+                ...baseChamp,
+                lane: extra?.lane || "UNKNOWN",
+                tags: extra?.tags || baseChamp.tags || [],
+                combat: {
+                    damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
+                    winrateCurve: curve
+                },
+                buildData: extra?.buildData || null,
+                counters: extra?.counters || [],
+                synergies: extra?.synergies || {},
+                godMatchups: extra?.godMatchups || [],
+                meta: {
+                    winRate: opgg ? parseFloat(opgg.winRate) : 50.0,
+                    tier: opgg ? parseInt(opgg.rank) : 5
+                },
+                scalingType: scaling
+            };
+
+            // Registro en el almacén de datos global
+            ENRICHED_DB[name] = enrichedChamp;
+
+            // Clasificación por carril
+            const laneKey = enrichedChamp.lane.toUpperCase();
+            if (DATA_BY_LANE[laneKey]) {
+                DATA_BY_LANE[laneKey].push(enrichedChamp);
             }
-        } catch (e: any) {
-            console.error("❌ Error cargando meta-cache dinámico:", e);
-        }
+        });
     }
-
-    loadedMetaCache = activeMetaCache;
-    
-    // 1. Mapeo de sinergias con llaves normalizadas
-    const normalizedSynergies: any = {};
-    Object.keys(counterSynergies).forEach(key => {
-        normalizedSynergies[normalizeKey(key)] = (counterSynergies as any)[key];
-    });
-
-    console.log("🧬 Cargando datos al motor...");
-
-    Object.values(CHAMPIONS_DB).forEach((baseChamp) => {
-        const name = baseChamp.name;
-        const internalName = CHAMPION_ALIAS[name] || name;
-        const extra = normalizedSynergies[normalizeKey(internalName)];
-        const opgg = findInMetaCache(name); 
-
-        // Cálculo del tipo de escalado del campeón
-        const curve = extra?.combat?.winrateCurve || [];
-        const scaling = calculateScalingType(curve);
-
-        // Creación del objeto de datos enriquecido
-        const enrichedChamp = {
-            ...baseChamp,
-            lane: extra?.lane || "UNKNOWN",
-            tags: extra?.tags || baseChamp.tags || [],
-            combat: {
-                damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
-                winrateCurve: curve
-            },
-            buildData: extra?.buildData || null,
-            counters: extra?.counters || [],
-            synergies: extra?.synergies || {},
-            godMatchups: extra?.godMatchups || [],
-            meta: {
-                winRate: opgg ? parseFloat(opgg.winRate) : 50.0,
-                tier: opgg ? parseInt(opgg.rank) : 5
-            },
-            scalingType: scaling
-        };
-
-        // Registro en el almacén de datos global
-        ENRICHED_DB[name] = enrichedChamp;
-
-        // Clasificación por carril
-        const laneKey = enrichedChamp.lane.toUpperCase();
-        if (DATA_BY_LANE[laneKey]) {
-            DATA_BY_LANE[laneKey].push(enrichedChamp);
-        }
-    });
 
     // Ordenamiento de campeones por tier para optimizar el rendimiento en consultas
     Object.keys(DATA_BY_LANE).forEach(lane => {

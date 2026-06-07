@@ -3,7 +3,12 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-export async function SyncEstructuraLanes(version: string, checkAbort: () => boolean, writeLog: (msg: string) => void) {
+export async function SyncEstructuraLanes(
+    version: string,
+    checkAbort: () => boolean,
+    writeLog: (msg: string) => void,
+    onProgress?: (current: number, total: number, phase: 'lanes' | 'done') => void
+) {
     const dbPath = './src/lib/data/counter-synergies.json';
     const metaMapPath = './src/lib/data/meta-positions.json';
     
@@ -38,6 +43,7 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
     });
 
     writeLog("🐘 INICIANDO CICLO LARGO - Análisis Estructural");
+    onProgress?.(1, 10, 'lanes');
 
     try {
         if (checkAbort()) {
@@ -50,7 +56,9 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
         }
         // --- PARTE 1: GENERAR META-MAP (Lanes) ---
         writeLog("📡 Generando Mapa de Posiciones...");
+        onProgress?.(3, 10, 'lanes');
         await page.goto(`https://dpm.lol/v1/tierlist?tier=diamond&timeframe=${version}&gameMode=ranked`);
+        onProgress?.(7, 10, 'lanes');
         const tierData = JSON.parse(await page.evaluate(() => document.body.innerText));
         
         const metaMap: Record<string, string[]> = {};
@@ -65,6 +73,13 @@ export async function SyncEstructuraLanes(version: string, checkAbort: () => boo
             metaMap[c.championName] = lanes;
         });
         fs.writeFileSync(metaMapPath, JSON.stringify(metaMap, null, 2));
+        onProgress?.(9, 10, 'lanes');
+        
+        try {
+            const { configRepo } = await import('../db/config.repo.js');
+            configRepo.setConfig('last_lane_sync_timestamp', new Date().toISOString());
+        } catch (e) {}
+        onProgress?.(10, 10, 'done');
     } finally {
         await browser.close();
         try {

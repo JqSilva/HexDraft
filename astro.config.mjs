@@ -12,7 +12,15 @@ export default defineConfig({
     plugins: [tailwindcss()],
     server: {
       watch: {
-        ignored: ['**/src/lib/data/**'],
+        ignored: [
+          '**/src/lib/data/**',
+          '**/hexdraft.db',
+          '**/hexdraft.db-journal',
+          '**/hexdraft.db-wal',
+          '**/hexdraft.db-shm',
+          '**/.puppeteer_profiles/**',
+          '**/.astro/**'
+        ],
       }
     },
     ssr: process.argv.includes('build') ? {

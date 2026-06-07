@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getLockfileData } from '../../lib/lcu';
+import { getLockfileData } from '../../lib/services/lcu.service.js';
 
 export const POST: APIRoute = async ({ request }) => {
     const lcu = getLockfileData();

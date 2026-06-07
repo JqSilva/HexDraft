@@ -1,8 +1,8 @@
-// src/lib/lcu.ts
+// src/lib/services/lcu.service.ts
 import fs from 'node:fs';
 import path from 'node:path';
+import { configRepo } from '../db/config.repo.js';
 
-const CONFIG_FILE = path.join(process.cwd(), 'hexdraft-config.json');
 const DEFAULT_PATH = 'C:\\Riot Games\\League of Legends\\lockfile';
 
 export interface LCUData {
@@ -12,17 +12,8 @@ export interface LCUData {
 }
 
 export function getLolPath(): string {
-  try {
-    if (fs.existsSync(CONFIG_FILE)) {
-      const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-      if (data && typeof data.lolPath === 'string') {
-        return data.lolPath;
-      }
-    }
-  } catch (error) {
-    console.error("Error leyendo hexdraft-config.json:", error);
-  }
-  return DEFAULT_PATH;
+  const dbPath = configRepo.getConfig('lol_path');
+  return dbPath || DEFAULT_PATH;
 }
 
 export function saveLolPath(inputPath: string): string {
@@ -30,12 +21,9 @@ export function saveLolPath(inputPath: string): string {
   if (cleanPath && !cleanPath.toLowerCase().endsWith('lockfile')) {
     cleanPath = path.join(cleanPath, 'lockfile');
   }
-  try {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify({ lolPath: cleanPath }, null, 2), 'utf8');
-    console.log(`✅ Configuración guardada: ${cleanPath}`);
-  } catch (error) {
-    console.error("Error guardando hexdraft-config.json:", error);
-  }
+  
+  // Guardar en la base de datos (configRepo internamente sincronizará hexdraft-config.json)
+  configRepo.setConfig('lol_path', cleanPath);
   return cleanPath;
 }
 
@@ -43,7 +31,7 @@ export function getLockfileData(): LCUData | null {
   try {
     const lockfilePath = getLolPath();
     if (!fs.existsSync(lockfilePath)) {
-      console.log(`El cliente de LoL no parece estar abierto (lockfile no encontrado en: ${lockfilePath}).`);
+      console.log(`[LCU] Cliente de LoL no detectado (lockfile ausente en: ${lockfilePath}).`);
       return null;
     }
 
@@ -52,7 +40,7 @@ export function getLockfileData(): LCUData | null {
 
     return { port, token, protocol };
   } catch (error) {
-    console.error("Error leyendo el lockfile:", error);
+    console.error("❌ Error leyendo el lockfile de LoL:", error);
     return null;
   }
 }

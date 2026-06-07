@@ -63,3 +63,9 @@ dist-installer/
 .puppeteer_profiles/
 
 hexdraft-installer-repo/
+
+# --- Local SQLite & Configs ---
+hexdraft.db
+hexdraft.db-shm
+hexdraft.db-wal
+hexdraft-config.json
