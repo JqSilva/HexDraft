@@ -4,7 +4,7 @@
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft
-AppVersion=1.0.0
+AppVersion=1.2
 AppPublisher=HexDraft
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
