@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import HextechBackground from "../components/HextechBackground.astro";
 import Sidebar from "../components/Sidebar.astro";
+import { AutoUpdateGuard } from "../components/react/AutoUpdateGuard";
 
 const { title = "HexDraft" } = Astro.props;
 ---
@@ -27,6 +28,66 @@ const { title = "HexDraft" } = Astro.props;
 				<slot />
 			</div>
 		</div>
+
+		<!-- Auto-check sync status on launch -->
+		<AutoUpdateGuard client:only="react" />
+
+		<!-- Barra de progreso superior para transiciones (sin blur, fluida, con resplandor) -->
+		<div id="global-page-loader" class="fixed top-0 left-0 h-[3px] z-[10000] bg-purple-accent shadow-[0_1px_10px_rgba(144,85,255,0.8)] transition-all duration-300 ease-out" style="width: 0%; opacity: 0;"></div>
+
+		<script is:inline>
+			const loader = document.getElementById('global-page-loader');
+
+			const showLoader = () => {
+				if (loader) {
+					loader.style.transition = 'width 2s cubic-bezier(0.08, 0.82, 0.17, 1), opacity 0.1s ease';
+					loader.style.opacity = '1';
+					loader.style.width = '80%';
+				}
+			};
+
+			const hideLoader = () => {
+				if (loader) {
+					loader.style.transition = 'width 0.3s ease, opacity 0.3s ease';
+					loader.style.width = '100%';
+					setTimeout(() => {
+						loader.style.opacity = '0';
+						setTimeout(() => {
+							loader.style.width = '0%';
+						}, 300);
+					}, 200);
+				}
+			};
+
+			// Si el DOM ya está listo (o casi listo), lo ocultamos inmediatamente
+			if (document.readyState === 'interactive' || document.readyState === 'complete') {
+				setTimeout(hideLoader, 100);
+			} else {
+				window.addEventListener('DOMContentLoaded', hideLoader);
+			}
+			
+			// Asegurar que se oculte al volver atrás en el historial (BFcache)
+			window.addEventListener('pageshow', (event) => {
+				if (event.persisted) {
+					hideLoader();
+				}
+			});
+
+			// Mostrar la barra de progreso al hacer click en enlaces internos
+			document.addEventListener('click', (e) => {
+				const target = e.target;
+				if (target) {
+					const link = target.closest('a');
+					if (link) {
+						const href = link.getAttribute('href');
+						// Interceptar enlaces internos
+						if (href && href.startsWith('/') && !href.startsWith('/#') && link.target !== '_blank') {
+							showLoader();
+						}
+					}
+				}
+			});
+		</script>
 	</body>
 </html>
 
