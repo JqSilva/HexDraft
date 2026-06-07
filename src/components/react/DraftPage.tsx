@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { LcuPlayer } from './PlayerSlot';
 import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
 import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId } from '../../lib/engine/engine';
+import { initializeEngineData } from '../../lib/engine/dataProvider';
 import { CombatDirectivesPanel, MatchupAnalysisPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 
@@ -116,6 +117,26 @@ export const DraftPage = () => {
         if (!currentBuild) return null;
         return getTacticalDirectives(currentBuild.name, myRole, allyNames, enemyNames);
     }, [currentBuild, myRole, allyNames, enemyNames]);
+
+    // Cargar datos de la base de datos SQLite local al montar
+    useEffect(() => {
+        const loadDb = async () => {
+            try {
+                console.log("🔌 Cargando campeones desde SQLite a través del endpoint...");
+                const res = await fetch('/api/champions');
+                if (res.ok) {
+                    const data = await res.json();
+                    initializeEngineData(data);
+                    console.log("Base de datos SQLite sincronizada con el motor cliente.");
+                } else {
+                    console.warn("No se pudo obtener datos de SQLite, usando fallback estático.");
+                }
+            } catch (e) {
+                console.error("Error cargando base de datos SQLite:", e);
+            }
+        };
+        loadDb();
+    }, []);
 
     // Hook para detectar responsividad en el lado del cliente
     useEffect(() => {
