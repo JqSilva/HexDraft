@@ -4,6 +4,7 @@ import path from 'path';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import { championsRepo } from './champions.repo.js';
 import { db } from './sqlite.js';
+import { configRepo } from './config.repo.js';
 
 export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -191,7 +192,7 @@ export function runMigration() {
         items: JSON.stringify(b.items || {}),
         skills: JSON.stringify(b.skills || {}),
         tags: JSON.stringify(["Default", lane]),
-        special_notes: JSON.stringify({})
+        special_notes: JSON.stringify({ last_update: b.lastUpdate || new Date().toISOString() })
       });
     }
   });
@@ -232,6 +233,14 @@ export function runMigration() {
       });
     });
   });
+
+  try {
+    configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
+    configRepo.setConfig('last_lane_sync_timestamp', new Date().toISOString());
+    console.log("💾 Timestamps de configuración actualizados correctamente.");
+  } catch (err) {
+    console.error("⚠️ Error al actualizar timestamps de configuración:", err);
+  }
 
   console.log("🎉 MIGRACIÓN COMPLETADA CON ÉXITO.");
 }

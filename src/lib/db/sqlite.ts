@@ -128,3 +128,16 @@ db.exec('CREATE INDEX IF NOT EXISTS idx_synergies_champ ON synergies(champion_id
 db.exec('CREATE INDEX IF NOT EXISTS idx_builds_champ ON builds(champion_id);');
 
 console.log('✅ Estructura de base de datos SQLite y tabla config inicializadas correctamente.');
+
+// Si la tabla de campeones está vacía, realizamos una migración inicial desde el JSON de respaldo
+try {
+  const countStmt = db.prepare('SELECT COUNT(*) as count FROM champions');
+  const result = countStmt.get() as { count: number };
+  if (result.count === 0) {
+    console.log('✏️ La base de datos SQLite está vacía. Realizando carga inicial desde JSON...');
+    const { populateDatabase } = await import('./initial-populate.js');
+    populateDatabase(db);
+  }
+} catch (err) {
+  console.error('❌ Error al realizar la carga inicial de datos en SQLite:', err);
+}
