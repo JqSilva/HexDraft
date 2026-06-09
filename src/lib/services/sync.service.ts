@@ -9,6 +9,7 @@ import { db as dbInstance } from '../db/sqlite.js';
 import { championsRepo } from '../db/champions.repo.js';
 import { configRepo } from '../db/config.repo.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
+import { getPathsForBuild } from '../engine/itemEngine.js';
 
 const API_NAME_MAP: Record<string, string> = {
   "Wukong": "MonkeyKing",
@@ -109,13 +110,97 @@ const getBestSecondaryRunes = (arr: any[]) => {
   return [finalRunes[0].Id, finalRunes[1].Id];
 };
 
+function getBestKeystoneForStyle(primaryRunesList: any[], style: string): number | null {
+  if (!primaryRunesList || primaryRunesList.length === 0) return null;
+
+  let preferredTrees: number[] = [];
+  if (style === "Tanque") {
+    preferredTrees = [8400, 8000];
+  } else if (style === "AP On-Hit") {
+    preferredTrees = [8000, 8200, 8100, 8300];
+  } else if (style.startsWith("AP")) {
+    preferredTrees = [8200, 8100, 8300, 8000];
+  } else if (style.includes("Lethality") || style.includes("Pen")) {
+    preferredTrees = [8100, 8300, 8000];
+  } else {
+    preferredTrees = [8000, 8100, 8400];
+  }
+
+  const sorted = [...primaryRunesList].sort((a, b) => b.pickrate - a.pickrate);
+
+  for (const treeId of preferredTrees) {
+    const matched = sorted.find(r => getStyleOfRune(r.Id) === treeId);
+    if (matched) return matched.Id;
+  }
+
+  return sorted[0]?.Id || null;
+}
+
+function getBestRuneForStyleInSlot(arr: any[], styleId: number): number {
+  if (!arr || arr.length === 0) return 0;
+  const filtered = arr.filter(r => getStyleOfRune(r.Id) === styleId);
+  const source = filtered.length > 0 ? filtered : arr;
+  const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
+  return sorted[0]?.Id || 0;
+}
+
+function getBestSecondaryRunesForStyle(arr: any[], primaryStyleId: number) {
+  if (!arr || arr.length === 0) return { subStyleId: 0, selections: [0, 0] };
+  const filtered = arr.filter(r => getStyleOfRune(r.Id) !== primaryStyleId && r.Id !== 0);
+  
+  const groups: Record<number, any[]> = {};
+  filtered.forEach(rune => {
+    const styleId = getStyleOfRune(rune.Id);
+    if (styleId === 0) return;
+    if (!groups[styleId]) groups[styleId] = [];
+    groups[styleId].push(rune);
+  });
+
+  let bestStyleId = 0;
+  let maxStylePower = -1;
+
+  Object.keys(groups).forEach(styleKey => {
+    const styleId = Number(styleKey);
+    const runesInStyle = groups[styleId];
+    const mainRunes = runesInStyle.filter(r => r.pickrate >= 10);
+    const stylePower = mainRunes.reduce((acc, r) => acc + (r.winrate + r.pickrate), 0);
+
+    if (stylePower > maxStylePower && runesInStyle.length >= 2) {
+      maxStylePower = stylePower;
+      bestStyleId = styleId;
+    }
+  });
+
+  if (bestStyleId === 0) {
+    const fallbackGroups = Object.keys(groups).sort((a, b) => {
+      const sumA = groups[Number(a)].reduce((acc, r) => acc + r.pickrate, 0);
+      const sumB = groups[Number(b)].reduce((acc, r) => acc + r.pickrate, 0);
+      return sumB - sumA;
+    });
+    bestStyleId = Number(fallbackGroups[0]);
+  }
+
+  if (!groups[bestStyleId] || groups[bestStyleId].length < 2) {
+    return { subStyleId: 0, selections: [0, 0] };
+  }
+
+  const finalRunes = groups[bestStyleId].sort((a, b) => 
+    (b.winrate + b.pickrate) - (a.winrate + a.pickrate)
+  );
+
+  return {
+    subStyleId: bestStyleId,
+    selections: [finalRunes[0].Id, finalRunes[1].Id]
+  };
+}
+
 const getBestCoreBuild = (coreBuilds: any) => {
   if (!coreBuilds) return [];
-  if (coreBuilds.coreItem5 && coreBuilds.coreItem5.length > 0) {
-    return [...coreBuilds.coreItem5].sort((a, b) => b.pickrate - a.pickrate)[0].itemIds;
-  }
   if (coreBuilds.coreItem3 && coreBuilds.coreItem3.length > 0) {
-    return [...coreBuilds.coreItem3].sort((a, b) => b.pickrate - a.pickrate)[0].itemIds;
+    return [...coreBuilds.coreItem3].sort((a: any, b: any) => b.pickrate - a.pickrate)[0].itemIds.slice(0, 3);
+  }
+  if (coreBuilds.coreItem5 && coreBuilds.coreItem5.length > 0) {
+    return [...coreBuilds.coreItem5].sort((a: any, b: any) => b.pickrate - a.pickrate)[0].itemIds.slice(0, 3);
   }
   return [];
 };
@@ -124,6 +209,106 @@ const getMostPopularItem = (items: any[], key: string) => {
   if (!items || items.length === 0) return 0;
   return [...items].sort((a, b) => b.pickrate - a.pickrate)[0][key];
 };
+
+function classifyCoreBuild(itemIds: number[]): { style: string; tags: string[] } {
+  const tags: string[] = [];
+  const getBaseId = (id: number) => (id >= 220000 && id < 230000) ? id - 220000 : id;
+
+  const cleanIds = itemIds.map(getBaseId);
+
+  // Mapeos de categorías
+  const apItems = [3089, 3152, 3115, 3102, 3157, 3165, 6653, 3001, 3003, 3007, 3092, 3100, 3118, 3185, 4629, 3135, 3137, 4633, 2510, 4645];
+  const tankItems = [3075, 3110, 3143, 3068, 2504, 6665, 3065, 3083, 6664, 6662, 3193, 3109, 2520];
+  const lethalityItems = [6697, 6699, 6696, 3179, 3814, 3142, 6695, 6698, 6693];
+  const bruiserItems = [6692, 3071, 6333, 3053, 3156, 3161, 3078, 6610, 6631, 3074, 6609, 3026, 2501];
+  const adcItems = [3031, 3046, 3094, 3085, 3091, 3124, 3153, 6672, 3033, 3035, 3036, 4642];
+
+  // Penetraciones / Utilidades para tags
+  const armorPenItems = [3071, 6694, 3035, 3036, 4642];
+  const magicPenItems = [3135, 3137, 4645];
+  const mrItems = [2504, 3065, 6664, 3102, 6665, 3140, 3156];
+  const armorItems = [3110, 3143, 3075, 3157, 6333, 3026, 3068, 6662, 6665];
+  const sustainItems = [3153, 3072, 3074, 3156, 3083, 4633];
+
+  let apCount = 0;
+  let tankCount = 0;
+  let lethalityCount = 0;
+  let bruiserCount = 0;
+  let adcCount = 0;
+
+  let hasArmorPen = false;
+  let hasMagicPen = false;
+  let hasMR = false;
+  let hasArmor = false;
+  let hasSustain = false;
+
+  cleanIds.forEach(id => {
+    if (apItems.includes(id)) apCount++;
+    if (tankItems.includes(id)) tankCount++;
+    if (lethalityItems.includes(id)) lethalityCount++;
+    if (bruiserItems.includes(id)) bruiserCount++;
+    if (adcItems.includes(id)) adcCount++;
+
+    if (armorPenItems.includes(id) || id === 6694) hasArmorPen = true;
+    if (magicPenItems.includes(id)) hasMagicPen = true;
+    if (mrItems.includes(id)) hasMR = true;
+    if (armorItems.includes(id)) hasArmor = true;
+    if (sustainItems.includes(id)) hasSustain = true;
+  });
+
+  if (hasArmorPen) tags.push("anti-tank");
+  if (hasMR) tags.push("anti-AP");
+  if (hasArmor) tags.push("anti-AD");
+  if (hasSustain) tags.push("sustain");
+
+  let style = "General";
+  const max = Math.max(apCount, tankCount, lethalityCount, bruiserCount, adcCount);
+
+  if (max === 0) {
+    style = "General";
+  } else if (apCount === max) {
+    if (adcCount > 0 || cleanIds.includes(3115)) {
+      style = "AP On-Hit";
+      tags.push("ap", "on-hit");
+    } else {
+      style = "AP";
+      tags.push("ap");
+    }
+    if (tankCount > 0) tags.push("tank");
+  } else if (tankCount === max) {
+    style = "Tanque";
+    tags.push("tank");
+    if (apCount > 0) tags.push("ap");
+    if (bruiserCount > 0) tags.push("bruiser");
+  } else if (lethalityCount === max) {
+    style = "Lethality";
+    tags.push("lethality");
+    if (hasArmorPen) {
+      style = "Lethality/Pen";
+    }
+    if (bruiserCount > 0) tags.push("bruiser");
+  } else if (bruiserCount === max) {
+    style = "AD/Bruiser";
+    tags.push("bruiser");
+    if (lethalityCount > 0) tags.push("lethality");
+    if (tankCount > 0) tags.push("tank");
+  } else if (adcCount === max) {
+    style = "On-Hit";
+    tags.push("on-hit");
+  } else {
+    if (lethalityCount > 0) {
+      style = "Lethality";
+      tags.push("lethality");
+    } else if (bruiserCount > 0) {
+      style = "AD/Bruiser";
+      tags.push("bruiser");
+    } else {
+      style = "General";
+    }
+  }
+
+  return { style, tags };
+}
 
 // --- COMPROBAR SI LA BUILD ESTÁ AL DÍA ---
 function isChampionBuildUpToDate(champId: number, version: string, syncPeriodDays: number): boolean {
@@ -275,9 +460,18 @@ async function scrapeSingleChampion(
   const primaryStyleId = getStyleOfRune(bestKeystone);
   const subStyleId = getStyleOfRune(secondaryRunes[0]);
   const bestStarter = data.startItems?.sort((a: any, b: any) => b.pickrate - a.pickrate)[0]?.startItems || [];   
-  const bestBootsId = getMostPopularItem(data.boots, 'itemId');
+  const bestBootsId = getMostPopularItem(data.boots, 'itemId') || 3047;
   const bestCoreItems = getBestCoreBuild(data.coreBuilds);
   const bestSummoners = getBestSummoners(data.summoners);
+
+  const champId = nameIdMap[normalizeKey(name)];
+  const damageType = champId ? (CHAMPIONS_DB[champId]?.damageType || "AD") : "AD";
+  const defaultPaths = getPathsForBuild(
+    data.items || {},
+    bestCoreItems,
+    damageType,
+    bestBootsId
+  );
 
   cData.buildData = {
     patch: version,
@@ -302,13 +496,14 @@ async function scrapeSingleChampion(
     items: {
       starter: bestStarter,
       boots: { id: bestBootsId },
-      coreSlots: bestCoreItems.map((id: number) => ({ id }))
+      core: bestCoreItems,
+      paths: defaultPaths,
+      slotItems: data.items
     },
     skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
   };
 
   // Guardar en SQLite en tiempo real
-  const champId = nameIdMap[normalizeKey(name)];
   if (champId) {
     const currentChampStmt = dbInstance.prepare('SELECT tier, win_rate FROM champions WHERE id = ?');
     const current = currentChampStmt.get(champId) as any;
@@ -387,6 +582,8 @@ async function scrapeSingleChampion(
     if (cData.buildData) {
       championsRepo.clearBuilds(champId);
       const b = cData.buildData;
+      
+      // 1. Guardar build por defecto (is_default = 1)
       championsRepo.saveBuild({
         champion_id: champId,
         build_name: "Recomendada",
@@ -397,7 +594,115 @@ async function scrapeSingleChampion(
         items: JSON.stringify(b.items || {}),
         skills: JSON.stringify(b.skills || {}),
         tags: JSON.stringify(["Default", cData.lane]),
-        special_notes: JSON.stringify({ last_update: new Date().toISOString() })
+        special_notes: JSON.stringify({ 
+          last_update: new Date().toISOString(),
+          winrate: b.skills?.winrate || 50.0,
+          pickrate: b.skills?.pickrate || 100.0,
+          style: "Default"
+        })
+      });
+
+      // 2. Guardar builds candidatas (is_default = 0)
+      let coreSource = data.coreBuilds?.coreItem3 || [];
+      if (coreSource.length === 0 && data.coreBuilds?.coreItem5) {
+        coreSource = data.coreBuilds.coreItem5;
+      }
+      
+      const sortedCandidates = [...coreSource].sort((a: any, b: any) => b.pickrate - a.pickrate);
+      const minPickrate = 0.7;
+
+      const seenItemSignatures = new Set<string>();
+      const seenTagSignatures = new Set<string>();
+      const uniqueCandidates: any[] = [];
+
+      for (const cand of sortedCandidates) {
+        if (cand.pickrate < minPickrate) continue;
+        if (!cand.itemIds || cand.itemIds.length < 3) continue;
+
+        const itemIds3 = cand.itemIds.slice(0, 3);
+        const itemSig = [...itemIds3].sort().join(',');
+        if (seenItemSignatures.has(itemSig)) continue;
+
+        const { style, tags } = classifyCoreBuild(itemIds3);
+        const signature = [...tags].sort().join(',');
+
+        if (!seenTagSignatures.has(signature)) {
+          seenItemSignatures.add(itemSig);
+          seenTagSignatures.add(signature);
+          uniqueCandidates.push({ 
+            cand: { ...cand, itemIds: itemIds3 }, 
+            style, 
+            tags 
+          });
+        }
+        if (uniqueCandidates.length >= 4) {
+          break;
+        }
+      }
+
+      let candidateIdx = 1;
+      uniqueCandidates.forEach(({ cand, style, tags }) => {
+        // Obtener la mejor runa clave para este estilo específico
+        const candKeystone = getBestKeystoneForStyle(r.primaryRuneId, style) || bestKeystone;
+        const candPrimaryStyleId = getStyleOfRune(candKeystone);
+        
+        let candRunes = { ...b.runes };
+        
+        if (candPrimaryStyleId !== 0) {
+          // Obtener las mejores runas de los slots 2, 3, y 4 de la misma rama primaria
+          const rune2 = getBestRuneForStyleInSlot(r.primaryRuneId2, candPrimaryStyleId);
+          const rune3 = getBestRuneForStyleInSlot(r.primaryRuneId3, candPrimaryStyleId);
+          const rune4 = getBestRuneForStyleInSlot(r.primaryRuneId4, candPrimaryStyleId);
+          
+          // Obtener las mejores runas de la rama secundaria que no coincidan con la rama primaria
+          const sec = getBestSecondaryRunesForStyle(r.secondaryRuneId, candPrimaryStyleId);
+          
+          candRunes = {
+            primaryStyleId: candPrimaryStyleId,
+            subStyleId: sec.subStyleId || subStyleId,
+            selections: [
+              candKeystone,
+              rune2 || getBestRuneSlot(r.primaryRuneId2),
+              rune3 || getBestRuneSlot(r.primaryRuneId3),
+              rune4 || getBestRuneSlot(r.primaryRuneId4),
+              ...sec.selections
+            ],
+            shards: b.runes.shards || []
+          };
+        }
+
+        const candPaths = getPathsForBuild(
+          data.items || {},
+          cand.itemIds,
+          damageType,
+          bestBootsId || 3047
+        );
+
+        championsRepo.saveBuild({
+          champion_id: champId,
+          build_name: `Core ${style} #${candidateIdx}`,
+          is_default: 0,
+          patch: version,
+          summoners: JSON.stringify(b.summoners || []),
+          runes: JSON.stringify(candRunes),
+          items: JSON.stringify({
+            starter: b.items.starter,
+            boots: b.items.boots,
+            core: cand.itemIds,
+            paths: candPaths,
+            slotItems: data.items
+          }),
+          skills: JSON.stringify(b.skills || {}),
+          tags: JSON.stringify(tags),
+          special_notes: JSON.stringify({
+            last_update: new Date().toISOString(),
+            winrate: cand.winrate,
+            pickrate: cand.pickrate,
+            style: style
+          })
+        });
+
+        candidateIdx++;
       });
     }
   }
@@ -464,6 +769,15 @@ export async function syncMetaAndBuilds(
 
   // Guardar Tiers y Winrates actualizados en SQLite (OP.GG)
   writeLog("💾 Sincronizando tiers y winrates con SQLite...");
+  
+  const roleToLaneMap: Record<string, string> = {
+    'top': 'TOP',
+    'jungle': 'JUNGLE',
+    'mid': 'MIDDLE',
+    'adc': 'BOTTOM',
+    'support': 'UTILITY'
+  };
+
   Object.keys(metaCache).forEach(role => {
     const list = metaCache[role] || [];
     list.forEach((metaChamp: any) => {
@@ -474,11 +788,19 @@ export async function syncMetaAndBuilds(
       const currentChampStmt = dbInstance.prepare('SELECT lane, scaling_type FROM champions WHERE id = ?');
       const current = currentChampStmt.get(champId) as any;
 
+      const roleLane = roleToLaneMap[role];
+      const currentLane = current?.lane || "UNKNOWN";
+
+      // Omitir si no coincide con el carril principal
+      if (currentLane !== "UNKNOWN" && currentLane !== roleLane) {
+        return;
+      }
+
       championsRepo.saveChampion({
         id: champId,
         name: baseChamp.name,
         lane: current?.lane || "UNKNOWN",
-        tier: parseInt(metaChamp.rank) || 5,
+        tier: parseInt(metaChamp.rank) || 99,
         win_rate: parseFloat(metaChamp.winRate) || 50.0,
         scaling_type: current?.scaling_type || "Mid",
         damage_type: baseChamp.damageType || "Adaptive",

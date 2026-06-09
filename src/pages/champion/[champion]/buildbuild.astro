@@ -1,0 +1,28 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { ChampionsStats } from '../../../components/react/ChampionsStats';
+import { championsRepo } from '../../../lib/db/champions.repo';
+
+const { champion } = Astro.params;
+const lane = Astro.url.searchParams.get('lane') || 'ALL';
+
+const nameMap = championsRepo.getChampionIdNameMap();
+const normalizedParam = (champion || '').toLowerCase().replace(/[^a-z0-9]/g, "");
+const championId = nameMap[normalizedParam];
+---
+
+<Layout title={`HexDraft | Build de ${champion}`}>
+  <main class="w-full flex flex-col">
+    {championId ? (
+      <ChampionsStats client:only="react" initialChampionId={championId} initialLane={lane} />
+    ) : (
+      <div class="p-8 text-center text-slate-400 min-h-[400px] flex flex-col items-center justify-center">
+        <h1 class="text-white text-2xl font-black uppercase tracking-widest mb-4">Campeón no encontrado</h1>
+        <p class="text-sm font-semibold">El campeón "{champion}" no existe en nuestra base de datos.</p>
+        <a href="/champions" class="inline-block mt-6 px-6 py-2.5 bg-purple-accent hover:bg-purple-accent-hover text-white text-xs uppercase font-black tracking-widest rounded-sm transition-all duration-200">
+          ← Volver a Estadísticas
+        </a>
+      </div>
+    )}
+  </main>
+</Layout>

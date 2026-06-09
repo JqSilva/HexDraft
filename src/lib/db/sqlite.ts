@@ -20,7 +20,7 @@ db.exec(`
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     lane TEXT,
-    tier INTEGER DEFAULT 5,
+    tier INTEGER DEFAULT 99,
     win_rate REAL DEFAULT 50.0,
     scaling_type TEXT DEFAULT 'Mid',
     damage_type TEXT DEFAULT 'Adaptive',

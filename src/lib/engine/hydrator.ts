@@ -27,8 +27,8 @@ export function hydrateAsset(type: 'runes' | 'items' | 'shards' | 'summoners', i
         return {
             id: Number(id),
             name: data?.name || "Runa",
-            // Limpiamos el prefijo si tu JSON ya tiene "perk-images/" o similar
-            icon: data ? `${CD_BASE}${data.icon}` : ""
+            // Limpiamos el prefijo si tu JSON ya tiene "perk-images/" o similar y lo convertimos a minúsculas
+            icon: data ? `${CD_BASE}${data.icon.toLowerCase()}` : ""
         };
     }
 

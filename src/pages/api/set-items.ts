@@ -29,17 +29,30 @@ export const POST: APIRoute = async ({ request }) => {
             associatedChampions: [Number(championId)], // Vincula el set al campeón
             blocks: [
                 {
-                    type: "Items Iniciales",
-                    items: items.starter.map((i: any) => ({ id: String(i.id || i), count: 1 }))
+                    type: "Items Iniciales y Botas",
+                    items: [
+                        ...(items.starter || []).map((i: any) => ({ id: String(i.id || i), count: 1 })),
+                        ...(items.boots ? [{ id: String(items.boots.id || items.boots), count: 1 }] : [])
+                    ]
                 },
                 {
-                    type: "Build Recomendada",
-                    items: items.core.map((i: any) => ({ id: String(i.id || i), count: 1 }))
+                    type: "Build Core Recomendada",
+                    items: (items.core || []).map((i: any) => ({ id: String(i.id || i), count: 1 }))
                 },
-                {
-                    type: "Botas Recomendadas",
-                    items: [{ id: String(items.boots.id || items.boots), count: 1 }]
-                },
+                ...(items.paths ? [
+                    {
+                        type: "Si vas Bien (Snowball)",
+                        items: (items.paths.snowball || []).map((i: any) => ({ id: String(i.id || i), count: 1 }))
+                    },
+                    {
+                        type: "Si vas Normal",
+                        items: (items.paths.neutral || []).map((i: any) => ({ id: String(i.id || i), count: 1 }))
+                    },
+                    {
+                        type: "Si vas Mal (Defensivo)",
+                        items: (items.paths.behind || []).map((i: any) => ({ id: String(i.id || i), count: 1 }))
+                    }
+                ] : []),
                 {
                     type: `Orden de habilidades: ${skillOrder}`,
                     items: [

@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { ChampionsStats } from '../components/react/ChampionsStats';
+---
+
+<Layout title="HexDraft | Campeones & Estadísticas">
+  <main class="w-full flex flex-col">
+    <ChampionsStats client:only="react" />
+  </main>
+</Layout>

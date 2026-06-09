@@ -1,5 +1,4 @@
 // src/lib/engine/dataProvider.ts
-import { object } from 'astro:schema';
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
 import fs from 'fs';
 import path from 'path';

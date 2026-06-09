@@ -1,6 +1,7 @@
 import { DATA_BY_LANE,ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
 import { NAME_TO_ID } from './constants';
 import { hydrateAsset } from './hydrator';
+import { getAdaptedBuild } from './itemEngine';
 
 
 export interface Recommendation {
@@ -382,7 +383,18 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 }
 
 
-export function getSingleChampionBuild(championId: number): any {
+export function getSingleChampionBuild(
+    championId: number,
+    myTeamIds: number[] = [],
+    theirTeamIds: number[] = [],
+    myRole: string = 'jungle'
+): any {
+    // Si se pasan composiciones, calcular la build adaptada contextualmente
+    if (myTeamIds.length > 0 || theirTeamIds.length > 0) {
+        const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole);
+        if (adapted) return adapted;
+    }
+
     const name = getNameFromId(championId);
     if (!name) return null;
 
@@ -404,7 +416,12 @@ export function getSingleChampionBuild(championId: number): any {
       .join(" > ")
     : "Q > W > E";
 
-
+    // Si la build guardada tiene paths pre-calculados, úsalos
+    const paths = b.items.paths || {
+        snowball: [],
+        neutral: [],
+        behind: []
+    };
 
     return {
         name: champ.name,
@@ -420,7 +437,8 @@ export function getSingleChampionBuild(championId: number): any {
             items: {
                 boots: hydrateAsset('items', b.items.boots.id),
                 core: b.items.coreSlots.map((i: any) => hydrateAsset('items', i.id)),
-                starter: b.items.starter.map((id: number) => hydrateAsset('items', id))
+                starter: b.items.starter.map((id: number) => hydrateAsset('items', id)),
+                paths: paths
             },
             // Corrección de undefined en skills
             skillOrder: fullOrder

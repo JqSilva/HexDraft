@@ -253,26 +253,28 @@ export const championsRepo = {
       });
 
       // 3. Obtener la build por defecto (para el motor actual)
-      const buildStmt = db.prepare(`
+      // 3. Obtener todas las builds
+      const buildsStmt = db.prepare(`
         SELECT * FROM builds 
-        WHERE champion_id = ? AND is_default = 1 
-        LIMIT 1
+        WHERE champion_id = ?
+        ORDER BY is_default DESC
       `);
-      const rawBuild = buildStmt.get(champId) as DbBuild | undefined;
+      const rawBuilds = buildsStmt.all(champId) as DbBuild[];
 
-      let buildData = null;
-      if (rawBuild) {
-        buildData = {
-          patch: rawBuild.patch,
-          lastUpdate: new Date().toISOString(),
-          summoners: JSON.parse(rawBuild.summoners),
-          runes: JSON.parse(rawBuild.runes),
-          items: JSON.parse(rawBuild.items),
-          skills: JSON.parse(rawBuild.skills),
-          tags: JSON.parse(rawBuild.tags),
-          special_notes: JSON.parse(rawBuild.special_notes)
-        };
-      }
+      const builds = rawBuilds.map(b => ({
+        id: b.id,
+        build_name: b.build_name,
+        is_default: b.is_default === 1,
+        patch: b.patch,
+        summoners: JSON.parse(b.summoners),
+        runes: JSON.parse(b.runes),
+        items: JSON.parse(b.items),
+        skills: JSON.parse(b.skills),
+        tags: JSON.parse(b.tags),
+        special_notes: JSON.parse(b.special_notes)
+      }));
+
+      const buildData = builds.find(b => b.is_default) || builds[0] || null;
 
       // Reconstruir curva de winrate dummy o basada en base de datos en el futuro
       const tagsList = JSON.parse(c.tags);
@@ -299,7 +301,8 @@ export const championsRepo = {
         counters: counters.sort((a, b) => a.dominanceScore - b.dominanceScore),
         godMatchups: godMatchups.sort((a, b) => b.dominanceScore - a.dominanceScore),
         synergies,
-        buildData
+        buildData,
+        builds
       };
     });
   }

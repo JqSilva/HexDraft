@@ -66,7 +66,7 @@ export function runMigration() {
       id: c.id,
       name: c.name,
       lane: extra?.lane || "UNKNOWN",
-      tier: 5, // Valor por defecto
+      tier: 99, // Valor por defecto
       win_rate: 50.0, // Valor por defecto
       scaling_type: "Mid", // Valor por defecto, se calcula luego
       damage_type: c.damageType || "Adaptive",
@@ -113,7 +113,7 @@ export function runMigration() {
       id: champId,
       name: baseChamp.name,
       lane: lane,
-      tier: 5,
+      tier: 99,
       win_rate: 50.0,
       scaling_type: scalingType,
       damage_type: baseChamp.damageType || "Adaptive",
@@ -199,6 +199,15 @@ export function runMigration() {
 
   // 4. Procesar Tiers y Winrates desde meta-cache.json (OP.GG)
   console.log("📊 Migrando tiers y winrates desde meta-cache...");
+  
+  const roleToLaneMap: Record<string, string> = {
+    'top': 'TOP',
+    'jungle': 'JUNGLE',
+    'mid': 'MIDDLE',
+    'adc': 'BOTTOM',
+    'support': 'UTILITY'
+  };
+
   Object.keys(metaCache).forEach(role => {
     const list = metaCache[role] || [];
     list.forEach((metaChamp: any) => {
@@ -209,14 +218,23 @@ export function runMigration() {
       const baseChamp = CHAMPIONS_DB[champId];
       const nameKey = baseChamp.name;
       const extra = counterSynergies[nameKey];
-      const tierNum = parseInt(metaChamp.rank) || 5;
+
+      const dbChampStmt = db.prepare('SELECT * FROM champions WHERE id = ?');
+      const current = dbChampStmt.get(champId) as any;
+
+      const roleLane = roleToLaneMap[role];
+      const currentLane = current?.lane || extra?.lane || "UNKNOWN";
+
+      // Omitir actualización si el rol del meta no coincide con el rol principal
+      if (currentLane !== "UNKNOWN" && currentLane !== roleLane) {
+        return;
+      }
+
+      const tierNum = parseInt(metaChamp.rank) || 99;
       const winRateNum = parseFloat(metaChamp.winRate) || 50.0;
 
       // Nota: Volvemos a guardar el campeón con tier y winrate actualizados
       // SQLite se encarga del ON CONFLICT UPDATE
-      const dbChampStmt = db.prepare('SELECT * FROM champions WHERE id = ?');
-      const current = dbChampStmt.get(champId) as any;
-
       championsRepo.saveChampion({
         id: champId,
         name: baseChamp.name,

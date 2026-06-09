@@ -332,32 +332,45 @@ export const DraftPage = () => {
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine);
 
                     if (myId > 0) {
-                        if (myId !== lastImportedIdRef.current) {
-                            lastImportedIdRef.current = myId;
-                            console.log(`🎯 Pick detectado: ${myId}`);
-
-                            const pickedRec = picks.find(r => r.id === myId);
-                            if (pickedRec) {
-                                console.log("✅ Razones capturadas con éxito");
-                                setSelectedRecommendation(pickedRec);
-                                localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
-                            }
-
-                            const buildData = getSingleChampionBuild(myId);
-                            if (buildData) {
-                                setCurrentBuild(buildData);
+                        // 1. Calcular y actualizar la build en la interfaz (React state)
+                        const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
+                        if (buildData && (!currentBuild || currentBuild.name !== buildData.name || JSON.stringify(currentBuild.build.items.core) !== JSON.stringify(buildData.build.items.core))) {
+                            setCurrentBuild(buildData);
+                            if (view !== 'reasons' && view !== 'build') {
                                 setView('build');
-                                await importToClient({ ...buildData, id: myId });
                             }
+                        }
 
-                            const champName = getNameFromId(myId);
+                        // 2. Cargar razones de recomendación (una sola vez)
+                        const pickedRec = picks.find(r => r.id === myId);
+                        if (pickedRec && !selectedRecommendation) {
+                            console.log("✅ Razones capturadas con éxito");
+                            setSelectedRecommendation(pickedRec);
+                            localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
+                        }
+
+                        // 3. Cargar datos tácticos adicionales (una sola vez)
+                        const champName = getNameFromId(myId);
+                        if (champName && !tacticalData) {
                             fetch(`/api/tactical-data?champion=${champName}&role=${currentRole}`)
                                 .then(res => res.json())
-                                .then(data => {
-                                    setTacticalData(data);
-                                    console.log("🔥 Data táctica cargada:", data);
+                                .then(tData => {
+                                    setTacticalData(tData);
+                                    console.log("🔥 Data táctica cargada:", tData);
                                 })
                                 .catch(err => console.error("Error táctico:", err));
+                        }
+
+                        // 4. Exportación definitiva al LCU de LoL: SOLO si los 10 campeones están seleccionados y confirmados (no hovers)
+                        const allPicks = data.actions?.flat().filter((a: any) => a.type === 'pick') || [];
+                        const allTenLocked = allPicks.length === 10 && allPicks.every((a: any) => a.completed);
+
+                        if (allTenLocked && myId !== lastImportedIdRef.current) {
+                            lastImportedIdRef.current = myId;
+                            console.log(`🎯 Importación definitiva al LCU para el pick ${myId} (10 picks confirmados)`);
+                            if (buildData) {
+                                await importToClient({ ...buildData, id: myId });
+                            }
                         }
                     } else {
                         const fingerprint = `${data.isBanPhase}-${cleanMyTeam.join(',')}-${myHoverIntent}`;
