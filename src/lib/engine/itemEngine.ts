@@ -85,6 +85,23 @@ export function getAdaptedBuild(
     return getFallbackStaticBuild(champ);
   }
 
+  // --- ANALIZAR COMPOSICIÓN ALIADA (PARA BALANCEAR DAÑO) ---
+  let allyADCount = 0;
+  let allyAPCount = 0;
+  let hasOtherAllies = false;
+
+  myTeamIds.forEach(id => {
+    if (id === championId) return; // Omitirse a sí mismo
+    const allyName = getNameFromId(id);
+    if (!allyName) return;
+    const ally = ENRICHED_DB[allyName];
+    if (!ally) return;
+
+    hasOtherAllies = true;
+    if (ally.damageType === 'AD') allyADCount++;
+    if (ally.damageType === 'AP') allyAPCount++;
+  });
+
   // --- ANALIZAR COMPOSICIÓN ENEMIGA ---
   let enemyADCount = 0;
   let enemyAPCount = 0;
@@ -111,7 +128,7 @@ export function getAdaptedBuild(
 
   const damageType = champ.damageType || 'AD';
 
-  // --- 1. SELECCIÓN DEL CORE BUILD (SCORING) ---
+  // --- 1. SELECCIÓN DEL CORE BUILD + RUNAS (SCORING UNIFICADO) ---
   let bestBuild = champ.builds.find((b: any) => b.is_default) || champ.builds[0];
   let maxScore = -9999;
 
@@ -131,6 +148,18 @@ export function getAdaptedBuild(
     const hasMR = coreItems.some((id: number) => isItemInGroup(id, ITEM_CATEGORIES.MAGIC_RESIST));
     const hasArmor = coreItems.some((id: number) => isItemInGroup(id, ITEM_CATEGORIES.ARMOR));
     const hasGrievous = coreItems.some((id: number) => isItemInGroup(id, ITEM_CATEGORIES.GRIEVOUS_WOUNDS));
+
+    // Balanceo de daño del equipo aliado (Playstyle adecuado para la comp)
+    if (hasOtherAllies) {
+      // Si nuestro equipo no tiene daño mágico (0 AP), favorecer fuertemente builds AP
+      if (allyAPCount === 0 && (tags.includes("ap") || tags.includes("AP"))) {
+        score += 25.0;
+      }
+      // Si nuestro equipo no tiene daño físico (0 AD), favorecer fuertemente builds AD/Lethality/Bruiser
+      if (allyADCount === 0 && (tags.includes("bruiser") || tags.includes("lethality") || tags.includes("on-hit"))) {
+        score += 25.0;
+      }
+    }
 
     // Ajustes por Tanques enemigos
     if (enemyTankCount >= 1) {
@@ -155,6 +184,41 @@ export function getAdaptedBuild(
     if (enemyADCount >= 3) {
       if (tags.includes("anti-AD") || hasArmor) {
         score += 12.0;
+      }
+    }
+
+    // Adaptación específica de las RUNAS correspondientes a esta build
+    if (b.runes) {
+      const keystoneId = Number(b.runes.selections?.[0]);
+      const primaryStyle = Number(b.runes.primaryStyleId);
+      const secondaryStyle = Number(b.runes.subStyleId);
+
+      // Si hay 2 o más tanques enemigos, Conqueror (8010) o PTA (8005) son óptimas
+      if (enemyTankCount >= 2) {
+        if (keystoneId === 8010 || keystoneId === 8005) {
+          score += 10.0;
+        }
+        // Penalizar runas puramente de burst contra tanques
+        if (keystoneId === 8112 || keystoneId === 9923) {
+          score -= 6.0;
+        }
+      }
+
+      // Si el enemigo no tiene tanques, favorecer runas de burst/asesinato rápido
+      if (enemyTankCount === 0 && (enemyADCount + enemyAPCount) >= 3) {
+        if (keystoneId === 8112 || keystoneId === 8369 || keystoneId === 8128 || keystoneId === 9923) {
+          score += 8.0;
+        }
+      }
+
+      // Si hay mucho CC enemigo, Phase Rush (8230) es una excelente vía de escape, o el árbol de Valor
+      if (enemyCCCount >= 3) {
+        if (keystoneId === 8230) {
+          score += 12.0;
+        }
+        if (primaryStyle === 8400 || secondaryStyle === 8400) {
+          score += 6.0;
+        }
       }
     }
 
