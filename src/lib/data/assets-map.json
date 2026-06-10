@@ -272,6 +272,170 @@
     "9923": {
       "name": "Lluvia de Espadas",
       "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png"
+    },
+    "8415": {
+      "name": "The Arcane Colossus",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8004": {
+      "name": "The Brazen Perfect",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8220": {
+      "name": "The Calamity",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8016": {
+      "name": "The Merciless Elite",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8339": {
+      "name": "Celestial Body",
+      "icon": "perk-images/Styles/Inspiration/CelestialBody/CelestialBody.png"
+    },
+    "8435": {
+      "name": "Mirror Shell",
+      "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png"
+    },
+    "8115": {
+      "name": "The Aether Blade",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8359": {
+      "name": "Kleptomancy",
+      "icon": "perk-images/Styles/Inspiration/Kleptomancy/Kleptomancy.png"
+    },
+    "5003": {
+      "name": "Magic Resist",
+      "icon": "perk-images/StatMods/StatModsMagicResIcon.png"
+    },
+    "8120": {
+      "name": "Ghost Poro",
+      "icon": "perk-images/Styles/Domination/GhostPoro/GhostPoro.png"
+    },
+    "8134": {
+      "name": "Ingenious Hunter",
+      "icon": "perk-images/Styles/Domination/IngeniousHunter/IngeniousHunter.png"
+    },
+    "8454": {
+      "name": "The Leviathan",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8207": {
+      "name": "The Cryptic",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "5012": {
+      "name": "Resist Scaling",
+      "icon": "perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png"
+    },
+    "8109": {
+      "name": "The Wicked Maestro ",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "5002": {
+      "name": "Armor",
+      "icon": "perk-images/StatMods/StatModsArmorIcon.png"
+    },
+    "5011": {
+      "name": "Health",
+      "icon": "perk-images/StatMods/StatModsHealthScalingIcon.png"
+    },
+    "5013": {
+      "name": "Tenacity and Slow Resist",
+      "icon": "perk-images/StatMods/StatModsTenacityIcon.png"
+    },
+    "8414": {
+      "name": "The Behemoth",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "5008": {
+      "name": "Adaptive Force",
+      "icon": "perk-images/StatMods/StatModsAdaptiveForceIcon.png"
+    },
+    "8320": {
+      "name": "The Timeless",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8319": {
+      "name": "The Stargazer",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "5001": {
+      "name": "Health Scaling",
+      "icon": "perk-images/StatMods/StatModsHealthPlusIcon.png"
+    },
+    "8430": {
+      "name": "Iron Skin",
+      "icon": "perk-images/Styles/Resolve/IronSkin/IronSkin.png"
+    },
+    "5007": {
+      "name": "Ability Haste",
+      "icon": "perk-images/StatMods/StatModsCDRScalingIcon.png"
+    },
+    "8114": {
+      "name": "The Immortal Butcher",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8318": {
+      "name": "The Ruthless Visionary",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "7000": {
+      "name": "Template",
+      "icon": "perk-images/Template/7000.png"
+    },
+    "8006": {
+      "name": "The Eternal Champion",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8416": {
+      "name": "The Enlightened Titan",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "5005": {
+      "name": "Attack Speed",
+      "icon": "perk-images/StatMods/StatModsAttackSpeedIcon.png"
+    },
+    "8138": {
+      "name": "Eyeball Collection",
+      "icon": "perk-images/Styles/Domination/EyeballCollection/EyeballCollection.png"
+    },
+    "5010": {
+      "name": "Move Speed",
+      "icon": "perk-images/StatMods/StatModsMovementSpeedIcon.png"
+    },
+    "8127": {
+      "name": "The Twisted Surgeon",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8205": {
+      "name": "The Incontestable Spellslinger",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8124": {
+      "name": "Predator",
+      "icon": "perk-images/Styles/Domination/Predator/Predator.png"
+    },
+    "8007": {
+      "name": "The Savant",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8136": {
+      "name": "Zombie Ward",
+      "icon": "perk-images/Styles/Domination/ZombieWard/ZombieWard.png"
+    },
+    "8208": {
+      "name": "The Ancient One",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8472": {
+      "name": "Chrysalis",
+      "icon": "perk-images/Styles/Resolve/Chrysalis/Chrysalis.png"
+    },
+    "8344": {
+      "name": "The Elegant Duelist ",
+      "icon": "perk-images/Styles/RunesIcon.png"
     }
   },
   "items": {
@@ -1041,7 +1205,7 @@
       "name": "Proyectiles Cazademonios",
       "description": "",
       "gold": 2650,
-      "icon": "2512.png"
+      "icon": "assets/items/icons2d/2512_adcallin.png"
     },
     "2517": {
       "name": "Hambre Infinita",
@@ -4525,19 +4689,27 @@
     },
     "5007": {
       "name": "Aceleración de Habilidad",
-      "icon": "StatMods/StatModsCDRIcon.png"
+      "icon": "StatMods/StatModsCDRScalingIcon.png"
     },
     "5008": {
       "name": "Fuerza Adaptable",
       "icon": "StatMods/StatModsAdaptiveForceIcon.png"
     },
+    "5010": {
+      "name": "Velocidad de Movimiento",
+      "icon": "StatMods/StatModsMovementSpeedIcon.png"
+    },
     "5011": {
-      "name": "Vida",
+      "name": "Vida Progresiva",
       "icon": "StatMods/StatModsHealthScalingIcon.png"
     },
+    "5012": {
+      "name": "Tenacidad y Resistencia a Ralentizaciones",
+      "icon": "StatMods/StatModsTenacityIcon.png"
+    },
     "5013": {
-      "name": "Tenacidad y Vida",
-      "icon": "StatMods/StatModsHealthScalingIcon.png"
+      "name": "Vida",
+      "icon": "StatMods/StatModsHealthPlusIcon.png"
     }
   },
   "runeToStyle": {

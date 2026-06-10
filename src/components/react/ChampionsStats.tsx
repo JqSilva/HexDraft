@@ -75,7 +75,7 @@ const RUNE_TREES: Record<number, {
     rows: [
       [8005, 8008, 8021, 8010],
       [9101, 9111, 8009],
-      [9103, 9104, 9105, 9124],
+      [9104, 9103, 9105],
       [8014, 8017, 8299]
     ]
   },
@@ -86,7 +86,7 @@ const RUNE_TREES: Record<number, {
       [8112, 8124, 8128, 9923],
       [8126, 8139, 8143],
       [8136, 8120, 8138],
-      [8135, 8134, 8105, 8106]
+      [8135, 8105, 8106]
     ]
   },
   8200: {
@@ -96,7 +96,7 @@ const RUNE_TREES: Record<number, {
       [8214, 8229, 8230],
       [8224, 8226, 8275],
       [8210, 8234, 8233],
-      [8237, 8236, 8232]
+      [8237, 8232, 8236]
     ]
   },
   8400: {
@@ -114,9 +114,9 @@ const RUNE_TREES: Record<number, {
     icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7203_whimsy.png",
     rows: [
       [8351, 8360, 8369],
-      [8306, 8313, 8304],
-      [8321, 8316, 8345],
-      [8347, 8410, 8352]
+      [8306, 8304, 8321],
+      [8313, 8345, 8352],
+      [8347, 8410, 8316]
     ]
   }
 };
@@ -133,10 +133,30 @@ const getTreeColors = (styleId: number) => {
 };
 
 const SHARDS_ROWS = [
-  [5008, 5005, 5007],
-  [5008, 5002, 5003],
-  [5011, 5002, 5003]
+  [5005, 5008, 5007],
+  [5008, 5010, 5011],
+  [5013, 5012, 5011]
 ];
+
+const normalizeShardIdForHighlight = (selectedId: number, rowIdx: number): number => {
+  if (rowIdx === 2) {
+    if (selectedId === 5001 || selectedId === 5003) return 5013; // Armor/MR -> Flat Health
+  }
+  if (rowIdx === 1) {
+    if (selectedId === 5001 || selectedId === 5003) return 5011; // Armor/MR -> Scaling Health
+  }
+  return selectedId;
+};
+
+const getRuneAlias = (id: number): number[] => {
+  const aliases: Record<number, number[]> = {
+    8136: [8136, 8141], // Zombie Ward / Deep Ward
+    8141: [8136, 8141],
+    8138: [8138, 8140], // Eyeball Collection / Grisly Mementos
+    8140: [8138, 8140]
+  };
+  return aliases[id] || [id];
+};
 
 const RuneTree = ({ styleId, selections, isPrimary }: { styleId: number; selections: number[]; isPrimary: boolean }) => {
   const tree = RUNE_TREES[styleId];
@@ -161,24 +181,27 @@ const RuneTree = ({ styleId, selections, isPrimary }: { styleId: number; selecti
   const rowsToShow = isPrimary ? tree.rows : tree.rows.slice(1);
 
   return (
-    <div className="flex flex-col gap-2.5 items-center">
+    <div className="flex flex-col gap-3.5 items-center">
+      {!isPrimary && <div className="h-10 w-10 shrink-0" aria-hidden="true" />}
       {rowsToShow.map((row, rowIdx) => {
         const isKeystoneRow = isPrimary && rowIdx === 0;
         return (
-          <div key={rowIdx} className="flex gap-2 justify-center items-center">
+          <div key={rowIdx} className="flex gap-2.5 justify-center items-center">
             {row.map(runeId => {
               const r = hydrateAsset('runes', runeId);
-              const isActive = selections.includes(runeId);
+              const isActive = selections.some(selId => getRuneAlias(selId).includes(runeId));
               return (
                 <div
                   key={runeId}
-                  className={`relative flex items-center justify-center rounded-full transition-all duration-200
+                  className={`relative flex items-center justify-center rounded-full transition-all duration-200 cursor-default
                     ${isKeystoneRow 
                       ? 'w-10 h-10 border-2' 
-                      : 'w-7 h-7 border'}
+                      : 'w-8 h-8 border'}
                     ${isActive 
                       ? `${colors.border} ${colors.bg} ${colors.shadow} scale-110 ring-2 ring-purple-500/10`
-                      : 'border-transparent bg-black/20 opacity-20 grayscale hover:opacity-40'}`}
+                      : isKeystoneRow
+                        ? 'border-slate-800 bg-black/40 opacity-30 grayscale hover:opacity-60 hover:border-slate-700'
+                        : 'border-slate-800/60 bg-black/30 opacity-30 grayscale hover:opacity-60 hover:border-slate-700/60'}`}
                   title={r?.name}
                 >
                   {r?.icon && (
@@ -200,25 +223,27 @@ const RuneTree = ({ styleId, selections, isPrimary }: { styleId: number; selecti
 
 const ShardsTree = ({ selections }: { selections: number[] }) => {
   return (
-    <div className="flex flex-col gap-1.5 items-center mt-3 border-t border-border-warm/30 pt-3">
+    <div className="flex flex-col gap-3.5 items-center">
+      <div className="h-10 w-10 shrink-0" aria-hidden="true" />
       {SHARDS_ROWS.map((row, rowIdx) => {
         const selectedId = selections[rowIdx];
+        const normalizedSelectedId = normalizeShardIdForHighlight(selectedId, rowIdx);
         return (
-          <div key={rowIdx} className="flex gap-2 justify-center items-center">
+          <div key={rowIdx} className="flex gap-2.5 justify-center items-center">
             {row.map(shardId => {
               const s = hydrateAsset('shards', shardId);
-              const isActive = shardId === selectedId;
+              const isActive = shardId === normalizedSelectedId;
               return (
                 <div
                   key={shardId}
-                  className={`w-5.5 h-5.5 rounded-full border flex items-center justify-center transition-all duration-200
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 cursor-default
                     ${isActive 
-                      ? 'border-yellow-500/60 bg-yellow-500/15 shadow-[0_0_6px_rgba(234,179,8,0.2)]' 
-                      : 'border-transparent opacity-20 grayscale'}`}
+                      ? 'border-yellow-500/60 bg-yellow-500/15 shadow-[0_0_8px_rgba(234,179,8,0.3)] scale-110' 
+                      : 'border-slate-800/60 bg-black/30 opacity-30 grayscale hover:opacity-60 hover:border-slate-700/60'}`}
                   title={s?.name}
                 >
                   {s?.icon && (
-                    <img src={s.icon} className="w-3.5 h-3.5 object-contain" alt={s.name} />
+                    <img src={s.icon} className="w-5 h-5 object-contain" alt={s.name} />
                   )}
                 </div>
               );
@@ -1003,10 +1028,10 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
         {/* Dashboard Unificado */}
         {activeBuild ? (
-          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl flex flex-col xl:flex-row justify-between gap-6 mb-6">
+          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
             
             {/* Sección 1: Runas (Izquierda) */}
-            <div className="flex gap-6 items-start shrink-0 pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-6 justify-center">
+            <div className="xl:col-span-5 flex flex-row flex-wrap sm:flex-nowrap gap-4 items-start pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-4 justify-center">
               {primaryStyleId && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/60 border border-border-warm/60 flex items-center justify-center p-1.5" title={RUNE_TREES[primaryStyleId]?.name}>
@@ -1022,171 +1047,179 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
                     {RUNE_TREES[secondaryStyleId] && <img src={RUNE_TREES[secondaryStyleId].icon} className="w-full h-full object-contain" alt="secondary tree" />}
                   </div>
                   <RuneTree styleId={secondaryStyleId} selections={secondarySelections} isPrimary={false} />
-                  <ShardsTree selections={shards} />
                 </div>
               )}
-            </div>
 
-            {/* Sección 2: Hechizos, Inicial, Habilidades, Botas (Medio) */}
-            <div className="flex flex-col md:flex-row gap-8 shrink-0 pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-8 justify-center">
-              <div className="flex flex-col gap-5 justify-between min-w-[240px]">
-                {/* Hechizos e Iniciales */}
-                <div className="flex gap-8">
-                  <div>
-                    <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Hechizos de Invocador</span>
-                    <div className="flex gap-2">
-                      {activeBuild.summoners?.map((sumId: number, idx: number) => {
-                        const s = hydrateAsset('summoners', sumId);
-                        return (
-                          <div key={idx} className="w-10 h-10 rounded-sm bg-black/40 border border-border-warm overflow-hidden" title={s?.name}>
-                            {s?.icon ? (
-                              <img src={s.icon} className="w-full h-full object-cover" alt="summoner" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">S</div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Inicial</span>
-                    <div className="flex gap-2">
-                      {starterItems.map((id: number, idx: number) => {
-                        const item = hydrateAsset('items', id);
-                        return (
-                          <div key={idx} className="w-10 h-10 rounded-sm bg-black/40 border border-border-warm overflow-hidden" title={item?.name}>
-                            {item?.icon ? (
-                              <img src={item.icon} className="w-full h-full object-cover" alt="starter" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">I</div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+              {/* Shards Column */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 flex items-center justify-center text-slate-500 font-black text-[10px] uppercase tracking-wider">
+                  Shards
                 </div>
-
-                {/* Orden de habilidades y Botas */}
-                <div className="flex gap-8">
-                  <div>
-                    <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Orden de habilidades</span>
-                    <div className="flex items-center gap-1.5">
-                      {fallbackOrder.split(" > ").map((key, idx, arr) => {
-                        const isLast = idx === arr.length - 1;
-                        return (
-                          <React.Fragment key={key}>
-                            <div className="flex flex-col items-center gap-0.5">
-                              <div className="w-8 h-8 border border-border-warm rounded-sm overflow-hidden bg-black/40">
-                                {spellImages[key as keyof typeof spellImages] ? (
-                                  <img src={spellImages[key as keyof typeof spellImages]} className="w-full h-full object-cover" alt={key} />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-xs font-black text-slate-400 bg-input-warm">{key}</div>
-                                )}
-                              </div>
-                              <span className="text-[9px] font-black font-mono text-slate-500">{key}</span>
-                            </div>
-                            {!isLast && <span className="text-slate-600 font-bold text-[10px] pb-3">→</span>}
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Botas</span>
-                    <div className="w-10 h-10 rounded-sm bg-black/40 border border-border-warm overflow-hidden" title={boots?.name}>
-                      {boots ? (
-                        <img src={boots.icon} className="w-full h-full object-cover" alt="boots" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">B</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botón de importación rápida */}
-                <button
-                  onClick={async () => {
-                    try {
-                      const name = champ.name;
-                      const runePayload = {
-                        name: `HexDraft: ${name}`,
-                        primaryStyleId: activeBuild.runes.primaryStyleId,
-                        subStyleId: activeBuild.runes.subStyleId,
-                        selectedPerkIds: [
-                          ...activeBuild.runes.selections,
-                          ...(activeBuild.runes.shards || [])
-                        ]
-                      };
-
-                      const spell1 = activeBuild.summoners?.[0] || 4;
-                      const spell2 = activeBuild.summoners?.[1] || 12;
-
-                      await Promise.all([
-                        fetch('/api/set-runes', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(runePayload)
-                        }),
-                        fetch('/api/set-items', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            championId: champ.id,
-                            championName: name,
-                            items: {
-                              starter: activeBuild.items.starter,
-                              boots: activeBuild.items.boots,
-                              core: activeBuild.items.core,
-                              paths: activeBuild.items.paths
-                            },
-                            skillOrder: fallbackOrder
-                          })
-                        }),
-                        fetch('/api/set-spells', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ spell1Id: spell1, spell2Id: spell2 })
-                        })
-                      ]);
-                      alert(`¡Playstyle "${activeBuild.build_name}" (Runas + Items) importados con éxito!`);
-                    } catch (err) {
-                      console.error("Error importando playstyle:", err);
-                      alert("Error al intentar importar. Abre el cliente de League of Legends.");
-                    }
-                  }}
-                  className="w-full py-2 bg-purple-accent/20 border border-purple-accent text-purple-200 hover:bg-purple-accent hover:text-white transition-all text-xs font-black uppercase tracking-widest rounded-sm cursor-pointer select-none mt-2 shadow-[0_0_10px_rgba(144,85,255,0.2)] active:scale-98"
-                >
-                  Importar Build Completa
-                </button>
+                <ShardsTree selections={shards} />
               </div>
             </div>
 
+            {/* Sección 2: Hechizos, Habilidades e Importación (Medio) */}
+            <div className="xl:col-span-2 flex flex-col gap-5 justify-between pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-6">
+              {/* Hechizos de Invocador */}
+              <div>
+                <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Hechizos de Invocador</span>
+                <div className="flex gap-2">
+                  {activeBuild.summoners?.map((sumId: number, idx: number) => {
+                    const s = hydrateAsset('summoners', sumId);
+                    return (
+                      <div key={idx} className="w-10 h-10 rounded-sm bg-black/40 border border-border-warm overflow-hidden" title={s?.name}>
+                        {s?.icon ? (
+                          <img src={s.icon} className="w-full h-full object-cover" alt="summoner" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">S</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Orden de habilidades */}
+              <div>
+                <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2">Orden de habilidades</span>
+                <div className="flex items-center gap-1.5">
+                  {fallbackOrder.split(" > ").map((key, idx, arr) => {
+                    const isLast = idx === arr.length - 1;
+                    return (
+                      <React.Fragment key={key}>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="w-8 h-8 border border-border-warm rounded-sm overflow-hidden bg-black/40">
+                            {spellImages[key as keyof typeof spellImages] ? (
+                              <img src={spellImages[key as keyof typeof spellImages]} className="w-full h-full object-cover" alt={key} />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs font-black text-slate-400 bg-input-warm">{key}</div>
+                            )}
+                          </div>
+                          <span className="text-[9px] font-black font-mono text-slate-500">{key}</span>
+                        </div>
+                        {!isLast && <span className="text-slate-600 font-bold text-[10px] pb-3">→</span>}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Botón de importación rápida */}
+              <button
+                onClick={async () => {
+                  try {
+                    const name = champ.name;
+                    const runePayload = {
+                      name: `HexDraft: ${name}`,
+                      primaryStyleId: activeBuild.runes.primaryStyleId,
+                      subStyleId: activeBuild.runes.subStyleId,
+                      selectedPerkIds: [
+                        ...activeBuild.runes.selections,
+                        ...(activeBuild.runes.shards || [])
+                      ]
+                    };
+
+                    const spell1 = activeBuild.summoners?.[0] || 4;
+                    const spell2 = activeBuild.summoners?.[1] || 12;
+
+                    await Promise.all([
+                      fetch('/api/set-runes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(runePayload)
+                      }),
+                      fetch('/api/set-items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          championId: champ.id,
+                          championName: name,
+                          items: {
+                            starter: activeBuild.items.starter,
+                            boots: activeBuild.items.boots,
+                            core: activeBuild.items.core,
+                            paths: activeBuild.items.paths
+                          },
+                          skillOrder: fallbackOrder
+                        })
+                      }),
+                      fetch('/api/set-spells', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ spell1Id: spell1, spell2Id: spell2 })
+                      })
+                    ]);
+                    alert(`¡Playstyle "${activeBuild.build_name}" (Runas + Items) importados con éxito!`);
+                  } catch (err) {
+                    console.error("Error importando playstyle:", err);
+                    alert("Error al intentar importar. Abre el cliente de League of Legends.");
+                  }
+                }}
+                className="w-full py-2 bg-purple-accent/20 border border-purple-accent text-purple-200 hover:bg-purple-accent hover:text-white transition-all text-xs font-black uppercase tracking-widest rounded-sm cursor-pointer select-none shadow-[0_0_10px_rgba(144,85,255,0.2)] active:scale-98"
+              >
+                Importar Build Completa
+              </button>
+            </div>
+
             {/* Sección 3: Ruta de Objetos (Flowchart Derecha) */}
-            <div className="flex-1 flex items-center justify-center xl:justify-start xl:pl-6 overflow-x-auto min-h-[140px]">
-              <div className="flex items-center gap-3 select-none">
+            <div className="xl:col-span-5 flex flex-col md:flex-row items-center gap-6 xl:pl-4 overflow-x-auto min-h-[140px] w-full">
+              
+              {/* Subsección A: Botas e Inicial (Izquierda) */}
+              <div className="flex flex-col gap-4 justify-center shrink-0 border-b md:border-b-0 md:border-r border-border-warm/30 pb-4 md:pb-0 md:pr-6 select-none w-full md:w-auto">
+                {/* Botas */}
+                <div>
+                  <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 mb-1.5">Botas</span>
+                  <div className="w-12 h-12 rounded-sm bg-black/40 border border-border-warm overflow-hidden flex items-center justify-center" title={boots?.name}>
+                    {boots ? (
+                      <img src={boots.icon} className="w-full h-full object-cover" alt="boots" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">B</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Inicial */}
+                <div>
+                  <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 mb-1.5">Inicial</span>
+                  <div className="flex gap-2">
+                    {starterItems.map((id: number, idx: number) => {
+                      const item = hydrateAsset('items', id);
+                      return (
+                        <div key={idx} className="w-12 h-12 rounded-sm bg-black/40 border border-border-warm overflow-hidden flex items-center justify-center" title={item?.name}>
+                          {item?.icon ? (
+                            <img src={item.icon} className="w-full h-full object-cover" alt="starter" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">I</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsección B: Ruta principal (Derecha) */}
+              <div className="flex-1 flex items-center gap-3 select-none justify-center md:justify-start">
                 {coreSlots.slice(0, 3).map((itemObj: any, idx: number) => {
                   const item = hydrateAsset('items', itemObj.id);
                   const isLast = idx === Math.min(3, coreSlots.length) - 1;
                   return (
                     <React.Fragment key={idx}>
-                      <div className="relative group shrink-0" title={item?.name}>
+                      <div className="relative group shrink-0 animate-in fade-in duration-300" title={item?.name}>
                         {item?.icon ? (
-                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors" alt="core-item" />
+                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors shadow-lg" alt="core-item" />
                         ) : (
                           <div className="w-12 h-12 bg-input-warm border border-border-warm rounded-sm flex items-center justify-center font-bold text-slate-600 text-xs">C</div>
                         )}
-                        <div className="absolute -top-1.5 -right-1.5 bg-[#0f0f13] border border-border-warm text-[8px] font-mono font-black px-1 py-0.5 rounded-sm text-slate-500">
+                        <div className="absolute -top-1.5 -right-1.5 bg-[#0f0f13] border border-border-warm text-[8px] font-mono font-black px-1.5 py-0.5 rounded-sm text-slate-500">
                           0{idx + 1}
                         </div>
                       </div>
 
-                      {/* Render arrow between cores or pointing to slot 4 */}
+                      {/* Chevron separator */}
                       {(!isLast || uniqueItem4Options.length > 0) && (
-                        <span className="text-slate-600 font-bold select-none text-sm">→</span>
+                        <span className="text-slate-600 font-extrabold select-none text-base px-1">›</span>
                       )}
                     </React.Fragment>
                   );
@@ -1194,11 +1227,11 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
                 {/* Slot 4 Column */}
                 {uniqueItem4Options.length > 0 && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 shrink-0 animate-in fade-in duration-300">
                     {uniqueItem4Options.map((item: any, idx: number) => (
                       <div key={item.id || idx} className="relative group shrink-0" title={item?.name}>
                         {item?.icon ? (
-                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors" alt="slot-4-item" />
+                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors shadow-lg" alt="slot-4-item" />
                         ) : (
                           <div className="w-12 h-12 bg-input-warm border border-border-warm rounded-sm flex items-center justify-center font-bold text-slate-600 text-xs">4</div>
                         )}
@@ -1209,16 +1242,16 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
                 {/* Arrow from Slot 4 to Slot 5 */}
                 {uniqueItem4Options.length > 0 && uniqueItem5Options.length > 0 && (
-                  <span className="text-slate-600 font-bold select-none text-sm">→</span>
+                  <span className="text-slate-600 font-extrabold select-none text-base px-1">›</span>
                 )}
 
                 {/* Slot 5 Column */}
                 {uniqueItem5Options.length > 0 && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 shrink-0 animate-in fade-in duration-300">
                     {uniqueItem5Options.map((item: any, idx: number) => (
                       <div key={item.id || idx} className="relative group shrink-0" title={item?.name}>
                         {item?.icon ? (
-                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors" alt="slot-5-item" />
+                          <img src={item.icon} className="w-12 h-12 border border-border-warm rounded-sm hover:border-purple-accent/60 transition-colors shadow-lg" alt="slot-5-item" />
                         ) : (
                           <div className="w-12 h-12 bg-input-warm border border-border-warm rounded-sm flex items-center justify-center font-bold text-slate-600 text-xs">5</div>
                         )}
@@ -1227,6 +1260,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
                   </div>
                 )}
               </div>
+
             </div>
 
           </div>
