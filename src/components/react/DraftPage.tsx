@@ -87,6 +87,8 @@ export const DraftPage = () => {
     const [tacticalData, setTacticalData] = useState<{ skills: string[] } | null>(null);
     const [isCompact, setIsCompact] = useState<boolean>(false);
     const [myRole, setMyRole] = useState<string>('jungle');
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+    const [prevConnected, setPrevConnected] = useState<boolean | null>(null);
 
     // --- CONFIGURACIÓN ---
     const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
@@ -97,6 +99,7 @@ export const DraftPage = () => {
     const lastActionKeyRef = useRef<string>("none");
     const lastFingerprintRef = useRef<string>("");
     const lastImportedIdRef = useRef<number>(0);
+    const lastImportedSignatureRef = useRef<string>("");
     const currentDataRef = useRef<any>(null);
     const isPollingRef = useRef<boolean>(false);
     const apiTimeAtSyncRef = useRef<number>(0);
@@ -148,6 +151,19 @@ export const DraftPage = () => {
         return () => media.removeEventListener("change", listener);
     }, []);
 
+    // Toast de conexión al cliente
+    useEffect(() => {
+        if (prevConnected !== null && prevConnected !== isConnected) {
+            setToast({
+                message: isConnected ? "Conectado a LCU" : "Desconectado de LCU",
+                type: isConnected ? 'success' : 'error'
+            });
+            const timer = setTimeout(() => setToast(null), 4000);
+            return () => clearTimeout(timer);
+        }
+        setPrevConnected(isConnected);
+    }, [isConnected, prevConnected]);
+
     // Guardar configuraciones en localStorage
     useEffect(() => {
         localStorage.setItem('autoPick', String(autoPick));
@@ -195,14 +211,12 @@ export const DraftPage = () => {
             const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
             const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
             
-            const meRes = await fetch('/api/me');
-            const { summoner } = await meRes.json();
-            const myPlayer = data.myTeam.find((p: any) => p.gameName === summoner);
+            const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
             const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
             // Obtener campeones preseleccionados por compañeros de equipo (excluyéndome a mí)
             const allyHovered = data.myTeam
-                .filter((p: any) => p.gameName !== summoner)
+                .filter((p: any) => p.cellId !== data.localPlayerCellId)
                 .map((p: any) => p.championPickIntent || 0)
                 .filter((id: number) => id !== 0);
 
@@ -267,6 +281,7 @@ export const DraftPage = () => {
         
         lastFingerprintRef.current = "";
         lastImportedIdRef.current = 0;
+        lastImportedSignatureRef.current = "";
         lastActionKeyRef.current = "none";
         timestampAtSyncRef.current = 0;
         activeActionRef.current = null;
@@ -306,17 +321,19 @@ export const DraftPage = () => {
                     setTheirTeam(data.theirTeam);
                     handleTimerSync(data); 
 
-                    const { summoner } = await (await fetch('/api/me')).json();
-                    const myPlayer = data.myTeam.find((p: any) => p.gameName === summoner);
+                    const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
                     const myId = myPlayer?.championId || 0;
                     const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
                     setMyRole(currentRole);
+                    localStorage.setItem('last_my_team', JSON.stringify(data.myTeam));
+                    localStorage.setItem('last_their_team', JSON.stringify(data.theirTeam));
+                    localStorage.setItem('last_my_role', currentRole);
                     
                     const myHoverIntent = myPlayer?.championPickIntent || 0;
                     const activeIdForEngine = myId > 0 ? myId : myHoverIntent;
 
                     const cleanMyTeam = data.myTeam
-                        .filter((p: any) => p.gameName !== summoner) 
+                        .filter((p: any) => p.cellId !== data.localPlayerCellId) 
                         .map((p: any) => p.championId || p.championPickIntent)
                         .filter((id: number) => id !== 0);
 
@@ -336,6 +353,7 @@ export const DraftPage = () => {
                         const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
                         if (buildData && (!currentBuild || currentBuild.name !== buildData.name || JSON.stringify(currentBuild.build.items.core) !== JSON.stringify(buildData.build.items.core))) {
                             setCurrentBuild(buildData);
+                            localStorage.setItem('last_build_data', JSON.stringify(buildData));
                             if (view !== 'reasons' && view !== 'build') {
                                 setView('build');
                             }
@@ -361,14 +379,15 @@ export const DraftPage = () => {
                                 .catch(err => console.error("Error táctico:", err));
                         }
 
-                        // 4. Exportación definitiva al LCU de LoL: SOLO si los 10 campeones están seleccionados y confirmados (no hovers)
-                        const allPicks = data.actions?.flat().filter((a: any) => a.type === 'pick') || [];
-                        const allTenLocked = allPicks.length === 10 && allPicks.every((a: any) => a.completed);
+                        // 4. Exportación automática al LCU de LoL al bloquear o cambiar de playstyle
+                        if (buildData) {
+                            const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
+                            const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
+                            const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
 
-                        if (allTenLocked && myId !== lastImportedIdRef.current) {
-                            lastImportedIdRef.current = myId;
-                            console.log(`🎯 Importación definitiva al LCU para el pick ${myId} (10 picks confirmados)`);
-                            if (buildData) {
+                            if (buildSig !== lastImportedSignatureRef.current) {
+                                lastImportedSignatureRef.current = buildSig;
+                                console.log(`🎯 [AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
                                 await importToClient({ ...buildData, id: myId });
                             }
                         }
@@ -389,8 +408,51 @@ export const DraftPage = () => {
             } 
             else if (phase === 'InProgress') {
                 nextInterval = 30000;
-                let currentRec = selectedRecommendation;
 
+                // 1. Restaurar build desde localStorage si no está en memoria
+                let activeBuild = currentBuild;
+                if (!activeBuild) {
+                    try {
+                        const savedBuild = localStorage.getItem('last_build_data');
+                        if (savedBuild) {
+                            activeBuild = JSON.parse(savedBuild);
+                            setCurrentBuild(activeBuild);
+                            console.log("🔄 Build restaurada desde localStorage para InProgress");
+                        }
+                    } catch (e) {
+                        console.error("Error restaurando build:", e);
+                    }
+                }
+
+                // 2. Restaurar equipos si están vacíos
+                const teamsEmpty = myTeam.every(p => p.championId === 0 && p.championPickIntent === 0);
+                if (teamsEmpty) {
+                    try {
+                        const savedMyTeam = localStorage.getItem('last_my_team');
+                        const savedTheirTeam = localStorage.getItem('last_their_team');
+                        const savedRole = localStorage.getItem('last_my_role');
+                        if (savedMyTeam) setMyTeam(JSON.parse(savedMyTeam));
+                        if (savedTheirTeam) setTheirTeam(JSON.parse(savedTheirTeam));
+                        if (savedRole) setMyRole(savedRole);
+                        console.log("🔄 Equipos restaurados desde localStorage");
+                    } catch (e) {
+                        console.error("Error restaurando equipos:", e);
+                    }
+                }
+
+                // 3. Cargar datos tácticos si no están en memoria
+                if (!tacticalData && activeBuild) {
+                    fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${myRole}`)
+                        .then(res => res.json())
+                        .then(tData => {
+                            setTacticalData(tData);
+                            console.log("🔥 Data táctica cargada durante InProgress");
+                        })
+                        .catch(err => console.error("Error táctico InProgress:", err));
+                }
+
+                // 4. Restaurar recomendación seleccionada
+                let currentRec = selectedRecommendation;
                 if (!currentRec) {
                     const saved = localStorage.getItem('last_pick_analysis');
                     if (saved) {
@@ -399,17 +461,26 @@ export const DraftPage = () => {
                     }
                 }
 
-                if (currentRec && view !== 'reasons') {
+                // 5. Establecer vista correcta
+                if (activeBuild) {
+                    if (view !== 'build' && view !== 'reasons') {
+                        setView('build');
+                    }
+                } else if (currentRec && view !== 'reasons') {
                     setView('reasons');
-                } else {
-                    setView('build');
                 }
             }
             else {
                 if (phase === 'None' || phase === 'Lobby') {
-                    if (inDraft || lastFingerprintRef.current !== "") {
+                    if (inDraft || lastFingerprintRef.current !== "" || currentBuild) {
                         resetDraftState();
                         setSelectedRecommendation(null);
+                        setCurrentBuild(null);
+                        setTacticalData(null);
+                        localStorage.removeItem('last_build_data');
+                        localStorage.removeItem('last_my_team');
+                        localStorage.removeItem('last_their_team');
+                        localStorage.removeItem('last_my_role');
                         nextInterval = 10000;
                     }
                 }
@@ -450,9 +521,19 @@ export const DraftPage = () => {
     }, [inDraft, view, currentBuild]);
 
     return (
-        <div className="flex flex-col mt-24 gap-4 w-full overflow-hidden">
-            {/* BARRA DE ESTADO */}
-            <ConnectionStatus isConnected={isConnected} />
+        <div className="flex-1 flex flex-col w-full max-w-[1550px] mx-auto px-4 py-8 overflow-x-hidden relative">
+            {/* TOAST DE CONEXIÓN */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 duration-350 select-none
+                    ${toast.type === 'success' 
+                        ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40' 
+                        : 'bg-red-950/85 border-red-500/40 text-red-200 shadow-red-950/40'
+                    }`}
+                >
+                    <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
+                </div>
+            )}
 
             <div className={`flex flex-row w-full items-start relative z-10 px-2 md:px-4 transition-all duration-700 ${
                 isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
@@ -474,7 +555,7 @@ export const DraftPage = () => {
                     <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden flex flex-col tech-corners">
                         
                         {/* CABECERA DINÁMICA */}
-                        <header className="mb-6 flex justify-between items-end border-b border-border-warm pb-5">
+                        <header className="mb-6 flex justify-between items-center border-b border-border-warm pb-5">
                             <div>
                                 <h2 className="text-xl md:text-2xl font-black uppercase tracking-[0.3em] text-white italic">
                                     {isBuildOrReasonsView && currentBuild ? (
@@ -491,10 +572,19 @@ export const DraftPage = () => {
                                     {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
                                 </p>
                             </div>
-                            <div className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm select-none ${
-                                isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
-                            }`}>
-                                Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
+                            
+                            <div className="flex items-center gap-3">
+                                {/* Indicador LCU sutil */}
+                                <div className="flex items-center gap-1.5 border border-border-warm bg-black/45 px-2.5 py-1 rounded-sm select-none" title={isConnected ? 'LCU Conectado' : 'LCU Desconectado'}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-red-500 shadow-[0_0_6px_#ef4444]'}`} />
+                                    <span className="text-[8px] font-black tracking-wider text-slate-400 uppercase font-mono">LCU</span>
+                                </div>
+
+                                <div className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm select-none ${
+                                    isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
+                                }`}>
+                                    Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
+                                </div>
                             </div>
                         </header>
 
