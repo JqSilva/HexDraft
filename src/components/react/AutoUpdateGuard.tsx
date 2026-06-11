@@ -10,6 +10,42 @@ export const AutoUpdateGuard = () => {
   
   const bypassedRef = useRef<boolean>(false);
   const logsConsoleEndRef = useRef<HTMLDivElement>(null);
+  // Polling para redireccionar a /draft en selección de campeón (una sola vez por fase)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkDraftPhase = async () => {
+      try {
+        const res = await fetch('/api/game-status');
+        if (!res.ok) return;
+
+        const { phase } = await res.json();
+        
+        if (phase === 'ChampSelect') {
+          const hasRedirected = sessionStorage.getItem('hexdraft_draft_redirected') === 'true';
+          const isCurrentlyOnDraft = window.location.pathname === '/draft';
+
+          if (!hasRedirected && !isCurrentlyOnDraft) {
+            console.log('[AutoUpdateGuard] ¡Fase de selección detectada! Redirigiendo a /draft...');
+            sessionStorage.setItem('hexdraft_draft_redirected', 'true');
+            window.location.href = '/draft';
+          }
+        } else {
+          // Si no está en selección de campeones, limpiar la flag para el siguiente juego
+          sessionStorage.removeItem('hexdraft_draft_redirected');
+        }
+      } catch (e) {
+        console.warn('[AutoUpdateGuard] Error comprobando fase de juego para redirección:', e);
+      }
+    };
+
+    // Pollear cada 3 segundos
+    const interval = setInterval(checkDraftPhase, 3000);
+    // Ejecución inicial inmediata
+    checkDraftPhase();
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (logsConsoleEndRef.current) {

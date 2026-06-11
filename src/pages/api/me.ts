@@ -1,6 +1,7 @@
 // src/pages/api/me.ts
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { getNameFromId } from '../../lib/engine/engine.js';
 
 // Desactivar validación de certificados SSL autofirmados para el cliente local de Riot
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -38,10 +39,10 @@ export const GET: APIRoute = async () => {
       { championId: 222, level: 5, points: 45100 }   // Jinx
     ],
     matches: [
-      { championId: 238, win: true, kills: 14, deaths: 2, assists: 8, csPerMin: "8.2", timeAgo: "24m hace", gameMode: "CLASSIC" },
-      { championId: 157, win: false, kills: 4, deaths: 7, assists: 2, csPerMin: "6.8", timeAgo: "2h hace", gameMode: "CLASSIC" },
-      { championId: 103, win: true, kills: 9, deaths: 1, assists: 12, csPerMin: "7.3", timeAgo: "5h hace", gameMode: "CLASSIC" },
-      { championId: 238, win: true, kills: 18, deaths: 3, assists: 9, csPerMin: "8.5", timeAgo: "Ayer", gameMode: "CLASSIC" }
+      { championId: 238, win: true, kills: 14, deaths: 2, assists: 8, csPerMin: "8.2", timeAgo: "24m hace", gameMode: "CLASSIC", lane: "MID" },
+      { championId: 157, win: false, kills: 4, deaths: 7, assists: 2, csPerMin: "6.8", timeAgo: "2h hace", gameMode: "CLASSIC", lane: "MID" },
+      { championId: 103, win: true, kills: 9, deaths: 1, assists: 12, csPerMin: "7.3", timeAgo: "5h hace", gameMode: "CLASSIC", lane: "MID" },
+      { championId: 238, win: true, kills: 18, deaths: 3, assists: 9, csPerMin: "8.5", timeAgo: "Ayer", gameMode: "CLASSIC", lane: "MID" }
     ]
   };
 
@@ -211,6 +212,46 @@ export const GET: APIRoute = async () => {
               }
             }
 
+            const timeline = participant?.timeline || {};
+            const rawLane = timeline.lane || "NONE";
+            const rawRole = timeline.role || "NONE";
+            
+            let matchLane = "MID"; // Default
+            
+            if (rawLane === "JUNGLE") {
+              matchLane = "JUNGLE";
+            } else if (rawLane === "MIDDLE" || rawLane === "MID") {
+              matchLane = "MID";
+            } else if (rawLane === "TOP") {
+              matchLane = "TOP";
+            } else if (rawLane === "BOTTOM" || rawLane === "BOT") {
+              if (rawRole === "DUO_SUPPORT") {
+                matchLane = "SUPPORT";
+              } else {
+                matchLane = "ADC";
+              }
+            } else if (rawLane === "UTILITY") {
+              matchLane = "SUPPORT";
+            } else {
+              // Hechizos de invocador
+              const s1 = participant?.spell1Id || 0;
+              const s2 = participant?.spell2Id || 0;
+              if (s1 === 11 || s2 === 11) {
+                matchLane = "JUNGLE";
+              } else {
+                const champName = getNameFromId(participant?.championId || 0);
+                if (champName) {
+                  const specialRoles: Record<string, string> = {
+                    "Zed": "MID", "Yasuo": "MID", "Ahri": "MID", "Jinx": "ADC", "Lee Sin": "JUNGLE",
+                    "Lux": "SUPPORT", "Garen": "TOP", "Viego": "JUNGLE", "Yone": "MID", "Aatrox": "TOP",
+                    "Katarina": "MID", "Akali": "MID", "Thresh": "SUPPORT", "Teemo": "TOP", "Wukong": "JUNGLE",
+                    "Rek'Sai": "JUNGLE"
+                  };
+                  matchLane = specialRoles[champName] || "MID";
+                }
+              }
+            }
+
             return {
               championId: participant ? participant.championId : 238,
               win,
@@ -219,7 +260,8 @@ export const GET: APIRoute = async () => {
               assists,
               csPerMin,
               timeAgo,
-              gameMode: g.gameMode || "CLASSIC"
+              gameMode: g.gameMode || "CLASSIC",
+              lane: matchLane
             };
           });
         }

@@ -36,7 +36,16 @@ def preparar_entorno_node():
             print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
-    # 2. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
+    # 2. Generar icono favicon.ico multi-resolución a partir del SVG
+    print("Generando favicon.ico de alta resolución a partir del SVG...")
+    try:
+        subprocess.run(["node", "scripts/generate-ico.js"], shell=True, check=True)
+        print("[OK] Generación de favicon.ico finalizada.")
+    except subprocess.CalledProcessError as e:
+        print(f"[WARN] No se pudo generar el favicon.ico de alta resolución: {e}")
+        print("Continuando con la compilación usando el favicon.ico existente...")
+
+    # 3. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
     print("Limpiando compilación anterior y compilando proyecto Astro...")
     if os.path.exists(CARPETA_BUILD_NODE):
         try:

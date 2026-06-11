@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { HistoryPage } from '../components/react/HistoryPage';
+---
+
+<Layout title="HexDraft | Historial de Partidas">
+  <main class="w-full h-full flex flex-col">
+    <HistoryPage client:only="react" />
+  </main>
+</Layout>

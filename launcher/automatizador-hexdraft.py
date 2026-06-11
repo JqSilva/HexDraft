@@ -6,7 +6,7 @@ import ctypes
 import json
 
 # === CONFIGURACIÓN ===
-APP_URL = "http://localhost:4321/draft"
+APP_URL = "http://localhost:4321/dashboard"
 APP_TITLE = "HexDraft"
 MUTEX_NAME = "Global\\HexDraft_App_Mutex_928F6DFD"
 

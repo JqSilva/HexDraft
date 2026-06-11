@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getNameFromId } from '../../lib/engine/engine';
+import metaCache from '../../lib/data/meta-cache.json';
 
 // Interfaces para tipar la respuesta del API
 interface RankedStats {
@@ -191,27 +192,26 @@ export const DashboardHome = () => {
       default: return 'text-slate-400';
     }
   };
-
-  return (
-    <div className="w-full h-full flex flex-col gap-6 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">      
+  return (
+    <div className="w-full h-full flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">      
       {/* TOP BAR */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-5">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
         <div>
-          <span className="text-[9px] uppercase tracking-[0.3em] font-black text-slate-500">BIENVENIDO DE NUEVO,</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">BIENVENIDO DE NUEVO,</span>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-white uppercase tracking-tight">{summonerName}</h1>
-            <span className="bg-[#9055ff]/10 border border-[#9055ff]/30 text-[#9055ff] text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded">
+            <span className="bg-[#9055ff]/10 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded">
               {ranked.tier} {ranked.division}
             </span>
           </div>
         </div>
 
         {/* LCU connection status indicator */}
-          <div className={`flex items-center justify-center gap-2 mt-3 mr-32 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[8.5px] uppercase tracking-widest font-black ${data.isConnected ? 'text-green-500' : 'text-slate-400'
-            }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
-            {data.isConnected ? 'LCU CONECTADO' : 'LCU OFFLINE'}
-          </div>
+        <div className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${data.isConnected ? 'text-green-500' : 'text-slate-400'
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
+          {data.isConnected ? 'LCU CONECTADO' : 'LCU OFFLINE'}
+        </div>
 
         {/* Icons and profile */}
         <div className="flex items-center gap-4 self-end md:self-auto">
@@ -231,71 +231,65 @@ export const DashboardHome = () => {
       </header>
 
       {/* HERO SECTION & TOP CHAMPIONS ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
         {/* A. Hero Banner Card */}
-        <div className="lg:col-span-8 bg-[#0f0f13]/90 border border-border-warm rounded-sm relative overflow-hidden flex flex-col justify-between p-6 md:p-8 min-h-[250px] tech-corners shadow-xl group">
+        <div className="md:col-span-7 lg:col-span-8 bg-[#0f0f13]/90 border border-border-warm rounded-sm relative overflow-hidden flex flex-col justify-between p-4 md:p-6 min-h-[220px] tech-corners shadow-xl group">
           {/* Background Grid Pattern & Ambient Glows */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#9055ff]/10 via-transparent to-transparent pointer-events-none z-0"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_100%_0%,rgba(144,85,255,0.06),transparent)] pointer-events-none z-0"></div>
 
           {/* Content layout */}
-          <div className="flex gap-2">
-            
-              <div className="flex flex-col z-10 space-y-3 w-1/2">
-                <span className="self-start inline-block bg-[#9055ff]/15 border border-[#9055ff]/30 text-[#9055ff] text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-sm select-none">
-                  SISTEMA DE ASISTENCIA
-                </span>
-                <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">
-                  HEXDRAFT <span className="text-[#9055ff]">TACTICAL</span>
-                </h2>
-                <p className="text-[9px] uppercase tracking-[0.15em] font-bold text-slate-400 mt-1">
-                  Optimización de Composiciones // Runas & Builds Automáticas
-                </p>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Sincroniza HexDraft con tu cliente de League of Legends para recibir análisis de matchups, prioridades de picks/bans y configuraciones óptimas directamente en tu cliente.
-                </p>
-                <div className="relative z-10 flex flex-col sm:flex-row gap-4 mt-6 items-start sm:items-center">
+          <div className="flex gap-4 items-center">
+            <div className="flex flex-col z-10 space-y-2 w-3/5">
+              <span className="self-start inline-block bg-[#9055ff]/15 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm select-none">
+                SISTEMA DE ASISTENCIA
+              </span>
+              <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
+                HEXDRAFT <span className="text-[#9055ff]">TACTICAL</span>
+              </h2>
+              <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-400 mt-1">
+                Optimización de Composiciones // Runas & Builds Automáticas
+              </p>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                Sincroniza HexDraft con tu cliente de League of Legends para recibir análisis de matchups, prioridades de picks/bans y configuraciones óptimas directamente en tu cliente.
+              </p>
+              <div className="relative z-10 flex flex-col sm:flex-row gap-2.5 mt-4 items-start sm:items-center">
                 <a
                   href="/draft"
-                  className="px-8 py-3.5 bg-[#9055ff] text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg[#7b3aff] transition-all duration-300 shadow-[0_0_20px_rgba(144,85,255,0.35)] hover:shadow-[0_0_25px_rgba(144,85,255,0.5)] rounded-sm cursor-pointer border border-[#9055ff]/50"
+                  className="px-6 py-2.5 bg-[#9055ff] text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7b3aff] transition-all duration-300 shadow-[0_0_15px_rgba(144,85,255,0.25)] hover:shadow-[0_0_20px_rgba(144,85,255,0.4)] rounded-sm cursor-pointer border border-[#9055ff]/50 text-center"
                 >
                   INICIAR DRAFT HELPER
                 </a>
 
                 <a
                   href="/actualizar"
-                  className="px-6 py-3.5 bg-[#08080b] border border-border-warm hover:border-[#9055ff]/50 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 rounded-sm cursor-pointer"
+                  className="px-5 py-2.5 bg-[#08080b] border border-border-warm hover:border-[#9055ff]/50 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 rounded-sm cursor-pointer text-center"
                 >
                   BASE DE DATOS
                 </a>
               </div>
             </div>
-            <div className="flex items-center justify-center w-1/2 relative select-none">
-              {/* Background ambient glow circle */}
-              <div className="absolute w-36 h-36  rounded-full pointer-events-none"></div>
+            <div className="flex items-center justify-center w-2/5 relative select-none">
+              <div className="absolute w-28 h-28 rounded-full pointer-events-none"></div>
               <img 
                 src="/favicon.svg" 
                 alt="HexDraft Logo" 
-                className="w-24 h-24 md:w-42 md:h-42 block relative z-10 transition-transform duration-500 hover:scale-105 "
+                className="w-24 h-24 md:w-36 md:h-36 block relative z-10 transition-transform duration-500 hover:scale-105"
               />
             </div>
           </div>
-            
-
-          {/* Patch Version Display Overlay */}
-          
         </div>
 
         {/* B. Top Champions / Collection List */}
-        <div className="lg:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-5 flex flex-col justify-between tech-corners shadow-xl min-h-[250px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border-warm">
+        <div className="md:col-span-5 lg:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 flex flex-col justify-between tech-corners shadow-xl min-h-[220px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">MAESTRÍA DE CAMPEONES</span>
-            <a href="#" onClick={(e) => e.preventDefault()} className="text-[8px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER TODOS</a>
+            <a href="#" onClick={(e) => e.preventDefault()} className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER TODOS</a>
           </div>
 
           {/* List of 4 champions */}
-          <div className="space-y-3.5 flex-1 flex flex-col justify-center">
+          <div className="space-y-2.5 flex-1 flex flex-col justify-center">
             {masteryList.map((m, index) => {
               const champId = m.championId;
               const points = m.points;
@@ -306,11 +300,11 @@ export const DashboardHome = () => {
               const progressWidth = index === 0 ? 92 : index === 1 ? 72 : index === 2 ? 61 : 48;
 
               return (
-                <div key={champId} className="flex items-center gap-3 group hover:bg-white/[0.01] p-1.5 rounded transition-colors duration-200">
+                <div key={champId} className="flex items-center gap-3 group hover:bg-white/[0.01] p-1 rounded transition-colors duration-200">
                   <img
                     src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                     alt={name}
-                    className="w-10 h-10 rounded-sm border border-border-warm select-none object-cover shadow-lg group-hover:border-[#9055ff]/40 transition-colors duration-300"
+                    className="w-9 h-9 rounded-sm border border-border-warm select-none object-cover shadow-lg group-hover:border-[#9055ff]/40 transition-colors duration-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/favicon.svg";
                     }}
@@ -318,11 +312,11 @@ export const DashboardHome = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
                       <span className="text-xs font-black text-white tracking-wider group-hover:text-[#9055ff] transition-colors duration-200">{name}</span>
-                      <span className="text-[9px] font-mono font-bold text-slate-400">{points.toLocaleString()} PTS</span>
+                      <span className="text-[10px] font-mono font-bold text-slate-400">{points.toLocaleString()} PTS</span>
                     </div>
-                    <span className="block text-[8.5px] text-slate-500 uppercase tracking-widest font-semibold mb-1.5">{role}</span>
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">{role}</span>
                     {/* Horizontal progress bar */}
-                    <div className="w-full bg-[#15151a] h-1.5 rounded-full overflow-hidden border border-[#22222b] relative">
+                    <div className="w-full bg-[#15151a] h-1 rounded-full overflow-hidden border border-[#22222b] relative">
                       <div
                         className={`bg-gradient-to-r ${gradient} h-full rounded-full transition-all duration-1000 ease-out`}
                         style={{ width: `${progressWidth}%` }}
@@ -330,7 +324,7 @@ export const DashboardHome = () => {
                     </div>
                   </div>
                   {/* Mastery Level Badge */}
-                  <div className="w-7 h-7 flex items-center justify-center rounded border border-[#9055ff]/20 bg-[#9055ff]/5 text-[10px] font-mono font-black text-[#9055ff] group-hover:bg-[#9055ff]/10 transition-colors duration-200 select-none shadow">
+                  <div className="w-6 h-6 flex items-center justify-center rounded border border-[#9055ff]/20 bg-[#9055ff]/5 text-[9px] font-mono font-black text-[#9055ff] group-hover:bg-[#9055ff]/10 transition-colors duration-200 select-none shadow">
                     L{lvl}
                   </div>
                 </div>
@@ -341,32 +335,33 @@ export const DashboardHome = () => {
       </div>
 
       {/* BOTTOM SECTIONS: RECENT MATCHES, PLAYER PROFILE, ACCLAIMS */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-4">
 
         {/* A. Recent Matches (Bottom Left Grid) */}
-        <div className="xl:col-span-5 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-5 tech-corners shadow-xl flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border-warm">
+        <div className="md:col-span-12 lg:col-span-5 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">HISTORIAL RECIENTE</span>
-            <a href="#" onClick={(e) => e.preventDefault()} className="text-[8px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER PARTIDAS</a>
+            <a href="/history" className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER PARTIDAS</a>
           </div>
 
           {/* Matches list */}
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-2 gap-3">
             {matchesList.map((match, idx) => {
               const name = getNameFromId(match.championId) || "Campeón";
               const role = getChampionRole(name);
               const borderClass = match.win ? "border-green-500/25 hover:border-green-500/40" : "border-red-500/25 hover:border-red-500/40";
               const badgeBg = match.win ? "bg-green-500/10 border-green-500/30 text-green-500" : "bg-red-500/10 border-red-500/30 text-red-500";
+              const displayLane = match.lane || role.split(' / ')[1] || 'MID';
 
               return (
-                <div key={idx} className={`bg-[#08080b] border ${borderClass} p-3.5 rounded flex flex-col justify-between items-center text-center transition-all duration-300 relative group`}>
+                <div key={idx} className={`bg-[#08080b] border ${borderClass} p-3 rounded flex flex-col justify-between items-center text-center transition-all duration-300 relative group`}>
                   <div className={`absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t border-l ${match.win ? 'border-green-500' : 'border-red-500'}`}></div>
-                  <div className={`absolute top-2.5 right-2.5 border ${badgeBg} text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm select-none`}>
+                  <div className={`absolute top-2.5 right-2.5 border ${badgeBg} text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm select-none`}>
                     {match.win ? 'VICTORIA' : 'DERROTA'}
                   </div>
 
                   {/* Champion portrait icon */}
-                  <div className="w-11 h-11 rounded-full border border-border-warm overflow-hidden mb-2 mt-2 shadow-lg group-hover:border-[#9055ff]/40 group-hover:scale-105 transition-all duration-300">
+                  <div className="w-10 h-10 rounded-full border border-border-warm overflow-hidden mb-1.5 mt-1.5 shadow-lg group-hover:border-[#9055ff]/40 group-hover:scale-105 transition-all duration-300">
                     <img
                       src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                       alt={name}
@@ -377,11 +372,11 @@ export const DashboardHome = () => {
                     />
                   </div>
                   <div>
-                    <span className="block text-xs font-black text-white uppercase tracking-wider">{name} - {role.split(' / ')[1] || 'Mid'}</span>
-                    <span className="block text-[11px] font-mono font-bold text-slate-300 mt-1">{match.kills} / {match.deaths} / {match.assists} <span className="text-slate-500 font-normal">KDA</span></span>
+                    <span className="block text-xs font-black text-white uppercase tracking-wider">{name} - {displayLane}</span>
+                    <span className="block text-xs font-mono font-bold text-slate-300 mt-0.5">{match.kills} / {match.deaths} / {match.assists} <span className="text-slate-500 font-normal">KDA</span></span>
                   </div>
-                  <div className="w-full h-px bg-border-warm my-2"></div>
-                  <div className="flex justify-between w-full text-[9px] font-mono text-slate-500">
+                  <div className="w-full h-px bg-border-warm my-1.5"></div>
+                  <div className="flex justify-between w-full text-[10.5px] font-mono text-slate-500">
                     <span>{match.csPerMin} CS/M</span>
                     <span>Hace {match.timeAgo.split(' ')[0]}</span>
                   </div>
@@ -392,182 +387,125 @@ export const DashboardHome = () => {
         </div>
 
         {/* B. Player Profile Details (Center Bottom) */}
-        <div className="xl:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-5 tech-corners shadow-xl flex flex-col justify-between min-h-[340px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border-warm">
+        <div className="md:col-span-6 lg:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between min-h-[300px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">DATOS DEL INVOCADOR</span>
-            <span className="text-[9px] font-bold text-slate-400 font-mono">ESTE MES</span>
+            <span className="text-[11px] font-bold text-slate-400 font-mono">ESTE MES</span>
           </div>
 
           {/* Profile centered layout wrapping avatar, ranks, and grid tightly */}
-          <div className="flex-1 flex flex-col justify-center gap-6 my-auto">
-            <div className="flex flex-col items-center justify-center gap-3 text-center">
+          <div className="flex-1 flex flex-col justify-center gap-4 my-auto">
+            <div className="flex flex-col items-center justify-center gap-2 text-center">
               <div className="relative flex items-center justify-center">
                 {/* Outer animated rotating orbit ring */}
-                <div className="absolute w-20 h-20 border border-dashed border-[#9055ff]/40 rounded-full animate-[spin_20s_linear_infinite]"></div>
-                <div className="absolute w-18 h-18 border-2 border-t-transparent border-r-[#9055ff] border-b-transparent border-l-[#9055ff] rounded-full animate-[spin_8s_linear_infinite]"></div>
+                <div className="absolute w-16 h-16 border border-dashed border-[#9055ff]/40 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                <div className="absolute w-14 h-14 border-2 border-t-transparent border-r-[#9055ff] border-b-transparent border-l-[#9055ff] rounded-full animate-[spin_8s_linear_infinite]"></div>
 
                 {/* Summoner Icon inside orbit */}
                 <img
                   src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/profileicon/${profileIconId}.png`}
                   alt="Avatar"
-                  className="w-14 h-14 rounded-full border-2 border-[#9055ff] bg-black select-none z-10"
+                  className="w-12 h-12 rounded-full border-2 border-[#9055ff] bg-black select-none z-10"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = "/favicon.svg";
                   }}
                 />
               </div>
 
-              <div className="space-y-2.5 w-full">
+              <div className="space-y-1.5 w-full">
                 <span className="block text-base font-black text-white">{summonerName}</span>
                 
                 {/* Columns layout side-by-side to remove empty space on the right */}
                 <div className="flex justify-center items-center gap-4 text-center w-full px-2">
                   <div className="flex-1">
-                    <span className="block text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Solo/Duo</span>
-                    <span className={`block text-[11px] font-black uppercase tracking-wider ${getTierColor(ranked.tier)}`}>
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Solo/Duo</span>
+                    <span className={`block text-xs font-black uppercase tracking-wider ${getTierColor(ranked.tier)}`}>
                       {ranked.tier} {ranked.division}
                     </span>
-                    <span className="block text-[9px] font-mono font-bold text-slate-400">{ranked.lp} LP</span>
+                    <span className="block text-[11px] font-mono font-bold text-slate-400">{ranked.lp} LP</span>
                   </div>
                   
-                  <div className="w-px bg-border-warm h-8 self-center shrink-0"></div>
+                  <div className="w-px bg-border-warm h-6 self-center shrink-0"></div>
                   
                   <div className="flex-1">
-                    <span className="block text-[8px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Flexible</span>
-                    <span className={`block text-[10px] font-bold uppercase tracking-wider ${getTierColor(data.rankedFlex?.tier || 'UNRANKED')}`}>
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-black mb-0.5">Flexible</span>
+                    <span className={`block text-[11px] font-bold uppercase tracking-wider ${getTierColor(data.rankedFlex?.tier || 'UNRANKED')}`}>
                       {data.rankedFlex ? `${data.rankedFlex.tier} ${data.rankedFlex.division}` : 'UNRANKED'}
                     </span>
-                    <span className="block text-[8.5px] font-mono text-slate-400">{data.rankedFlex?.lp || 0} LP</span>
+                    <span className="block text-[10px] font-mono text-slate-400">{data.rankedFlex?.lp || 0} LP</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Core Stats table positioned directly under the profile details */}
-            <div className="grid grid-cols-4 gap-2 text-center bg-[#08080b]/60 p-3 border border-border-warm rounded">
+            <div className="grid grid-cols-4 gap-2 text-center bg-[#08080b]/60 p-2.5 border border-border-warm rounded">
               <div>
-                <span className="block text-[11px] font-mono font-black text-white">{winRate}%</span>
-                <span className="block text-[7.5px] uppercase font-bold text-slate-500 tracking-wider">Winrate</span>
+                <span className="block text-xs font-mono font-black text-white">{winRate}%</span>
+                <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Winrate</span>
               </div>
               <div className="border-l border-border-warm">
-                <span className="block text-[11px] font-mono font-black text-white">{totalGames}</span>
-                <span className="block text-[7.5px] uppercase font-bold text-slate-500 tracking-wider">Partidas</span>
+                <span className="block text-xs font-mono font-black text-white">{totalGames}</span>
+                <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Partidas</span>
               </div>
               <div className="border-l border-border-warm">
-                <span className="block text-[11px] font-mono font-black text-white">{ranked.wins}</span>
-                <span className="block text-[7.5px] uppercase font-bold text-slate-500 tracking-wider">Victorias</span>
+                <span className="block text-xs font-mono font-black text-white">{ranked.wins}</span>
+                <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Victorias</span>
               </div>
               <div className="border-l border-border-warm">
-                <span className="block text-[11px] font-mono font-black text-white">3.4K</span>
-                <span className="block text-[7.5px] uppercase font-bold text-slate-500 tracking-wider">KDA Score</span>
+                <span className="block text-xs font-mono font-black text-white">3.4K</span>
+                <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">KDA Score</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* C. Campeones Fuertes (Bottom Right Grid) */}
-        <div className="xl:col-span-3 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-5 tech-corners shadow-xl flex flex-col justify-between min-h-[340px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border-warm">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">META: CAMPEONES FUERTES</span>
-            <span className="text-[8px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest font-mono">P{data.gameVersion || "14.9.1"}</span>
+        <div className="md:col-span-6 lg:col-span-3 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between min-h-[300px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-white">META: CAMPEONES FUERTES</span>
+            <span className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest font-mono">P{data.gameVersion || "14.9.1"}</span>
           </div>
 
           {/* Role Meta List */}
-          <div className="space-y-2.5 flex-1 flex flex-col justify-between">
-            {/* TOP LANE */}
-            <div className="flex items-center justify-between py-1 border-b border-border-warm/30 last:border-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">TOP</span>
-              <div className="flex gap-2">
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Aatrox.png`} alt="Aatrox" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Aatrox</span>
+          <div className="space-y-2 flex-1 flex flex-col justify-between">
+            {[
+              { key: 'top', label: 'TOP' },
+              { key: 'jungle', label: 'JNG' },
+              { key: 'mid', label: 'MID' },
+              { key: 'adc', label: 'BOT' },
+              { key: 'support', label: 'SUP' },
+            ].map(({ key, label }) => {
+              const list = (metaCache as Record<string, any[]>)[key] || [];
+              const top3 = list.slice(0, 3);
+              return (
+                <div key={key} className="flex items-center justify-between py-1 border-b border-border-warm/20 last:border-0">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+                  <div className="flex gap-2">
+                    {top3.map((champ, index) => {
+                      const name = champ.name;
+                      const winRate = champ.winRate || "50.0%";
+                      const cdnName = getChampionCdnName(name);
+                      return (
+                        <div key={index} className="group relative flex items-center justify-center">
+                          <img 
+                            src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${cdnName}.png`} 
+                            alt={name} 
+                            className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/favicon.svg";
+                            }}
+                          />
+                          <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8.5px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">
+                            {name} ({winRate})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Garen.png`} alt="Garen" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Garen</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Darius.png`} alt="Darius" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Darius</span>
-                </div>
-              </div>
-            </div>
-
-            {/* JUNGLE LANE */}
-            <div className="flex items-center justify-between py-1 border-b border-border-warm/30 last:border-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">JNG</span>
-              <div className="flex gap-2">
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/LeeSin.png`} alt="Lee Sin" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Lee Sin</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Viego.png`} alt="Viego" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Viego</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Brand.png`} alt="Brand" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Brand</span>
-                </div>
-              </div>
-            </div>
-
-            {/* MID LANE */}
-            <div className="flex items-center justify-between py-1 border-b border-border-warm/30 last:border-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">MID</span>
-              <div className="flex gap-2">
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Ahri.png`} alt="Ahri" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Ahri</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Zed.png`} alt="Zed" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Zed</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Yone.png`} alt="Yone" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Yone</span>
-                </div>
-              </div>
-            </div>
-
-            {/* BOT LANE */}
-            <div className="flex items-center justify-between py-1 border-b border-border-warm/30 last:border-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">BOT</span>
-              <div className="flex gap-2">
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Jinx.png`} alt="Jinx" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Jinx</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Kaisa.png`} alt="Kai'Sa" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Kai'Sa</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Ezreal.png`} alt="Ezreal" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Ezreal</span>
-                </div>
-              </div>
-            </div>
-
-            {/* SUPPORT LANE */}
-            <div className="flex items-center justify-between py-1 border-b border-border-warm/30 last:border-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">SUP</span>
-              <div className="flex gap-2">
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Thresh.png`} alt="Thresh" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Thresh</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Lux.png`} alt="Lux" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Lux</span>
-                </div>
-                <div className="group relative flex items-center justify-center">
-                  <img src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/Nautilus.png`} alt="Nautilus" className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" />
-                  <span className="absolute bottom-full mb-1 scale-0 transition-all rounded bg-[#0b0b0e] p-1 text-[8px] text-white group-hover:scale-100 whitespace-nowrap border border-border-warm z-20">Nautilus</span>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>

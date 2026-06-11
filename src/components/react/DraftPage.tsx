@@ -403,11 +403,11 @@ export const DraftPage = () => {
                             if (everyonePicked && !lastEveryonePickedRef.current) {
                                 lastEveryonePickedRef.current = true;
                                 triggerImport = true;
-                                console.log(`🏁 [FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
+                                console.log(`[FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
                             }
 
                             if (triggerImport) {
-                                console.log(`🎯 [AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
+                                console.log(`[AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
                                 await importToClient({ ...buildData, id: myId });
                             }
                         }
@@ -594,12 +594,6 @@ export const DraftPage = () => {
                             </div>
                             
                             <div className="flex items-center gap-3">
-                                {/* Indicador LCU sutil */}
-                                <div className="flex items-center gap-1.5 border border-border-warm bg-black/45 px-2.5 py-1 rounded-sm select-none" title={isConnected ? 'LCU Conectado' : 'LCU Desconectado'}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-red-500 shadow-[0_0_6px_#ef4444]'}`} />
-                                    <span className="text-[8px] font-black tracking-wider text-slate-400 uppercase font-mono">LCU</span>
-                                </div>
-
                                 <div className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm select-none ${
                                     isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
                                 }`}>
