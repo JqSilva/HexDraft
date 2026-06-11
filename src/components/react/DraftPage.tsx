@@ -100,6 +100,7 @@ export const DraftPage = () => {
     const lastFingerprintRef = useRef<string>("");
     const lastImportedIdRef = useRef<number>(0);
     const lastImportedSignatureRef = useRef<string>("");
+    const lastEveryonePickedRef = useRef<boolean>(false);
     const currentDataRef = useRef<any>(null);
     const isPollingRef = useRef<boolean>(false);
     const apiTimeAtSyncRef = useRef<number>(0);
@@ -282,6 +283,7 @@ export const DraftPage = () => {
         lastFingerprintRef.current = "";
         lastImportedIdRef.current = 0;
         lastImportedSignatureRef.current = "";
+        lastEveryonePickedRef.current = false;
         lastActionKeyRef.current = "none";
         timestampAtSyncRef.current = 0;
         activeActionRef.current = null;
@@ -385,8 +387,26 @@ export const DraftPage = () => {
                             const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
                             const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
 
+                            // Comprobar si todos los participantes de la selección han bloqueado sus campeones
+                            const everyonePicked = myId > 0 && 
+                                data.myTeam.every((p: any) => p.championId > 0) && 
+                                (data.theirTeam.length === 0 || data.theirTeam.every((p: any) => p.championId > 0));
+
+                            let triggerImport = false;
+
                             if (buildSig !== lastImportedSignatureRef.current) {
                                 lastImportedSignatureRef.current = buildSig;
+                                triggerImport = true;
+                            }
+
+                            // Si todos acaban de elegir, forzamos una importación final definitiva con las recomendaciones finales
+                            if (everyonePicked && !lastEveryonePickedRef.current) {
+                                lastEveryonePickedRef.current = true;
+                                triggerImport = true;
+                                console.log(`🏁 [FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
+                            }
+
+                            if (triggerImport) {
                                 console.log(`🎯 [AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
                                 await importToClient({ ...buildData, id: myId });
                             }
@@ -521,7 +541,7 @@ export const DraftPage = () => {
     }, [inDraft, view, currentBuild]);
 
     return (
-        <div className="flex-1 flex flex-col w-full max-w-[1550px] mx-auto px-4 py-8 overflow-x-hidden relative">
+        <div className="flex-1 flex flex-col justify-center w-full max-w-[1550px] mx-auto px-4 py-8 overflow-x-hidden relative">
             {/* TOAST DE CONEXIÓN */}
             {toast && (
                 <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 duration-350 select-none
