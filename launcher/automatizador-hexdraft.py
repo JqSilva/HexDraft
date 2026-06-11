@@ -4,6 +4,7 @@ import subprocess
 import time
 import ctypes
 import json
+import re
 
 # === CONFIGURACIÓN ===
 APP_URL = "http://localhost:4321/dashboard"
@@ -80,19 +81,21 @@ def get_browser_command(url):
     webbrowser.open(url)
     return None
 
-def close_window_by_title(valid_titles):
-    """Busca ventanas con los títulos exactos indicados usando APIs nativas de Windows y les envía WM_CLOSE."""
+def close_window_by_title_pattern(title_pattern):
+    """Busca ventanas cuyos títulos coinciden con el patrón regex indicado usando APIs nativas de Windows y les envía WM_CLOSE."""
     try:
         user32 = ctypes.windll.user32
         WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+        
+        compiled_regex = re.compile(title_pattern)
         
         def enum_windows_callback(hwnd, lparam):
             length = user32.GetWindowTextLengthW(hwnd)
             if length > 0:
                 buffer = ctypes.create_unicode_buffer(length + 1)
                 user32.GetWindowTextW(hwnd, buffer, length + 1)
-                # Comparar por igualdad exacta para no interferir con pestañas abiertas en navegadores ordinarios
-                if buffer.value in valid_titles:
+                # Comparar usando expresión regular para tolerar títulos dinámicos
+                if compiled_regex.match(buffer.value):
                     # Enviar mensaje WM_CLOSE (0x0010)
                     user32.PostMessageW(hwnd, 0x0010, 0, 0)
             return True
@@ -124,9 +127,9 @@ def start_services(node_path):
 def stop_services():
     global node_process
     try:
-        # 1. Cerrar la ventana del navegador (solo si coincide exactamente con los títulos de la app)
-        valid_titles = {"HexDraft", "HexDraft | LCU Real-Time", "HexDraft | Dashboard", "HexDraft | Panel de Control"}
-        close_window_by_title(valid_titles)
+        # 1. Cerrar la ventana del navegador (coincide con títulos exactos y dinámicos)
+        pattern = r"^(HexDraft|HexDraft \| LCU Real-Time|HexDraft \| Dashboard|HexDraft \| Panel de Control|HexDraft \| Build de .*)$"
+        close_window_by_title_pattern(pattern)
         
         # 2. Terminar el servidor local
         if node_process:

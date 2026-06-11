@@ -3,7 +3,7 @@
 const activePath = Astro.url.pathname;
 ---
 
-<aside id="sidebar" class="h-screen bg-[#0a0a0d] border-r border-[#1b1b1f] flex flex-col justify-between p-4 transition-all duration-300 w-64 select-none shrink-0 relative z-20 overflow-hidden">
+<aside id="sidebar" transition:persist class="h-screen bg-[#0a0a0d] border-r border-[#1b1b1f] flex flex-col justify-between p-4 transition-all duration-300 w-64 select-none shrink-0 relative z-20 overflow-hidden">
   <!-- Top / Logo and Navigation -->
   <div class="flex flex-col gap-6">
     <!-- Brand Header -->

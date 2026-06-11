@@ -3,6 +3,7 @@ import "../styles/global.css";
 import HextechBackground from "../components/HextechBackground.astro";
 import Sidebar from "../components/Sidebar.astro";
 import { AutoUpdateGuard } from "../components/react/AutoUpdateGuard";
+import { ClientRouter } from "astro:transitions";
 
 const { title = "HexDraft" } = Astro.props;
 ---
@@ -16,6 +17,7 @@ const { title = "HexDraft" } = Astro.props;
 		<link rel="icon" href="/favicon.ico?v=3" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<ClientRouter />
 	</head>
 	<body class="relative h-full text-slate-200 overflow-hidden font-sans bg-[#08080b]">
 		<div id="app-layout" class="flex h-full w-full overflow-hidden">
@@ -36,17 +38,19 @@ const { title = "HexDraft" } = Astro.props;
 		<div id="global-page-loader" class="fixed top-0 left-0 h-[3px] z-[10000] bg-purple-accent shadow-[0_1px_10px_rgba(144,85,255,0.8)] transition-all duration-300 ease-out" style="width: 0%; opacity: 0;"></div>
 
 		<script is:inline>
-			const loader = document.getElementById('global-page-loader');
+			const getLoader = () => document.getElementById('global-page-loader');
 
 			const showLoader = () => {
+				const loader = getLoader();
 				if (loader) {
-					loader.style.transition = 'width 2s cubic-bezier(0.08, 0.82, 0.17, 1), opacity 0.1s ease';
+					loader.style.transition = 'width 1.5s cubic-bezier(0.08, 0.82, 0.17, 1), opacity 0.1s ease';
 					loader.style.opacity = '1';
 					loader.style.width = '80%';
 				}
 			};
 
 			const hideLoader = () => {
+				const loader = getLoader();
 				if (loader) {
 					loader.style.transition = 'width 0.3s ease, opacity 0.3s ease';
 					loader.style.width = '100%';
@@ -59,34 +63,8 @@ const { title = "HexDraft" } = Astro.props;
 				}
 			};
 
-			// Si el DOM ya está listo (o casi listo), lo ocultamos inmediatamente
-			if (document.readyState === 'interactive' || document.readyState === 'complete') {
-				setTimeout(hideLoader, 100);
-			} else {
-				window.addEventListener('DOMContentLoaded', hideLoader);
-			}
-			
-			// Asegurar que se oculte al volver atrás en el historial (BFcache)
-			window.addEventListener('pageshow', (event) => {
-				if (event.persisted) {
-					hideLoader();
-				}
-			});
-
-			// Mostrar la barra de progreso al hacer click en enlaces internos
-			document.addEventListener('click', (e) => {
-				const target = e.target;
-				if (target) {
-					const link = target.closest('a');
-					if (link) {
-						const href = link.getAttribute('href');
-						// Interceptar enlaces internos
-						if (href && href.startsWith('/') && !href.startsWith('/#') && link.target !== '_blank') {
-							showLoader();
-						}
-					}
-				}
-			});
+			document.addEventListener('astro:before-preparation', showLoader);
+			document.addEventListener('astro:page-load', hideLoader);
 		</script>
 	</body>
 </html>
