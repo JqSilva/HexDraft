@@ -5,6 +5,7 @@ import time
 import ctypes
 import json
 import re
+import datetime
 
 # === CONFIGURACIÓN ===
 APP_URL = "http://localhost:4321/dashboard"
@@ -23,6 +24,21 @@ else:
     if os.path.basename(PROYECTO_DIR) == "launcher":
         PROYECTO_DIR = os.path.dirname(PROYECTO_DIR)
 
+# Resolver directorio de logs seguro (AppData/Local/HexDraft)
+LOCAL_APP_DATA = os.environ.get('LOCALAPPDATA', os.path.expanduser('~'))
+LOG_DIR = os.path.join(LOCAL_APP_DATA, "HexDraft")
+LOG_FILE = os.path.join(LOG_DIR, "hexdraft.log")
+
+def write_log(message):
+    """Escribe un mensaje de log con marca de tiempo en la ruta segura de AppData."""
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{now}] {message}\n")
+    except Exception:
+        pass
+
 _mutex_holder = None
 
 def acquire_mutex():
@@ -33,12 +49,12 @@ def acquire_mutex():
         err = ctypes.windll.kernel32.GetLastError()
         if err == 183:  # ERROR_ALREADY_EXISTS
             return False
-    except Exception:
-        pass
+    except Exception as e:
+        write_log(f"Error al adquirir mutex: {e}")
     return True
 
 def get_lol_path():
-    """Lee la ruta de instalación de League of Legends configurada."""
+    """Lee la ruta de instalación de League of Legends configurada o busca en rutas y unidades alternativas."""
     config_path = os.path.join(PROYECTO_DIR, 'hexdraft-config.json')
     if os.path.exists(config_path):
         try:
@@ -46,9 +62,22 @@ def get_lol_path():
                 data = json.load(f)
                 if isinstance(data, dict) and 'lolPath' in data:
                     return data['lolPath']
-        except Exception:
-            pass
-    return 'C:\\Riot Games\\League of Legends\\lockfile'
+        except Exception as e:
+            write_log(f"Error leyendo hexdraft-config.json: {e}")
+            
+    # Probar ruta por defecto
+    default_path = 'C:\\Riot Games\\League of Legends\\lockfile'
+    if os.path.exists(default_path):
+        return default_path
+        
+    # Buscar en otras unidades comunes (D:, E:, F:, G:, H:)
+    for drive in ['D', 'E', 'F', 'G', 'H','B']:
+        alt_path = f"{drive}:\\Riot Games\\League of Legends\\lockfile"
+        if os.path.exists(alt_path):
+            write_log(f"Ruta alternativa de LoL encontrada: {alt_path}")
+            return alt_path
+            
+    return default_path
 
 def is_lol_active():
     """Determina si el juego está activo mediante el archivo lockfile."""
@@ -101,50 +130,74 @@ def close_window_by_title_pattern(title_pattern):
             return True
             
         user32.EnumWindows(WNDENUMPROC(enum_windows_callback), 0)
-    except Exception:
-        pass
+    except Exception as e:
+        write_log(f"Error en close_window_by_title_pattern: {e}")
 
 node_process = None
 
 def start_services(node_path):
     global node_process
     try:
+        node_log_file = os.path.join(LOG_DIR, "node_error.log")
+        write_log(f"Iniciando servicios... Node path: {node_path}")
+        try:
+            node_log = open(node_log_file, "w", encoding="utf-8")
+        except Exception as e:
+            write_log(f"No se pudo crear archivo de log de node: {e}")
+            node_log = subprocess.DEVNULL
+
         # Iniciar node en segundo plano oculto
         node_process = subprocess.Popen(
             [node_path, "--experimental-sqlite", "dist/server/entry.mjs"],
             cwd=PROYECTO_DIR,
+            stdout=node_log,
+            stderr=node_log,
             creationflags=subprocess.CREATE_NO_WINDOW
         )
+        write_log(f"Proceso Node iniciado con PID {node_process.pid}")
         time.sleep(5)  # Esperar a que el servidor web local esté listo
         
         # Levantar la ventana del navegador en modo app
         cmd = get_browser_command(APP_URL)
         if cmd:
+            write_log(f"Abriendo navegador: {cmd}")
             subprocess.Popen(cmd)
-    except Exception:
-        pass
+        else:
+            write_log("Abriendo navegador con fallback (webbrowser)")
+    except Exception as e:
+        write_log(f"Error crítico al iniciar servicios: {e}")
 
 def stop_services():
     global node_process
     try:
         # 1. Cerrar la ventana del navegador (coincide con títulos exactos y dinámicos)
         pattern = r"^(HexDraft|HexDraft \| LCU Real-Time|HexDraft \| Dashboard|HexDraft \| Panel de Control|HexDraft \| Build de .*)$"
+        write_log("Cerrando ventanas de HexDraft...")
         close_window_by_title_pattern(pattern)
         
         # 2. Terminar el servidor local
         if node_process:
+            write_log(f"Terminando proceso Node (PID: {node_process.pid})...")
             node_process.terminate()
             node_process.wait(timeout=3)
-    except Exception:
+            write_log("Proceso Node terminado correctamente.")
+    except Exception as e:
+        write_log(f"Error deteniendo servicios de Node de forma ordenada: {e}")
         if node_process:
             try:
+                write_log("Forzando cierre (kill) de Node...")
                 node_process.kill()
-            except Exception:
-                pass
+            except Exception as e_kill:
+                write_log(f"Error al forzar cierre de Node: {e_kill}")
     node_process = None
 
 def main():
+    write_log("=== MONITOR INICIADO EN SEGUNDO PLANO ===")
+    write_log(f"Directorio del proyecto: {PROYECTO_DIR}")
+    write_log(f"Directorio de logs: {LOG_DIR}")
+    
     if not acquire_mutex():
+        write_log("Mutex ya en uso. Otra instancia de HexDraft se está ejecutando. Saliendo.")
         sys.exit(0)
 
     node_path = os.path.join(PROYECTO_DIR, "bin", "node.exe")
@@ -153,23 +206,29 @@ def main():
     if not os.path.exists(node_path):
         node_path = "node"
 
+    write_log(f"Ruta de Node resuelta: {node_path}")
+    write_log(f"Ruta de League of Legends (lockfile) configurada: {get_lol_path()}")
+
     server_active = False
 
     while True:
         try:
             lol_on = is_lol_active()
             if lol_on and not server_active:
+                write_log("League of Legends detectado activo. Iniciando servicios...")
                 start_services(node_path)
                 server_active = True
                 time.sleep(30)
             elif not lol_on and server_active:
+                write_log("League of Legends ya no está activo. Deteniendo servicios...")
                 stop_services()
                 server_active = False
                 time.sleep(10)
             
             interval = 8 if not server_active else 20
             time.sleep(interval)
-        except Exception:
+        except Exception as e:
+            write_log(f"Error en bucle del monitor: {e}")
             time.sleep(20)
 
 if __name__ == "__main__":
