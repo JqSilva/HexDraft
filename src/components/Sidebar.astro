@@ -144,6 +144,25 @@ const activePath = Astro.url.pathname;
     }
   }
 
+  function updateActiveLink() {
+    const currentPath = window.location.pathname;
+    const items = document.querySelectorAll('.sidebar-item');
+    items.forEach((item) => {
+      const href = item.getAttribute('href');
+      const isActive = href === '/' 
+        ? currentPath === '/' 
+        : (href ? (currentPath === href || currentPath.startsWith(href + '/')) : false);
+
+      if (isActive) {
+        item.classList.add('bg-[#9055ff]/20', 'text-white', 'shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]');
+        item.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/[0.02]');
+      } else {
+        item.classList.remove('bg-[#9055ff]/20', 'text-white', 'shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]');
+        item.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/[0.02]');
+      }
+    });
+  }
+
   let collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
   updateSidebarState(collapsed);
 
@@ -173,7 +192,14 @@ const activePath = Astro.url.pathname;
     }
   }
 
+  // Initial updates
+  updateActiveLink();
   fetchSidebarProfile();
+
+  // Listeners and intervals
+  document.addEventListener('astro:page-load', () => {
+    updateActiveLink();
+  });
   setInterval(fetchSidebarProfile, 4000);
 </script>
 
