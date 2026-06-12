@@ -171,7 +171,7 @@ def stop_services():
     global node_process
     try:
         # 1. Cerrar la ventana del navegador (coincide con títulos exactos y dinámicos)
-        pattern = r"^(HexDraft|HexDraft \| LCU Real-Time|HexDraft \| Dashboard|HexDraft \| Panel de Control|HexDraft \| Build de .*)$"
+        pattern = r"^(HexDraft|HexDraft \| LCU Real-Time|HexDraft \| Dashboard|HexDraft \| Panel de Control|HexDraft \| .* |HexDraft \| Build de .*)$"
         write_log("Cerrando ventanas de HexDraft...")
         close_window_by_title_pattern(pattern)
         
