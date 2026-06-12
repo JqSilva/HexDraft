@@ -13,7 +13,21 @@ export interface LCUData {
 
 export function getLolPath(): string {
   const dbPath = configRepo.getConfig('lol_path');
-  return dbPath || DEFAULT_PATH;
+  if (dbPath) return dbPath;
+
+  if (fs.existsSync(DEFAULT_PATH)) {
+    return DEFAULT_PATH;
+  }
+
+  // Buscar en otras unidades (D:, E:, F:, G:, H:, B:)
+  for (const drive of ['D', 'E', 'F', 'G', 'H', 'B']) {
+    const altPath = `${drive}:\\Riot Games\\League of Legends\\lockfile`;
+    if (fs.existsSync(altPath)) {
+      return altPath;
+    }
+  }
+
+  return DEFAULT_PATH;
 }
 
 export function saveLolPath(inputPath: string): string {
