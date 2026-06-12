@@ -36,14 +36,6 @@ def preparar_entorno_node():
             print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
-    # 2. Generar icono favicon.ico multi-resolución a partir del SVG
-    print("Generando favicon.ico de alta resolución a partir del SVG...")
-    try:
-        subprocess.run(["node", "scripts/generate-ico.js"], shell=True, check=True)
-        print("[OK] Generación de favicon.ico finalizada.")
-    except subprocess.CalledProcessError as e:
-        print(f"[WARN] No se pudo generar el favicon.ico de alta resolución: {e}")
-        print("Continuando con la compilación usando el favicon.ico existente...")
 
     # 3. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
     print("Limpiando compilación anterior y compilando proyecto Astro...")
@@ -80,7 +72,7 @@ def build_python():
     temp_dist_dir = os.path.abspath("build/pyinstaller_temp")
     release_dir = os.path.abspath("release/HexDraft")
     os.makedirs(release_dir, exist_ok=True)
-    icon_path = os.path.join("public", "favicon.ico")
+    icon_path = os.path.join("public", "app-icon.ico")
     
     # Usamos sys.executable para asegurar que use el mismo python
     command = [
@@ -160,13 +152,22 @@ def copiar_recursos_release(release_dir):
     else:
         print("[WARN] Carpeta src/lib/data no encontrada.")
 
-    # 4. Copiar public/
-    if os.path.exists("public"):
-        print("Copiando carpeta public...")
-        target_public = os.path.join(release_dir, "public")
-        if os.path.exists(target_public):
-            shutil.rmtree(target_public)
-        shutil.copytree("public", target_public)
+    # 4. Copiar archivos de public/ (solo los iconos activos para producción)
+    print("Copiando recursos de public...")
+    target_public = os.path.join(release_dir, "public")
+    if os.path.exists(target_public):
+        shutil.rmtree(target_public)
+    os.makedirs(target_public, exist_ok=True)
+    
+    archivos_public = ["app-icon.ico", "app-icon.svg", "favicon.ico", "favicon.svg"]
+    for archivo in archivos_public:
+        src_path = os.path.join("public", archivo)
+        dest_path = os.path.join(target_public, archivo)
+        if os.path.exists(src_path):
+            shutil.copy2(src_path, dest_path)
+            print(f"  Copiado: {archivo}")
+        else:
+            print(f"  [WARN] No se encontró {src_path}")
 
     # 5. Copiar Detener-HexDraft.bat
     bat_path = os.path.join("launcher", "Detener-HexDraft.bat")
