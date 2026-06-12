@@ -5,18 +5,27 @@
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft
 AppVersion=1.2
+AppVerName=HexDraft 1.2.0
+VersionInfoVersion=1.2.0.0
 AppPublisher=HexDraft
+AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
+AppSupportURL=https://github.com/JqSilva/HexDraft-Launcher
+AppUpdatesURL=https://github.com/JqSilva/HexDraft-Launcher/releases
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=HexDraft_Setup
+OutputBaseFilename=HexDraft-Setup-1.2.0
 SetupIconFile=..\public\app-icon.ico
+UninstallDisplayIcon={app}\HexDraft.exe
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern dark
 PrivilegesRequired=lowest
 AppMutex=Global\HexDraft_App_Mutex_928F6DFD
 CloseApplications=yes
+SetupLogging=yes
+AppComments=Herramienta de análisis de draft en tiempo real para League of Legends
+AppContact=support@hexdraft.cl
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
@@ -31,14 +40,14 @@ Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recurses
 
 [Icons]
 ; Acceso directo al monitor/launcher principal
-Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"
-Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"
+Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: desktopicon
 
 ; Acceso directo para detener el servicio
 Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 
 ; Acceso directo de inicio automático (Startup)
-Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\favicon.ico"; Tasks: startup
+Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: startup
 
 [Run]
 ; Opción para ejecutar la aplicación al finalizar la instalación
