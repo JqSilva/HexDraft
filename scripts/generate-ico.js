@@ -51,17 +51,18 @@ function createIcoFromPngs(pngBuffers) {
 }
 
 async function main() {
-  console.log(`🎨 Iniciando conversión de SVG a ICO...`);
-  console.log(`SVG de origen: ${SVG_PATH}`);
-  console.log(`ICO de destino: ${ICO_PATH}`);
+  const targets = [
+    {
+      svg: SVG_PATH,
+      ico: ICO_PATH
+    },
+    {
+      svg: path.join(PROJECT_ROOT, 'public', 'app-icon.svg'),
+      ico: path.join(PROJECT_ROOT, 'public', 'app-icon.ico')
+    }
+  ];
 
-  if (!fs.existsSync(SVG_PATH)) {
-    console.error(`❌ Error: No se encuentra el archivo SVG de origen en ${SVG_PATH}`);
-    process.exit(1);
-  }
-
-  const svgContent = fs.readFileSync(SVG_PATH, 'utf8');
-
+  console.log(`🎨 Iniciando conversión de SVGs a ICOs...`);
   console.log(`🚀 Iniciando Puppeteer en segundo plano...`);
   const browser = await puppeteer.launch({
     headless: true,
@@ -71,56 +72,66 @@ async function main() {
   try {
     const page = await browser.newPage();
     
-    // Configurar contenido HTML con el SVG adaptado para ocupar el viewport completo
-    await page.setContent(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body, html {
-              margin: 0;
-              padding: 0;
-              width: 100%;
-              height: 100%;
-              background: transparent;
-              overflow: hidden;
-            }
-            svg {
-              width: 100%;
-              height: 100%;
-              display: block;
-            }
-          </style>
-        </head>
-        <body>
-          ${svgContent}
-        </body>
-      </html>
-    `);
-
-    const pngBuffers = [];
-
-    for (const size of SIZES) {
-      console.log(`📸 Renderizando resolución ${size}x${size}...`);
-      await page.setViewport({
-        width: size,
-        height: size,
-        deviceScaleFactor: 1
-      });
-
-      const buffer = await page.screenshot({
-        type: 'png',
-        omitBackground: true
-      });
+    for (const target of targets) {
+      if (!fs.existsSync(target.svg)) {
+        console.log(`⚠️ Advertencia: No se encontró el archivo SVG en ${target.svg}. Saltando...`);
+        continue;
+      }
       
-      pngBuffers.push({ width: size, height: size, buffer });
-    }
+      console.log(`Procesando: ${path.basename(target.svg)} -> ${path.basename(target.ico)}`);
+      const svgContent = fs.readFileSync(target.svg, 'utf8');
 
-    console.log(`📦 Empaquetando PNGs en archivo ICO...`);
-    const icoBuffer = createIcoFromPngs(pngBuffers);
-    
-    fs.writeFileSync(ICO_PATH, icoBuffer);
-    console.log(`✅ ¡Éxito! favicon.ico creado con éxito en ${ICO_PATH} (${icoBuffer.length} bytes)`);
+      // Configurar contenido HTML con el SVG adaptado para ocupar el viewport completo
+      await page.setContent(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body, html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                overflow: hidden;
+              }
+              svg {
+                width: 100%;
+                height: 100%;
+                display: block;
+              }
+            </style>
+          </head>
+          <body>
+            ${svgContent}
+          </body>
+        </html>
+      `);
+
+      const pngBuffers = [];
+
+      for (const size of SIZES) {
+        console.log(`   📸 Renderizando resolución ${size}x${size}...`);
+        await page.setViewport({
+          width: size,
+          height: size,
+          deviceScaleFactor: 1
+        });
+
+        const buffer = await page.screenshot({
+          type: 'png',
+          omitBackground: true
+        });
+        
+        pngBuffers.push({ width: size, height: size, buffer });
+      }
+
+      console.log(`   📦 Empaquetando PNGs en archivo ICO...`);
+      const icoBuffer = createIcoFromPngs(pngBuffers);
+      
+      fs.writeFileSync(target.ico, icoBuffer);
+      console.log(`   ✅ ¡Éxito! ${path.basename(target.ico)} creado con éxito (${icoBuffer.length} bytes)`);
+    }
 
   } catch (error) {
     console.error(`❌ Ocurrió un error durante la generación del icono:`, error);
