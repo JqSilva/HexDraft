@@ -5,6 +5,7 @@ import { CHAMPIONS_DB } from '../data/championdb.js';
 import { championsRepo } from './champions.repo.js';
 import { db } from './sqlite.js';
 import { configRepo } from './config.repo.js';
+import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
 export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -258,6 +259,13 @@ export function runMigration() {
     console.log("💾 Timestamps de configuración actualizados correctamente.");
   } catch (err) {
     console.error("⚠️ Error al actualizar timestamps de configuración:", err);
+  }
+
+  try {
+    console.log("🧠 Sincronizando datos semánticos de campeones durante la migración...");
+    syncChampionsSemanticData();
+  } catch (e: any) {
+    console.error("⚠️ Error al sincronizar datos semánticos de campeones:", e);
   }
 
   console.log("🎉 MIGRACIÓN COMPLETADA CON ÉXITO.");

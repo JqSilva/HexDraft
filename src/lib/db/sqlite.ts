@@ -28,7 +28,77 @@ db.exec(`
     is_frontline INTEGER DEFAULT 0,
     is_hypercarry INTEGER DEFAULT 0,
     has_hard_cc INTEGER DEFAULT 0,
-    tags TEXT DEFAULT '[]' -- Array JSON de tags de juego
+    tags TEXT DEFAULT '[]', -- Array JSON de tags de juego
+    
+    -- Nuevos campos semánticos
+    tactic_role TEXT DEFAULT 'teamfight',
+    mobility TEXT DEFAULT 'medium',
+    target_priority TEXT DEFAULT 'any',
+    team_needs TEXT DEFAULT '[]',
+    team_provides TEXT DEFAULT '[]',
+    has_shield INTEGER DEFAULT 0,
+    has_sustain INTEGER DEFAULT 0,
+    lane_phase TEXT DEFAULT 'average',
+    resource_dependency TEXT DEFAULT 'medium'
+  );
+`);
+
+// Migración dinámica de columnas en champions por si el usuario tiene una base de datos existente
+try {
+  const tableInfo = db.prepare("PRAGMA table_info(champions)").all() as any[];
+  const columns = tableInfo.map(c => c.name);
+  const newCols = {
+    tactic_role: "TEXT DEFAULT 'teamfight'",
+    mobility: "TEXT DEFAULT 'medium'",
+    target_priority: "TEXT DEFAULT 'any'",
+    team_needs: "TEXT DEFAULT '[]'",
+    team_provides: "TEXT DEFAULT '[]'",
+    has_shield: "INTEGER DEFAULT 0",
+    has_sustain: "INTEGER DEFAULT 0",
+    lane_phase: "TEXT DEFAULT 'average'",
+    resource_dependency: "TEXT DEFAULT 'medium'"
+  };
+  for (const [colName, colType] of Object.entries(newCols)) {
+    if (!columns.includes(colName)) {
+      console.log(`[MIGRATION] Añadiendo columna champions.${colName}...`);
+      db.exec(`ALTER TABLE champions ADD COLUMN ${colName} ${colType};`);
+    }
+  }
+} catch (e) {
+  console.error("⚠️ Error en migración dinámica de columnas:", e);
+}
+
+// Nueva tabla de items semánticos
+db.exec(`
+  CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    gold INTEGER DEFAULT 0,
+    epicness TEXT DEFAULT 'basic', -- starter, basic, epic, legendary, mythic
+    categories TEXT DEFAULT '[]',  -- JSON array de tags de Community Dragon
+    icon_path TEXT
+  );
+`);
+
+// Nueva tabla de historial del jugador
+db.exec(`
+  CREATE TABLE IF NOT EXISTS player_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT UNIQUE,
+    champion_id INTEGER,
+    lane TEXT,
+    win INTEGER,           -- 1 = victoria, 0 = derrota
+    kills INTEGER,
+    deaths INTEGER,
+    assists INTEGER,
+    cs_per_min REAL,
+    game_duration INTEGER, -- segundos
+    patch TEXT,
+    enemy_comp TEXT,       -- JSON array de IDs
+    ally_comp TEXT,        -- JSON array de IDs
+    items_built TEXT,      -- JSON array de IDs
+    recorded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (champion_id) REFERENCES champions(id)
   );
 `);
 
@@ -111,21 +181,42 @@ insertConfigStmt.run('sync_period_days', '3');
 insertConfigStmt.run('lane_sync_period_days', '21');
 insertConfigStmt.run('last_sync_timestamp', '-');
 insertConfigStmt.run('last_lane_sync_timestamp', '-');
-insertConfigStmt.run('engine_weights', JSON.stringify({
+
+// Actualizar engine_weights en config fusionándolo si ya existe, o insertándolo
+const defaultWeights = {
   meta_base: 0.4,
   synergy: 2.2,
   matchup: 0.45,
   counter: 0.35,
   composition: 0.8,
   utility: 0.5,
-  scaling: 1.0
-}));
+  scaling: 1.0,
+  tactic_role_bonus: 1.5,
+  personal_mastery: 0.8,
+  flex_value: 0.6,
+  phase_multiplier_pick5: 1.4
+};
+
+try {
+  const checkWeights = db.prepare('SELECT value FROM config WHERE key = ?').get('engine_weights') as { value: string } | undefined;
+  if (checkWeights) {
+    const existingWeights = JSON.parse(checkWeights.value);
+    const mergedWeights = { ...defaultWeights, ...existingWeights };
+    db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run('engine_weights', JSON.stringify(mergedWeights));
+  } else {
+    insertConfigStmt.run('engine_weights', JSON.stringify(defaultWeights));
+  }
+} catch (e) {
+  console.error("⚠️ Error configurando engine_weights:", e);
+}
 
 // Creación de índices para optimizar consultas frecuentes
 db.exec('CREATE INDEX IF NOT EXISTS idx_champions_lane ON champions(lane);');
 db.exec('CREATE INDEX IF NOT EXISTS idx_matchups_champ_type ON matchups(champion_id, matchup_type);');
 db.exec('CREATE INDEX IF NOT EXISTS idx_synergies_champ ON synergies(champion_id);');
 db.exec('CREATE INDEX IF NOT EXISTS idx_builds_champ ON builds(champion_id);');
+db.exec('CREATE INDEX IF NOT EXISTS idx_items_categories ON items(categories);');
+db.exec('CREATE INDEX IF NOT EXISTS idx_player_history_champ ON player_history(champion_id);');
 
 console.log('✅ Estructura de base de datos SQLite y tabla config inicializadas correctamente.');
 

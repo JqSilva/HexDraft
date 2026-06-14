@@ -1,0 +1,179 @@
+// src/lib/engine/compositionAnalyzer.ts
+import { ENRICHED_DB } from './dataProvider.js';
+
+export interface CompositionAnalysis {
+  tankCount: number;
+  healerCount: number;
+  apCount: number;
+  adCount: number;
+  ccCount: number;
+  assassinCount: number;
+  
+  primaryTacticRole: 'engage' | 'poke' | 'teamfight' | 'splitpush' | 'mixed';
+  hasEngageInitiator: boolean;
+  hasPeelForCarry: boolean;
+  hasFrontline: boolean;
+  hasHypercarry: boolean;
+  
+  damageProfile: {
+    physicalPct: number;
+    magicPct: number;
+    isBalanced: boolean;
+  };
+  
+  teamScaling: 'early' | 'mid' | 'late';
+  gaps: ('engage' | 'peel' | 'frontline' | 'hypercarry' | 'cc' | 'healing' | 'splitpush')[];
+  primaryThreats: string[];
+  winCondition: 'early_pressure' | 'teamfight' | 'splitpush' | 'poke_siege' | 'dive_backline' | 'scaling';
+}
+
+export function analyzeComposition(champNames: string[]): CompositionAnalysis {
+  let tankCount = 0;
+  let healerCount = 0;
+  let apCount = 0;
+  let adCount = 0;
+  let ccCount = 0;
+  let assassinCount = 0;
+  
+  let hasEngageInitiator = false;
+  let hasPeelForCarry = false;
+  let hasFrontline = false;
+  let hasHypercarry = false;
+  
+  let totalPhysical = 0;
+  let totalMagic = 0;
+  let totalScalingValue = 0; // 1 = early, 2 = mid, 3 = late
+  
+  const tacticRoleCounts: Record<string, number> = {};
+  
+  const HEAVY_HEALERS = new Set([
+    "soraka", "yuumi", "sylas", "aatrox", "briar", "vladimir", "drmundo", 
+    "warwick", "swain", "nami", "sona", "seraphine", "taric", "renekton", 
+    "volibear", "illaoi", "fiddlesticks", "kayn", "nilah", "samira", "olaf"
+  ]);
+
+  champNames.forEach(name => {
+    const champ = ENRICHED_DB[name];
+    if (!champ) return;
+    
+    // Classes & tags
+    if (champ.class === 'Tank' || champ.isFrontline) {
+      tankCount++;
+      hasFrontline = true;
+    }
+    if (champ.class === 'Assassin') {
+      assassinCount++;
+    }
+    if (champ.hasHardCC) {
+      ccCount++;
+    }
+    if (champ.isHypercarry) {
+      hasHypercarry = true;
+    }
+    
+    const normName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (HEAVY_HEALERS.has(normName) || champ.hasSustain || champ.has_sustain) {
+      healerCount++;
+    }
+    
+    // Damage type
+    if (champ.damageType === 'AP' || champ.damage_type === 'AP') {
+      apCount++;
+      totalMagic += 80;
+      totalPhysical += 20;
+    } else if (champ.damageType === 'AD' || champ.damage_type === 'AD') {
+      adCount++;
+      totalPhysical += 80;
+      totalMagic += 20;
+    } else {
+      totalPhysical += 50;
+      totalMagic += 50;
+    }
+    
+    // Scaling
+    const scaling = champ.scalingType || champ.scaling_type || 'Mid';
+    if (scaling === 'Early') {
+      totalScalingValue += 1;
+    } else if (scaling === 'Late') {
+      totalScalingValue += 3;
+    } else {
+      totalScalingValue += 2;
+    }
+    
+    // Tactical Roles
+    const role = champ.tacticRole || champ.tactic_role || 'teamfight';
+    tacticRoleCounts[role] = (tacticRoleCounts[role] || 0) + 1;
+    
+    if (role === 'engage') hasEngageInitiator = true;
+    if (role === 'peel' || role === 'utility') hasPeelForCarry = true;
+  });
+  
+  // Primary tactic role
+  let primaryTacticRole: 'engage' | 'poke' | 'teamfight' | 'splitpush' | 'mixed' = 'mixed';
+  let maxRoleCount = 0;
+  Object.entries(tacticRoleCounts).forEach(([role, count]) => {
+    if (count > maxRoleCount && ['engage', 'poke', 'teamfight', 'splitpush'].includes(role)) {
+      maxRoleCount = count;
+      primaryTacticRole = role as any;
+    }
+  });
+  
+  // Scaling
+  const avgScaling = champNames.length > 0 ? totalScalingValue / champNames.length : 2.0;
+  let teamScaling: 'early' | 'mid' | 'late' = 'mid';
+  if (avgScaling < 1.6) teamScaling = 'early';
+  else if (avgScaling > 2.4) teamScaling = 'late';
+  
+  // Damage profile
+  const totalDmgSum = totalPhysical + totalMagic || 1;
+  const physicalPct = Math.round((totalPhysical / totalDmgSum) * 100);
+  const magicPct = 100 - physicalPct;
+  const isBalanced = physicalPct <= 65 && magicPct <= 65;
+  
+  // Gaps
+  const gaps: ('engage' | 'peel' | 'frontline' | 'hypercarry' | 'cc' | 'healing' | 'splitpush')[] = [];
+  if (!hasEngageInitiator) gaps.push('engage');
+  if (!hasPeelForCarry) gaps.push('peel');
+  if (!hasFrontline) gaps.push('frontline');
+  if (!hasHypercarry) gaps.push('hypercarry');
+  if (ccCount === 0) gaps.push('cc');
+  if (healerCount === 0) gaps.push('healing');
+  if (!tacticRoleCounts['splitpush']) gaps.push('splitpush');
+  
+  // Win condition inference
+  let winCondition: 'early_pressure' | 'teamfight' | 'splitpush' | 'poke_siege' | 'dive_backline' | 'scaling' = 'teamfight';
+  if (primaryTacticRole === 'splitpush') {
+    winCondition = 'splitpush';
+  } else if (primaryTacticRole === 'poke') {
+    winCondition = 'poke_siege';
+  } else if (assassinCount >= 2) {
+    winCondition = 'dive_backline';
+  } else if (teamScaling === 'early') {
+    winCondition = 'early_pressure';
+  } else if (teamScaling === 'late') {
+    winCondition = 'scaling';
+  }
+  
+  return {
+    tankCount,
+    healerCount,
+    apCount,
+    adCount,
+    ccCount,
+    assassinCount,
+    primaryTacticRole,
+    hasEngageInitiator,
+    hasPeelForCarry,
+    hasFrontline,
+    hasHypercarry,
+    damageProfile: {
+      physicalPct,
+      magicPct,
+      isBalanced
+    },
+    teamScaling,
+    gaps,
+    primaryThreats: [],
+    winCondition
+  };
+}

@@ -28,6 +28,21 @@ export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0
 
 const ENRICHED_DB: any = {};
 
+export const ITEMS_DB: Record<number, { id: number; name: string; gold: number; epicness: string; categories: string[]; iconPath: string }> = {};
+
+export function initializeItemsData(itemsData: any) {
+    // Limpiar previo
+    Object.keys(ITEMS_DB).forEach(key => delete (ITEMS_DB as any)[key]);
+    
+    // Rellenar
+    if (itemsData) {
+        Object.entries(itemsData).forEach(([id, item]: [string, any]) => {
+            ITEMS_DB[Number(id)] = item;
+        });
+        console.log(`✅ ItemsDB listo: ${Object.keys(ITEMS_DB).length} items cargados en memoria.`);
+    }
+}
+
 export interface MatchupData {
   name: string;
   winrate: string;

@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
 import { getNameFromId } from '../../lib/engine/engine.js';
+import { db } from '../../lib/db/sqlite.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -598,6 +599,50 @@ export const GET: APIRoute = async () => {
         enemies
       };
     });
+
+    // Guardar partidas en la tabla SQLite player_history para el motor de maestría personal
+    try {
+      const insertHistoryStmt = db.prepare(`
+        INSERT INTO player_history (
+          game_id, champion_id, lane, win, kills, deaths, assists, cs_per_min, game_duration, patch, enemy_comp, ally_comp, items_built
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(game_id) DO UPDATE SET
+          win=excluded.win,
+          kills=excluded.kills,
+          deaths=excluded.deaths,
+          assists=excluded.assists,
+          cs_per_min=excluded.cs_per_min,
+          items_built=excluded.items_built
+      `);
+      
+      db.exec('BEGIN TRANSACTION;');
+      parsedMatches.forEach((m: any) => {
+        const enemyComp = JSON.stringify(m.enemies.map((e: any) => e.championId));
+        const allyComp = JSON.stringify(m.allies.map((a: any) => a.championId));
+        const itemsBuilt = JSON.stringify(m.items.filter((id: number) => id > 0));
+
+        insertHistoryStmt.run(
+          String(m.gameId),
+          m.championId,
+          m.lane,
+          m.win ? 1 : 0,
+          m.kills,
+          m.deaths,
+          m.assists,
+          parseFloat(m.csPerMin || '0.0'),
+          m.gameDuration,
+          gameVersion,
+          enemyComp,
+          allyComp,
+          itemsBuilt
+        );
+      });
+      db.exec('COMMIT;');
+      console.log(`💾 Guardadas ${parsedMatches.length} partidas en la tabla player_history de SQLite.`);
+    } catch (saveHistoryErr) {
+      try { db.exec('ROLLBACK;'); } catch (_) {}
+      console.error("⚠️ Error al guardar partidas en SQLite:", saveHistoryErr);
+    }
 
     return new Response(JSON.stringify({ isConnected: true, gameVersion, matches: parsedMatches }), { status: 200 });
 

@@ -1,7 +1,52 @@
-import { DATA_BY_LANE,ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider';
-import { NAME_TO_ID } from './constants';
-import { hydrateAsset } from './hydrator';
-import { getAdaptedBuild } from './itemEngine';
+import { DATA_BY_LANE, ENRICHED_DB, normalizeKey, initializeEngineData, type EnrichedChampion } from './dataProvider.js';
+import { NAME_TO_ID } from './constants.js';
+import { hydrateAsset } from './hydrator.js';
+import { getAdaptedBuild } from './itemEngine.js';
+import { analyzeComposition } from './compositionAnalyzer.js';
+
+export let engineWeights = {
+  meta_base: 0.4,
+  synergy: 2.2,
+  matchup: 0.45,
+  counter: 0.35,
+  composition: 0.8,
+  utility: 0.5,
+  scaling: 1.0,
+  tactic_role_bonus: 1.5,
+  personal_mastery: 0.8,
+  flex_value: 0.6,
+  phase_multiplier_pick5: 1.4
+};
+
+export function setEngineWeights(weights: any) {
+  if (weights) {
+    engineWeights = { ...engineWeights, ...weights };
+  }
+}
+
+export const PERSONAL_STATS: Record<number, { gamesPlayed: number; winRate: number }> = {};
+
+export function initializePersonalStats(stats: any[]) {
+  Object.keys(PERSONAL_STATS).forEach(k => delete PERSONAL_STATS[Number(k)]);
+  if (stats && Array.isArray(stats)) {
+    stats.forEach(s => {
+      PERSONAL_STATS[s.championId] = {
+        gamesPlayed: s.gamesPlayed,
+        winRate: s.winRate
+      };
+    });
+    console.log(`✅ PersonalStats listo: ${Object.keys(PERSONAL_STATS).length} campeones con historial.`);
+  }
+}
+
+function isFlexChampion(champ: EnrichedChampion): boolean {
+  const flexList = new Set([
+    "Gragas", "Pantheon", "Karma", "Yasuo", "Yone", "Nautilus", "Swain", "Brand", 
+    "Morgana", "Tahm Kench", "Jayce", "Twisted Fate", "Sylas", "K'Sante", "Volibear",
+    "Rumble", "Maokai", "Poppy", "Graves", "Lucian", "Talon", "Quinn"
+  ]);
+  return flexList.has(champ.name);
+}
 
 
 export interface Recommendation {
@@ -97,55 +142,127 @@ export function getProcessedRecommendations(
 
 
 export function getProcessedBans(
-    topRecommendations: Recommendation[]
+    topRecommendations: Recommendation[],
+    myChampion: string | null = null,
+    myRole: string = 'jungle',
+    alliedPicks: string[] = [],
+    enemyPicks: string[] = [],
+    bannedChamps: string[] = [],
+    allAvailableChamps: string[] = []
 ): BansRecommendation[] {
-    //console.log("🔍 [ENGINE] Calculando Bans basados en los mejores picks sugeridos.");
+    if (alliedPicks.length > 0 || enemyPicks.length > 0 || bannedChamps.length > 0) {
+        return getBanRecommendations(myChampion, myRole, alliedPicks, enemyPicks, bannedChamps, allAvailableChamps);
+    }
 
     const banScores: Record<string, { id: number; score: number; count: number }> = {};
-
-    // 1. Tomamos los top 5 o 10 picks recomendados para no saturar con counters de picks malos
     const targetPicks = topRecommendations.slice(0, 10);
 
     targetPicks.forEach(pick => {
         const champData = ENRICHED_DB[pick.name];
         if (!champData || !champData.counters) return;
 
-        // 2. Iteramos sobre los counters reales de nuestros mejores picks sugeridos
         champData.counters.forEach((counter: any) => {
             const counterName = counter.name;
             const counterId = NAME_TO_ID[counterName];
             if (!counterId) return;
 
-            // Convertimos el winrate del counter a número para usarlo como métrica de peligro
             const wr = parseFloat(counter.winrate.replace('%', ''));
-
-            // Cuanto mayor sea el WinRate del counter contra nuestro pick, mayor prioridad de ban
             const dangerWeight = wr > 50 ? (wr - 50) * 2 : 0.5;
 
             if (!banScores[counterName]) {
                 banScores[counterName] = {
                     id: counterId,
-                    score: dangerWeight * (pick.score / 10), // Ponderado por lo bueno que es nuestro pick
+                    score: dangerWeight * (pick.score / 10),
                     count: 1
                 };
             } else {
-                // Si es counter de múltiples picks recomendados, su prioridad se acumula
                 banScores[counterName].score += dangerWeight * (pick.score / 10);
                 banScores[counterName].count += 1;
             }
         });
     });
 
-    // 3. Transformar el mapa en el array de salida requerido por tu interfaz
     const results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
         id: data.id,
         name: name,
-        // Damos un pequeño bono si es counter repetido de varios de tus campeones
         score: parseFloat(Math.min(Math.max(data.score + (data.count * 0.5), 0.1), 10.0).toFixed(2))
     }));
 
-    // Ordenar de mayor peligro a menor
     return results.sort((a, b) => b.score - a.score).slice(0, 30);
+}
+
+export function getBanRecommendations(
+  myChampion: string | null,
+  myRole: string,
+  alliedPicks: string[],
+  enemyPicks: string[],
+  bannedChamps: string[],
+  allAvailableChamps: string[]
+): BansRecommendation[] {
+  const normBanned = bannedChamps.map(normalizeKey);
+  const normAllies = alliedPicks.map(normalizeKey);
+  const normEnemies = enemyPicks.map(normalizeKey);
+
+  const results = allAvailableChamps
+    .filter(name => {
+      const normName = normalizeKey(name);
+      return !normBanned.includes(normName) && !normAllies.includes(normName) && !normEnemies.includes(normName);
+    })
+    .map(name => {
+      let banScore = 1.0;
+      const reasons: string[] = [];
+      const champData = ENRICHED_DB[name];
+      const champId = NAME_TO_ID[name];
+
+      if (!champData || !champId) return { id: 0, name, score: -99, reasons: [] };
+
+      // 1. ¿Counterea a mi campeón?
+      if (myChampion) {
+        const myData = ENRICHED_DB[myChampion];
+        const isCounter = myData?.counters?.some((ct: any) => normalizeKey(ct.name) === normalizeKey(name));
+        if (isCounter) {
+          banScore += 4.0;
+          reasons.push(`Counter directo de tu pick (${myChampion})`);
+        }
+      }
+
+      // 2. ¿Es Tier S en el meta actual?
+      if (champData.meta) {
+        const tier = champData.meta.tier || 5;
+        const winRate = champData.meta.winRate || 50.0;
+        if (tier <= 2 && winRate > 51.5) {
+          banScore += 2.5;
+          reasons.push(`Tier meta alto con ${winRate.toFixed(1)}% WR`);
+        }
+      }
+
+      // 3. ¿Deshace la táctica emergente de nuestro equipo?
+      if (alliedPicks.length >= 2) {
+        const alliedComp = analyzeComposition(alliedPicks);
+        const myTeamTactic = alliedComp.primaryTacticRole;
+        const role = champData.tacticRole || champData.tactic_role || 'teamfight';
+        
+        if (myTeamTactic === 'engage' && (role === 'peel' || name === 'Poppy' || name === 'Janna')) {
+          banScore += 3.0;
+          reasons.push(`Deshace nuestra iniciación (peel/anti-dash)`);
+        } else if (myTeamTactic === 'poke' && (role === 'dive' || role === 'burst')) {
+          banScore += 3.0;
+          reasons.push(`Excelente para divear nuestra composición de poke`);
+        }
+      }
+
+      return {
+        id: champId,
+        name,
+        score: parseFloat(Math.min(Math.max(banScore, 0.1), 10.0).toFixed(2)),
+        reasons
+      };
+    })
+    .filter(r => r.id > 0 && r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  return results;
 }
 
 
@@ -153,46 +270,108 @@ export function getProcessedBans(
  * CALCULAR PUNTAJE
  */
 function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
-    // 1. CONSTANTES DE PESO REEQUILIBRADAS (Contexto > Meta)
-    const isLatePick = enemies.length >= 4;
+    // 1. CONSTANTES DE PESO REEQUILIBRADAS POR FASE
+    const pickedCount = allies.length;
+    let phaseKey: 'pick1' | 'pick3' | 'pick5' = 'pick3';
+    if (pickedCount <= 1) phaseKey = 'pick1';
+    else if (pickedCount >= 4) phaseKey = 'pick5';
+
+    const PHASE_WEIGHTS = {
+      pick1: {
+        meta_base: 1.5,
+        synergy: 0.3,
+        counter: 0.5,
+        composition: 0.5,
+        flex_bonus: 1.0
+      },
+      pick3: {
+        meta_base: 1.0,
+        synergy: 1.5,
+        counter: 1.0,
+        composition: 1.5,
+        flex_bonus: 0.2
+      },
+      pick5: {
+        meta_base: 0.8,
+        synergy: 2.0,
+        counter: 2.5,
+        composition: 2.0,
+        flex_bonus: 0.0
+      }
+    };
+
+    const phase = PHASE_WEIGHTS[phaseKey];
 
     const WEIGHTS = {
-        META_BASE: isLatePick ? 0.2 : 0.4,
-        SYNERGY: 2.2,
-        MATCHUP: isLatePick ? 0.8 : 0.45,
-        COUNTER: isLatePick ? 0.6 : 0.35,
-        COMPOSITION: 0.8,
-        UTILITY: 0.5,
-        SCALING: 1.0
+        META_BASE: (engineWeights.meta_base ?? 0.4) * phase.meta_base,
+        SYNERGY: (engineWeights.synergy ?? 2.2) * phase.synergy,
+        MATCHUP: engineWeights.matchup ?? 0.45,
+        COUNTER: (engineWeights.counter ?? 0.35) * phase.counter,
+        COMPOSITION: (engineWeights.composition ?? 0.8) * phase.composition,
+        UTILITY: engineWeights.utility ?? 0.5,
+        SCALING: engineWeights.scaling ?? 1.0,
+        tactic_role_bonus: engineWeights.tactic_role_bonus ?? 1.5,
+        flex_value: engineWeights.flex_value ?? 0.6,
+        personal_mastery: engineWeights.personal_mastery ?? 0.8
     };
 
     let score = 5.0;
     const reasons: string[] = [];
-    const targetLane = target.lane; // Ej: "TOP"
+    const targetLane = target.lane;
+
+    // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
+    if (phaseKey === 'pick1' && isFlexChampion(target)) {
+        score += WEIGHTS.flex_value;
+        reasons.push("Flex Pick: Altamente flexible para ocultar composición en early draft");
+    }
+
+    // --- CAPA 0.7: MAESTRÍA PERSONAL ---
+    const stats = PERSONAL_STATS[target.id];
+    if (stats && stats.gamesPlayed >= 5) {
+      if (stats.gamesPlayed >= 20 && stats.winRate > 55) {
+        score += WEIGHTS.personal_mastery * 1.5;
+        reasons.push(`Maestría: Excelente rendimiento personal (${stats.winRate.toFixed(1)}% WR en ${stats.gamesPlayed} partidas)`);
+      } else if (stats.gamesPlayed >= 10 && stats.winRate > 52) {
+        score += WEIGHTS.personal_mastery;
+        reasons.push(`Maestría: Buen rendimiento personal (${stats.winRate.toFixed(1)}% WR)`);
+      } else if (stats.winRate < 45) {
+        score -= WEIGHTS.personal_mastery * 1.2;
+        reasons.push(`Riesgo: Rendimiento personal bajo (${stats.winRate.toFixed(1)}% WR)`);
+      }
+    }
+
+    // --- CAPA 0.9: ROL TÁCTICO FALTANTE ---
+    const allyComp = analyzeComposition(allies);
+    const gaps = allyComp.gaps;
+    const tacticRole = target.tacticRole || target.tactic_role || 'teamfight';
     
+    if (allies.length >= 1 && gaps.includes(tacticRole as any)) {
+      score += WEIGHTS.tactic_role_bonus;
+      reasons.push(`Balance: Aporta el rol táctico faltante (${tacticRole.toUpperCase()})`);
+    }
 
     // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
     const rank = target.meta.tier || 50;
     if (rank === 1) {
-        score += 4.0; // Rey del Meta: Bono absoluto para el Top 1
+        score += 4.0; // Rey del Meta
         reasons.push("Meta: Prioridad Máxima (Top 1 Global)");
     } else if (rank === 2) {
-        score += 3.5; // Excelente estado: Bono fuerte para el Top 2
+        score += 3.5;
         reasons.push("Meta: Selección dominante (Top 2 Global)");
     } else if (rank === 3) {
-        score += 3.0; // God Tier de cierre del podio
+        score += 3.0;
         reasons.push("Meta: Selección muy fuerte (Top 3 Global)");
     } else if (rank <= 6) {
-        score += 2.2; // Bloque alto del Top Tier (Top 4, 5, 6)
+        score += 2.2;
         reasons.push("Meta: Selección Top Tier sólida");
     } else if (rank <= 12) {
-        score += 1.2; // Bloque medio/bajo del Top Tier (Rammus cae aquí, ya no empata con el podio)
+        score += 1.2;
         reasons.push("Meta: Pick estable de la Tierlist");
     } else if (rank <= 25) {
         score += 0.4;
         reasons.push("Análisis: Pick situacional viable");
     } else if (rank > 35) {
-        score -= 2.5; // Castigo más severo por estar completamente fuera del radar
+        score -= 2.5;
         reasons.push("Nota: Fuera del meta prioritario");
     }
     

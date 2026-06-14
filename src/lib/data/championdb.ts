@@ -9,6 +9,18 @@ export interface ChampionData {
   isFrontline: boolean; // ¿Puede absorber daño?
   isHypercarry: boolean; // ¿Gana solo si llega al minuto 35?
   tags: string[]; // Para sinergias (ej: ["Knockup", "Global", "Poke"])
+
+  // --- CAMPOS NUEVOS ---
+  tacticRole?: 'engage' | 'peel' | 'poke' | 'dive' | 'burst' | 
+              'splitpush' | 'skirmish' | 'teamfight' | 'siege' | 'utility';
+  mobility?: 'low' | 'medium' | 'high';
+  targetPriority?: 'squishy' | 'tank' | 'any' | 'healer';
+  resourceDependency?: 'high' | 'medium' | 'low';
+  teamNeeds?: ('peel' | 'engage' | 'healing' | 'followup' | 'none')[];
+  teamProvides?: ('engage' | 'peel' | 'healing' | 'shielding' | 'cc' | 'vision')[];
+  hasShield?: boolean;
+  hasSustain?: boolean;
+  lanePhase?: 'weak' | 'average' | 'strong';
 }
 
 export const CHAMPIONS_DB: Record<number, ChampionData> = {

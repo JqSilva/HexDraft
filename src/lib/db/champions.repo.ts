@@ -14,6 +14,17 @@ export interface DbChampion {
   is_hypercarry: number;
   has_hard_cc: number;
   tags: string; // JSON string
+  
+  // Nuevos campos semánticos
+  tactic_role?: string;
+  mobility?: string;
+  target_priority?: string;
+  team_needs?: string; // JSON string
+  team_provides?: string; // JSON string
+  has_shield?: number;
+  has_sustain?: number;
+  lane_phase?: string;
+  resource_dependency?: string;
 }
 
 export interface DbMatchup {
@@ -53,8 +64,9 @@ export interface DbBuild {
 const insertChampStmt = db.prepare(`
   INSERT INTO champions (
     id, name, lane, tier, win_rate, scaling_type, damage_type, class, 
-    is_frontline, is_hypercarry, has_hard_cc, tags
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    is_frontline, is_hypercarry, has_hard_cc, tags,
+    tactic_role, mobility, target_priority, team_needs, team_provides, has_shield, has_sustain, lane_phase, resource_dependency
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(id) DO UPDATE SET
     name=excluded.name,
     lane=excluded.lane,
@@ -66,7 +78,16 @@ const insertChampStmt = db.prepare(`
     is_frontline=excluded.is_frontline,
     is_hypercarry=excluded.is_hypercarry,
     has_hard_cc=excluded.has_hard_cc,
-    tags=excluded.tags;
+    tags=excluded.tags,
+    tactic_role=excluded.tactic_role,
+    mobility=excluded.mobility,
+    target_priority=excluded.target_priority,
+    team_needs=excluded.team_needs,
+    team_provides=excluded.team_provides,
+    has_shield=excluded.has_shield,
+    has_sustain=excluded.has_sustain,
+    lane_phase=excluded.lane_phase,
+    resource_dependency=excluded.resource_dependency;
 `);
 
 const insertMatchupStmt = db.prepare(`
@@ -120,7 +141,16 @@ export const championsRepo = {
       champ.is_frontline,
       champ.is_hypercarry,
       champ.has_hard_cc,
-      champ.tags
+      champ.tags,
+      champ.tactic_role ?? 'teamfight',
+      champ.mobility ?? 'medium',
+      champ.target_priority ?? 'any',
+      champ.team_needs ?? '[]',
+      champ.team_provides ?? '[]',
+      champ.has_shield ?? 0,
+      champ.has_sustain ?? 0,
+      champ.lane_phase ?? 'average',
+      champ.resource_dependency ?? 'medium'
     );
   },
 
@@ -289,6 +319,18 @@ export const championsRepo = {
         isFrontline: c.is_frontline === 1,
         isHypercarry: c.is_hypercarry === 1,
         hasHardCC: c.has_hard_cc === 1,
+        
+        // Nuevos campos semánticos
+        tacticRole: c.tactic_role || 'teamfight',
+        mobility: c.mobility || 'medium',
+        targetPriority: c.target_priority || 'any',
+        teamNeeds: JSON.parse(c.team_needs || '[]'),
+        teamProvides: JSON.parse(c.team_provides || '[]'),
+        hasShield: c.has_shield === 1,
+        hasSustain: c.has_sustain === 1,
+        lanePhase: c.lane_phase || 'average',
+        resourceDependency: c.resource_dependency || 'medium',
+
         meta: {
           winRate: c.win_rate,
           tier: c.tier

@@ -270,6 +270,19 @@ export function populateDatabase(db: any) {
     updateConfigStmt.run('last_lane_sync_timestamp', new Date().toISOString());
 
     db.exec('COMMIT;');
+    
+    // Ejecutar la sincronización semántica inicial en el siguiente tick
+    // para evitar interbloqueos de carga (ESM Top-Level Await Circular Deadlock)
+    setTimeout(async () => {
+      try {
+        console.log("🧠 Sincronizando datos semánticos de campeones iniciales...");
+        const { syncChampionsSemanticData } = await import('../scripts/sync-champions-cdrag.js');
+        await syncChampionsSemanticData();
+      } catch (semErr) {
+        console.error("⚠️ Error al sincronizar datos semánticos iniciales:", semErr);
+      }
+    }, 50);
+    
     console.log("🎉 CARGA INICIAL COMPLETADA CON ÉXITO.");
   } catch (err) {
     db.exec('ROLLBACK;');

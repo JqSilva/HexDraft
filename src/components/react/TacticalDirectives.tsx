@@ -1,9 +1,43 @@
 import React, { memo, useMemo } from 'react';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
+import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
 
 // =========================================================
 // PANEL 1: DIRECTIVAS DE COMBATE (Estrategia, Timing, Daño)
 // =========================================================
+const ENEMY_WIN_COND_DETAILS: Record<string, { label: string; advice: string; color: string }> = {
+    'early_pressure': {
+        label: 'Presión Temprana',
+        advice: 'El enemigo buscará tomar ventajas rápidas. Juega seguro bajo torre, evita escaramuzas en río y escala con calma. No regales muertes por dragones tempranos.',
+        color: 'text-orange-400 border-orange-500/25 bg-orange-950/15'
+    },
+    'teamfight': {
+        label: 'Peleas de Equipo (Teamfight)',
+        advice: 'El rival brilla agrupado 5v5. Evita agruparte en pasillos estrechos de la jungla y usa el splitpush para forzar enfrentamientos en desventaja numérica.',
+        color: 'text-red-400 border-red-500/25 bg-red-950/15'
+    },
+    'splitpush': {
+        label: 'Presión Dividida (Splitpush)',
+        advice: 'Tienen duelistas fuertes en líneas laterales. Mantén oleadas empujadas, asegura visión lateral y fuerza peleas 5v4 en el medio cuando se separen.',
+        color: 'text-amber-400 border-amber-500/25 bg-amber-950/15'
+    },
+    'poke_siege': {
+        label: 'Desgaste y Asedio (Poke & Siege)',
+        advice: 'Evita recibir daño pasivo bajo torre. Prioriza iniciaciones directas fuertes (hard engage) y flanqueos rápidos. Compra sustain temprano.',
+        color: 'text-cyan-400 border-cyan-500/25 bg-cyan-950/15'
+    },
+    'dive_backline': {
+        label: 'Foco a Retaguardia (Dive)',
+        advice: 'Poseen campeones asesinos muy móviles. Quédate cerca de tu frontline y guarda el CC defensivo para cuando salten hacia tus carries.',
+        color: 'text-purple-400 border-purple-500/25 bg-purple-950/15'
+    },
+    'scaling': {
+        label: 'Escalado Tardío',
+        advice: 'Tienen mejor juego tardío. El reloj corre en tu contra: toma la iniciativa, presiona carriles agresivamente y cierra el mapa antes del minuto 35.',
+        color: 'text-emerald-400 border-emerald-500/25 bg-emerald-950/15'
+    }
+};
+
 interface CombatDirectivesPanelProps {
     scalingType: 'Early' | 'Mid' | 'Late';
     combatStyle: {
@@ -23,13 +57,15 @@ interface CombatDirectivesPanelProps {
         strategy: string;
         timing: string;
     };
+    enemyNames?: string[];
 }
 
 export const CombatDirectivesPanel = memo(({
     scalingType,
     combatStyle,
     winrateCurveAnalysis,
-    generalDirectives
+    generalDirectives,
+    enemyNames = []
 }: CombatDirectivesPanelProps) => {
     const scalingColors = {
         Early: {
@@ -123,6 +159,33 @@ export const CombatDirectivesPanel = memo(({
                         {combatStyle.description}
                     </p>
                 </div>
+
+                {/* AMENAZA ESTRATÉGICA ENEMIGA */}
+                {enemyNames && enemyNames.length > 0 ? (() => {
+                    const enemyComp = analyzeComposition(enemyNames);
+                    const wincon = ENEMY_WIN_COND_DETAILS[enemyComp.winCondition] || ENEMY_WIN_COND_DETAILS.teamfight;
+                    return (
+                        <div className={`p-3 border rounded-sm space-y-1.5 ${wincon.color} transition-all duration-300`}>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[9px] font-black uppercase tracking-wider block">
+                                    Amenaza Estratégica Enemiga
+                                </span>
+                                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-sm border border-current">
+                                    Wincon: {wincon.label}
+                                </span>
+                            </div>
+                            <p className="text-[10px] leading-relaxed text-slate-200">
+                                {wincon.advice}
+                            </p>
+                        </div>
+                    );
+                })() : (
+                    <div className="p-3 border border-dashed border-border-warm bg-input-warm/30 rounded-sm text-center">
+                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">
+                            Esperando picks enemigos para análisis de Wincon...
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -280,6 +343,7 @@ export const TacticalDirectives = memo(({ championName, myRole, allies, enemies 
                 combatStyle={directives.combatStyle}
                 winrateCurveAnalysis={directives.winrateCurveAnalysis}
                 generalDirectives={directives.generalDirectives}
+                enemyNames={enemies}
             />
             <MatchupAnalysisPanel
                 matchups={directives.matchups}

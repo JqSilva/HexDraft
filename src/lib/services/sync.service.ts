@@ -10,6 +10,8 @@ import { championsRepo } from '../db/champions.repo.js';
 import { configRepo } from '../db/config.repo.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import { getPathsForBuild } from '../engine/itemEngine.js';
+import { syncItemsFromCommunityDragon } from '../scripts/sync-items.js';
+import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
 const API_NAME_MAP: Record<string, string> = {
   "Wukong": "MonkeyKing",
@@ -256,7 +258,12 @@ function classifyCoreBuild(itemIds: number[]): { style: string; tags: string[] }
     if (sustainItems.includes(id)) hasSustain = true;
   });
 
-  if (hasArmorPen) tags.push("anti-tank");
+  if (hasArmorPen || hasMagicPen) {
+    tags.push("anti-tank");
+    tags.push("vs_tank");
+  } else {
+    tags.push("vs_squishy");
+  }
   if (hasMR) tags.push("anti-AP");
   if (hasArmor) tags.push("anti-AD");
   if (hasSustain) tags.push("sustain");
@@ -728,6 +735,15 @@ export async function syncMetaAndBuilds(
 
   writeLog(`🚀 INICIANDO SINCRONIZACIÓN GENERAL - Versión Parche: ${version}`);
 
+  // --- PARTE 0: Sincronizar catálogo de items desde Community Dragon ---
+  try {
+    writeLog("📥 Sincronizando catálogo de items desde Community Dragon...");
+    const itemsCount = await syncItemsFromCommunityDragon();
+    writeLog(`✅ Catálogo de items actualizado (${itemsCount} items)`);
+  } catch (e: any) {
+    writeLog(`⚠️ Error al sincronizar items desde Community Dragon: ${e.message || e}`);
+  }
+
   // --- PARTE 1: OP.GG (Sin Puppeteer - Rápido) ---
   const roles = ['top', 'jungle', 'mid', 'adc', 'support'];
   const metaCache: Record<string, any[]> = {};
@@ -926,6 +942,15 @@ export async function syncMetaAndBuilds(
   try {
     configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
   } catch (err) {}
+  
+  // --- PARTE 3: Sincronizar datos semánticos de campeones ---
+  try {
+    writeLog("🧠 Sincronizando datos semánticos de campeones...");
+    await syncChampionsSemanticData();
+  } catch (e: any) {
+    writeLog(`⚠️ Error al sincronizar datos semánticos de campeones: ${e.message || e}`);
+  }
+
   writeLog("🏁 SINCRONIZACIÓN COMPLETA - Datos actualizados en SQLite local");
   onProgress?.(pendingChamps.length, pendingChamps.length, 'done');
   return "Sincronización completa";

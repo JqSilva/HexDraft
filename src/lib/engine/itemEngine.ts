@@ -1,16 +1,57 @@
 // src/lib/engine/itemEngine.ts
-import { ENRICHED_DB, normalizeKey } from './dataProvider';
-import { NAME_TO_ID } from './constants';
-import { hydrateAsset } from './hydrator';
+import { ENRICHED_DB, normalizeKey, ITEMS_DB } from './dataProvider.js';
+import { NAME_TO_ID } from './constants.js';
+import { hydrateAsset } from './hydrator.js';
+import { analyzeComposition } from './compositionAnalyzer.js';
 
-// Definición de grupos de items para scoring y adaptación
-export const ITEM_CATEGORIES = {
+// Categorías de respaldo si ITEMS_DB no está cargado aún en el cliente
+const HARDCODED_CATEGORIES = {
   ARMOR_PEN: [3035, 3036, 3071, 6694, 3153, 6692, 3033, 223035, 223036, 223071, 226692, 226694, 223153, 223033],
   MAGIC_PEN: [3135, 6653, 3001, 3165, 3137, 223135, 226653, 223165, 223137],
   GRIEVOUS_WOUNDS: [3033, 3165, 3075, 3181, 3011, 8020, 3123, 223033, 223165, 223075, 323075],
   MAGIC_RESIST: [3156, 2504, 3065, 4401, 3001, 3102, 3140, 3111, 223156, 222504, 223065, 224401, 223111],
   ARMOR: [3110, 3047, 3143, 3075, 3026, 6333, 3053, 6662, 3157, 223110, 223047, 223143, 223075, 223026, 223157, 223053, 226662, 323075, 323110],
   TENACITY: [3111, 3140, 223111]
+};
+
+// Definición dinámica de grupos de items para scoring y adaptación
+export const ITEM_CATEGORIES = {
+  get ARMOR_PEN(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('ArmorPenetration') && item.gold >= 1500)
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.ARMOR_PEN;
+  },
+  get MAGIC_PEN(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('MagicPenetration') && item.gold >= 1500)
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.MAGIC_PEN;
+  },
+  get GRIEVOUS_WOUNDS(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('AntiHeal'))
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.GRIEVOUS_WOUNDS;
+  },
+  get MAGIC_RESIST(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('GivesMagicResist') && item.gold >= 1000)
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.MAGIC_RESIST;
+  },
+  get ARMOR(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('GivesArmor') && item.gold >= 1000)
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.ARMOR;
+  },
+  get TENACITY(): number[] {
+    const dynamic = Object.values(ITEMS_DB)
+      .filter(item => item.categories.includes('Tenacity'))
+      .map(item => item.id);
+    return dynamic.length > 0 ? dynamic : HARDCODED_CATEGORIES.TENACITY;
+  }
 };
 
 // Fallbacks seguros de items para rellenar rutas de continuación vacías
@@ -42,7 +83,22 @@ export function getNameFromId(id: number): string | undefined {
 export function classifyItem(itemId: number): 'offensive' | 'balanced' | 'defensive' {
   const baseId = itemId > 220000 ? itemId % 220000 : itemId;
 
-  if (ITEM_CATEGORIES.MAGIC_RESIST.includes(baseId) || ITEM_CATEGORIES.ARMOR.includes(baseId)) {
+  // Si existe en ITEMS_DB, hacemos la clasificación semántica
+  const dbItem = ITEMS_DB[baseId];
+  if (dbItem) {
+    const cats = dbItem.categories || [];
+    const hasOffense = cats.some(c => ['Damage', 'AttackSpeed', 'CriticalStrike', 
+                                       'SpellDamage', 'ArmorPenetration', 
+                                       'MagicPenetration'].includes(c));
+    const hasDefense = cats.some(c => ['GivesArmor', 'GivesMagicResist', 
+                                       'GivesHealth', 'Tenacity'].includes(c));
+    if (hasOffense && !hasDefense) return 'offensive';
+    if (hasDefense && !hasOffense) return 'defensive';
+    return 'balanced';
+  }
+
+  // Fallback estático
+  if (HARDCODED_CATEGORIES.MAGIC_RESIST.includes(baseId) || HARDCODED_CATEGORIES.ARMOR.includes(baseId)) {
     // Si da daño (como Zhonya, Sterak, Fauces, Death's Dance, Eclipse, Stridebreaker), es balanceado
     const balancedIds = [3053, 3156, 3157, 6333, 6692, 6631, 3078, 6673, 3072, 3074, 3748, 6653, 223053, 223156, 223157, 226692, 226631, 223078, 226673, 223072, 223074, 223748, 226653];
     if (balancedIds.includes(baseId)) {
@@ -82,49 +138,26 @@ export function getAdaptedBuild(
 
   // Si no hay builds asociadas, fallback
   if (!champ.builds || champ.builds.length === 0) {
-    return getFallbackStaticBuild(champ);
+    return getFallbackStaticBuild(champ, myRole);
   }
 
-  // --- ANALIZAR COMPOSICIÓN ALIADA (PARA BALANCEAR DAÑO) ---
-  let allyADCount = 0;
-  let allyAPCount = 0;
-  let hasOtherAllies = false;
+  // --- ANALIZAR COMPOSICIÓN CON MODULE CENTRALIZADO ---
+  const allyNames = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+  const enemyNames = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+  const myName = getNameFromId(championId) || "";
 
-  myTeamIds.forEach(id => {
-    if (id === championId) return; // Omitirse a sí mismo
-    const allyName = getNameFromId(id);
-    if (!allyName) return;
-    const ally = ENRICHED_DB[allyName];
-    if (!ally) return;
+  const allyComp = analyzeComposition(allyNames);
+  const enemyComp = analyzeComposition(enemyNames);
 
-    hasOtherAllies = true;
-    if (ally.damageType === 'AD') allyADCount++;
-    if (ally.damageType === 'AP') allyAPCount++;
-  });
+  const allyADCount = allyComp.adCount;
+  const allyAPCount = allyComp.apCount;
+  const hasOtherAllies = allyNames.filter(n => n !== myName).length > 0;
 
-  // --- ANALIZAR COMPOSICIÓN ENEMIGA ---
-  let enemyADCount = 0;
-  let enemyAPCount = 0;
-  let enemyTankCount = 0;
-  let enemyCCCount = 0;
-  let enemyHealerCount = 0;
-
-  theirTeamIds.forEach(id => {
-    const enemyName = getNameFromId(id);
-    if (!enemyName) return;
-    const enemy = ENRICHED_DB[enemyName];
-    if (!enemy) return;
-
-    if (enemy.damageType === 'AD') enemyADCount++;
-    if (enemy.damageType === 'AP') enemyAPCount++;
-    if (enemy.tags?.includes('Tank') || enemy.class === 'Tank' || enemy.isFrontline) enemyTankCount++;
-    if (enemy.hasHardCC) enemyCCCount++;
-
-    const normEnemyName = enemyName.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (HEAVY_HEALERS.has(normEnemyName)) {
-      enemyHealerCount++;
-    }
-  });
+  const enemyADCount = enemyComp.adCount;
+  const enemyAPCount = enemyComp.apCount;
+  const enemyTankCount = enemyComp.tankCount;
+  const enemyCCCount = enemyComp.ccCount;
+  const enemyHealerCount = enemyComp.healerCount;
 
   const damageType = champ.damageType || 'AD';
 
@@ -163,8 +196,16 @@ export function getAdaptedBuild(
 
     // Ajustes por Tanques enemigos
     if (enemyTankCount >= 1) {
-      if (tags.includes("anti-tank") || (damageType === 'AD' && hasArmorPen) || (damageType === 'AP' && hasMagicPen)) {
+      if (tags.includes("anti-tank") || tags.includes("vs_tank") || (damageType === 'AD' && hasArmorPen) || (damageType === 'AP' && hasMagicPen)) {
         score += 15.0 * enemyTankCount;
+      }
+    }
+
+    // Ajustes por Squishies enemigos
+    const enemySquishyCount = enemyComp.assassinCount + (enemyComp.damageProfile.isBalanced ? 1 : 2);
+    if (enemySquishyCount >= 3) {
+      if (tags.includes("vs_squishy") || tags.includes("lethality") || tags.includes("burst")) {
+        score += 10.0;
       }
     }
 
@@ -245,23 +286,12 @@ export function getAdaptedBuild(
   if (Array.isArray(starterIds)) {
     starterIds = starterIds.map((i: any) => typeof i === 'object' ? Number(i.id || i.itemId) : Number(i));
   }
+  if (myRole.toLowerCase() === 'utility' && !starterIds.includes(3858)) {
+    starterIds = [3858, ...starterIds.filter(id => id !== 3858)];
+  }
   const defaultBootId = typeof bestBuild.items?.boots === 'object'
     ? (bestBuild.items.boots.id || bestBuild.items.boots.itemId)
     : (Number(bestBuild.items?.boots) || 3047);
-
-  // --- 2. SELECCIÓN DE BOTAS ADAPTATIVA ---
-  let adaptedBootId = defaultBootId;
-  // Si hay mucho CC y daño mágico, o más de 3 AP
-  if (enemyCCCount >= 2 || enemyAPCount >= 3) {
-    adaptedBootId = 3111; // Mercurio
-  } else if (enemyADCount >= 3) {
-    adaptedBootId = 3047; // Placas de Acero
-  }
-
-  // --- 3. SELECCIÓN/GENERACIÓN DE LAS 3 RAMAS DE CONTINUACIÓN ---
-  let finalSnowball: number[] = [];
-  let finalNeutral: number[] = [];
-  let finalBehind: number[] = [];
 
   const enemyContext = {
     enemyADCount,
@@ -270,6 +300,34 @@ export function getAdaptedBuild(
     enemyCCCount,
     enemyHealerCount
   };
+
+  // --- 2. SELECCIÓN DE BOTAS ADAPTATIVA ---
+  const bootSelectionResult = selectBoots(name, enemyContext);
+  const adaptedBootId = bootSelectionResult.bootId;
+
+  // --- 2.3 SOPORTE EVOLUCION ---
+  const supportEvolution = selectSupportItemEvolution(name, myRole);
+  let hydratedSupportEvolution = null;
+  if (supportEvolution) {
+    hydratedSupportEvolution = {
+      item: hydrateAsset('items', supportEvolution.itemId),
+      reason: supportEvolution.reason
+    };
+  }
+
+  // --- 2.5 CORE ITEM SWAPS ---
+  const swapsRaw = getCoreItemSwaps(coreItemIds, enemyContext, champ);
+  const coreItemSwaps = swapsRaw.map(s => ({
+    replaceItem: hydrateAsset('items', s.replaceItem),
+    withItem: hydrateAsset('items', s.withItem),
+    reason: s.reason,
+    priority: s.priority
+  }));
+
+  // --- 3. SELECCIÓN/GENERACIÓN DE LAS 3 RAMAS DE CONTINUACIÓN ---
+  let finalSnowball: number[] = [];
+  let finalNeutral: number[] = [];
+  let finalBehind: number[] = [];
 
   const slotItems = bestBuild.items?.slotItems;
   if (slotItems && (slotItems.item4 || slotItems.item5)) {
@@ -307,6 +365,13 @@ export function getAdaptedBuild(
 
   return {
     name: name,
+    isAdapted: adaptedBootId !== defaultBootId || coreItemSwaps.length > 0,
+    bootsSelection: {
+      bootId: adaptedBootId,
+      reason: bootSelectionResult.reason
+    },
+    supportEvolution: hydratedSupportEvolution,
+    coreItemSwaps: coreItemSwaps,
     build: {
       summoners: bestBuild.summoners.map((id: number) => hydrateAsset('summoners', id)),
       runes: {
@@ -332,7 +397,7 @@ export function getAdaptedBuild(
 }
 
 // Fallback estático en caso de que no existan builds en SQLite
-function getFallbackStaticBuild(champ: any): any {
+function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): any {
   const b = champ.buildData || { runes: {}, items: { starter: [], boots: { id: 3047 }, core: [] }, summoners: [4, 12] };
   const damageType = champ.damageType || 'AD';
   
@@ -350,6 +415,9 @@ function getFallbackStaticBuild(champ: any): any {
   if (Array.isArray(starter)) {
     starter = starter.map((i: any) => typeof i === 'object' ? Number(i.id || i.itemId) : Number(i));
   }
+  if (myRole.toLowerCase() === 'utility' && !starter.includes(3858)) {
+    starter = [3858, ...starter.filter(id => id !== 3858)];
+  }
 
   let paths = b.items?.paths;
   let finalSnowball = (paths?.snowball || []).map((i: any) => typeof i === 'object' ? i.id : i);
@@ -363,8 +431,24 @@ function getFallbackStaticBuild(champ: any): any {
     finalBehind = fallbacks.defensive.slice(0, 2);
   }
 
+  const supportEvolution = selectSupportItemEvolution(champ.name, myRole);
+  let hydratedSupportEvolution = null;
+  if (supportEvolution) {
+    hydratedSupportEvolution = {
+      item: hydrateAsset('items', supportEvolution.itemId),
+      reason: supportEvolution.reason
+    };
+  }
+
   return {
     name: champ.name,
+    isAdapted: false,
+    bootsSelection: {
+      bootId: bootId,
+      reason: "Botas estándar de tu build recomendada"
+    },
+    supportEvolution: hydratedSupportEvolution,
+    coreItemSwaps: [],
     build: {
       summoners: b.summoners?.map((id: number) => hydrateAsset('summoners', id)) || [hydrateAsset('summoners', 4), hydrateAsset('summoners', 12)],
       runes: {
@@ -618,4 +702,321 @@ export function getDynamicPaths(
     neutral: fillBranch(balanced, 'balanced'),
     behind: fillBranch(defensive, 'defensive')
   };
+}
+
+// --- 5. CONSTANTES Y CONFIGURACIÓN DE UMBRALES DE ADAPTACIÓN ---
+export const ADAPTATION_THRESHOLDS = {
+  antiHeal: {
+    minHealerCount: 2,           // Mínimo para sugerir anti-heal
+    minChampPickrate: 3.0,       // Pickrate mínimo del item en datos del campeón
+    maxCoreDisruption: 1,        // Máximo 1 item del core que se puede reemplazar
+  },
+  tankPen: {
+    minTankCount: 2,
+    minChampPickrate: 2.0,
+  },
+  defensiveItem: {
+    minThreatCount: 3,           // Mínimo 3 amenazas del mismo tipo para forzar defensiva
+    minChampPickrate: 1.5,
+  }
+};
+
+const SUPPORT_ITEM_IDS = [3869, 3870, 3871, 3876, 3877]; // Versiones finales
+const SUPPORT_ITEM_QUEST_IDS = [3850, 3851, 3853, 3855, 3858, 3859, 3860, 3862, 3864]; // Quest items
+
+export function getItemsByCategory(category: string): number[] {
+  if (category === 'AntiHeal' || category === 'GrievousWounds') {
+    return ITEM_CATEGORIES.GRIEVOUS_WOUNDS;
+  }
+  if (category === 'ArmorPen') {
+    return ITEM_CATEGORIES.ARMOR_PEN;
+  }
+  if (category === 'MagicPen') {
+    return ITEM_CATEGORIES.MAGIC_PEN;
+  }
+  if (category === 'Armor') {
+    return ITEM_CATEGORIES.ARMOR;
+  }
+  if (category === 'MagicResist') {
+    return ITEM_CATEGORIES.MAGIC_RESIST;
+  }
+  if (category === 'Tenacity') {
+    return ITEM_CATEGORIES.TENACITY;
+  }
+  return [];
+}
+
+export function isItemViableForChamp(itemId: number, champName: string): boolean {
+  const champData = ENRICHED_DB[champName];
+  if (!champData) return false;
+  
+  // Determinar el umbral de pickrate según la categoría del item
+  let minPickrate = 3.0; // Umbral por defecto
+  
+  if (ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(itemId)) {
+    minPickrate = ADAPTATION_THRESHOLDS.antiHeal.minChampPickrate;
+  } else if (ITEM_CATEGORIES.ARMOR_PEN.includes(itemId) || ITEM_CATEGORIES.MAGIC_PEN.includes(itemId)) {
+    minPickrate = ADAPTATION_THRESHOLDS.tankPen.minChampPickrate;
+  } else if (ITEM_CATEGORIES.ARMOR.includes(itemId) || ITEM_CATEGORIES.MAGIC_RESIST.includes(itemId) || ITEM_CATEGORIES.TENACITY.includes(itemId)) {
+    minPickrate = ADAPTATION_THRESHOLDS.defensiveItem.minChampPickrate;
+  }
+  
+  // 1. ¿El item aparece en los slotItems del campeón con pickrate mínimo?
+  const allSlotItems = Object.values(champData.buildData?.slotItems || {}).flat();
+  const inPool = allSlotItems.find((i: any) => 
+    Number(i.Id || i.id) === itemId
+  );
+  
+  // Si el item existe en los datos scrapeados con pickrate >= umbral, es viable
+  if (inPool) {
+    const pickrate = parseFloat(inPool.pickrate || inPool.pickRate || 0);
+    if (pickrate >= minPickrate) return true;
+  }
+  
+  // 2. Si no aparece en datos scrapeados (o pickrate bajo), verificar compatibilidad semántica
+  const item = ITEMS_DB[itemId];
+  const champDmgType = champData.damageType;
+  const itemCats = item?.categories || [];
+  
+  if (champDmgType === 'AD' && itemCats.includes('SpellDamage') && !itemCats.includes('Damage')) 
+    return false;
+  if (champDmgType === 'AP' && itemCats.includes('AttackDamage') && !itemCats.includes('SpellDamage')) 
+    return false;
+  
+  return true; // Si no está en pool y pasa la semántica, es viable
+}
+
+export interface BootsResult {
+  bootId: number;
+  reason: string;
+  source: 'champion_locked' | 'meta_stats' | 'composition_adapted';
+}
+
+// --- 6. SELECCIÓN DE BOTAS GRANULAR Y CAPAS DE PRIORIDAD ---
+export function selectBoots(
+  champName: string,
+  enemyContext: {
+    enemyADCount: number;
+    enemyAPCount: number;
+    enemyTankCount: number;
+    enemyCCCount: number;
+    enemyHealerCount: number;
+  }
+): BootsResult {
+  const champ = ENRICHED_DB[champName];
+  if (!champ) {
+    return { bootId: 3047, reason: "Botas estándar de tu build recomendada", source: 'meta_stats' };
+  }
+  const champClass = champ.class;
+  const damageType = champ.damageType;
+  
+  // === CAPA 1: VETO DURO DEL CAMPEÓN ===
+  const CHAMPION_BOOT_LOCKS: Record<string, number> = {
+    'Cassiopeia': 3009,   // Cassio no lleva botas (su pasiva)
+    'Hecarim': 3006,      // Hecarim siempre Berserker (su pasiva escala con MS)
+  };
+  
+  if (CHAMPION_BOOT_LOCKS[champName] !== undefined) {
+    const bootId = CHAMPION_BOOT_LOCKS[champName];
+    return { 
+      bootId, 
+      reason: `${champName} tiene una mecánica de pasiva que hace obligatorio este tipo de botas`,
+      source: 'champion_locked'
+    };
+  }
+  
+  // === CAPA 2: PREFERENCIA ESTADÍSTICA DEL CAMPEÓN ===
+  const BOOT_IDS = [3006, 3009, 3020, 3047, 3111, 3117, 3158];
+  const slotItems = champ.buildData?.slotItems || {};
+  const allItems: any[] = Object.values(slotItems).flat();
+  
+  const bootStats = BOOT_IDS.map(id => {
+    const found = allItems.find((i: any) => Number(i.Id || i.id) === id);
+    return { id, pickrate: found ? parseFloat(found.pickrate || found.pickRate || 0) : 0 };
+  }).sort((a, b) => b.pickrate - a.pickrate);
+  
+  const dominantBoot = bootStats[0];
+  
+  if (dominantBoot && dominantBoot.pickrate >= 40) {
+    const isExtremeCCThreat = enemyContext.enemyCCCount >= 3;
+    const isExtremeADThreat = enemyContext.enemyADCount >= 4;
+    
+    if (!isExtremeCCThreat && !isExtremeADThreat) {
+      return {
+        bootId: dominantBoot.id,
+        reason: `Botas estándar de ${champName} (${dominantBoot.pickrate.toFixed(0)}% de partidas). La composición enemiga no justifica un cambio.`,
+        source: 'meta_stats'
+      };
+    }
+    
+    if (dominantBoot.id !== 3111 && isExtremeCCThreat) {
+      return {
+        bootId: dominantBoot.id,
+        reason: `Botas estándar de ${champName}. Considera Mercury como alternativa situacional (${enemyContext.enemyCCCount} fuentes de CC enemigo).`,
+        source: 'meta_stats'
+      };
+    }
+  }
+  
+  // === CAPA 3: LÓGICA DE COMPOSICIÓN ===
+  if (enemyContext.enemyCCCount >= 3 || 
+     (enemyContext.enemyCCCount >= 2 && enemyContext.enemyAPCount >= 3)) {
+    return { bootId: 3111, reason: "CC crítico enemigo — Mercury obligatorio", source: 'composition_adapted' };
+  }
+  if (enemyContext.enemyADCount >= 4) {
+    return { bootId: 3047, reason: "Composición AD extrema", source: 'composition_adapted' };
+  }
+  if (damageType === 'AP') {
+    return { bootId: 3020, reason: "Penetración mágica estándar", source: 'composition_adapted' };
+  }
+  
+  return { bootId: (dominantBoot && dominantBoot.id) || 3006, reason: "Botas estándar", source: 'meta_stats' };
+}
+
+// --- 7. CORE ITEM SWAPS ---
+export interface CoreItemSwap {
+  replaceItem: number;
+  withItem: number;
+  reason: string;
+  priority: 'critical' | 'recommended' | 'optional';
+}
+
+export function getCoreItemSwaps(
+  coreItems: number[],
+  enemyContext: any,
+  champProfile: any
+): CoreItemSwap[] {
+  const swaps: CoreItemSwap[] = [];
+  const champName = champProfile.name;
+
+  // 1. Void Staff swap-out si no hay tanques
+  if (coreItems.includes(3135) && enemyContext.enemyTankCount === 0) {
+    const targetItem = 4645;
+    if (isItemViableForChamp(targetItem, champName)) {
+      swaps.push({
+        replaceItem: 3135,
+        withItem: targetItem,
+        reason: "No hay tanques que justifiquen Void Staff. Shadowflame maximiza el burst contra objetivos blandos.",
+        priority: 'recommended'
+      });
+    }
+  }
+
+  if (swaps.length >= ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption) {
+    return swaps;
+  }
+
+  // 2. Anti-healing swap-in si hay 2+ sanadores
+  const hasAntiHeal = coreItems.some(id => ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(id));
+  if (!hasAntiHeal && enemyContext.enemyHealerCount >= ADAPTATION_THRESHOLDS.antiHeal.minHealerCount) {
+    const isAP = champProfile.damageType === 'AP';
+    let bestAntiHeal = isAP ? 3165 : 3033;
+    
+    if (champProfile.class === 'Tank') bestAntiHeal = 3075;
+    else if (champProfile.class === 'Fighter' && !isAP) bestAntiHeal = 3181;
+    
+    let viableAntiHeal: number | null = bestAntiHeal;
+    if (!isItemViableForChamp(bestAntiHeal, champName)) {
+      const alternatives = getItemsByCategory('AntiHeal')
+        .filter(id => isItemViableForChamp(id, champName));
+      
+      if (alternatives.length === 0) {
+        viableAntiHeal = null;
+      } else {
+        const classPref: number[] = [];
+        if (champProfile.class === 'Tank') classPref.push(3075);
+        if (champProfile.class === 'Fighter') classPref.push(3181, 3075);
+        if (isAP) classPref.push(3165);
+        else classPref.push(3033, 3181);
+        
+        const sortedAlternatives = [...alternatives].sort((a, b) => {
+          const idxA = classPref.indexOf(a);
+          const idxB = classPref.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          if (idxA !== -1) return -1;
+          if (idxB !== -1) return 1;
+          return 0;
+        });
+        viableAntiHeal = sortedAlternatives[0] || null;
+      }
+    }
+    
+    if (viableAntiHeal !== null) {
+      swaps.push({
+        replaceItem: coreItems[coreItems.length - 1],
+        withItem: viableAntiHeal,
+        reason: `${enemyContext.enemyHealerCount} fuentes de curación en el enemigo. Obligatorio comprar Heridas Graves.`,
+        priority: 'critical'
+      });
+    }
+  }
+
+  if (swaps.length >= ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption) {
+    return swaps;
+  }
+
+  // 3. Tank pen swap-in si hay 2+ tanques
+  const hasPen = coreItems.some(id => 
+    ITEM_CATEGORIES.ARMOR_PEN.includes(id) || ITEM_CATEGORIES.MAGIC_PEN.includes(id)
+  );
+  if (!hasPen && enemyContext.enemyTankCount >= ADAPTATION_THRESHOLDS.tankPen.minTankCount) {
+    const isAP = champProfile.damageType === 'AP';
+    let bestPen = isAP ? 3135 : 3036;
+    
+    let viablePen: number | null = bestPen;
+    if (!isItemViableForChamp(bestPen, champName)) {
+      const alternatives = (isAP ? ITEM_CATEGORIES.MAGIC_PEN : ITEM_CATEGORIES.ARMOR_PEN)
+        .filter(id => isItemViableForChamp(id, champName));
+      viablePen = alternatives[0] || null;
+    }
+    
+    if (viablePen !== null) {
+      swaps.push({
+        replaceItem: coreItems[coreItems.length - 1],
+        withItem: viablePen,
+        reason: `${enemyContext.enemyTankCount} tanques enemigos. Se requiere penetración para infligir daño.`,
+        priority: 'recommended'
+      });
+    }
+  }
+
+  return swaps;
+}
+
+// --- 8. SOPORTE Y EVOLUCIONES DE ITEM ---
+export function champUsesQuestItem(champName: string, myRole: string): boolean {
+  if (myRole.toLowerCase() === 'utility' || myRole.toLowerCase() === 'support') {
+    return true;
+  }
+  const champData = ENRICHED_DB[champName];
+  const starter = champData?.buildData?.starter || [];
+  return starter.some((id: number) => SUPPORT_ITEM_QUEST_IDS.includes(id));
+}
+
+export function selectSupportItemEvolution(champName: string, myRole: string): { itemId: number, reason: string } | null {
+  if (!champUsesQuestItem(champName, myRole)) return null;
+  
+  const champ = ENRICHED_DB[champName];
+  if (!champ) return null;
+  const tacticRole = champ.tacticRole;
+  const damageType = champ.damageType;
+  
+  // Zeal Spellblade (3869): Enchanters con heals/shields (Lulu, Janna, Nami)
+  if (tacticRole === 'peel' || champ.teamProvides?.includes('healing') || champ.teamProvides?.includes('shields') || champ.class === 'Enchanter')
+    return { itemId: 3869, reason: "Encantadora con heal/shield — Hoja Zelote maximiza el uptime de protección" };
+  
+  // Celestial Opposition (3876): Tanques/engage supports (Leona, Nautilus, Thresh)
+  if (tacticRole === 'engage' || champ.isFrontline || champ.class === 'Tank')
+    return { itemId: 3876, reason: "Support de iniciación — Oposición Celestial aporta resistencias para sobrevivir el engage" };
+  
+  // Bloodsong (3877): Supports de daño/poke (Brand, Zyra, Vel'Koz)
+  if (damageType === 'AP' && (tacticRole === 'poke' || champ.class === 'Mage'))
+    return { itemId: 3877, reason: "Support de daño — Canción de Sangre amplifica el burst mágico" };
+  
+  // Harrowing Crescent → Umbral Glaive (3871): Supports con visión/roam (Pyke, Senna)
+  if (tacticRole === 'skirmish' || champ.tags?.includes('Assassin') || champ.class === 'Assassin')
+    return { itemId: 3871, reason: "Support de roam — Media Luna maximiza el control de visión y la movilidad" };
+  
+  // Medallion → Solstice Sleigh (3870): Default enchanter/utility
+  return { itemId: 3870, reason: "Evolución estándar de utilidad para supports de control" };
 }

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { LcuPlayer } from './PlayerSlot';
 import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
-import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId } from '../../lib/engine/engine';
-import { initializeEngineData } from '../../lib/engine/dataProvider';
+import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/engine';
+import { initializeEngineData, initializeItemsData } from '../../lib/engine/dataProvider';
 import { CombatDirectivesPanel, MatchupAnalysisPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
+import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
 
 // Importación de subcomponentes modulares
 import { ConnectionStatus } from './ConnectionStatus';
@@ -35,7 +36,7 @@ const executeLcuAction = async (actionId: number, championId: number) => {
 const importToClient = async (buildData: any) => {
     if (!buildData) return;
     try {
-        const { build, name, id } = buildData;
+        const { build, name, id, coreItemSwaps } = buildData;
         const runePayload = {
             name: `HexDraft: ${name}`,
             primaryStyleId: build.runes.primaryStyle,
@@ -47,7 +48,17 @@ const importToClient = async (buildData: any) => {
         };
         await Promise.all([
             fetch('/api/set-runes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runePayload) }),
-            fetch('/api/set-items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ championId: id, championName: name, items: build.items, skillOrder: build.skillOrder }) }),
+            fetch('/api/set-items', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    championId: id, 
+                    championName: name, 
+                    items: build.items, 
+                    skillOrder: build.skillOrder,
+                    criticalSwaps: coreItemSwaps
+                }) 
+            }),
             fetch('/api/set-spells', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spell1Id: build.summoners[0].id, spell2Id: build.summoners[1].id }) })
         ]);
         console.log("✅ Configuración enviada al LCU");
@@ -68,6 +79,25 @@ const PHASE_TRANSLATIONS: Record<string, string> = {
     'WaitingForStats': 'Esperando Estadísticas',
     'PreEndOfGame': 'Fin de Partida',
     'EndOfGame': 'Partida Finalizada'
+};
+
+const GAP_TRANSLATIONS: Record<string, string> = {
+    'engage': 'Iniciación',
+    'peel': 'Protección (Peel)',
+    'frontline': 'Línea Frontal (Tanque)',
+    'hypercarry': 'Daño Continuo (Carry)',
+    'cc': 'Control de Masas (CC)',
+    'healing': 'Sustento/Curación',
+    'splitpush': 'Empuje Dividido (Splitpush)'
+};
+
+const WIN_COND_TRANSLATIONS: Record<string, string> = {
+    'early_pressure': 'Presión en Juego Temprano',
+    'teamfight': 'Peleas de Equipo (Teamfight)',
+    'splitpush': 'Presión en Paralelo (Splitpush)',
+    'poke_siege': 'Desgaste y Asedio (Poke/Siege)',
+    'dive_backline': 'Foco a la Retaguardia (Dive)',
+    'scaling': 'Escalado Tardío'
 };
 
 export const DraftPage = () => {
@@ -122,16 +152,46 @@ export const DraftPage = () => {
         return getTacticalDirectives(currentBuild.name, myRole, allyNames, enemyNames);
     }, [currentBuild, myRole, allyNames, enemyNames]);
 
+    const myTeamAnalysis = useMemo(() => {
+        return analyzeComposition(allyNames);
+    }, [allyNames]);
+
     // Cargar datos de la base de datos SQLite local al montar
     useEffect(() => {
         const loadDb = async () => {
             try {
-                console.log("🔌 Cargando campeones desde SQLite a través del endpoint...");
+                console.log("🔌 Sincronizando motor HexDraft con bases de datos locales...");
+                
+                // 1. Obtener y configurar Pesos del Motor
+                const configRes = await fetch('/api/config');
+                if (configRes.ok) {
+                    const config = await configRes.json();
+                    if (config.engine_weights) {
+                        setEngineWeights(config.engine_weights);
+                        console.log("⚖️ Pesos del motor sincronizados.");
+                    }
+                }
+
+                // 2. Obtener y configurar Items
+                const itemsRes = await fetch('/api/items');
+                if (itemsRes.ok) {
+                    const itemsData = await itemsRes.json();
+                    initializeItemsData(itemsData);
+                }
+
+                // 3. Obtener y configurar Estadísticas Personales (Maestría)
+                const statsRes = await fetch('/api/personal-stats');
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    initializePersonalStats(statsData);
+                }
+
+                // 4. Obtener y configurar Campeones Enriquecidos
                 const res = await fetch('/api/champions');
                 if (res.ok) {
                     const data = await res.json();
                     initializeEngineData(data);
-                    console.log("Base de datos SQLite sincronizada con el motor cliente.");
+                    console.log("🧬 Campeones enriquecidos sincronizados con el cliente.");
                 } else {
                     console.warn("No se pudo obtener datos de SQLite, usando fallback estático.");
                 }
@@ -524,11 +584,9 @@ export const DraftPage = () => {
         }
     }, [currentBuild]);
 
-    const handleSelectChamp = useCallback((rec: Recommendation) => {
-        if (view !== 'bans') {
-            setPreviewChamp(rec);
-        }
-    }, [view]);
+    const handleSelectChamp = useCallback((rec: any) => {
+        setPreviewChamp(rec);
+    }, []);
 
     const handleCloseModal = useCallback(() => {
         setPreviewChamp(null);
@@ -635,6 +693,7 @@ export const DraftPage = () => {
                                             combatStyle={tacticalDirectives.combatStyle}
                                             winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
                                             generalDirectives={tacticalDirectives.generalDirectives}
+                                            enemyNames={enemyNames}
                                         />
                                     </div>
 
@@ -649,11 +708,70 @@ export const DraftPage = () => {
                             ) : (
                                 /* 3. DRAFT GRID (SELECCIÓN / BANEOS) */
                                 inDraft && (
-                                    <DraftGrid
-                                        recommendations={view === 'bans' ? banRecommendations : recommendations}
-                                        onSelectChampion={handleSelectChamp}
-                                        isBan={view === 'bans'}
-                                    />
+                                    <div className="space-y-6">
+                                        {/* Panel de Composición del Equipo */}
+                                        {myTeamAnalysis && allyNames.length > 0 && (
+                                            <div className="p-4 bg-slate-900/40 border border-border-warm/50 rounded-sm tech-corners space-y-4 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border-warm/30 pb-3">
+                                                     <div>
+                                                         <span className="text-[9px] text-[#9055ff] font-black uppercase tracking-wider">
+                                                             Análisis de Composición Aliada
+                                                         </span>
+                                                         <h4 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
+                                                             Estrategia: <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
+                                                         </h4>
+                                                     </div>
+
+                                                     {/* Gaps / Roles Faltantes */}
+                                                     <div className="flex flex-wrap gap-2 items-center">
+                                                         <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
+                                                             Falta:
+                                                         </span>
+                                                         {myTeamAnalysis.gaps.length > 0 ? (
+                                                             myTeamAnalysis.gaps.map((gap) => (
+                                                                 <span key={gap} className="text-[8px] font-black uppercase px-2 py-0.5 bg-red-950/60 border border-red-500/40 text-red-400 rounded-sm">
+                                                                     {GAP_TRANSLATIONS[gap] || gap}
+                                                                 </span>
+                                                             ))
+                                                         ) : (
+                                                             <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 rounded-sm">
+                                                                 Composición Balanceada
+                                                             </span>
+                                                         )}
+                                                     </div>
+                                                 </div>
+
+                                                 {/* Fila de balance de Daño */}
+                                                 <div className="space-y-1.5">
+                                                     <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                         <span>Daño Físico (AD): {myTeamAnalysis.damageProfile.physicalPct}%</span>
+                                                         <span>Daño Mágico (AP): {myTeamAnalysis.damageProfile.magicPct}%</span>
+                                                     </div>
+                                                     <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
+                                                         <div 
+                                                             style={{ width: `${myTeamAnalysis.damageProfile.physicalPct}%` }}
+                                                             className="bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500"
+                                                         />
+                                                         <div 
+                                                             style={{ width: `${myTeamAnalysis.damageProfile.magicPct}%` }}
+                                                             className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500"
+                                                         />
+                                                     </div>
+                                                     {!myTeamAnalysis.damageProfile.isBalanced && (
+                                                         <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
+                                                             ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
+                                                         </span>
+                                                     )}
+                                                 </div>
+                                            </div>
+                                        )}
+
+                                        <DraftGrid
+                                            recommendations={view === 'bans' ? banRecommendations : recommendations}
+                                            onSelectChampion={handleSelectChamp}
+                                            isBan={view === 'bans'}
+                                        />
+                                    </div>
                                 )
                             )}
                         </div>
