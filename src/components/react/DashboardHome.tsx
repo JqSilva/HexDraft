@@ -192,7 +192,8 @@ export const DashboardHome = () => {
       default: return 'text-slate-400';
     }
   };
-  return (
+
+  return (
     <div className="w-full h-full flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">      
       {/* TOP BAR */}
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
@@ -210,7 +211,7 @@ export const DashboardHome = () => {
         <div className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${data.isConnected ? 'text-green-500' : 'text-slate-400'
           } md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2`}>
           <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
-          {data.isConnected ? 'LCU CONECTADO' : 'LCU OFFLINE'}
+          {data.isConnected ? 'CONECTADO' : 'DESCONECTADO'}
         </div>
 
         {/* Icons and profile */}
@@ -234,50 +235,50 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
         {/* A. Hero Banner Card */}
-        <div className="md:col-span-7 lg:col-span-8 bg-[#0f0f13]/90 border border-border-warm rounded-sm relative overflow-hidden flex flex-col justify-between p-4 md:p-6 min-h-[220px] tech-corners shadow-xl group">
+        <div className="md:col-span-7 lg:col-span-8 bg-[#0f0f13]/90 border border-border-warm rounded-sm relative overflow-hidden flex flex-row items-center justify-between p-6 md:p-8 min-h-[220px] tech-corners shadow-xl group">
           {/* Background Grid Pattern & Ambient Glows */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#9055ff]/10 via-transparent to-transparent pointer-events-none z-0"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_100%_0%,rgba(144,85,255,0.06),transparent)] pointer-events-none z-0"></div>
 
-          {/* Content layout */}
-          <div className="flex gap-4 items-center">
-            <div className="flex flex-col z-10 space-y-2 w-3/5">
-              <span className="self-start inline-block bg-[#9055ff]/15 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm select-none">
-                SISTEMA DE ASISTENCIA
-              </span>
-              <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
-                HEXDRAFT <span className="text-[#9055ff]">TACTICAL</span>
-              </h2>
-              <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-400 mt-1">
-                Optimización de Composiciones // Runas & Builds Automáticas
-              </p>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Sincroniza HexDraft con tu cliente de League of Legends para recibir análisis de matchups, prioridades de picks/bans y configuraciones óptimas directamente en tu cliente.
-              </p>
-              <div className="relative z-10 flex flex-col sm:flex-row gap-2.5 mt-4 items-start sm:items-center">
-                <a
-                  href="/draft"
-                  className="px-6 py-2.5 bg-[#9055ff] text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7b3aff] transition-all duration-300 shadow-[0_0_15px_rgba(144,85,255,0.25)] hover:shadow-[0_0_20px_rgba(144,85,255,0.4)] rounded-sm cursor-pointer border border-[#9055ff]/50 text-center"
-                >
-                  INICIAR DRAFT HELPER
-                </a>
+          {/* Left: Text Content & Actions */}
+          <div className="flex flex-col z-10 space-y-3 w-[65%] justify-center h-full">
+            <span className="self-start inline-block bg-[#9055ff]/15 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm select-none">
+              SISTEMA DE ASISTENCIA
+            </span>
+            <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
+              HEXDRAFT <span className="text-[#9055ff]">TACTICAL</span>
+            </h2>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-400 mt-1">
+              Optimización de Composiciones // Runas & Builds Automáticas
+            </p>
+            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+              Sincroniza HexDraft con tu cliente de League of Legends para recibir análisis de matchups, prioridades de picks/bans y configuraciones óptimas directamente en tu cliente.
+            </p>
+            <div className="relative z-10 flex flex-col sm:flex-row gap-3 pt-2 items-start sm:items-center">
+              <a
+                href="/draft"
+                className="px-6 py-2.5 bg-[#9055ff] text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7b3aff] transition-all duration-300 shadow-[0_0_15px_rgba(144,85,255,0.25)] hover:shadow-[0_0_20px_rgba(144,85,255,0.4)] rounded-sm cursor-pointer border border-[#9055ff]/50 text-center"
+              >
+                INICIAR DRAFT HELPER
+              </a>
 
-                <a
-                  href="/actualizar"
-                  className="px-5 py-2.5 bg-[#08080b] border border-border-warm hover:border-[#9055ff]/50 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 rounded-sm cursor-pointer text-center"
-                >
-                  BASE DE DATOS
-                </a>
-              </div>
+              <a
+                href="/actualizar"
+                className="px-5 py-2.5 bg-[#08080b] border border-border-warm hover:border-[#9055ff]/50 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 rounded-sm cursor-pointer text-center"
+              >
+                BASE DE DATOS
+              </a>
             </div>
-            <div className="flex items-center justify-center w-2/5 relative select-none">
-              <div className="absolute w-28 h-28 rounded-full pointer-events-none"></div>
-              <img 
-                src="/favicon.svg" 
-                alt="HexDraft Logo" 
-                className="w-24 h-24 md:w-36 md:h-36 block relative z-10 transition-transform duration-500 hover:scale-105"
-              />
-            </div>
+          </div>
+
+          {/* Right: Centered Logo Illustration */}
+          <div className="flex items-center justify-center w-[30%] relative select-none z-10 h-full">
+            <div className="absolute w-32 h-32 bg-[#9055ff]/10 rounded-full blur-2xl pointer-events-none"></div>
+            <img 
+              src="/favicon.svg" 
+              alt="HexDraft Logo" 
+              className="w-24 h-24 md:w-36 md:h-36 block relative transition-transform duration-500 hover:scale-105"
+            />
           </div>
         </div>
 
