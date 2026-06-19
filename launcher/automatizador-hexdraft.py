@@ -66,6 +66,9 @@ def get_lol_path():
         except Exception as e:
             write_log(f"Error leyendo hexdraft-config.json: {e}")
             
+    if path_val and not os.path.exists(path_val):
+        path_val = None
+
     if not path_val:
         # Probar ruta por defecto
         default_path = 'C:\\Riot Games\\League of Legends\\lockfile'

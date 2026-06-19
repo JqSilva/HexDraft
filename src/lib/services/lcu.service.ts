@@ -14,7 +14,11 @@ export interface LCUData {
 
 export function getLolPath(): string {
   const dbPath = configRepo.getConfig('lol_path');
-  if (dbPath && dbPath.trim() !== '') return dbPath;
+  if (dbPath && dbPath.trim() !== '') {
+    if (fs.existsSync(dbPath)) {
+      return dbPath;
+    }
+  }
 
   if (fs.existsSync(DEFAULT_PATH)) {
     saveLolPath(DEFAULT_PATH);
@@ -30,7 +34,7 @@ export function getLolPath(): string {
     }
   }
 
-  return DEFAULT_PATH;
+  return dbPath || DEFAULT_PATH;
 }
 
 export function saveLolPath(inputPath: string): string {
