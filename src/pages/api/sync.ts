@@ -81,7 +81,8 @@ export const GET: APIRoute = async ({ url }) => {
             const lastLaneSyncTimestamp = configs.last_lane_sync_timestamp || '-';
 
             // Obtener versión de LoL (LCU o fallback a DDragon)
-            let shortVersion = '14.9'; // Fallback por defecto si todo falla
+            let shortVersion = '16.12'; // Fallback por defecto si todo falla
+            let fetched = false;
             try {
                 const lcu = getLockfileData();
                 if (lcu) {
@@ -92,18 +93,30 @@ export const GET: APIRoute = async ({ url }) => {
                             headers: { 'Authorization': `Basic ${auth}` }
                         }
                     );
-                    const fullVersion = await response.json();
-                    const parts = fullVersion.split('.');
-                    shortVersion = `${parts[0]}.${parts[1]}`;
-                } else {
-                    const ddragonRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-                    const versions = await ddragonRes.json();
-                    const latestFull = versions[0];
-                    const parts = latestFull.split('.');
-                    shortVersion = `${parts[0]}.${parts[1]}`;
+                    if (response.ok) {
+                        const fullVersion = await response.json();
+                        const parts = fullVersion.split('.');
+                        shortVersion = `${parts[0]}.${parts[1]}`;
+                        fetched = true;
+                    }
                 }
             } catch (e) {
-                console.warn("No se pudo obtener la versión de LoL para el check:", e);
+                console.warn("No se pudo obtener la versión de LoL desde LCU para el check:", e);
+            }
+
+            if (!fetched) {
+                try {
+                    const ddragonRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+                    if (ddragonRes.ok) {
+                        const versions = await ddragonRes.json();
+                        const latestFull = versions[0];
+                        const parts = latestFull.split('.');
+                        shortVersion = `${parts[0]}.${parts[1]}`;
+                        fetched = true;
+                    }
+                } catch (e) {
+                    console.warn("No se pudo obtener la versión de LoL desde DDragon para el check:", e);
+                }
             }
 
             const isOutdated = (timestampStr: string, limitDays: number): boolean => {
@@ -165,19 +178,19 @@ export const GET: APIRoute = async ({ url }) => {
                     initializeEngineData();
                     if (resStatus === "Cancelado por el usuario") {
                         progressPhase = 'cancelled';
-                        writeLog("🛑 Sincronización cancelada por el usuario.");
+                        writeLog("[ABORT] Sincronizacion cancelada por el usuario.");
                     } else {
                         progressPhase = 'done';
                         progressPercent = 100;
-                        writeLog("✅ Sincronización y recarga del motor en memoria completadas.");
+                        writeLog("[OK] Sincronizacion y recarga del motor en memoria completadas.");
                     }
                 } catch (e: any) {
-                    writeLog(`⚠️ Sincronización completada, pero falló la recarga en memoria: ${e.message || e}`);
+                    writeLog(`[WARN] Sincronizacion completada, pero fallo la recarga en memoria: ${e.message || e}`);
                 }
             })
             .catch((err) => {
                 progressPhase = 'error';
-                writeLog(`❌ Sincronización falló: ${err.message || err}`);
+                writeLog(`[ERROR] Sincronizacion fallo: ${err.message || err}`);
             })
             .finally(() => {
                 isGlobalSyncing = false;
@@ -189,19 +202,19 @@ export const GET: APIRoute = async ({ url }) => {
                     initializeEngineData();
                     if (shouldAbort) {
                         progressPhase = 'cancelled';
-                        writeLog("🛑 Mapeo cancelado por el usuario.");
+                        writeLog("[ABORT] Mapeo cancelado por el usuario.");
                     } else {
                         progressPhase = 'done';
                         progressPercent = 100;
-                        writeLog("✅ Mapeo de carriles y recarga del motor en memoria completadas.");
+                        writeLog("[OK] Mapeo de carriles y recarga del motor en memoria completadas.");
                     }
                 } catch (e: any) {
-                    writeLog(`⚠️ Mapeo completado, pero falló la recarga en memoria: ${e.message || e}`);
+                    writeLog(`[WARN] Mapeo completado, pero fallo la recarga en memoria: ${e.message || e}`);
                 }
             })
             .catch((err) => {
                 progressPhase = 'error';
-                writeLog(`❌ Mapeo falló: ${err.message || err}`);
+                writeLog(`[ERROR] Mapeo fallo: ${err.message || err}`);
             })
             .finally(() => {
                 isGlobalSyncing = false;

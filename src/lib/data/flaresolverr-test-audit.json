@@ -1,0 +1,2476 @@
+{
+  "stats": {
+    "totalTimeSeconds": 142.27,
+    "successCount": 254,
+    "failCount": 0,
+    "avgTimePerRequest": 0.56
+  },
+  "sampleData": {
+    "Galio": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Olaf": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Annie": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Xin Zhao": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Twisted Fate": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Urgot": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Leblanc": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Vladimir": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "FiddleSticks": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kayle": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Maestro Yi": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Alistar": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ryze": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sion": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sivir": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Soraka": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Teemo": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Tristana": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Warwick": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nunu y Willump": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Miss Fortune": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ashe": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Tryndamere": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Jax": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zilean": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Singed": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Morgana": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Evelynn": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Twitch": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Karthus": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Cho'Gath": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Amumu": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rammus": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Anivia": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Shaco": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Dr. Mundo": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sona": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kassadin": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Irelia": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Janna": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Gangplank": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Karma": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Corki": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Taric": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Veigar": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Trundle": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Swain": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Caitlyn": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Blitzcrank": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Malphite": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Katarina": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nocturne": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Renekton": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Maokai": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Elise": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Jarvan IV": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Orianna": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Wukong": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Brand": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lee Sin": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Vayne": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rumble": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Cassiopeia": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Skarner": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Heimerdinger": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nasus": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Udyr": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nidalee": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Poppy": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Gragas": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Pantheon": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ezreal": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Mordekaiser": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Yorick": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Akali": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kennen": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Garen": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Leona": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Malzahar": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Talon": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Riven": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Shen": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kog'Maw": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lux": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Xerath": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Shyvana": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ahri": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Graves": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Fizz": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Volibear": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rengar": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Varus": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nautilus": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Viktor": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sejuani": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ziggs": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Fiora": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lulu": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Draven": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Hecarim": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kha'Zix": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Darius": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Jayce": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lissandra": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Diana": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Quinn": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Syndra": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Aurelion Sol": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kayn": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zoe": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zyra": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kai'Sa": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Seraphine": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Gnar": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zac": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Yasuo": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Velkoz": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Taliyah": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Camille": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Bel'Veth": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Akshan": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Braum": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Jhin": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kindred": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zeri": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Jinx": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "TahmKench": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Briar": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Viego": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Senna": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lucian": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zed": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kled": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ekko": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Qiyana": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Aatrox": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Vi": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nami": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Azir": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Yuumi": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Samira": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Thresh": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Illaoi": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rek'Sai": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ivern": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Kalista": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Bardo": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Xayah": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rakan": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ornn": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sylas": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Neeko": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Aphelios": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Rell": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Pyke": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Vex": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Yone": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Ambessa": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Mel": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Yunara": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Sett": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Lillia": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Gwen": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Renata Glasc": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Aurora": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Nilah": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "K'Sante": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Smolder": {
+      "lanes": {
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Milio": {
+      "lanes": {
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Zaahen": {
+      "lanes": {
+        "TOP": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Hwei": {
+      "lanes": {
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "BOTTOM": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "UTILITY": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    },
+    "Naafiri": {
+      "lanes": {
+        "JUNGLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        },
+        "MIDDLE": {
+          "runesFound": true,
+          "startItemsFound": true,
+          "coreBuildsFound": true,
+          "enemyMatchupsCount": 5,
+          "allyMatchupsCount": 4
+        }
+      }
+    }
+  }
+}

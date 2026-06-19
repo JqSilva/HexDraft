@@ -54,7 +54,7 @@ export function getLockfileData(): LCUData | null {
 
     return { port, token, protocol };
   } catch (error) {
-    console.error("❌ Error leyendo el lockfile de LoL:", error);
+    console.error("Error leyendo el lockfile de LoL:", error);
     return null;
   }
 }

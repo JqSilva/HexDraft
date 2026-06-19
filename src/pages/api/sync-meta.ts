@@ -5,7 +5,7 @@ import { saveMetaCache } from '../../lib/metaManager';
 
 async function scrapeRoleData(role: string) {
     // Mapeo de nombres de posición para la URL de OP.GG
-    const pos = role === 'support' ? 'utility' : (role === 'adc' ? 'bottom' : role);
+    const pos = role;
     const url = `https://www.op.gg/champions?region=global&tier=master&position=${pos}`;
 
     const { data: html } = await axios.get(url, {

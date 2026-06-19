@@ -11,6 +11,7 @@ import { configRepo } from '../db/config.repo.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import { getPathsForBuild } from '../engine/itemEngine.js';
 import { syncItemsFromCommunityDragon } from '../scripts/sync-items.js';
+import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
 const API_NAME_MAP: Record<string, string> = {
@@ -317,33 +318,38 @@ function classifyCoreBuild(itemIds: number[]): { style: string; tags: string[] }
   return { style, tags };
 }
 
-// --- COMPROBAR SI LA BUILD ESTÁ AL DÍA ---
-function isChampionBuildUpToDate(champId: number, version: string, syncPeriodDays: number): boolean {
+// --- COMPROBAR SI LA BUILD ESTÁ AL DÍA EN TODOS SUS CARRILES ---
+function isChampionBuildUpToDate(champId: number, version: string, syncPeriodDays: number, playLanes: string[]): boolean {
   try {
-    const stmt = dbInstance.prepare('SELECT patch, special_notes FROM builds WHERE champion_id = ? AND is_default = 1 LIMIT 1');
-    const row = stmt.get(champId) as { patch: string; special_notes: string } | undefined;
-    if (!row) return false;
-    
-    // 1. Verificar parche
-    if (row.patch !== version) return false;
+    if (playLanes.length === 0) return false;
 
-    // 2. Verificar antigüedad de la build
-    const notes = JSON.parse(row.special_notes || '{}');
-    if (!notes.last_update) return false;
+    const stmt = dbInstance.prepare('SELECT patch, special_notes FROM builds WHERE champion_id = ? AND lane = ? AND is_default = 1 LIMIT 1');
+    for (const lane of playLanes) {
+      const row = stmt.get(champId, lane) as { patch: string; special_notes: string } | undefined;
+      if (!row) return false;
+      
+      // 1. Verificar parche
+      if (row.patch !== version) return false;
 
-    const lastDate = new Date(notes.last_update);
-    if (isNaN(lastDate.getTime())) return false;
+      // 2. Verificar antigüedad de la build
+      const notes = JSON.parse(row.special_notes || '{}');
+      if (!notes.last_update) return false;
 
-    const diffMs = Date.now() - lastDate.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    return diffDays < syncPeriodDays;
+      const lastDate = new Date(notes.last_update);
+      if (isNaN(lastDate.getTime())) return false;
+
+      const diffMs = Date.now() - lastDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      if (diffDays >= syncPeriodDays) return false;
+    }
+    return true;
   } catch (e) {
     return false;
   }
 }
 
-// --- SCRAPEO INDIVIDUAL ---
-async function scrapeSingleChampion(
+// --- SCRAPEO INDIVIDUAL POR CARRILES ---
+export async function scrapeSingleChampion(
   page: any,
   name: string,
   version: string,
@@ -351,244 +357,272 @@ async function scrapeSingleChampion(
   nameIdMap: Record<string, number>,
   writeLog: (msg: string) => void
 ) {
-  const lane = dbMemory[name]?.lane || "UNKNOWN";
-  const internalName = API_NAME_MAP[name] || name;
-  const urlName = internalName.replace(/\s/g, "");
+  const champId = nameIdMap[normalizeKey(name)];
+  if (!champId) return;
 
-  const url = `https://dpm.lol/v1/builds/${urlName}?lane=${lane.toLowerCase()}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
-  
-  await page.goto(url, { waitUntil: 'networkidle2' });
-  const data = JSON.parse(await page.evaluate(() => document.body.innerText));
+  // Obtener carriles jugables desde la base de datos
+  const laneRow = dbInstance.prepare('SELECT play_lanes FROM champions WHERE id = ?').get(champId) as { play_lanes: string } | undefined;
+  const playLanes = JSON.parse(laneRow?.play_lanes || '[]');
+  if (playLanes.length === 0) {
+    playLanes.push(dbMemory[name]?.lane || "UNKNOWN");
+  }
 
   const cData = dbMemory[name] || {};
 
-  // 1. Extraer God Matchups
-  cData.godMatchups = (data.enemyMatchups?.[lane] || [])
-    .filter((m: any) => m.count > 160)
-    .map((m: any) => {
-      const goldValue = m.goldDiffAt15 || 0;
-      const xpValue = m.xpDiffAt15 || 0;
-      const winrateValue = m.winrate || 0.50;
-      const countValue = m.count || 0;
-      const isGoodLane = (goldValue + xpValue) > 200;
-      const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
-      const K = 120; 
-      const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
-      const deltaScore = (bayesianWinrate - 0.50) * 100;
+  for (const lane of playLanes) {
+    if (lane === "UNKNOWN") continue;
+    writeLog(`   > Procesando carril: ${lane} para ${name}`);
+    
+    const internalName = API_NAME_MAP[name] || name;
+    const urlName = internalName.replace(/\s/g, "");
+    
+    // El endpoint de dpm.lol usa 'support' para UTILITY
+    const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'support' : lane.toLowerCase();
+    const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
+    
+    try {
+      let data: any = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await page.goto(url, { waitUntil: 'networkidle2' });
+        const bodyText = await page.evaluate(() => document.body.innerText);
+        try {
+          data = JSON.parse(bodyText);
+          break;
+        } catch {
+          // Cloudflare block - wait and retry
+          if (attempt === 0) {
+            writeLog(`   [RETRY] Cloudflare bloqueo detectado para ${name}/${lane}, reintentando...`);
+            await new Promise(r => setTimeout(r, 3000));
+          }
+        }
+      }
 
-      return {
-        name: m.championName,
-        winrate: (winrateValue * 100).toFixed(1) + "%",
-        goldDiff: goldValue.toFixed(0),
-        xpDiff: xpValue.toFixed(0),
-        csDiff: (m.csDiffAt15 || 0).toFixed(1),
-        count: countValue,
-        laneTag: laneTag,
-        dominanceScore: parseFloat(deltaScore.toFixed(1))
-      };
-    })
-    .sort((a: any, b: any) => b.dominanceScore - a.dominanceScore)
-    .slice(0, 15);
+      if (!data || data.error || !data.runes) {
+        writeLog(`   [WARN] dpm.lol no tiene builds para ${name} en ${lane}`);
+        continue;
+      }
 
-  // 2. Extraer Counters
-  cData.counters = (data.enemyMatchups?.[lane] || [])
-    .filter((m: any) => m.count > 160)
-    .map((m: any) => {
-      const goldValue = m.goldDiffAt15 || 0;
-      const xpValue = m.xpDiffAt15 || 0;
-      const winrateValue = m.winrate || 0.50;
-      const countValue = m.count || 0;
-      const isGoodLane = (goldValue + xpValue) > 200;
-      const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
-      const K = 100;
-      const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
-      const deltaScore = (bayesianWinrate - 0.50) * 100;
-
-      return {
-        name: m.championName,
-        winrate: (winrateValue * 100).toFixed(1) + "%",
-        goldDiff: goldValue.toFixed(0),
-        xpDiff: xpValue.toFixed(0),
-        csDiff: (m.csDiffAt15 || 0).toFixed(1),
-        count: countValue,
-        laneTag: laneTag,
-        dominanceScore: parseFloat(deltaScore.toFixed(1))
-      };
-    })
-    .filter((m: any) => m.dominanceScore < 1.0)
-    .sort((a: any, b: any) => a.dominanceScore - b.dominanceScore)
-    .slice(0, 10);
-
-  // 3. Extraer Ally Matchups (Sinergias)
-  if (data.allyMatchups) {
-    const synergies: any = {};
-    for (const pos in data.allyMatchups) {
-      synergies[pos] = (data.allyMatchups[pos] || [])
-        .filter((a: any) => a.count > 100)
-        .map((a: any) => {
-          const rawDelta = a.delta || 0;
-          const countValue = a.count || 0;
-          const bayesianFactor = countValue / (countValue + 80);
-          const smoothedDelta = rawDelta * bayesianFactor;
+      // 1. Extraer God Matchups para este carril
+      const laneGodMatchups = (data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+        .filter((m: any) => m.count > 160)
+        .map((m: any) => {
+          const goldValue = m.goldDiffAt15 || 0;
+          const xpValue = m.xpDiffAt15 || 0;
+          const winrateValue = m.winrate || 0.50;
+          const countValue = m.count || 0;
+          const isGoodLane = (goldValue + xpValue) > 200;
+          const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
+          const K = 120; 
+          const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
+          const deltaScore = (bayesianWinrate - 0.50) * 100;
 
           return {
-            name: a.championName,
+            name: m.championName,
+            winrate: (winrateValue * 100).toFixed(1) + "%",
+            goldDiff: goldValue.toFixed(0),
+            xpDiff: xpValue.toFixed(0),
+            csDiff: (m.csDiffAt15 || 0).toFixed(1),
             count: countValue,
-            delta: parseFloat((smoothedDelta * 100).toFixed(2))
+            laneTag: laneTag,
+            dominanceScore: parseFloat(deltaScore.toFixed(1))
           };
         })
-        .filter((a: any) => a.delta > 0)
-        .sort((a: any, b: any) => b.delta - a.delta)
-        .slice(0, 5);
-    }
-    cData.synergies = synergies;
-  }
+        .sort((a: any, b: any) => b.dominanceScore - a.dominanceScore)
+        .slice(0, 15);
 
-  // 4. Extraer ADN de Combate y Escalado
-  cData.combat = cData.combat || {};
-  if (data.damageComposition) {
-    cData.combat.damageComposition = {
-      physical: Math.round(data.damageComposition.physical || 0),
-      magic: Math.round(data.damageComposition.magic || 0),
-      true: Math.round(data.damageComposition.true || 0)
-    };
-  }
-  if (data.winrateByGameTime && data.winrateByGameTime.length > 0) {
-    cData.combat.winrateCurve = data.winrateByGameTime;
-    const earlyWR = data.winrateByGameTime[0]?.value || 50;
-    const lateWR = data.winrateByGameTime[data.winrateByGameTime.length - 1]?.value || 50;
-    cData.scalingType = lateWR > earlyWR + 1.5 ? "Late" : (earlyWR > lateWR + 1.5 ? "Early" : "Mid");
-  }
+      // 2. Extraer Counters para este carril
+      const laneCounters = (data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+        .filter((m: any) => m.count > 160)
+        .map((m: any) => {
+          const goldValue = m.goldDiffAt15 || 0;
+          const xpValue = m.xpDiffAt15 || 0;
+          const winrateValue = m.winrate || 0.50;
+          const countValue = m.count || 0;
+          const isGoodLane = (goldValue + xpValue) > 200;
+          const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
+          const K = 100;
+          const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
+          const deltaScore = (bayesianWinrate - 0.50) * 100;
 
-  // 5. Extraer Build
-  const r = data.runes;
-  const bestKeystone = getBestRuneSlot(r.primaryRuneId);
-  const secondaryRunes = getBestSecondaryRunes(r.secondaryRuneId);
-  const primaryStyleId = getStyleOfRune(bestKeystone);
-  const subStyleId = getStyleOfRune(secondaryRunes[0]);
-  const bestStarter = data.startItems?.sort((a: any, b: any) => b.pickrate - a.pickrate)[0]?.startItems || [];   
-  const bestBootsId = getMostPopularItem(data.boots, 'itemId') || 3047;
-  const bestCoreItems = getBestCoreBuild(data.coreBuilds);
-  const bestSummoners = getBestSummoners(data.summoners);
+          return {
+            name: m.championName,
+            winrate: (winrateValue * 100).toFixed(1) + "%",
+            goldDiff: goldValue.toFixed(0),
+            xpDiff: xpValue.toFixed(0),
+            csDiff: (m.csDiffAt15 || 0).toFixed(1),
+            count: countValue,
+            laneTag: laneTag,
+            dominanceScore: parseFloat(deltaScore.toFixed(1))
+          };
+        })
+        .filter((m: any) => m.dominanceScore < 1.0)
+        .sort((a: any, b: any) => a.dominanceScore - b.dominanceScore)
+        .slice(0, 10);
 
-  const champId = nameIdMap[normalizeKey(name)];
-  const damageType = champId ? (CHAMPIONS_DB[champId]?.damageType || "AD") : "AD";
-  const defaultPaths = getPathsForBuild(
-    data.items || {},
-    bestCoreItems,
-    damageType,
-    bestBootsId
-  );
+      // 3. Extraer Ally Matchups (Sinergias)
+      const synergies: any = {};
+      if (data.allyMatchups) {
+        for (const pos in data.allyMatchups) {
+          synergies[pos] = (data.allyMatchups[pos] || [])
+            .filter((a: any) => a.count > 100)
+            .map((a: any) => {
+              const rawDelta = a.delta || 0;
+              const countValue = a.count || 0;
+              const bayesianFactor = countValue / (countValue + 80);
+              const smoothedDelta = rawDelta * bayesianFactor;
 
-  cData.buildData = {
-    patch: version,
-    lastUpdate: new Date().toISOString(),
-    summoners: bestSummoners,
-    runes: {
-      primaryStyleId: primaryStyleId,
-      subStyleId: subStyleId,
-      selections: [
-        bestKeystone,
-        getBestRuneSlot(r.primaryRuneId2),
-        getBestRuneSlot(r.primaryRuneId3),
-        getBestRuneSlot(r.primaryRuneId4),
-        ...secondaryRunes
-      ],
-      shards: [
-        getBestRuneSlot(r.perksStat1),
-        getBestRuneSlot(r.perksStat2),
-        getBestRuneSlot(r.perksStat3)
-      ]
-    },
-    items: {
-      starter: bestStarter,
-      boots: { id: bestBootsId },
-      core: bestCoreItems,
-      paths: defaultPaths,
-      slotItems: data.items
-    },
-    skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
-  };
-
-  // Guardar en SQLite en tiempo real
-  if (champId) {
-    const currentChampStmt = dbInstance.prepare('SELECT tier, win_rate FROM champions WHERE id = ?');
-    const current = currentChampStmt.get(champId) as any;
-
-    championsRepo.saveChampion({
-      id: champId,
-      name: name,
-      lane: cData.lane || "UNKNOWN",
-      tier: current?.tier || 5,
-      win_rate: current?.win_rate || 50.0,
-      scaling_type: cData.scalingType || "Mid",
-      damage_type: CHAMPIONS_DB[champId]?.damageType || "Adaptive",
-      class: CHAMPIONS_DB[champId]?.class || "Unknown",
-      is_frontline: CHAMPIONS_DB[champId]?.isFrontline ? 1 : 0,
-      is_hypercarry: CHAMPIONS_DB[champId]?.isHypercarry ? 1 : 0,
-      has_hard_cc: CHAMPIONS_DB[champId]?.hasHardCC ? 1 : 0,
-      tags: JSON.stringify(CHAMPIONS_DB[champId]?.tags || [])
-    });
-
-    // Matchups (counters)
-    const counters = cData.counters || [];
-    counters.forEach((cnt: any) => {
-      const opponentId = resolveChampionId(cnt.name, nameIdMap);
-      if (opponentId) {
-        championsRepo.saveMatchup({
-          champion_id: champId,
-          opponent_id: opponentId,
-          lane: cData.lane || "UNKNOWN",
-          winrate: cnt.winrate,
-          gold_diff: parseInt(cnt.goldDiff || 0),
-          xp_diff: parseInt(cnt.xpDiff || 0),
-          cs_diff: parseFloat(cnt.csDiff || 0.0),
-          dominance_score: parseFloat(cnt.dominanceScore || 0.0),
-          matchup_type: 'counter'
-        });
+              return {
+                name: a.championName,
+                count: countValue,
+                delta: parseFloat((smoothedDelta * 100).toFixed(2))
+              };
+            })
+            .filter((a: any) => a.delta > 0)
+            .sort((a: any, b: any) => b.delta - a.delta)
+            .slice(0, 5);
+        }
       }
-    });
 
-    // Matchups (godMatchups)
-    const godMatchups = cData.godMatchups || [];
-    godMatchups.forEach((god: any) => {
-      const opponentId = resolveChampionId(god.name, nameIdMap);
-      if (opponentId) {
-        championsRepo.saveMatchup({
-          champion_id: champId,
-          opponent_id: opponentId,
-          lane: cData.lane || "UNKNOWN",
-          winrate: god.winrate,
-          gold_diff: parseInt(god.goldDiff || 0),
-          xp_diff: parseInt(god.xpDiff || 0),
-          cs_diff: parseFloat(god.csDiff || 0.0),
-          dominance_score: parseFloat(god.dominanceScore || 0.0),
-          matchup_type: 'god_matchup'
-        });
+      // 4. Extraer ADN de Combate y Escalado
+      cData.combat = cData.combat || {};
+      if (data.damageComposition) {
+        cData.combat.damageComposition = {
+          physical: Math.round(data.damageComposition.physical || 0),
+          magic: Math.round(data.damageComposition.magic || 0),
+          true: Math.round(data.damageComposition.true || 0)
+        };
       }
-    });
+      if (data.winrateByGameTime && data.winrateByGameTime.length > 0) {
+        cData.combat.winrateCurve = data.winrateByGameTime;
+        const earlyWR = data.winrateByGameTime[0]?.value || 50;
+        const lateWR = data.winrateByGameTime[data.winrateByGameTime.length - 1]?.value || 50;
+        cData.scalingType = lateWR > earlyWR + 1.5 ? "Late" : (earlyWR > lateWR + 1.5 ? "Early" : "Mid");
+      }
 
-    // Sinergias
-    const synergies = cData.synergies || {};
-    Object.keys(synergies).forEach(roleKey => {
-      const partnerList = synergies[roleKey] || [];
-      partnerList.forEach((syn: any) => {
-        const partnerId = resolveChampionId(syn.name, nameIdMap);
-        if (partnerId) {
-          championsRepo.saveSynergy({
+      // 5. Extraer Build
+      const r = data.runes;
+      const bestKeystone = getBestRuneSlot(r.primaryRuneId);
+      const secondaryRunes = getBestSecondaryRunes(r.secondaryRuneId);
+      const primaryStyleId = getStyleOfRune(bestKeystone);
+      const subStyleId = getStyleOfRune(secondaryRunes[0]);
+      const bestStarter = data.startItems?.sort((a: any, b: any) => b.pickrate - a.pickrate)[0]?.startItems || [];   
+      const bestBootsId = getMostPopularItem(data.boots, 'itemId') || 3047;
+      const bestCoreItems = getBestCoreBuild(data.coreBuilds);
+      const bestSummoners = getBestSummoners(data.summoners);
+      const damageType = CHAMPIONS_DB[champId]?.damageType || "AD";
+      const defaultPaths = getPathsForBuild(
+        data.items || {},
+        bestCoreItems,
+        damageType,
+        bestBootsId
+      );
+
+      const laneBuildData = {
+        patch: version,
+        lastUpdate: new Date().toISOString(),
+        summoners: bestSummoners,
+        runes: {
+          primaryStyleId: primaryStyleId,
+          subStyleId: subStyleId,
+          selections: [
+            bestKeystone,
+            getBestRuneSlot(r.primaryRuneId2),
+            getBestRuneSlot(r.primaryRuneId3),
+            getBestRuneSlot(r.primaryRuneId4),
+            ...secondaryRunes
+          ],
+          shards: [
+            getBestRuneSlot(r.perksStat1),
+            getBestRuneSlot(r.perksStat2),
+            getBestRuneSlot(r.perksStat3)
+          ]
+        },
+        items: {
+          starter: bestStarter,
+          boots: { id: bestBootsId },
+          core: bestCoreItems,
+          paths: defaultPaths,
+          slotItems: data.items
+        },
+        skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
+      };
+
+      // Guardar en SQLite en tiempo real
+      const currentChampStmt = dbInstance.prepare('SELECT lane, tier, win_rate, play_lanes, lanes_pickrate, lanes_stats FROM champions WHERE id = ?');
+      const current = currentChampStmt.get(champId) as any;
+
+      championsRepo.saveChampion({
+        id: champId,
+        name: name,
+        lane: current?.lane || cData.lane || "UNKNOWN",
+        tier: current?.tier || 5,
+        win_rate: current?.win_rate || 50.0,
+        scaling_type: cData.scalingType || "Mid",
+        damage_type: CHAMPIONS_DB[champId]?.damageType || "Adaptive",
+        class: CHAMPIONS_DB[champId]?.class || "Unknown",
+        is_frontline: CHAMPIONS_DB[champId]?.isFrontline ? 1 : 0,
+        is_hypercarry: CHAMPIONS_DB[champId]?.isHypercarry ? 1 : 0,
+        has_hard_cc: CHAMPIONS_DB[champId]?.hasHardCC ? 1 : 0,
+        tags: JSON.stringify(CHAMPIONS_DB[champId]?.tags || []),
+        play_lanes: current?.play_lanes || "[]",
+        lanes_pickrate: current?.lanes_pickrate || "{}",
+        lanes_stats: current?.lanes_stats || "{}"
+      });
+
+      // Matchups (counters)
+      laneCounters.forEach((cnt: any) => {
+        const opponentId = resolveChampionId(cnt.name, nameIdMap);
+        if (opponentId) {
+          championsRepo.saveMatchup({
             champion_id: champId,
-            partner_id: partnerId,
-            lane: roleKey.toUpperCase(),
-            delta: parseFloat(syn.delta || 0.0)
+            opponent_id: opponentId,
+            lane: lane,
+            winrate: cnt.winrate,
+            gold_diff: parseInt(cnt.goldDiff || 0),
+            xp_diff: parseInt(cnt.xpDiff || 0),
+            cs_diff: parseFloat(cnt.csDiff || 0.0),
+            dominance_score: parseFloat(cnt.dominanceScore || 0.0),
+            matchup_type: 'counter'
           });
         }
       });
-    });
 
-    // Build
-    if (cData.buildData) {
-      championsRepo.clearBuilds(champId);
-      const b = cData.buildData;
+      // Matchups (godMatchups)
+      laneGodMatchups.forEach((god: any) => {
+        const opponentId = resolveChampionId(god.name, nameIdMap);
+        if (opponentId) {
+          championsRepo.saveMatchup({
+            champion_id: champId,
+            opponent_id: opponentId,
+            lane: lane,
+            winrate: god.winrate,
+            gold_diff: parseInt(god.goldDiff || 0),
+            xp_diff: parseInt(god.xpDiff || 0),
+            cs_diff: parseFloat(god.csDiff || 0.0),
+            dominance_score: parseFloat(god.dominanceScore || 0.0),
+            matchup_type: 'god_matchup'
+          });
+        }
+      });
+
+      // Sinergias
+      Object.keys(synergies).forEach(roleKey => {
+        const partnerList = synergies[roleKey] || [];
+        partnerList.forEach((syn: any) => {
+          const partnerId = resolveChampionId(syn.name, nameIdMap);
+          if (partnerId) {
+            championsRepo.saveSynergy({
+              champion_id: champId,
+              partner_id: partnerId,
+              lane: roleKey.toUpperCase(),
+              delta: parseFloat(syn.delta || 0.0)
+            });
+          }
+        });
+      });
+
+      // Guardar builds para esta línea
+      championsRepo.clearBuilds(champId, lane);
       
       // 1. Guardar build por defecto (is_default = 1)
       championsRepo.saveBuild({
@@ -596,17 +630,18 @@ async function scrapeSingleChampion(
         build_name: "Recomendada",
         is_default: 1,
         patch: version,
-        summoners: JSON.stringify(b.summoners || []),
-        runes: JSON.stringify(b.runes || {}),
-        items: JSON.stringify(b.items || {}),
-        skills: JSON.stringify(b.skills || {}),
-        tags: JSON.stringify(["Default", cData.lane]),
+        summoners: JSON.stringify(laneBuildData.summoners || []),
+        runes: JSON.stringify(laneBuildData.runes || {}),
+        items: JSON.stringify(laneBuildData.items || {}),
+        skills: JSON.stringify(laneBuildData.skills || {}),
+        tags: JSON.stringify(["Default", lane]),
         special_notes: JSON.stringify({ 
           last_update: new Date().toISOString(),
-          winrate: b.skills?.winrate || 50.0,
-          pickrate: b.skills?.pickrate || 100.0,
+          winrate: laneBuildData.skills?.winrate || 50.0,
+          pickrate: laneBuildData.skills?.pickrate || 100.0,
           style: "Default"
-        })
+        }),
+        lane: lane
       });
 
       // 2. Guardar builds candidatas (is_default = 0)
@@ -649,19 +684,15 @@ async function scrapeSingleChampion(
 
       let candidateIdx = 1;
       uniqueCandidates.forEach(({ cand, style, tags }) => {
-        // Obtener la mejor runa clave para este estilo específico
         const candKeystone = getBestKeystoneForStyle(r.primaryRuneId, style) || bestKeystone;
         const candPrimaryStyleId = getStyleOfRune(candKeystone);
         
-        let candRunes = { ...b.runes };
+        let candRunes = { ...laneBuildData.runes };
         
         if (candPrimaryStyleId !== 0) {
-          // Obtener las mejores runas de los slots 2, 3, y 4 de la misma rama primaria
           const rune2 = getBestRuneForStyleInSlot(r.primaryRuneId2, candPrimaryStyleId);
           const rune3 = getBestRuneForStyleInSlot(r.primaryRuneId3, candPrimaryStyleId);
           const rune4 = getBestRuneForStyleInSlot(r.primaryRuneId4, candPrimaryStyleId);
-          
-          // Obtener las mejores runas de la rama secundaria que no coincidan con la rama primaria
           const sec = getBestSecondaryRunesForStyle(r.secondaryRuneId, candPrimaryStyleId);
           
           candRunes = {
@@ -674,7 +705,7 @@ async function scrapeSingleChampion(
               rune4 || getBestRuneSlot(r.primaryRuneId4),
               ...sec.selections
             ],
-            shards: b.runes.shards || []
+            shards: laneBuildData.runes.shards || []
           };
         }
 
@@ -690,31 +721,43 @@ async function scrapeSingleChampion(
           build_name: `Core ${style} #${candidateIdx}`,
           is_default: 0,
           patch: version,
-          summoners: JSON.stringify(b.summoners || []),
+          summoners: JSON.stringify(laneBuildData.summoners || []),
           runes: JSON.stringify(candRunes),
           items: JSON.stringify({
-            starter: b.items.starter,
-            boots: b.items.boots,
+            starter: laneBuildData.items.starter,
+            boots: laneBuildData.items.boots,
             core: cand.itemIds,
             paths: candPaths,
             slotItems: data.items
           }),
-          skills: JSON.stringify(b.skills || {}),
+          skills: JSON.stringify(laneBuildData.skills || {}),
           tags: JSON.stringify(tags),
           special_notes: JSON.stringify({
             last_update: new Date().toISOString(),
             winrate: cand.winrate,
             pickrate: cand.pickrate,
             style: style
-          })
+          }),
+          lane: lane
         });
 
         candidateIdx++;
       });
+      
+      // Actualizar memoria local para la última línea procesada
+      cData.godMatchups = laneGodMatchups;
+      cData.counters = laneCounters;
+      cData.synergies = synergies;
+      cData.buildData = laneBuildData;
+
+    } catch (e: any) {
+      writeLog(`   [ERROR] Error scrapeando carril ${lane} de ${name}: ${e.message || e}`);
     }
+    
+    // Delay entre carriles para respetar Cloudflare
+    await new Promise(r => setTimeout(r, 1000));
   }
 
-  // Escribir en la memoria local
   dbMemory[name] = cData;
 }
 
@@ -733,15 +776,24 @@ export async function syncMetaAndBuilds(
   const champions = Object.keys(db);
   const nameIdMap = championsRepo.getChampionIdNameMap();
 
-  writeLog(`🚀 INICIANDO SINCRONIZACIÓN GENERAL - Versión Parche: ${version}`);
+  writeLog(`[SYNC] Iniciando sincronizacion general - Parche: ${version}`);
 
   // --- PARTE 0: Sincronizar catálogo de items desde Community Dragon ---
   try {
-    writeLog("📥 Sincronizando catálogo de items desde Community Dragon...");
+    writeLog("[SYNC] Sincronizando catalogo de items desde Community Dragon...");
     const itemsCount = await syncItemsFromCommunityDragon();
-    writeLog(`✅ Catálogo de items actualizado (${itemsCount} items)`);
+    writeLog(`[OK] Catalogo de items actualizado (${itemsCount} items)`);
   } catch (e: any) {
-    writeLog(`⚠️ Error al sincronizar items desde Community Dragon: ${e.message || e}`);
+    writeLog(`[WARN] Error al sincronizar items desde Community Dragon: ${e.message || e}`);
+  }
+
+  // --- PARTE 0.5: Sincronizar runas y shards desde Community Dragon ---
+  try {
+    writeLog("[SYNC] Sincronizando runas y shards desde Community Dragon...");
+    const runesResult = await syncRunesFromCommunityDragon();
+    writeLog(`[OK] Runas actualizadas (${runesResult.runesCount} runas, ${runesResult.shardsCount} shards, ${runesResult.runeToStyleCount} mappings)`);
+  } catch (e: any) {
+    writeLog(`[WARN] Error al sincronizar runas desde Community Dragon: ${e.message || e}`);
   }
 
   // --- PARTE 1: OP.GG (Sin Puppeteer - Rápido) ---
@@ -752,10 +804,10 @@ export async function syncMetaAndBuilds(
   onProgress?.(0, roles.length, 'opgg');
   for (const role of roles) {
     if (checkAbort()) return "Cancelado por el usuario";
-    writeLog(`🔍 Scrapeando OP.GG: ${role}`);
-    const pos = role === 'utility' ? 'support' : (role === 'adc' ? 'bottom' : role);
+    writeLog(`[OPGG] Scrapeando: ${role}`);
+    const pos = role;
     try {
-      const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=emerald_plus&position=${pos}`, {
+      const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=diamond&position=${pos}`, {
         headers: { 'User-Agent': 'Mozilla/5.0' }
       });
       const $ = cheerio.load(html);
@@ -784,7 +836,7 @@ export async function syncMetaAndBuilds(
   fs.writeFileSync(cachePath, JSON.stringify(metaCache, null, 2));
 
   // Guardar Tiers y Winrates actualizados en SQLite (OP.GG)
-  writeLog("💾 Sincronizando tiers y winrates con SQLite...");
+  writeLog("[SYNC] Sincronizando tiers y winrates con SQLite...");
   
   const roleToLaneMap: Record<string, string> = {
     'top': 'TOP',
@@ -794,39 +846,103 @@ export async function syncMetaAndBuilds(
     'support': 'UTILITY'
   };
 
+  // 1. Agrupar entradas del metaCache por campeón para determinar su carril principal dinámicamente
+  const champMetaStats: Record<number, Array<{ role: string; rank: string; winRate: string; pickRate: string }>> = {};
+
   Object.keys(metaCache).forEach(role => {
     const list = metaCache[role] || [];
     list.forEach((metaChamp: any) => {
       const champId = resolveChampionId(metaChamp.name, nameIdMap);
       if (!champId) return;
-
-      const baseChamp = CHAMPIONS_DB[champId];
-      const currentChampStmt = dbInstance.prepare('SELECT lane, scaling_type FROM champions WHERE id = ?');
-      const current = currentChampStmt.get(champId) as any;
-
-      const roleLane = roleToLaneMap[role];
-      const currentLane = current?.lane || "UNKNOWN";
-
-      // Omitir si no coincide con el carril principal
-      if (currentLane !== "UNKNOWN" && currentLane !== roleLane) {
-        return;
+      if (!champMetaStats[champId]) {
+        champMetaStats[champId] = [];
       }
-
-      championsRepo.saveChampion({
-        id: champId,
-        name: baseChamp.name,
-        lane: current?.lane || "UNKNOWN",
-        tier: parseInt(metaChamp.rank) || 99,
-        win_rate: parseFloat(metaChamp.winRate) || 50.0,
-        scaling_type: current?.scaling_type || "Mid",
-        damage_type: baseChamp.damageType || "Adaptive",
-        class: baseChamp.class || "Unknown",
-        is_frontline: baseChamp.isFrontline ? 1 : 0,
-        is_hypercarry: baseChamp.isHypercarry ? 1 : 0,
-        has_hard_cc: baseChamp.hasHardCC ? 1 : 0,
-        tags: JSON.stringify(baseChamp.tags || [])
+      champMetaStats[champId].push({
+        role,
+        rank: metaChamp.rank,
+        winRate: metaChamp.winRate,
+        pickRate: metaChamp.pickRate
       });
     });
+  });
+
+  // 2. Para cada campeón, elegir el carril con mayor pickrate, calcular la distribución de carriles y actualizar la BD
+  Object.keys(champMetaStats).forEach(idStr => {
+    const champId = Number(idStr);
+    const statsList = champMetaStats[champId];
+    if (statsList.length === 0) return;
+
+    const parsePickRate = (pr: string) => parseFloat(pr.replace('%', '')) || 0.0;
+    
+    let bestStat = statsList[0];
+    let maxPick = parsePickRate(bestStat.pickRate);
+
+    for (let i = 1; i < statsList.length; i++) {
+      const pr = parsePickRate(statsList[i].pickRate);
+      if (pr > maxPick) {
+        maxPick = pr;
+        bestStat = statsList[i];
+      }
+    }
+
+     // Calcular la distribución de pickrate por carril y estadísticas por carril
+     let totalPickRate = 0;
+     statsList.forEach(s => {
+       totalPickRate += parsePickRate(s.pickRate);
+     });
+ 
+     const distribution: Record<string, number> = {};
+     const lanesStats: Record<string, { tier: number, winRate: number }> = {};
+     statsList.forEach(s => {
+       const laneKey = roleToLaneMap[s.role];
+       if (laneKey && totalPickRate > 0) {
+         const relativeRate = (parsePickRate(s.pickRate) / totalPickRate) * 100;
+         distribution[laneKey] = parseFloat(relativeRate.toFixed(1));
+         lanesStats[laneKey] = {
+           tier: parseInt(s.rank) || 99,
+           winRate: parseFloat(s.winRate) || 50.0
+         };
+       }
+     });
+ 
+     // Determinar líneas no-troll (distribución > 5%)
+     const playLanes = Object.entries(distribution)
+       .filter(([_, relRate]) => relRate > 5.0)
+       .map(([lane]) => lane);
+ 
+     if (playLanes.length === 0 && Object.keys(distribution).length > 0) {
+       const bestLane = Object.entries(distribution).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+       playLanes.push(bestLane);
+     }
+ 
+     const baseChamp = CHAMPIONS_DB[champId];
+     const currentChampStmt = dbInstance.prepare('SELECT lane, scaling_type FROM champions WHERE id = ?');
+     const current = currentChampStmt.get(champId) as any;
+ 
+     const primaryLane = roleToLaneMap[bestStat.role] || "UNKNOWN";
+ 
+     // Actualizar también la memoria db (counter-synergies) para que los scrapers posteriores usen el carril correcto
+     if (db[baseChamp.name]) {
+       db[baseChamp.name].lane = primaryLane;
+     }
+ 
+     championsRepo.saveChampion({
+       id: champId,
+       name: baseChamp.name,
+       lane: primaryLane,
+       tier: parseInt(bestStat.rank) || 99,
+       win_rate: parseFloat(bestStat.winRate) || 50.0,
+       scaling_type: current?.scaling_type || "Mid",
+       damage_type: baseChamp.damageType || "Adaptive",
+       class: baseChamp.class || "Unknown",
+       is_frontline: baseChamp.isFrontline ? 1 : 0,
+       is_hypercarry: baseChamp.isHypercarry ? 1 : 0,
+       has_hard_cc: baseChamp.hasHardCC ? 1 : 0,
+       tags: JSON.stringify(baseChamp.tags || []),
+       play_lanes: JSON.stringify(playLanes),
+       lanes_pickrate: JSON.stringify(distribution),
+       lanes_stats: JSON.stringify(lanesStats)
+     });
   });
 
   const syncPeriodSetting = parseInt(configRepo.getConfig('sync_period_days') || '3') || 3;
@@ -836,21 +952,26 @@ export async function syncMetaAndBuilds(
     const id = nameIdMap[normalizeKey(name)];
     if (!id) return false;
     if (forceSync) return true;
-    return !isChampionBuildUpToDate(id, version, syncPeriodSetting);
+
+    // Obtener carriles jugables desde la BD
+    const laneRow = dbInstance.prepare('SELECT play_lanes FROM champions WHERE id = ?').get(id) as { play_lanes: string } | undefined;
+    const playLanes = JSON.parse(laneRow?.play_lanes || '[]');
+
+    return !isChampionBuildUpToDate(id, version, syncPeriodSetting, playLanes);
   });
 
   const skippedCount = champions.length - pendingChamps.length;
   if (skippedCount > 0) {
-    writeLog(`⏭️ [SYNC DIFERENCIAL] Omitiendo ${skippedCount} campeones ya actualizados para el parche ${version}.`);
+    writeLog(`[SKIP] Omitiendo ${skippedCount} campeones ya actualizados para el parche ${version}.`);
   }
 
   if (pendingChamps.length === 0) {
-    writeLog("🏁 Todos los campeones están al día. Sincronización finalizada.");
+    writeLog("[DONE] Todos los campeones estan al dia. Sincronizacion finalizada.");
     onProgress?.(0, 0, 'done');
     return "Sincronización al día";
   }
 
-  writeLog(`⚡ Iniciando Puppeteer para procesar ${pendingChamps.length} campeones.`);
+  writeLog(`[PUPPETEER] Iniciando procesamiento de ${pendingChamps.length} campeones.`);
   onProgress?.(0, pendingChamps.length, 'puppeteer');
 
   // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA) ---
@@ -858,7 +979,7 @@ export async function syncMetaAndBuilds(
   // Limitar concurrencia física para evitar saturar el sistema
   const concurrency = Math.min(Math.max(concurrencySetting, 1), 6); 
 
-  writeLog(`🚀 Nivel de concurrencia configurado: ${concurrency} páginas simultáneas.`);
+  writeLog(`[PUPPETEER] Concurrencia: ${concurrency} paginas simultaneas.`);
 
   const profilesDir = path.join(process.cwd(), '.puppeteer_profiles');
   if (!fs.existsSync(profilesDir)) {
@@ -902,7 +1023,7 @@ export async function syncMetaAndBuilds(
         const name = pendingChamps[index++];
         if (!name) break;
 
-        writeLog(`🔄 [Pestaña ${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
+        writeLog(`[TAB-${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
         
         try {
           await scrapeSingleChampion(page, name, version, db, nameIdMap, writeLog);
@@ -914,7 +1035,7 @@ export async function syncMetaAndBuilds(
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
           }
         } catch (e: any) {
-          writeLog(`❌ [Pestaña ${workerId}] Error procesando ${name}: ${e.message || e}`);
+          writeLog(`[ERROR] [TAB-${workerId}] Error procesando ${name}: ${e.message || e}`);
         }
 
         // Delay mínimo para respetar rate limits de Cloudflare
@@ -935,7 +1056,7 @@ export async function syncMetaAndBuilds(
   }
 
   if (checkAbort()) {
-    writeLog("🛑 CANCELACIÓN PROCESADA. Procesador detenido.");
+    writeLog("[ABORT] Cancelacion procesada. Procesador detenido.");
     return "Cancelado por el usuario";
   }
 
@@ -945,13 +1066,13 @@ export async function syncMetaAndBuilds(
   
   // --- PARTE 3: Sincronizar datos semánticos de campeones ---
   try {
-    writeLog("🧠 Sincronizando datos semánticos de campeones...");
+    writeLog("[SYNC] Sincronizando datos semanticos de campeones...");
     await syncChampionsSemanticData();
   } catch (e: any) {
-    writeLog(`⚠️ Error al sincronizar datos semánticos de campeones: ${e.message || e}`);
+    writeLog(`[WARN] Error al sincronizar datos semanticos: ${e.message || e}`);
   }
 
-  writeLog("🏁 SINCRONIZACIÓN COMPLETA - Datos actualizados en SQLite local");
+  writeLog("[DONE] Sincronizacion completa - Datos actualizados en SQLite local");
   onProgress?.(pendingChamps.length, pendingChamps.length, 'done');
   return "Sincronización completa";
 }

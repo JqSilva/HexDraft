@@ -54,25 +54,48 @@ export async function SyncEstructuraLanes(
             } catch (e) {}
             return;
         }
-        // --- PARTE 1: GENERAR META-MAP (Lanes) ---
-        writeLog("📡 Generando Mapa de Posiciones...");
+        // --- PARTE 1: ACTUALIZAR BD DIRECTAMENTE ---
+        writeLog("📡 Sincronizando Carriles en la Base de Datos...");
         onProgress?.(3, 10, 'lanes');
         await page.goto(`https://dpm.lol/v1/tierlist?tier=diamond&timeframe=${version}&gameMode=ranked`);
         onProgress?.(7, 10, 'lanes');
         const tierData = JSON.parse(await page.evaluate(() => document.body.innerText));
         
-        const metaMap: Record<string, string[]> = {};
-        tierData.champions.forEach((c: any) => {
-            const lanes = Object.entries(c.lanesPickrate)
-                .filter(([_, rate]) => (rate as number) > 40.0)
-                .map(([lane]) => lane);
-            if (lanes.length === 0) {
-                const best = Object.entries(c.lanesPickrate).reduce((a: any, b: any) => a[1] > b[1] ? a : b)[0];
-                lanes.push(best);
-            }
-            metaMap[c.championName] = lanes;
-        });
-        fs.writeFileSync(metaMapPath, JSON.stringify(metaMap, null, 2));
+        const { championsRepo } = await import('../db/champions.repo.js');
+        const { db } = await import('../db/sqlite.js');
+        const nameIdMap = championsRepo.getChampionIdNameMap();
+
+        db.exec('BEGIN TRANSACTION;');
+        try {
+            const updateStmt = db.prepare('UPDATE champions SET lane = ? WHERE id = ?');
+            let updatedCount = 0;
+
+            tierData.champions.forEach((c: any) => {
+                const normName = c.championName.toLowerCase().replace(/[^a-z0-9]/g, "");
+                const champId = nameIdMap[normName];
+                if (champId) {
+                    const lanes = Object.entries(c.lanesPickrate)
+                        .filter(([_, rate]) => (rate as number) > 40.0)
+                        .map(([lane]) => lane);
+                    if (lanes.length === 0) {
+                        const best = Object.entries(c.lanesPickrate).reduce((a: any, b: any) => a[1] > b[1] ? a : b)[0];
+                        lanes.push(best);
+                    }
+                    const primaryLane = lanes[0]?.toUpperCase();
+                    if (primaryLane) {
+                        updateStmt.run(primaryLane, champId);
+                        updatedCount++;
+                    }
+                }
+            });
+
+            db.exec('COMMIT;');
+            writeLog(`✅ Carriles actualizados directamente en base de datos: ${updatedCount} campeones.`);
+        } catch (err: any) {
+            db.exec('ROLLBACK;');
+            writeLog(`❌ Error al actualizar base de datos con carriles: ${err.message || err}`);
+            throw err;
+        }
         onProgress?.(9, 10, 'lanes');
         
         try {

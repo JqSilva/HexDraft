@@ -638,10 +638,10 @@ export const GET: APIRoute = async () => {
         );
       });
       db.exec('COMMIT;');
-      console.log(`💾 Guardadas ${parsedMatches.length} partidas en la tabla player_history de SQLite.`);
+      console.log(`Guardadas ${parsedMatches.length} partidas en la tabla player_history de SQLite.`);
     } catch (saveHistoryErr) {
       try { db.exec('ROLLBACK;'); } catch (_) {}
-      console.error("⚠️ Error al guardar partidas en SQLite:", saveHistoryErr);
+      console.error("Error al guardar partidas en SQLite:", saveHistoryErr);
     }
 
     return new Response(JSON.stringify({ isConnected: true, gameVersion, matches: parsedMatches }), { status: 200 });

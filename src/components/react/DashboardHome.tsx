@@ -73,7 +73,7 @@ const getChampionRole = (name: string): string => {
     "Zed": "Asesino / Mid",
     "Yasuo": "Luchador / Mid",
     "Ahri": "Mago / Mid",
-    "Jinx": "Tirador / Bot",
+    "Jinx": "Tirador / ADC",
     "Lee Sin": "Luchador / Jungla",
     "Lux": "Mago / Soporte",
     "Garen": "Luchador / Top",
@@ -473,7 +473,7 @@ export const DashboardHome = () => {
               { key: 'top', label: 'TOP' },
               { key: 'jungle', label: 'JNG' },
               { key: 'mid', label: 'MID' },
-              { key: 'adc', label: 'BOT' },
+              { key: 'adc', label: 'ADC' },
               { key: 'support', label: 'SUP' },
             ].map(({ key, label }) => {
               const list = (metaCache as Record<string, any[]>)[key] || [];

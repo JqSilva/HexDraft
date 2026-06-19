@@ -25,6 +25,9 @@ export interface DbChampion {
   has_sustain?: number;
   lane_phase?: string;
   resource_dependency?: string;
+  play_lanes?: string; // JSON string
+  lanes_pickrate?: string; // JSON string
+  lanes_stats?: string; // JSON string
 }
 
 export interface DbMatchup {
@@ -58,6 +61,7 @@ export interface DbBuild {
   skills: string;     // JSON string
   tags: string;       // JSON string
   special_notes: string; // JSON string
+  lane?: string;
 }
 
 // === PREPARED STATEMENTS FOR WRITES (Para optimizar rendimiento) ===
@@ -65,8 +69,9 @@ const insertChampStmt = db.prepare(`
   INSERT INTO champions (
     id, name, lane, tier, win_rate, scaling_type, damage_type, class, 
     is_frontline, is_hypercarry, has_hard_cc, tags,
-    tactic_role, mobility, target_priority, team_needs, team_provides, has_shield, has_sustain, lane_phase, resource_dependency
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    tactic_role, mobility, target_priority, team_needs, team_provides, has_shield, has_sustain, lane_phase, resource_dependency,
+    play_lanes, lanes_pickrate, lanes_stats
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(id) DO UPDATE SET
     name=excluded.name,
     lane=excluded.lane,
@@ -87,7 +92,10 @@ const insertChampStmt = db.prepare(`
     has_shield=excluded.has_shield,
     has_sustain=excluded.has_sustain,
     lane_phase=excluded.lane_phase,
-    resource_dependency=excluded.resource_dependency;
+    resource_dependency=excluded.resource_dependency,
+    play_lanes=excluded.play_lanes,
+    lanes_pickrate=excluded.lanes_pickrate,
+    lanes_stats=excluded.lanes_stats;
 `);
 
 const insertMatchupStmt = db.prepare(`
@@ -112,8 +120,8 @@ const insertSynergyStmt = db.prepare(`
 
 const insertBuildStmt = db.prepare(`
   INSERT INTO builds (
-    champion_id, build_name, is_default, patch, summoners, runes, items, skills, tags, special_notes
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    champion_id, build_name, is_default, patch, summoners, runes, items, skills, tags, special_notes, lane
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 // === REPOSITORY METHODS ===
@@ -121,10 +129,12 @@ const insertBuildStmt = db.prepare(`
 export const championsRepo = {
   // Limpiar tablas antes de resincronizaciones o migraciones
   clearAllData() {
+    db.exec('PRAGMA foreign_keys = OFF;');
     db.exec('DELETE FROM builds;');
     db.exec('DELETE FROM synergies;');
     db.exec('DELETE FROM matchups;');
     db.exec('DELETE FROM champions;');
+    db.exec('PRAGMA foreign_keys = ON;');
   },
 
   // Guardar un campeón básico
@@ -150,7 +160,10 @@ export const championsRepo = {
       champ.has_shield ?? 0,
       champ.has_sustain ?? 0,
       champ.lane_phase ?? 'average',
-      champ.resource_dependency ?? 'medium'
+      champ.resource_dependency ?? 'medium',
+      champ.play_lanes ?? '[]',
+      champ.lanes_pickrate ?? '{}',
+      champ.lanes_stats ?? '{}'
     );
   },
 
@@ -180,9 +193,14 @@ export const championsRepo = {
   },
 
   // Guardar una build (Elimina las builds anteriores del champ si es una sincronización fresca)
-  clearBuilds(championId: number) {
-    const stmt = db.prepare('DELETE FROM builds WHERE champion_id = ?');
-    stmt.run(championId);
+  clearBuilds(championId: number, lane?: string) {
+    if (lane) {
+      const stmt = db.prepare('DELETE FROM builds WHERE champion_id = ? AND lane = ?');
+      stmt.run(championId, lane);
+    } else {
+      const stmt = db.prepare('DELETE FROM builds WHERE champion_id = ?');
+      stmt.run(championId);
+    }
   },
 
   saveBuild(build: DbBuild) {
@@ -196,7 +214,8 @@ export const championsRepo = {
       build.items,
       build.skills,
       build.tags,
-      build.special_notes
+      build.special_notes,
+      build.lane ?? 'UNKNOWN'
     );
   },
 
@@ -242,11 +261,11 @@ export const championsRepo = {
 
       const counters: any[] = [];
       const godMatchups: any[] = [];
-
       rawMatchups.forEach(m => {
         const opponentName = nameIdMap[m.opponent_id] || `Unknown (${m.opponent_id})`;
         const matchupObj = {
           name: opponentName,
+          lane: m.lane,
           winrate: m.winrate,
           goldDiff: String(m.gold_diff),
           xpDiff: String(m.xp_diff),
@@ -282,7 +301,6 @@ export const championsRepo = {
         });
       });
 
-      // 3. Obtener la build por defecto (para el motor actual)
       // 3. Obtener todas las builds
       const buildsStmt = db.prepare(`
         SELECT * FROM builds 
@@ -301,7 +319,8 @@ export const championsRepo = {
         items: JSON.parse(b.items),
         skills: JSON.parse(b.skills),
         tags: JSON.parse(b.tags),
-        special_notes: JSON.parse(b.special_notes)
+        special_notes: JSON.parse(b.special_notes),
+        lane: b.lane
       }));
 
       const buildData = builds.find(b => b.is_default) || builds[0] || null;
@@ -335,6 +354,9 @@ export const championsRepo = {
           winRate: c.win_rate,
           tier: c.tier
         },
+        playLanes: JSON.parse(c.play_lanes || '[]'),
+        lanesPickrate: JSON.parse(c.lanes_pickrate || '{}'),
+        lanesStats: JSON.parse(c.lanes_stats || '{}'),
         scalingType: c.scaling_type,
         combat: {
           damageComposition: { physical: c.damage_type === 'AD' ? 80 : 20, magic: c.damage_type === 'AP' ? 80 : 20, true: 0 },

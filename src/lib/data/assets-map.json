@@ -1,13 +1,24 @@
 {
   "runes": {
-    "8000": {
-      "name": "Precisión",
-      "icon": "perk-images/Styles/7201_Precision.png",
-      "isStyle": true
+    "7000": {
+      "name": "Template",
+      "icon": "perk-images/Template/7000.png"
+    },
+    "8004": {
+      "name": "El Atrevido Perfecto",
+      "icon": "perk-images/Styles/RunesIcon.png"
     },
     "8005": {
       "name": "Estrategia Ofensiva",
       "icon": "perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png"
+    },
+    "8006": {
+      "name": "El Campeón Eterno",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8007": {
+      "name": "El Sabio",
+      "icon": "perk-images/Styles/RunesIcon.png"
     },
     "8008": {
       "name": "Cadencia Letal",
@@ -25,6 +36,10 @@
       "name": "Golpe de Gracia",
       "icon": "perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png"
     },
+    "8016": {
+      "name": "La Élite Despiadada",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8017": {
       "name": "Corte",
       "icon": "perk-images/Styles/Precision/CutDown/CutDown.png"
@@ -32,11 +47,6 @@
     "8021": {
       "name": "Sobre la Marcha",
       "icon": "perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png"
-    },
-    "8100": {
-      "name": "Dominación",
-      "icon": "perk-images/Styles/7200_Domination.png",
-      "isStyle": true
     },
     "8105": {
       "name": "Cazador Implacable",
@@ -46,25 +56,61 @@
       "name": "Cazador Definitivo",
       "icon": "perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png"
     },
+    "8109": {
+      "name": "El Maestro Malvado",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8112": {
       "name": "Electrocutar",
       "icon": "perk-images/Styles/Domination/Electrocute/Electrocute.png"
+    },
+    "8114": {
+      "name": "El Carnicero Inmortal",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8115": {
+      "name": "La Cuchilla de Éter",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8120": {
+      "name": "Poro Fantasma",
+      "icon": "perk-images/Styles/Domination/GhostPoro/GhostPoro.png"
+    },
+    "8124": {
+      "name": "Depredador",
+      "icon": "perk-images/Styles/Domination/Predator/Predator.png"
     },
     "8126": {
       "name": "Golpe Bajo",
       "icon": "perk-images/Styles/Domination/CheapShot/CheapShot.png"
     },
+    "8127": {
+      "name": "El Cirujano Retorcido",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8128": {
       "name": "Cosecha Oscura",
       "icon": "perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png"
+    },
+    "8134": {
+      "name": "Cazador Ingenioso",
+      "icon": "perk-images/Styles/Domination/IngeniousHunter/IngeniousHunter.png"
     },
     "8135": {
       "name": "Cazador de Tesoros",
       "icon": "perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png"
     },
+    "8136": {
+      "name": "Centinela Zombie",
+      "icon": "perk-images/Styles/Domination/ZombieWard/ZombieWard.png"
+    },
     "8137": {
       "name": "Sexto Sentido",
       "icon": "perk-images/Styles/Domination/SixthSense/SixthSense.png"
+    },
+    "8138": {
+      "name": "Colección de Ojos",
+      "icon": "perk-images/Styles/Domination/EyeballCollection/EyeballCollection.png"
     },
     "8139": {
       "name": "Sabor a Sangre",
@@ -82,10 +128,17 @@
       "name": "Impacto Súbito",
       "icon": "perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png"
     },
-    "8200": {
-      "name": "Brujería",
-      "icon": "perk-images/Styles/7202_Sorcery.png",
-      "isStyle": true
+    "8205": {
+      "name": "El Lanzador de Hechizos Indiscutible",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8207": {
+      "name": "El Críptico",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8208": {
+      "name": "El Ancestral",
+      "icon": "perk-images/Styles/RunesIcon.png"
     },
     "8210": {
       "name": "Trascendencia",
@@ -94,6 +147,10 @@
     "8214": {
       "name": "Invocación: Aery",
       "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png"
+    },
+    "8220": {
+      "name": "La Calamidad",
+      "icon": "perk-images/Styles/RunesIcon.png"
     },
     "8224": {
       "name": "Arcanista Axiomático",
@@ -108,7 +165,7 @@
       "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png"
     },
     "8230": {
-      "name": "Saqueador de Tormentas",
+      "name": "Arrebato del Cabalgatormentas",
       "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png"
     },
     "8232": {
@@ -143,11 +200,6 @@
       "name": "La Última Batalla",
       "icon": "perk-images/Styles/Sorcery/LastStand/LastStand.png"
     },
-    "8300": {
-      "name": "Inspiración",
-      "icon": "perk-images/Styles/7203_Whimsy.png",
-      "isStyle": true
-    },
     "8304": {
       "name": "Calzado Mágico",
       "icon": "perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png"
@@ -164,9 +216,29 @@
       "name": "Comodín",
       "icon": "perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png"
     },
+    "8318": {
+      "name": "El Visionario Despiadado",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8319": {
+      "name": "El Observador de Estrellas",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8320": {
+      "name": "El Eterno",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8321": {
       "name": "Reembolso",
       "icon": "perk-images/Styles/Inspiration/CashBack/CashBack2.png"
+    },
+    "8339": {
+      "name": "Cuerpo Celestial",
+      "icon": "perk-images/Styles/Inspiration/CelestialBody/CelestialBody.png"
+    },
+    "8344": {
+      "name": "El Duelista Elegante",
+      "icon": "perk-images/Styles/RunesIcon.png"
     },
     "8345": {
       "name": "Entrega de Galletas",
@@ -184,6 +256,10 @@
       "name": "Tónico de Distorsión Temporal",
       "icon": "perk-images/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png"
     },
+    "8359": {
+      "name": "Cleptomancia",
+      "icon": "perk-images/Styles/Inspiration/Kleptomancy/Kleptomancy.png"
+    },
     "8360": {
       "name": "Libro de Hechizos Abierto",
       "icon": "perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png"
@@ -191,11 +267,6 @@
     "8369": {
       "name": "Primer Golpe",
       "icon": "perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png"
-    },
-    "8400": {
-      "name": "Valor",
-      "icon": "perk-images/Styles/7204_Resolve.png",
-      "isStyle": true
     },
     "8401": {
       "name": "Golpe de Escudo",
@@ -205,9 +276,29 @@
       "name": "Velocidad de Aproximación",
       "icon": "perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png"
     },
+    "8414": {
+      "name": "El Mastodonte",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8415": {
+      "name": "El Coloso Arcano",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
+    "8416": {
+      "name": "El Titán Iluminado",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8429": {
       "name": "Acondicionamiento",
       "icon": "perk-images/Styles/Resolve/Conditioning/Conditioning.png"
+    },
+    "8430": {
+      "name": "Piel de Hierro",
+      "icon": "perk-images/Styles/Resolve/IronSkin/IronSkin.png"
+    },
+    "8435": {
+      "name": "Coraza Reflejante",
+      "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png"
     },
     "8437": {
       "name": "Agarre del Perpetuo",
@@ -233,6 +324,10 @@
       "name": "Revitalizar",
       "icon": "perk-images/Styles/Resolve/Revitalize/Revitalize.png"
     },
+    "8454": {
+      "name": "El Leviatán",
+      "icon": "perk-images/Styles/RunesIcon.png"
+    },
     "8463": {
       "name": "Fuente de Vida",
       "icon": "perk-images/Styles/Resolve/FontOfLife/FontOfLife.png"
@@ -240,6 +335,10 @@
     "8465": {
       "name": "Guardián",
       "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png"
+    },
+    "8472": {
+      "name": "Crisálida",
+      "icon": "perk-images/Styles/Resolve/Chrysalis/Chrysalis.png"
     },
     "8473": {
       "name": "Coraza Ósea",
@@ -272,170 +371,6 @@
     "9923": {
       "name": "Lluvia de Espadas",
       "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png"
-    },
-    "8415": {
-      "name": "The Arcane Colossus",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8004": {
-      "name": "The Brazen Perfect",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8220": {
-      "name": "The Calamity",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8016": {
-      "name": "The Merciless Elite",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8339": {
-      "name": "Celestial Body",
-      "icon": "perk-images/Styles/Inspiration/CelestialBody/CelestialBody.png"
-    },
-    "8435": {
-      "name": "Mirror Shell",
-      "icon": "perk-images/Styles/Resolve/MirrorShell/MirrorShell.png"
-    },
-    "8115": {
-      "name": "The Aether Blade",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8359": {
-      "name": "Kleptomancy",
-      "icon": "perk-images/Styles/Inspiration/Kleptomancy/Kleptomancy.png"
-    },
-    "5003": {
-      "name": "Magic Resist",
-      "icon": "perk-images/StatMods/StatModsMagicResIcon.png"
-    },
-    "8120": {
-      "name": "Ghost Poro",
-      "icon": "perk-images/Styles/Domination/GhostPoro/GhostPoro.png"
-    },
-    "8134": {
-      "name": "Ingenious Hunter",
-      "icon": "perk-images/Styles/Domination/IngeniousHunter/IngeniousHunter.png"
-    },
-    "8454": {
-      "name": "The Leviathan",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8207": {
-      "name": "The Cryptic",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "5012": {
-      "name": "Resist Scaling",
-      "icon": "perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png"
-    },
-    "8109": {
-      "name": "The Wicked Maestro ",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "5002": {
-      "name": "Armor",
-      "icon": "perk-images/StatMods/StatModsArmorIcon.png"
-    },
-    "5011": {
-      "name": "Health",
-      "icon": "perk-images/StatMods/StatModsHealthScalingIcon.png"
-    },
-    "5013": {
-      "name": "Tenacity and Slow Resist",
-      "icon": "perk-images/StatMods/StatModsTenacityIcon.png"
-    },
-    "8414": {
-      "name": "The Behemoth",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "5008": {
-      "name": "Adaptive Force",
-      "icon": "perk-images/StatMods/StatModsAdaptiveForceIcon.png"
-    },
-    "8320": {
-      "name": "The Timeless",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8319": {
-      "name": "The Stargazer",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "5001": {
-      "name": "Health Scaling",
-      "icon": "perk-images/StatMods/StatModsHealthPlusIcon.png"
-    },
-    "8430": {
-      "name": "Iron Skin",
-      "icon": "perk-images/Styles/Resolve/IronSkin/IronSkin.png"
-    },
-    "5007": {
-      "name": "Ability Haste",
-      "icon": "perk-images/StatMods/StatModsCDRScalingIcon.png"
-    },
-    "8114": {
-      "name": "The Immortal Butcher",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8318": {
-      "name": "The Ruthless Visionary",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "7000": {
-      "name": "Template",
-      "icon": "perk-images/Template/7000.png"
-    },
-    "8006": {
-      "name": "The Eternal Champion",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8416": {
-      "name": "The Enlightened Titan",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "5005": {
-      "name": "Attack Speed",
-      "icon": "perk-images/StatMods/StatModsAttackSpeedIcon.png"
-    },
-    "8138": {
-      "name": "Eyeball Collection",
-      "icon": "perk-images/Styles/Domination/EyeballCollection/EyeballCollection.png"
-    },
-    "5010": {
-      "name": "Move Speed",
-      "icon": "perk-images/StatMods/StatModsMovementSpeedIcon.png"
-    },
-    "8127": {
-      "name": "The Twisted Surgeon",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8205": {
-      "name": "The Incontestable Spellslinger",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8124": {
-      "name": "Predator",
-      "icon": "perk-images/Styles/Domination/Predator/Predator.png"
-    },
-    "8007": {
-      "name": "The Savant",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8136": {
-      "name": "Zombie Ward",
-      "icon": "perk-images/Styles/Domination/ZombieWard/ZombieWard.png"
-    },
-    "8208": {
-      "name": "The Ancient One",
-      "icon": "perk-images/Styles/RunesIcon.png"
-    },
-    "8472": {
-      "name": "Chrysalis",
-      "icon": "perk-images/Styles/Resolve/Chrysalis/Chrysalis.png"
-    },
-    "8344": {
-      "name": "The Elegant Duelist ",
-      "icon": "perk-images/Styles/RunesIcon.png"
     }
   },
   "items": {
@@ -4672,44 +4607,44 @@
   },
   "shards": {
     "5001": {
-      "name": "Armadura",
-      "icon": "StatMods/StatModsArmorIcon.png"
+      "name": "Progresión de vida",
+      "icon": "perk-images/StatMods/StatModsHealthPlusIcon.png"
     },
     "5002": {
       "name": "Armadura",
-      "icon": "StatMods/StatModsArmorIcon.png"
+      "icon": "perk-images/StatMods/StatModsArmorIcon.png"
     },
     "5003": {
       "name": "Resistencia Mágica",
-      "icon": "StatMods/StatModsMagicResIcon.png"
+      "icon": "perk-images/StatMods/StatModsMagicResIcon.png"
     },
     "5005": {
-      "name": "Velocidad de Ataque",
-      "icon": "StatMods/StatModsAttackSpeedIcon.png"
+      "name": "Velocidad de ataque",
+      "icon": "perk-images/StatMods/StatModsAttackSpeedIcon.png"
     },
     "5007": {
       "name": "Aceleración de Habilidad",
-      "icon": "StatMods/StatModsCDRScalingIcon.png"
+      "icon": "perk-images/StatMods/StatModsCDRScalingIcon.png"
     },
     "5008": {
       "name": "Fuerza Adaptable",
-      "icon": "StatMods/StatModsAdaptiveForceIcon.png"
+      "icon": "perk-images/StatMods/StatModsAdaptiveForceIcon.png"
     },
     "5010": {
       "name": "Velocidad de Movimiento",
-      "icon": "StatMods/StatModsMovementSpeedIcon.png"
+      "icon": "perk-images/StatMods/StatModsMovementSpeedIcon.png"
     },
     "5011": {
-      "name": "Vida Progresiva",
-      "icon": "StatMods/StatModsHealthScalingIcon.png"
+      "name": "Vida",
+      "icon": "perk-images/StatMods/StatModsHealthScalingIcon.png"
     },
     "5012": {
-      "name": "Tenacidad y Resistencia a Ralentizaciones",
-      "icon": "StatMods/StatModsTenacityIcon.png"
+      "name": "Progresión de Resistencias",
+      "icon": "perk-images/StatMods/StatModsAdaptiveForceScalingIcon.png"
     },
     "5013": {
-      "name": "Vida",
-      "icon": "StatMods/StatModsHealthPlusIcon.png"
+      "name": "Tenacidad y resistencia a ralentizaciones",
+      "icon": "perk-images/StatMods/StatModsTenacityIcon.png"
     }
   },
   "runeToStyle": {

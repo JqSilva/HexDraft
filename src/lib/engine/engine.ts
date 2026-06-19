@@ -97,9 +97,15 @@ export function getProcessedRecommendations(
 
     const posMap: Record<string, string> = {
         "top": "TOP",
+        "jng": "JUNGLE",
         "jungle": "JUNGLE",
+        "mid": "MIDDLE",
         "middle": "MIDDLE",
+        "bot": "BOTTOM",
+        "adc": "BOTTOM",
         "bottom": "BOTTOM",
+        "sup": "UTILITY",
+        "support": "UTILITY",
         "utility": "UTILITY"
     };
 

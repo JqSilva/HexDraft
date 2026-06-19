@@ -18,6 +18,14 @@ const API_NAME_MAP: Record<string, string> = {
   "bard": "bardo"
 };
 
+const roleToLaneMap: Record<string, string> = {
+  'top': 'TOP',
+  'jungle': 'JUNGLE',
+  'mid': 'MIDDLE',
+  'adc': 'BOTTOM',
+  'support': 'UTILITY'
+};
+
 function resolveChampionId(name: string, nameIdMap: Record<string, number>): number | null {
   const norm = normalizeKey(name);
   if (nameIdMap[norm]) return nameIdMap[norm];
@@ -198,58 +206,97 @@ export function runMigration() {
     }
   });
 
-  // 4. Procesar Tiers y Winrates desde meta-cache.json (OP.GG)
-  console.log("📊 Migrando tiers y winrates desde meta-cache...");
-  
-  const roleToLaneMap: Record<string, string> = {
-    'top': 'TOP',
-    'jungle': 'JUNGLE',
-    'mid': 'MIDDLE',
-    'adc': 'BOTTOM',
-    'support': 'UTILITY'
-  };
+  // 4. Procesar Tiers, Winrates y Carriles desde meta-cache.json (OP.GG)
+  console.log("📊 Migrando tiers, winrates y carriles desde meta-cache...");
+
+  const champMetaStats: Record<number, Array<{ role: string; rank: string; winRate: string; pickRate: string }>> = {};
 
   Object.keys(metaCache).forEach(role => {
     const list = metaCache[role] || [];
     list.forEach((metaChamp: any) => {
       const champId = resolveChampionId(metaChamp.name, nameIdMap);
       if (!champId) return;
-
-      // Leer datos actuales para no sobreescribir otras propiedades
-      const baseChamp = CHAMPIONS_DB[champId];
-      const nameKey = baseChamp.name;
-      const extra = counterSynergies[nameKey];
-
-      const dbChampStmt = db.prepare('SELECT * FROM champions WHERE id = ?');
-      const current = dbChampStmt.get(champId) as any;
-
-      const roleLane = roleToLaneMap[role];
-      const currentLane = current?.lane || extra?.lane || "UNKNOWN";
-
-      // Omitir actualización si el rol del meta no coincide con el rol principal
-      if (currentLane !== "UNKNOWN" && currentLane !== roleLane) {
-        return;
+      if (!champMetaStats[champId]) {
+        champMetaStats[champId] = [];
       }
-
-      const tierNum = parseInt(metaChamp.rank) || 99;
-      const winRateNum = parseFloat(metaChamp.winRate) || 50.0;
-
-      // Nota: Volvemos a guardar el campeón con tier y winrate actualizados
-      // SQLite se encarga del ON CONFLICT UPDATE
-      championsRepo.saveChampion({
-        id: champId,
-        name: baseChamp.name,
-        lane: current?.lane || extra?.lane || "UNKNOWN",
-        tier: tierNum,
-        win_rate: winRateNum,
-        scaling_type: current?.scaling_type || "Mid",
-        damage_type: baseChamp.damageType || "Adaptive",
-        class: baseChamp.class || "Unknown",
-        is_frontline: baseChamp.isFrontline ? 1 : 0,
-        is_hypercarry: baseChamp.isHypercarry ? 1 : 0,
-        has_hard_cc: baseChamp.hasHardCC ? 1 : 0,
-        tags: JSON.stringify(baseChamp.tags || [])
+      champMetaStats[champId].push({
+        role,
+        rank: metaChamp.rank,
+        winRate: metaChamp.winRate,
+        pickRate: metaChamp.pickRate
       });
+    });
+  });
+
+  Object.keys(champMetaStats).forEach(idStr => {
+    const champId = Number(idStr);
+    const statsList = champMetaStats[champId];
+    if (statsList.length === 0) return;
+
+    const parsePickRate = (pr: string) => parseFloat(pr.replace('%', '')) || 0.0;
+    
+    let bestStat = statsList[0];
+    let maxPick = parsePickRate(bestStat.pickRate);
+
+    for (let i = 1; i < statsList.length; i++) {
+      const pr = parsePickRate(statsList[i].pickRate);
+      if (pr > maxPick) {
+        maxPick = pr;
+        bestStat = statsList[i];
+      }
+    }
+
+    // Calcular distribución
+    let totalPickRate = 0;
+    statsList.forEach(s => {
+      totalPickRate += parsePickRate(s.pickRate);
+    });
+
+    const distribution: Record<string, number> = {};
+    const lanesStats: Record<string, { tier: number, winRate: number }> = {};
+    statsList.forEach(s => {
+      const laneKey = roleToLaneMap[s.role];
+      if (laneKey && totalPickRate > 0) {
+        const relativeRate = (parsePickRate(s.pickRate) / totalPickRate) * 100;
+        distribution[laneKey] = parseFloat(relativeRate.toFixed(1));
+        lanesStats[laneKey] = {
+          tier: parseInt(s.rank) || 99,
+          winRate: parseFloat(s.winRate) || 50.0
+        };
+      }
+    });
+
+    const playLanes = Object.entries(distribution)
+      .filter(([_, relRate]) => relRate > 5.0)
+      .map(([lane]) => lane);
+
+    if (playLanes.length === 0 && Object.keys(distribution).length > 0) {
+      const bestLane = Object.entries(distribution).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+      playLanes.push(bestLane);
+    }
+
+    const baseChamp = CHAMPIONS_DB[champId];
+    const dbChampStmt = db.prepare('SELECT lane, scaling_type FROM champions WHERE id = ?');
+    const current = dbChampStmt.get(champId) as any;
+
+    const primaryLane = roleToLaneMap[bestStat.role] || "UNKNOWN";
+
+    championsRepo.saveChampion({
+      id: champId,
+      name: baseChamp.name,
+      lane: primaryLane,
+      tier: parseInt(bestStat.rank) || 99,
+      win_rate: parseFloat(bestStat.winRate) || 50.0,
+      scaling_type: current?.scaling_type || "Mid",
+      damage_type: baseChamp.damageType || "Adaptive",
+      class: baseChamp.class || "Unknown",
+      is_frontline: baseChamp.isFrontline ? 1 : 0,
+      is_hypercarry: baseChamp.isHypercarry ? 1 : 0,
+      has_hard_cc: baseChamp.hasHardCC ? 1 : 0,
+      tags: JSON.stringify(baseChamp.tags || []),
+      play_lanes: JSON.stringify(playLanes),
+      lanes_pickrate: JSON.stringify(distribution),
+      lanes_stats: JSON.stringify(lanesStats)
     });
   });
 

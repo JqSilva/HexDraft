@@ -137,7 +137,7 @@ function inferLanePhase(name: string, scaling: string): 'weak' | 'average' | 'st
 }
 
 export async function syncChampionsSemanticData() {
-  console.log("📥 Iniciando sincronización semántica de campeones...");
+  console.log("Iniciando sincronizacion semantica de campeones...");
 
   try {
     const query = db.prepare('SELECT * FROM champions');
@@ -189,13 +189,13 @@ export async function syncChampionsSemanticData() {
     }
 
     db.exec('COMMIT;');
-    console.log(`✅ Sincronización semántica completada: ${count} campeones actualizados.`);
+    console.log(`Sincronizacion semantica completada: ${count} campeones actualizados.`);
     return count;
   } catch (error) {
     try {
       db.exec('ROLLBACK;');
     } catch (_) {}
-    console.error("❌ Error en sincronización semántica de campeones:", error);
+    console.error("Error en sincronizacion semantica de campeones:", error);
     throw error;
   }
 }

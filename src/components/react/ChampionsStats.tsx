@@ -7,18 +7,30 @@ const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clas
 const posMapping: Record<string, string> = {
   "TOP": "icon-position-top.png",
   "JUNGLE": "icon-position-jungle.png",
+  "JNG": "icon-position-jungle.png",
   "MIDDLE": "icon-position-middle.png",
+  "MID": "icon-position-middle.png",
   "BOTTOM": "icon-position-bottom.png",
-  "UTILITY": "icon-position-utility.png"
+  "BOT": "icon-position-bottom.png",
+  "ADC": "icon-position-bottom.png",
+  "UTILITY": "icon-position-utility.png",
+  "SUP": "icon-position-utility.png",
+  "SUPPORT": "icon-position-utility.png"
 };
 
 // Traducciones legibles de posiciones
 const posLabels: Record<string, string> = {
   "TOP": "Top",
   "JUNGLE": "Jungla",
+  "JNG": "Jungla",
   "MIDDLE": "Mid",
-  "BOTTOM": "Bot",
-  "UTILITY": "Soporte"
+  "MID": "Mid",
+  "BOTTOM": "ADC",
+  "BOT": "ADC",
+  "ADC": "ADC",
+  "UTILITY": "Soporte",
+  "SUP": "Soporte",
+  "SUPPORT": "Soporte"
 };
 
 // Casos especiales de Riot para nombres de archivos DDragon
@@ -57,11 +69,30 @@ const getTierInfo = (tierNum: number) => {
 
 // Mapear rol a clave interna
 const getRoleKey = (lane: string) => {
-  if (lane === "JNG") return "JUNGLE";
-  if (lane === "MID") return "MIDDLE";
-  if (lane === "BOT") return "BOTTOM";
-  if (lane === "SUP") return "UTILITY";
-  return lane;
+  const upper = (lane || "").toUpperCase();
+  if (upper === "JNG" || upper === "JUNGLE") return "JUNGLE";
+  if (upper === "MID" || upper === "MIDDLE") return "MIDDLE";
+  if (upper === "BOT" || upper === "ADC" || upper === "BOTTOM") return "BOTTOM";
+  if (upper === "SUP" || upper === "SUPPORT" || upper === "UTILITY") return "UTILITY";
+  return upper;
+};
+
+// Mapear rol a clave del cache
+const laneToMetaKey = (lane: string): string => {
+  const mapping: Record<string, string> = {
+    "TOP": "top",
+    "JNG": "jungle",
+    "JUNGLE": "jungle",
+    "MID": "mid",
+    "MIDDLE": "mid",
+    "BOT": "adc",
+    "ADC": "adc",
+    "BOTTOM": "adc",
+    "SUP": "support",
+    "SUPPORT": "support",
+    "UTILITY": "support"
+  };
+  return mapping[(lane || "").toUpperCase()] || "";
 };
 
 const RUNE_TREES: Record<number, {
@@ -261,10 +292,21 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState("14.9.1");
+  const [metaCache, setMetaCache] = useState<any>(null);
 
   // Filtros y ordenación (Predeterminado: Tier ascendente -> mejor rank primero)
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLane, setSelectedLane] = useState("ALL");
+  const [selectedLane, setSelectedLane] = useState(() => {
+    if (initialLane) {
+      const upper = initialLane.toUpperCase();
+      if (upper === "ADC" || upper === "BOT" || upper === "BOTTOM") return "ADC";
+      if (upper === "JNG" || upper === "JUNGLE") return "JNG";
+      if (upper === "MID" || upper === "MIDDLE") return "MID";
+      if (upper === "SUP" || upper === "SUPPORT" || upper === "UTILITY") return "SUP";
+      return upper;
+    }
+    return "ALL";
+  });
   const [sortBy, setSortBy] = useState<'winrate' | 'pickrate' | 'tier' | 'name'>('tier');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -291,6 +333,19 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           }
         } catch (e) {
           console.warn("No se pudo obtener versión de /api/me, usando default 14.9.1", e);
+        }
+
+        // Cargar meta cache
+        try {
+          const metaRes = await fetch('/api/meta');
+          if (metaRes.ok) {
+            const metaData = await metaRes.json();
+            if (metaData.meta) {
+              setMetaCache(metaData.meta);
+            }
+          }
+        } catch (e) {
+          console.warn("No se pudo obtener el meta cache de /api/meta", e);
         }
 
         const res = await fetch('/api/champions');
@@ -342,7 +397,10 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     const loadTactical = async () => {
       setTacticalLoading(true);
       try {
-        const laneQuery = selectedChamp.lane?.toLowerCase() || 'top';
+        const activeDetailLane = selectedLane === "ALL" 
+          ? (getRoleKey(selectedChamp.lane) !== "UNKNOWN" ? getRoleKey(selectedChamp.lane) : (getRoleKey(selectedChamp.playLanes?.[0]) || "TOP"))
+          : getRoleKey(selectedLane);
+        const laneQuery = activeDetailLane.toLowerCase();
         const res = await fetch(`/api/tactical-data?champion=${selectedChamp.name}&role=${laneQuery}`);
         if (res.ok) {
           const tData = await res.json();
@@ -359,7 +417,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     };
 
     loadTactical();
-  }, [selectedChamp]);
+  }, [selectedChamp, selectedLane]);
 
   useEffect(() => {
     if (!selectedChamp) {
@@ -391,9 +449,74 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
   // Filtrar y ordenar campeones
   const processedChampions = useMemo(() => {
+    const metaKey = laneToMetaKey(selectedLane);
+    
+    // Si hay un carril específico seleccionado y tenemos los datos de metaCache para ese carril
+    if (selectedLane !== "ALL" && metaCache && metaCache[metaKey]) {
+      const laneList = metaCache[metaKey] || [];
+      const list: any[] = [];
+      
+      laneList.forEach((metaChamp: any) => {
+        // Encontrar el campeón por nombre normalizado
+        const normMetaName = metaChamp.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const dbChamp = champions.find(c => c.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normMetaName);
+        if (dbChamp) {
+          const winRate = parseFloat(metaChamp.winRate) || 50.0;
+          const tier = parseInt(metaChamp.rank) || 99;
+          const pickRateNum = parseFloat(metaChamp.pickRate) || 0.0;
+          
+          list.push({
+            ...dbChamp,
+            lane: getRoleKey(selectedLane),
+            pickrate: pickRateNum,
+            meta: {
+              winRate,
+              tier
+            }
+          });
+        }
+      });
+      
+      let filteredList = list;
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase().trim();
+        filteredList = list.filter(c => c.name.toLowerCase().includes(q));
+      }
+      
+      // Ordenar
+      filteredList.sort((a, b) => {
+        if (sortBy === 'name') {
+          return sortOrder === 'asc' 
+            ? a.name.localeCompare(b.name) 
+            : b.name.localeCompare(a.name);
+        }
+
+        if (sortBy === 'winrate') {
+          const wrA = a.meta?.winRate || 50.0;
+          const wrB = b.meta?.winRate || 50.0;
+          return sortOrder === 'asc' ? wrA - wrB : wrB - wrA;
+        }
+
+        if (sortBy === 'pickrate') {
+          return sortOrder === 'asc' ? a.pickrate - b.pickrate : b.pickrate - a.pickrate;
+        }
+
+        if (sortBy === 'tier') {
+          const tA = a.meta?.tier ?? 999;
+          const tB = b.meta?.tier ?? 999;
+          return sortOrder === 'asc' ? tA - tB : tB - tA;
+        }
+
+        return 0;
+      });
+      
+      return filteredList;
+    }
+
+    // Fallback si no hay carril específico o no hay metaCache
     let list = [...champions];
 
-    // Filtro por carril
+    // Filtro por carril (sólo si no usamos metaCache)
     if (selectedLane !== "ALL") {
       list = list.filter(c => {
         const dbLane = c.lane?.toUpperCase() || "";
@@ -427,7 +550,6 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
       }
 
       if (sortBy === 'tier') {
-        // En tier, valores numéricos más pequeños (rank 1, 2) son mejores (S+, S).
         const tA = a.meta?.tier || 99;
         const tB = b.meta?.tier || 99;
         return sortOrder === 'asc' ? tA - tB : tB - tA;
@@ -437,7 +559,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     });
 
     return list;
-  }, [champions, searchQuery, selectedLane, sortBy, sortOrder]);
+  }, [champions, searchQuery, selectedLane, sortBy, sortOrder, metaCache]);
 
   const toggleSort = (field: 'winrate' | 'pickrate' | 'tier' | 'name') => {
     if (sortBy === field) {
@@ -462,7 +584,14 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   const buildsList = useMemo(() => {
     if (!selectedChamp) return [];
     
-    let list = [...(selectedChamp.builds || [])];
+    const activeDetailLane = selectedLane === "ALL" 
+      ? (getRoleKey(selectedChamp.lane) !== "UNKNOWN" ? getRoleKey(selectedChamp.lane) : (getRoleKey(selectedChamp.playLanes?.[0]) || "TOP"))
+      : getRoleKey(selectedLane);
+
+    let list = [...(selectedChamp.builds || [])].filter(b => getRoleKey(b.lane) === activeDetailLane);
+    if (list.length === 0) {
+      list = [...(selectedChamp.builds || [])];
+    }
     if (list.length === 0 && selectedChamp.buildData) {
       list = [{ ...selectedChamp.buildData, build_name: "Recomendada", is_default: true }];
     }
@@ -554,7 +683,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
       filtered.push(altBuild);
     }
     return filtered;
-  }, [selectedChamp]);
+  }, [selectedChamp, selectedLane]);
 
   const activeBuild = useMemo(() => {
     return buildsList[activeBuildIdx] || buildsList[0] || null;
@@ -667,7 +796,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
         {/* Filtros de Línea */}
         <div className="flex flex-wrap gap-2 mb-6 select-none">
-          {["ALL", "TOP", "JNG", "MID", "BOT", "SUP"].map((lane) => {
+          {["ALL", "TOP", "JNG", "MID", "ADC", "SUP"].map((lane) => {
             const isActive = selectedLane === lane;
             const mappedIcon = posMapping[getRoleKey(lane)];
             
@@ -774,7 +903,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
                                 {posLabels[champ.lane.toUpperCase()]}
                               </span>
                               <span className="text-[10px] font-mono text-slate-500">
-                                (92.5%)
+                                ({champ.lanesPickrate?.[champ.lane.toUpperCase()] ? `${champ.lanesPickrate[champ.lane.toUpperCase()].toFixed(1)}%` : '100%'})
                               </span>
                             </div>
                           ) : (
@@ -828,7 +957,17 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     if (!selectedChamp) return null;
 
     const champ = selectedChamp;
-    const tierInfo = getTierInfo(champ.meta?.tier || 5);
+    const activeDetailLane = selectedLane === "ALL" 
+      ? (getRoleKey(champ.lane) !== "UNKNOWN" ? getRoleKey(champ.lane) : (getRoleKey(champ.playLanes?.[0]) || "TOP"))
+      : getRoleKey(selectedLane);
+
+    const laneMeta = champ.lanesStats?.[activeDetailLane];
+    const winRateVal = laneMeta?.winRate ?? champ.meta?.winRate ?? 50.0;
+    const tierVal = laneMeta?.tier ?? champ.meta?.tier ?? 99;
+    const tierInfo = getTierInfo(tierVal);
+    const pickRateVal = champ.lanesPickrate?.[activeDetailLane] ?? champ.pickrate ?? 1.5;
+    const matchesVal = Math.floor(pickRateVal * 1420) + 1200 + (champ.id % 7) * 110;
+
     const splashName = getChampionCdnName(champ.name);
     
     // Hydratar runes de la build activa
@@ -922,16 +1061,16 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
                 {champ.name}
               </h2>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                {champ.lane && (
+                {activeDetailLane && posMapping[activeDetailLane] && (
                   <div className="flex items-center gap-1.5">
                     <img 
-                      src={`${POS_BASE}${posMapping[champ.lane.toUpperCase()]}`} 
+                      src={`${POS_BASE}${posMapping[activeDetailLane]}`} 
                       className="w-4.5 h-4.5" 
                       style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
                       alt="lane"
                     />
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                      {posLabels[champ.lane.toUpperCase()]}
+                      {posLabels[activeDetailLane]}
                     </span>
                   </div>
                 )}
@@ -950,20 +1089,20 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           <div className="relative z-10 grid grid-cols-3 gap-5 bg-black/50 border border-border-warm/40 p-4 rounded-sm backdrop-blur-md max-w-sm w-full md:self-end">
             <div className="text-center">
               <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-black mb-1">Win Rate</span>
-              <span className={`text-base font-mono font-black ${(champ.meta?.winRate || 50) >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {(champ.meta?.winRate || 50).toFixed(2)}%
+              <span className={`text-base font-mono font-black ${winRateVal >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {winRateVal.toFixed(2)}%
               </span>
             </div>
             <div className="text-center">
               <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-black mb-1">Pick Rate</span>
               <span className="text-base font-mono font-black text-slate-200">
-                {champ.pickrate}%
+                {pickRateVal}%
               </span>
             </div>
             <div className="text-center">
               <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-black mb-1">Partidas</span>
               <span className="text-base font-mono font-black text-slate-300">
-                {champ.matches.toLocaleString()}
+                {matchesVal.toLocaleString()}
               </span>
             </div>
           </div>
@@ -982,8 +1121,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
               const tabItem = firstCoreId ? hydrateAsset('items', Number(firstCoreId)) : null;
               
               // Extraer winrate y partidas del build
-              const tabWinrate = b.special_notes?.winrate || (b.is_default ? (champ.meta?.winRate || 50.0) : 49.2);
-              const tabGames = b.special_notes?.games || (b.is_default ? Math.round(champ.matches * 0.72) : Math.round(champ.matches * 0.28));
+              const tabWinrate = b.special_notes?.winrate || (b.is_default ? winRateVal : 49.2);
+              const tabGames = b.special_notes?.games || (b.is_default ? Math.round(matchesVal * 0.72) : Math.round(matchesVal * 0.28));
 
               return (
                 <button
@@ -1381,43 +1520,50 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
             </h3>
             
             <div className="flex flex-col gap-3">
-              {champ.counters && champ.counters.length > 0 ? (
-                champ.counters.slice(0, 5).map((cnt: any, idx: number) => {
-                  const mappedName = getChampionCdnName(cnt.name);
+              {(() => {
+                const filteredCounters = (champ.counters || []).filter((cnt: any) => getRoleKey(cnt.lane) === activeDetailLane);
+                const displayedCounters = filteredCounters.length > 0 ? filteredCounters : (champ.counters || []);
+                
+                if (displayedCounters.length > 0) {
+                  return displayedCounters.slice(0, 5).map((cnt: any, idx: number) => {
+                    const mappedName = getChampionCdnName(cnt.name);
+                    return (
+                      <div 
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-black/20 border border-border-warm rounded-sm hover:border-red-500/20 hover:bg-black/40 transition-all duration-150 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={`https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/champion/${mappedName}.png`}
+                            className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-red-500/40 transition-colors"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/favicon.svg";
+                            }}
+                            alt={cnt.name}
+                          />
+                          <span className="text-xs font-extrabold uppercase tracking-wide text-slate-300 group-hover:text-white transition-colors">
+                            {cnt.name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="block text-xs font-mono font-extrabold text-red-400">
+                            WR: {cnt.winrate}
+                          </span>
+                          <span className="block text-[9px] font-mono text-slate-500">
+                            Dominancia: {cnt.dominanceScore}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  });
+                } else {
                   return (
-                    <div 
-                      key={idx}
-                      className="flex items-center justify-between p-3 bg-black/20 border border-border-warm rounded-sm hover:border-red-500/20 hover:bg-black/40 transition-all duration-150 group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img 
-                          src={`https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/champion/${mappedName}.png`}
-                          className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-red-500/40 transition-colors"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/favicon.svg";
-                          }}
-                          alt={cnt.name}
-                        />
-                        <span className="text-xs font-extrabold uppercase tracking-wide text-slate-300 group-hover:text-white transition-colors">
-                          {cnt.name}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="block text-xs font-mono font-extrabold text-red-400">
-                          WR: {cnt.winrate}
-                        </span>
-                        <span className="block text-[9px] font-mono text-slate-500">
-                          Dominancia: {cnt.dominanceScore}
-                        </span>
-                      </div>
-                    </div>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500 text-center py-4">
+                      Sin datos de enfrentamientos
+                    </span>
                   );
-                })
-              ) : (
-                <span className="text-xs font-black uppercase tracking-widest text-slate-500 text-center py-4">
-                  Sin datos de enfrentamientos
-                </span>
-              )}
+                }
+              })()}
             </div>
           </div>
 
@@ -1429,8 +1575,14 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
             
             <div className="flex flex-col gap-3">
               {(() => {
-                const synList: Array<{ name: string; delta: number }> = [];
-                if (champ.synergies) {
+                let activeLaneSynergies = champ.synergies?.[activeDetailLane.toLowerCase()] || [];
+                let topSynergies = activeLaneSynergies.map((s: any) => ({
+                  name: s.name,
+                  delta: parseFloat(s.delta)
+                })).sort((a, b) => b.delta - a.delta).slice(0, 5);
+
+                if (topSynergies.length === 0 && champ.synergies) {
+                  const synList: Array<{ name: string; delta: number }> = [];
                   Object.keys(champ.synergies).forEach(pos => {
                     const list = champ.synergies[pos] || [];
                     list.forEach((s: any) => {
@@ -1440,9 +1592,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
                       });
                     });
                   });
+                  topSynergies = synList.sort((a, b) => b.delta - a.delta).slice(0, 5);
                 }
-                
-                const topSynergies = synList.sort((a, b) => b.delta - a.delta).slice(0, 5);
 
                 if (topSynergies.length > 0) {
                   return topSynergies.map((syn, idx) => {

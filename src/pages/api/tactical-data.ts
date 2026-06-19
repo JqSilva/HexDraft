@@ -137,7 +137,7 @@ export const GET: APIRoute = async ({ url }) => {
                         }
                     }
                     
-                    console.log(`💡 Generada secuencia fallback para ${champion}:`, fallbackLevels);
+                    console.log(`Generada secuencia fallback para ${champion}:`, fallbackLevels);
                     return new Response(JSON.stringify({
                         skills: fallbackLevels,
                         champion: champion,

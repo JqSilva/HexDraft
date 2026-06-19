@@ -39,7 +39,10 @@ db.exec(`
     has_shield INTEGER DEFAULT 0,
     has_sustain INTEGER DEFAULT 0,
     lane_phase TEXT DEFAULT 'average',
-    resource_dependency TEXT DEFAULT 'medium'
+    resource_dependency TEXT DEFAULT 'medium',
+    play_lanes TEXT DEFAULT '[]',
+    lanes_pickrate TEXT DEFAULT '{}',
+    lanes_stats TEXT DEFAULT '{}'
   );
 `);
 
@@ -56,7 +59,10 @@ try {
     has_shield: "INTEGER DEFAULT 0",
     has_sustain: "INTEGER DEFAULT 0",
     lane_phase: "TEXT DEFAULT 'average'",
-    resource_dependency: "TEXT DEFAULT 'medium'"
+    resource_dependency: "TEXT DEFAULT 'medium'",
+    play_lanes: "TEXT DEFAULT '[]'",
+    lanes_pickrate: "TEXT DEFAULT '{}'",
+    lanes_stats: "TEXT DEFAULT '{}'"
   };
   for (const [colName, colType] of Object.entries(newCols)) {
     if (!columns.includes(colName)) {
@@ -144,9 +150,22 @@ db.exec(`
     skills TEXT DEFAULT '{}',     -- Objeto JSON con orden de habilidades
     tags TEXT DEFAULT '[]',       -- Array JSON de tags (ej. ["AP", "Jungle", "Rhaast"])
     special_notes TEXT DEFAULT '{}', -- Notas específicas (ej. evoluciones, prioridades)
+    lane TEXT DEFAULT 'UNKNOWN',  -- Carril al que pertenece esta build
     FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE
   );
 `);
+
+// Migración dinámica de columnas en builds
+try {
+  const tableInfo = db.prepare("PRAGMA table_info(builds)").all() as any[];
+  const columns = tableInfo.map(c => c.name);
+  if (!columns.includes('lane')) {
+    console.log(`[MIGRATION] Añadiendo columna builds.lane...`);
+    db.exec(`ALTER TABLE builds ADD COLUMN lane TEXT DEFAULT 'UNKNOWN';`);
+  }
+} catch (e) {
+  console.error("⚠️ Error en migración dinámica de columnas builds:", e);
+}
 
 // Creación de la tabla de configuraciones
 db.exec(`

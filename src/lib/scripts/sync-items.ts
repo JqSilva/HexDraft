@@ -2,7 +2,7 @@
 import { db } from '../db/sqlite.js';
 
 export async function syncItemsFromCommunityDragon(): Promise<number> {
-  console.log("📥 Sincronizando items desde Community Dragon...");
+  console.log("Sincronizando items desde Community Dragon...");
   const url = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json';
   
   try {
@@ -56,13 +56,13 @@ export async function syncItemsFromCommunityDragon(): Promise<number> {
     }
     
     db.exec('COMMIT;');
-    console.log(`✅ Sincronización de items completada: ${count} items guardados.`);
+    console.log(`Sincronizacion de items completada: ${count} items guardados.`);
     return count;
   } catch (error) {
     try {
       db.exec('ROLLBACK;');
     } catch (_) {}
-    console.error("❌ Error al sincronizar items:", error);
+    console.error("Error al sincronizar items:", error);
     throw error;
   }
 }
