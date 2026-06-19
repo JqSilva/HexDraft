@@ -10,6 +10,7 @@ export const SettingsPage = () => {
     const [puppeteerConcurrency, setPuppeteerConcurrency] = useState<number>(3);
     const [syncPeriodDays, setSyncPeriodDays] = useState<number>(3);
     const [laneSyncPeriodDays, setLaneSyncPeriodDays] = useState<number>(21);
+    const [metaSyncFrequency, setMetaSyncFrequency] = useState<number>(2);
     const [engineWeights, setEngineWeights] = useState<any>({
         meta_base: 0.4,
         synergy: 2.2,
@@ -39,6 +40,7 @@ export const SettingsPage = () => {
                     setPuppeteerConcurrency(data.puppeteer_concurrency);
                     setSyncPeriodDays(data.sync_period_days || 3);
                     setLaneSyncPeriodDays(data.lane_sync_period_days || 21);
+                    setMetaSyncFrequency(data.meta_sync_frequency !== undefined ? data.meta_sync_frequency : 2);
                     if (data.engine_weights && Object.keys(data.engine_weights).length > 0) {
                         setEngineWeights(data.engine_weights);
                     }
@@ -80,6 +82,7 @@ export const SettingsPage = () => {
                     puppeteer_concurrency: puppeteerConcurrency,
                     sync_period_days: syncPeriodDays,
                     lane_sync_period_days: laneSyncPeriodDays,
+                    meta_sync_frequency: metaSyncFrequency,
                     engine_weights: weights
                 })
             });
@@ -278,6 +281,24 @@ export const SettingsPage = () => {
                                     </select>
                                     <span className="block text-[9px] text-slate-500 font-medium uppercase tracking-wide">
                                         Tiempo antes de forzar el mapeo de carriles preferidos.
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    <span className="block text-[10px] uppercase font-bold text-slate-300 tracking-wider">Frecuencia de actualizacion del meta</span>
+                                    <select 
+                                        value={metaSyncFrequency}
+                                        onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
+                                        className="w-full bg-[#111117] border border-[#23232c] text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-[#9055ff]/80 cursor-pointer"
+                                    >
+                                        <option value={0}>Desactivado</option>
+                                        <option value={-1}>Al iniciar el programa</option>
+                                        <option value={2}>Cada 2 horas</option>
+                                        <option value={4}>Cada 4 horas</option>
+                                        <option value={12}>Cada 12 horas</option>
+                                        <option value={24}>Cada 24 horas</option>
+                                    </select>
+                                    <span className="block text-[9px] text-slate-500 font-medium uppercase tracking-wide">
+                                        Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
                                     </span>
                                 </div>
                             </div>

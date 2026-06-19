@@ -1,6 +1,6 @@
 // src/pages/api/me.ts
 import type { APIRoute } from 'astro';
-import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { getLockfileData, readLcuProfileCache, writeLcuProfileCache } from '../../lib/services/lcu.service.js';
 import { getNameFromId } from '../../lib/engine/engine.js';
 
 // Desactivar validación de certificados SSL autofirmados para el cliente local de Riot
@@ -9,45 +9,39 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 export const GET: APIRoute = async () => {
   const lcu = getLockfileData();
 
-  const mockPayload = {
+  const offlineEmptyPayload = {
     isConnected: false,
-    gameVersion: "14.9.1", // Fallback a la versión local por defecto en hydrator.ts (14.9.1)
-    summoner: "Alex Legend",
-    level: 128,
-    xpPercent: 43,
-    xpCurrent: 12450,
-    xpMax: 28950,
-    profileIconId: 29, // Icono clásico
+    gameVersion: "16.12",
+    summoner: "Desconectado",
+    level: 0,
+    xpPercent: 0,
+    xpCurrent: 0,
+    xpMax: 100,
+    profileIconId: 29, // Icono default
     ranked: {
-      tier: "CHALLENGER",
-      division: "I",
-      lp: 842,
-      wins: 142,
-      losses: 105
+      tier: "UNRANKED",
+      division: "",
+      lp: 0,
+      wins: 0,
+      losses: 0
     },
     rankedFlex: {
-      tier: "DIAMOND",
-      division: "IV",
-      lp: 22,
-      wins: 45,
-      losses: 38
+      tier: "UNRANKED",
+      division: "",
+      lp: 0,
+      wins: 0,
+      losses: 0
     },
-    mastery: [
-      { championId: 238, level: 7, points: 248500 }, // Zed
-      { championId: 157, level: 7, points: 185200 }, // Yasuo
-      { championId: 103, level: 6, points: 92000 },  // Ahri
-      { championId: 222, level: 5, points: 45100 }   // Jinx
-    ],
-    matches: [
-      { championId: 238, win: true, kills: 14, deaths: 2, assists: 8, csPerMin: "8.2", timeAgo: "24m hace", gameMode: "CLASSIC", lane: "MID" },
-      { championId: 157, win: false, kills: 4, deaths: 7, assists: 2, csPerMin: "6.8", timeAgo: "2h hace", gameMode: "CLASSIC", lane: "MID" },
-      { championId: 103, win: true, kills: 9, deaths: 1, assists: 12, csPerMin: "7.3", timeAgo: "5h hace", gameMode: "CLASSIC", lane: "MID" },
-      { championId: 238, win: true, kills: 18, deaths: 3, assists: 9, csPerMin: "8.5", timeAgo: "Ayer", gameMode: "CLASSIC", lane: "MID" }
-    ]
+    mastery: [],
+    matches: []
   };
 
   if (!lcu) {
-    return new Response(JSON.stringify(mockPayload), { status: 200 });
+    const cachedProfile = readLcuProfileCache();
+    if (cachedProfile) {
+      return new Response(JSON.stringify(cachedProfile), { status: 200 });
+    }
+    return new Response(JSON.stringify(offlineEmptyPayload), { status: 200 });
   }
 
   const auth = btoa(`riot:${lcu.token}`);
@@ -270,7 +264,7 @@ export const GET: APIRoute = async () => {
       console.warn("No se pudo obtener el historial de partidas LCU:", e);
     }
 
-    return new Response(JSON.stringify({
+    const profileData = {
       isConnected: true,
       gameVersion: gameVersion,
       summoner: summonerName,
@@ -283,11 +277,26 @@ export const GET: APIRoute = async () => {
       rankedFlex: rankedFlexInfo,
       mastery: topMastery,
       matches: recentMatches
-    }), { status: 200 });
+    };
+
+    // Escribir en caché marcándolo como desconectado para futuros arranques offline
+    writeLcuProfileCache({
+      ...profileData,
+      isConnected: false
+    });
+
+    return new Response(JSON.stringify(profileData), { status: 200 });
     
   } catch (e) {
+    const cachedProfile = readLcuProfileCache();
+    if (cachedProfile) {
+      return new Response(JSON.stringify({
+        ...cachedProfile,
+        error: "Error de conexión con el LCU"
+      }), { status: 200 });
+    }
     return new Response(JSON.stringify({
-      ...mockPayload,
+      ...offlineEmptyPayload,
       error: "Error de conexión con el LCU"
     }), { status: 200 });
   }

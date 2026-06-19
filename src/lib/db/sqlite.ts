@@ -200,6 +200,8 @@ insertConfigStmt.run('sync_period_days', '3');
 insertConfigStmt.run('lane_sync_period_days', '21');
 insertConfigStmt.run('last_sync_timestamp', '-');
 insertConfigStmt.run('last_lane_sync_timestamp', '-');
+insertConfigStmt.run('meta_sync_frequency', '2');
+insertConfigStmt.run('last_meta_cache_sync', '-');
 
 // Actualizar engine_weights en config fusionándolo si ya existe, o insertándolo
 const defaultWeights = {
@@ -250,4 +252,12 @@ try {
   }
 } catch (err) {
   console.error('❌ Error al realizar la carga inicial de datos en SQLite:', err);
+}
+
+// Iniciar el planificador automático de meta-cache en segundo plano
+try {
+  const { startAutomaticMetaCacheScheduler } = await import('../services/sync.service.js');
+  startAutomaticMetaCacheScheduler();
+} catch (e) {
+  console.error('❌ Error al iniciar el planificador de meta-cache:', e);
 }

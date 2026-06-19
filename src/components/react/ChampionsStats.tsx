@@ -286,6 +286,27 @@ const ShardsTree = ({ selections }: { selections: number[] }) => {
   );
 };
 
+const formatTimeAgo = (dateStr: string): string => {
+  if (!dateStr || dateStr === '-') return 'Nunca';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Nunca';
+  
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) {
+    return 'Hace unos segundos';
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `Hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `Hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+  }
+  const days = Math.floor(hours / 24);
+  return `Hace ${days} ${days === 1 ? 'día' : 'días'}`;
+};
+
 export const ChampionsStats = ({ initialChampionId, initialLane }: { initialChampionId?: number; initialLane?: string }) => {
   // Estados de datos
   const [champions, setChampions] = useState<any[]>([]);
@@ -293,6 +314,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   const [error, setError] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState("14.9.1");
   const [metaCache, setMetaCache] = useState<any>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>("-");
+  const [timeAgoText, setTimeAgoText] = useState<string>("Nunca");
 
   // Filtros y ordenación (Predeterminado: Tier ascendente -> mejor rank primero)
   const [searchQuery, setSearchQuery] = useState("");
@@ -343,6 +366,9 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
             if (metaData.meta) {
               setMetaCache(metaData.meta);
             }
+            if (metaData.lastUpdated) {
+              setLastUpdated(metaData.lastUpdated);
+            }
           }
         } catch (e) {
           console.warn("No se pudo obtener el meta cache de /api/meta", e);
@@ -385,6 +411,45 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
     loadInitialData();
   }, [initialChampionId]);
+
+  // Actualizar el texto dinámico "Hace x minutos" cada 30 segundos si la pestaña está abierta
+  useEffect(() => {
+    if (!lastUpdated || lastUpdated === '-') {
+      setTimeAgoText('Nunca');
+      return;
+    }
+    
+    const updateText = () => {
+      setTimeAgoText(formatTimeAgo(lastUpdated));
+    };
+    
+    updateText();
+    const interval = setInterval(updateText, 30000);
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
+
+  // Polling de /api/meta cada 60 segundos para capturar actualizaciones silenciosas en segundo plano
+  useEffect(() => {
+    const pollMeta = async () => {
+      try {
+        const metaRes = await fetch('/api/meta');
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
+          if (metaData.meta) {
+            setMetaCache(metaData.meta);
+          }
+          if (metaData.lastUpdated) {
+            setLastUpdated(metaData.lastUpdated);
+          }
+        }
+      } catch (e) {
+        console.warn("Error haciendo polling a /api/meta:", e);
+      }
+    };
+
+    const interval = setInterval(pollMeta, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Cargar datos tácticos detallados (habilidades de OP.GG) cuando se selecciona un campeón
   useEffect(() => {
@@ -769,9 +834,16 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
             <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-[0.2em] italic">
               Estadísticas <span className="text-purple-accent">Campeones</span>
             </h1>
-            <p className="text-xs uppercase tracking-widest font-extrabold text-slate-400 mt-1">
-              Filtro Global de Meta // Análisis de Desempeño
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1 select-none">
+              <p className="text-xs uppercase tracking-widest font-extrabold text-slate-400">
+                Filtro Global de Meta // Análisis de Desempeño
+              </p>
+              {lastUpdated && lastUpdated !== '-' && (
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider sm:border-l sm:border-border-warm/30 sm:pl-2">
+                  Actualizado: {timeAgoText}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Buscador de Campeones */}

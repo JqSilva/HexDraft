@@ -17,6 +17,7 @@ export const GET: APIRoute = async () => {
       lane_sync_period_days: parseInt(rawConfigs.lane_sync_period_days || '21') || 21,
       last_sync_timestamp: rawConfigs.last_sync_timestamp || '-',
       last_lane_sync_timestamp: rawConfigs.last_lane_sync_timestamp || '-',
+      meta_sync_frequency: rawConfigs.meta_sync_frequency !== undefined ? parseFloat(rawConfigs.meta_sync_frequency) : 2,
       engine_weights: JSON.parse(rawConfigs.engine_weights || '{}')
     };
 
@@ -68,6 +69,11 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (payload.last_lane_sync_timestamp !== undefined) {
       updates.last_lane_sync_timestamp = String(payload.last_lane_sync_timestamp);
+    }
+
+    if (payload.meta_sync_frequency !== undefined) {
+      const val = parseFloat(payload.meta_sync_frequency);
+      if (!isNaN(val)) updates.meta_sync_frequency = String(val);
     }
     
     if (payload.engine_weights !== undefined) {
