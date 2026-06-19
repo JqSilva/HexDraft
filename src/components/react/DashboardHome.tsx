@@ -195,7 +195,7 @@ export const DashboardHome = () => {
   return (
     <div className="w-full h-full flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">      
       {/* TOP BAR */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
+      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
         <div>
           <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">BIENVENIDO DE NUEVO,</span>
           <div className="flex items-center gap-3">
@@ -208,7 +208,7 @@ export const DashboardHome = () => {
 
         {/* LCU connection status indicator */}
         <div className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${data.isConnected ? 'text-green-500' : 'text-slate-400'
-          }`}>
+          } md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2`}>
           <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
           {data.isConnected ? 'LCU CONECTADO' : 'LCU OFFLINE'}
         </div>
