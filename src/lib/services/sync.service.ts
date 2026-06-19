@@ -1,5 +1,4 @@
 // src/lib/services/sync.service.ts
-import puppeteer from 'puppeteer';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import fs from 'node:fs';
@@ -14,12 +13,28 @@ import { syncItemsFromCommunityDragon } from '../scripts/sync-items.js';
 import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
+const FLARESOLVERR_URL = 'http://localhost:8191/v1';
+
 const API_NAME_MAP: Record<string, string> = {
   "Wukong": "MonkeyKing",
   "Maestro Yi": "MasterYi",
   "Nunu y Willump": "Nunu",
   "Renata Glasc": "Renata",
-  "Bardo": "Bard"
+  "Bardo": "Bard",
+  "Kha'Zix": "Khazix",
+  "Kai'Sa": "Kaisa",
+  "Bel'Veth": "Belveth",
+  "Rek'Sai": "RekSai",
+  "Vel'Koz": "Velkoz",
+  "Cho'Gath": "Chogath",
+  "Dr. Mundo": "DrMundo",
+  "K'Sante": "KSante",
+  "Kog'Maw": "KogMaw",
+  "Jarvan IV": "JarvanIV",
+  "Lee Sin": "LeeSin",
+  "Miss Fortune": "MissFortune",
+  "Twisted Fate": "TwistedFate",
+  "Xin Zhao": "XinZhao"
 };
 
 const NORM_API_NAME_MAP: Record<string, string> = {
@@ -29,6 +44,40 @@ const NORM_API_NAME_MAP: Record<string, string> = {
   "renata": "renataglasc",
   "bard": "bardo"
 };
+
+function extractJsonFromHtml(htmlOrJson: string | any): any {
+  if (typeof htmlOrJson === 'object') return htmlOrJson;
+  try {
+    return JSON.parse(htmlOrJson);
+  } catch (e) {
+    const preMatch = htmlOrJson.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+    if (preMatch && preMatch[1]) {
+      return JSON.parse(preMatch[1].trim());
+    }
+    const bodyMatch = htmlOrJson.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch && bodyMatch[1]) {
+      const text = bodyMatch[1].replace(/<[^>]*>/g, '').trim();
+      return JSON.parse(text);
+    }
+    throw new Error("No se pudo extraer JSON puro de la respuesta de FlareSolverr.");
+  }
+}
+
+async function fetchWithFlareSolverr(url: string): Promise<any> {
+  const response = await axios.post(FLARESOLVERR_URL, {
+    cmd: "request.get",
+    url: url,
+    maxTimeout: 60000
+  }, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 70000
+  });
+
+  if (response.data && response.data.status === 'ok') {
+    return response.data.solution.response;
+  }
+  throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
+}
 
 const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -350,7 +399,6 @@ function isChampionBuildUpToDate(champId: number, version: string, syncPeriodDay
 
 // --- SCRAPEO INDIVIDUAL POR CARRILES ---
 export async function scrapeSingleChampion(
-  page: any,
   name: string,
   version: string,
   dbMemory: any,
@@ -374,28 +422,15 @@ export async function scrapeSingleChampion(
     writeLog(`   > Procesando carril: ${lane} para ${name}`);
     
     const internalName = API_NAME_MAP[name] || name;
-    const urlName = internalName.replace(/\s/g, "");
+    const urlName = internalName.replace(/[^a-zA-Z0-9]/g, "");
     
     // El endpoint de dpm.lol usa 'support' para UTILITY
     const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'support' : lane.toLowerCase();
     const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
     
     try {
-      let data: any = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        await page.goto(url, { waitUntil: 'networkidle2' });
-        const bodyText = await page.evaluate(() => document.body.innerText);
-        try {
-          data = JSON.parse(bodyText);
-          break;
-        } catch {
-          // Cloudflare block - wait and retry
-          if (attempt === 0) {
-            writeLog(`   [RETRY] Cloudflare bloqueo detectado para ${name}/${lane}, reintentando...`);
-            await new Promise(r => setTimeout(r, 3000));
-          }
-        }
-      }
+      const responseHtml = await fetchWithFlareSolverr(url);
+      const data = extractJsonFromHtml(responseHtml);
 
       if (!data || data.error || !data.runes) {
         writeLog(`   [WARN] dpm.lol no tiene builds para ${name} en ${lane}`);
@@ -971,89 +1006,50 @@ export async function syncMetaAndBuilds(
     return "Sincronización al día";
   }
 
-  writeLog(`[PUPPETEER] Iniciando procesamiento de ${pendingChamps.length} campeones.`);
+  writeLog(`[FLARESOLVERR] Iniciando procesamiento de ${pendingChamps.length} campeones.`);
   onProgress?.(0, pendingChamps.length, 'puppeteer');
 
-  // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA) ---
+  // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA CON FLARESOLVERR) ---
   const concurrencySetting = parseInt(configRepo.getConfig('puppeteer_concurrency') || '3') || 3;
-  // Limitar concurrencia física para evitar saturar el sistema
+  // Concurrencia de trabajadores
   const concurrency = Math.min(Math.max(concurrencySetting, 1), 6); 
 
-  writeLog(`[PUPPETEER] Concurrencia: ${concurrency} paginas simultaneas.`);
+  writeLog(`[FLARESOLVERR] Concurrencia: ${concurrency} trabajadores simultáneos.`);
 
-  const profilesDir = path.join(process.cwd(), '.puppeteer_profiles');
-  if (!fs.existsSync(profilesDir)) {
-    fs.mkdirSync(profilesDir, { recursive: true });
-  }
-  const uniqueProfileDir = path.join(profilesDir, `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
+  let index = 0;
+  let savedCount = 0;
 
-  const browser = await puppeteer.launch({ 
-    headless: true,
-    userDataDir: uniqueProfileDir,
-    pipe: true,
-    ignoreDefaultArgs: ['--enable-automation'],
-    args: [
-      '--no-sandbox', 
-      '--disable-setuid-sandbox',
-      '--disable-blink-features=AutomationControlled'
-    ] 
-  });
+  const worker = async (workerId: number) => {
+    while (index < pendingChamps.length) {
+      if (checkAbort()) break;
+      
+      const name = pendingChamps[index++];
+      if (!name) break;
 
-  try {
-    const pages = await Promise.all(
-      Array.from({ length: concurrency }).map(async () => {
-        const p = await browser.newPage();
-        await p.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-        await p.evaluateOnNewDocument(() => {
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => false,
-          });
-        });
-        return p;
-      })
-    );
+      writeLog(`[W-${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
+      
+      try {
+        await scrapeSingleChampion(name, version, db, nameIdMap, writeLog);
+        savedCount++;
+        onProgress?.(savedCount, pendingChamps.length, 'puppeteer');
 
-    let index = 0;
-    let savedCount = 0;
-
-    const worker = async (page: any, workerId: number) => {
-      while (index < pendingChamps.length) {
-        if (checkAbort()) break;
-        
-        const name = pendingChamps[index++];
-        if (!name) break;
-
-        writeLog(`[TAB-${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
-        
-        try {
-          await scrapeSingleChampion(page, name, version, db, nameIdMap, writeLog);
-          savedCount++;
-          onProgress?.(savedCount, pendingChamps.length, 'puppeteer');
-
-          // Guardar preventivamente cada 5 campeones en JSON
-          if (savedCount % 5 === 0) {
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-          }
-        } catch (e: any) {
-          writeLog(`[ERROR] [TAB-${workerId}] Error procesando ${name}: ${e.message || e}`);
+        // Guardar preventivamente cada 5 campeones en JSON
+        if (savedCount % 5 === 0) {
+          fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
         }
-
-        // Delay mínimo para respetar rate limits de Cloudflare
-        await new Promise(r => setTimeout(r, 1500));
+      } catch (e: any) {
+        writeLog(`[ERROR] [W-${workerId}] Error procesando ${name}: ${e.message || e}`);
       }
-    };
 
-    // Lanzar todos los workers en paralelo
-    await Promise.all(pages.map((p, i) => worker(p, i + 1)));
+      // Delay de cortesía para no sobrecargar el proxy/dpm.lol
+      await new Promise(r => setTimeout(r, 800));
+    }
+  };
 
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  // Lanzar todos los workers en paralelo
+  await Promise.all(Array.from({ length: concurrency }).map((_, i) => worker(i + 1)));
 
-  } finally {
-    await browser.close();
-    try {
-      fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
-    } catch (e) {}
-  }
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
   if (checkAbort()) {
     writeLog("[ABORT] Cancelacion procesada. Procesador detenido.");

@@ -101,9 +101,9 @@ export const SettingsPage = () => {
     };
 
     const getConcurrencyMessage = () => {
-        if (puppeteerConcurrency <= 2) return { text: "Seguro y estable. Ideal para procesadores sencillos.", color: "text-slate-500" };
-        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Muy rápido. Opción recomendada para la mayoría de PCs.", color: "text-purple-400" };
-        return { text: "Extremo. Alto consumo de recursos de CPU/Red. Riesgo de bloqueo de IP por dpm.lol.", color: "text-red-500 font-bold" };
+        if (puppeteerConcurrency <= 2) return { text: "Seguro y estable. Ideal para conexiones o proxies sencillos.", color: "text-slate-500" };
+        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Súper rápido. Opción recomendada para FlareSolverr.", color: "text-purple-400" };
+        return { text: "Extremo. Sincronización ultra-rápida. Requiere buena capacidad en tu FlareSolverr local.", color: "text-red-500 font-bold" };
     };
 
     if (loading) {
@@ -215,7 +215,7 @@ export const SettingsPage = () => {
                             {/* Concurrencia de Scraper */}
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
-                                    <label className="text-[#9055ff] tracking-widest">Páginas simultáneas</label>
+                                    <label className="text-[#9055ff] tracking-widest">Hilos simultáneos (FlareSolverr)</label>
                                     <span className="font-mono text-white bg-[#1a1a24] px-2.5 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
                                 </div>
                                 <input 

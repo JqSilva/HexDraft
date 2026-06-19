@@ -1,7 +1,42 @@
-import puppeteer from 'puppeteer';
+import axios from 'axios';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
+
+const FLARESOLVERR_URL = 'http://localhost:8191/v1';
+
+function extractJsonFromHtml(htmlOrJson: string | any): any {
+  if (typeof htmlOrJson === 'object') return htmlOrJson;
+  try {
+    return JSON.parse(htmlOrJson);
+  } catch (e) {
+    const preMatch = htmlOrJson.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+    if (preMatch && preMatch[1]) {
+      return JSON.parse(preMatch[1].trim());
+    }
+    const bodyMatch = htmlOrJson.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch && bodyMatch[1]) {
+      const text = bodyMatch[1].replace(/<[^>]*>/g, '').trim();
+      return JSON.parse(text);
+    }
+    throw new Error("No se pudo extraer JSON puro de la respuesta de FlareSolverr.");
+  }
+}
+
+async function fetchWithFlareSolverr(url: string): Promise<any> {
+  const response = await axios.post(FLARESOLVERR_URL, {
+    cmd: "request.get",
+    url: url,
+    maxTimeout: 60000
+  }, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 70000
+  });
+
+  if (response.data && response.data.status === 'ok') {
+    return response.data.solution.response;
+  }
+  throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
+}
 
 export async function SyncEstructuraLanes(
     version: string,
@@ -9,57 +44,23 @@ export async function SyncEstructuraLanes(
     writeLog: (msg: string) => void,
     onProgress?: (current: number, total: number, phase: 'lanes' | 'done') => void
 ) {
-    const dbPath = './src/lib/data/counter-synergies.json';
-    const metaMapPath = './src/lib/data/meta-positions.json';
-    
-    const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-    
-    //const champions = Object.keys(db);
-    const champions = ['Aatrox'];
-
-
-    const profilesDir = path.join(process.cwd(), '.puppeteer_profiles');
-    if (!fs.existsSync(profilesDir)) {
-        fs.mkdirSync(profilesDir, { recursive: true });
-    }
-    const uniqueProfileDir = path.join(profilesDir, `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
-    const browser = await puppeteer.launch({ 
-        headless: true, 
-        userDataDir: uniqueProfileDir,
-        pipe: true,
-        ignoreDefaultArgs: ['--enable-automation'],
-        args: [
-            '--no-sandbox', 
-            '--disable-setuid-sandbox',
-            '--disable-blink-features=AutomationControlled'
-        ] 
-    });
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-    await page.evaluateOnNewDocument(() => {
-        Object.defineProperty(navigator, 'webdriver', {
-            get: () => false,
-        });
-    });
-
     writeLog("🐘 INICIANDO CICLO LARGO - Análisis Estructural");
     onProgress?.(1, 10, 'lanes');
 
     try {
         if (checkAbort()) {
             writeLog("🛑 CANCELACIÓN DETECTADA. Deteniendo...");
-            await browser.close();
-            try {
-                fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
-            } catch (e) {}
             return;
         }
         // --- PARTE 1: ACTUALIZAR BD DIRECTAMENTE ---
         writeLog("📡 Sincronizando Carriles en la Base de Datos...");
         onProgress?.(3, 10, 'lanes');
-        await page.goto(`https://dpm.lol/v1/tierlist?tier=diamond&timeframe=${version}&gameMode=ranked`);
+
+        const url = `https://dpm.lol/v1/tierlist?tier=diamond&timeframe=${version}&gameMode=ranked`;
+        const responseHtml = await fetchWithFlareSolverr(url);
+        const tierData = extractJsonFromHtml(responseHtml);
+
         onProgress?.(7, 10, 'lanes');
-        const tierData = JSON.parse(await page.evaluate(() => document.body.innerText));
         
         const { championsRepo } = await import('../db/champions.repo.js');
         const { db } = await import('../db/sqlite.js');
@@ -103,10 +104,8 @@ export async function SyncEstructuraLanes(
             configRepo.setConfig('last_lane_sync_timestamp', new Date().toISOString());
         } catch (e) {}
         onProgress?.(10, 10, 'done');
-    } finally {
-        await browser.close();
-        try {
-            fs.rmSync(uniqueProfileDir, { recursive: true, force: true });
-        } catch (e) {}
+    } catch (err: any) {
+        writeLog(`❌ Error en SyncEstructuraLanes: ${err.message || err}`);
+        throw err;
     }
 }
