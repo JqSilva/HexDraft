@@ -37,12 +37,16 @@ export const GET: APIRoute = async () => {
   };
 
   if (!lcu) {
+    console.log("❌ [LCU-ME] No se encontraron credenciales de LCU (juego cerrado o lockfile inaccesible).");
     const cachedProfile = readLcuProfileCache();
     if (cachedProfile) {
+      console.log("ℹ️ [LCU-ME] Devolviendo perfil de invocador offline cacheado.");
       return new Response(JSON.stringify(cachedProfile), { status: 200 });
     }
     return new Response(JSON.stringify(offlineEmptyPayload), { status: 200 });
   }
+
+  console.log(`🔌 [LCU-ME] Credenciales de LCU encontradas. Intentando conectar a 127.0.0.1:${lcu.port}...`);
 
   const auth = btoa(`riot:${lcu.token}`);
   const headers = {
@@ -138,7 +142,7 @@ export const GET: APIRoute = async () => {
     }
 
     // 4. Obtener maestría de campeones (Opcional y fail-safe)
-    let topMastery = mockPayload.mastery;
+    let topMastery = offlineEmptyPayload.mastery;
     try {
       const masteryResponse = await fetch(
         `https://127.0.0.1:${lcu.port}/lol-champion-mastery/v1/local-player/champion-mastery`,
@@ -163,7 +167,7 @@ export const GET: APIRoute = async () => {
     }
 
     // 5. Obtener historial de partidas reciente (Opcional y fail-safe)
-    let recentMatches = mockPayload.matches;
+    let recentMatches = offlineEmptyPayload.matches;
     try {
       const matchHistoryResponse = await fetch(
         `https://127.0.0.1:${lcu.port}/lol-match-history/v1/products/lol/current-summoner/matches`,
@@ -287,9 +291,11 @@ export const GET: APIRoute = async () => {
 
     return new Response(JSON.stringify(profileData), { status: 200 });
     
-  } catch (e) {
+  } catch (e: any) {
+    console.error("⚠️ [LCU-ME] Error al conectar con LCU:", e.message || e);
     const cachedProfile = readLcuProfileCache();
     if (cachedProfile) {
+      console.log("ℹ️ [LCU-ME] Fallback a perfil de invocador cacheado tras error de conexión.");
       return new Response(JSON.stringify({
         ...cachedProfile,
         error: "Error de conexión con el LCU"
