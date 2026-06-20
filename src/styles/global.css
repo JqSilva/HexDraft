@@ -147,4 +147,21 @@ h1, h2, h3, h4, h5, h6 {
     24px 24px, 
     72px 72px, 
     72px 72px;
-}
+}
+
+/* Dynamic Sidebar & Content Offsets for exact viewport centering */
+#app-layout {
+  --sidebar-width: 16rem; /* 256px default */
+}
+
+#app-layout:has(#sidebar.collapsed) {
+  --sidebar-width: 4rem; /* 64px collapsed */
+}
+
+@media (min-width: 768px) {
+  #app-layout {
+    --header-status-left: calc(50vw - var(--sidebar-width) - 24px);
+    --header-status-top: calc(50% - 8px);
+  }
+}
+

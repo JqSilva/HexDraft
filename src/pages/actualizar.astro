@@ -4,18 +4,8 @@ import { SyncPanel } from '../components/react/SyncPanel';
 ---
 
 <Layout title="HexDraft | Panel de Control">
-  <main class="w-full h-full p-4 md:p-6 flex flex-col relative text-slate-200 overflow-x-hidden font-sans">
-
-    <header class="max-w-7xl mx-auto mt-4 mb-10 flex justify-between items-center relative z-10">
-      <div class="flex items-center gap-6">
-        <h1 class="text-lg md:text-2xl font-black uppercase tracking-[0.4em] text-white italic">
-          Nexo <span class="text-[#9055ff]">Sincronización</span>
-        </h1>
-      </div>
-    </header>
-
+  <main class="w-full h-full flex flex-col">
     <!-- Componente React Inteligente -->
     <SyncPanel client:load />
-
   </main>
 </Layout>

@@ -153,7 +153,7 @@ export const SyncPanel = () => {
   };
 
   const formatTimestamp = (ts: string) => {
-    if (ts === '-' || !ts) return 'Nunca sincronizado';
+    if (ts === '-' || !ts) return 'Nunca';
     try {
       const date = new Date(ts);
       if (isNaN(date.getTime())) return ts;
@@ -172,153 +172,266 @@ export const SyncPanel = () => {
   return (
     <>
       {toast.visible && (
-        <div className="fixed top-24 right-6 z-50 animate-in slide-in-from-right duration-300">
-          <div className={`p-4 rounded border ${toast.type === 'error' ? 'bg-red-900/40 border-red-500 text-red-200' : toast.type === 'warn' ? 'bg-yellow-900/40 border-yellow-500 text-yellow-200' : 'bg-purple-900/40 border-purple-500 text-purple-200'} shadow-lg backdrop-blur-md max-w-sm`}>
-            <h4 className="text-xs font-black uppercase tracking-wider">{toast.title}</h4>
-            <p className="text-[10px] uppercase mt-1 tracking-wide">{toast.body}</p>
+        <div className="fixed top-24 right-6 z-50 animate-in slide-in-from-top-4 slide-in-from-right-4 duration-300">
+          <div className={`p-4 rounded-sm border ${
+            toast.type === 'error' 
+              ? 'bg-red-950/40 border-red-500/50 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
+              : toast.type === 'warn' 
+                ? 'bg-yellow-950/40 border-yellow-500/50 text-yellow-200 shadow-[0_0_15px_rgba(234,179,8,0.15)]' 
+                : 'bg-purple-950/40 border-purple-500/50 text-purple-200 shadow-[0_0_15px_rgba(144,85,255,0.15)]'
+            } backdrop-blur-md max-w-sm`}>
+            <h4 className="text-[10px] font-black uppercase tracking-wider">{toast.title}</h4>
+            <p className="text-[9px] uppercase mt-1 tracking-wide font-bold">{toast.body}</p>
           </div>
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto space-y-8 relative z-10 mt-8">
+      <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
         
-        {/* BARRA DE ESTADO GLOBAL (SIN CARDS) */}
-        <div className="flex flex-wrap items-center justify-between gap-6 pb-6 border-b border-border-warm/30">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Versión LoL:</span>
-            <span className="text-xs font-mono font-bold text-white px-3 py-1 bg-[#13131a] border border-[#23232c] rounded-sm select-none">{version}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Última Sync Builds:</span>
-            <span className="text-xs font-mono text-slate-300">{formatTimestamp(lastSync)}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Última Sync Carriles:</span>
-            <span className="text-xs font-mono text-slate-300">{formatTimestamp(lastLaneSync)}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Integridad Base Datos:</span>
-            <span className={`text-xs font-black tracking-wider uppercase ${isSyncing ? 'text-yellow-500' : 'text-[#00f0ff]'}`}>
-              {isSyncing ? 'Actualizando' : 'Óptima'}
+        {/* Cabecera Táctica (Ocupa todo el ancho) */}
+        <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
+          <div>
+            <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
+              MANTENIMIENTO // TELEMETRÍA DE BASE DE DATOS
             </span>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-black text-white uppercase tracking-tight">
+                Sincronización <span className="text-purple-accent">de Datos</span>
+              </h1>
+            </div>
           </div>
-        </div>
+        </header>
 
-        {/* ACCIONES DE SINCRONIZACIÓN (SIN CARDS) */}
-        <div className="space-y-6">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9055ff]">// Panel de Control</h3>
-          
-          {/* Fila de Builds */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-6 border-b border-border-warm/20">
-            <div className="flex-1 space-y-2">
-              <h4 className="text-base font-black text-white uppercase tracking-wider italic">Sincronización de Meta & Builds</h4>
-              <p className="text-xs text-slate-400 font-medium">Scrapea OP.GG y DPM.lol para actualizar coeficientes de winrate, tiers, builds bayesianas y counters.</p>
+        {/* Contenido Principal Centrado */}
+        <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
+          {/* TARJETA DE ESTADO GLOBAL (SINGLE DIAGNOSTIC CARD) */}
+          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="mb-6">
+              <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
+                Estado del Motor y Base de Datos
+              </h3>
+              <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
+                Diagnóstico y telemetría de caché en tiempo real
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-2">
+              {/* Campo 1: Versión */}
+              <div className="md:border-r border-border-warm-hover/40 pr-4">
+                <span className="block text-[8.5px] text-slate-500 uppercase tracking-widest font-black mb-1">Versión LoL Activa</span>
+                <span className="text-sm font-mono font-black text-white">{version}</span>
+              </div>
               
-              <div className="pt-2 flex items-center gap-3 select-none">
+              {/* Campo 2: Último Meta Sync */}
+              <div className="md:border-r border-border-warm-hover/40 pr-4">
+                <span className="block text-[8.5px] text-slate-500 uppercase tracking-widest font-black mb-1">Último Meta Sync</span>
+                <span className="text-xs font-mono font-black text-slate-300 truncate block">
+                  {formatTimestamp(lastSync)}
+                </span>
+              </div>
+
+              {/* Campo 3: Mapeo de Carriles */}
+              <div className="md:border-r border-border-warm-hover/40 pr-4">
+                <span className="block text-[8.5px] text-slate-500 uppercase tracking-widest font-black mb-1">Mapeo de Carriles</span>
+                <span className="text-xs font-mono font-black text-slate-300 truncate block">
+                  {formatTimestamp(lastLaneSync)}
+                </span>
+              </div>
+
+              {/* Campo 4: Integridad */}
+              <div>
+                <span className="block text-[8.5px] text-slate-500 uppercase tracking-widest font-black mb-1">Integridad del Cache</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-yellow-500 animate-pulse' : 'bg-cyan-400 shadow-[0_0_8px_#00f0ff]'}`} />
+                  <span className={`text-[10px] font-black tracking-wider uppercase font-mono ${isSyncing ? 'text-yellow-500' : 'text-cyan-400'}`}>
+                    {isSyncing ? 'Sincronizando' : 'Actualizado'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        {/* ACCIONES DE SINCRONIZACIÓN */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Card 1: Builds & Meta */}
+          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">01 //</span>
+                <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Sincronización de Meta & Builds</h4>
+              </div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
+                Extrae datos estadísticos en tiempo real de OP.GG y DPM.lol para recalcular coeficientes Bayesianos, tiers de campeones y diagramas de builds sugeridos.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <label className={`flex items-center gap-3 p-3  cursor-pointer select-none transition-all duration-200 active:scale-[0.99]`}>
                 <input 
                   type="checkbox" 
-                  id="force-sync-checkbox"
                   checked={forceSync}
                   onChange={(e) => setForceSync(e.target.checked)}
                   disabled={!!isSyncing}
-                  className="w-3.5 h-3.5 text-purple-accent border-slate-700 bg-slate-900 rounded cursor-pointer disabled:opacity-50"
+                  className="sr-only"
                 />
-                <label htmlFor="force-sync-checkbox" className="text-[10px] uppercase font-bold text-slate-400 tracking-wider cursor-pointer select-none">
-                  Forzar descarga completa (omite el filtro diferencial y descarga todo de cero)
-                </label>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button 
-                onClick={() => runSync('meta_builds')}
-                disabled={!!isSyncing} 
-                className={`px-8 py-3.5 font-black uppercase text-[10px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95 ${isSyncing ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' : 'bg-purple-accent border-purple-accent hover:bg-purple-accent-hover text-white shadow-[0_0_15px_rgba(144,85,255,0.2)]'}`}
-              >
-                {isSyncing === 'meta_builds' ? 'Procesando...' : 'Ejecutar Sincronización'}
-              </button>
-              {isSyncing === 'meta_builds' && (
+                <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors duration-200 shrink-0 ${forceSync ? 'bg-purple-accent border-purple-accent' : 'bg-black/40 border-slate-700'}`}>
+                  {forceSync && <span className="text-[8px] font-bold text-white"></span>}
+                </div>
+                <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">
+                  Forzar descarga completa (ignora caché diferencial y descarga todo de cero)
+                </span>
+              </label>
+
+              <div className="flex items-center gap-3">
                 <button 
-                  onClick={cancelSync}
-                  className="px-5 py-3.5 bg-transparent border border-red-900/50 hover:bg-red-600/20 text-red-500 font-black uppercase text-[9px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95"
+                  onClick={() => runSync('meta_builds')}
+                  disabled={!!isSyncing} 
+                  className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
+                    ${isSyncing 
+                      ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
+                      : 'bg-purple-accent border-purple-accent hover:bg-purple-accent/90 text-white shadow-[0_0_15px_rgba(144,85,255,0.2)]'}`}
                 >
-                  Cancelar
+                  {isSyncing === 'meta_builds' ? 'Procesando...' : 'Ejecutar Sincronización'}
                 </button>
-              )}
+                
+                {isSyncing === 'meta_builds' && (
+                  <button 
+                    onClick={cancelSync}
+                    className="px-5 py-3.5 bg-transparent border border-red-900/50 hover:bg-red-600/20 text-red-500 font-black uppercase text-[9px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95"
+                  >
+                    Detener
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Fila de Mapeo */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-6 border-b border-border-warm/20">
-            <div className="flex-1 space-y-1">
-              <h4 className="text-base font-black text-white uppercase tracking-wider italic">Mapeo de Posiciones y Carriles</h4>
-              <p className="text-xs text-slate-400 font-medium">Actualiza la matriz de roles preferidos de campeones basándose en el meta actual de Diamond+.</p>
+          {/* Card 2: Lanes Mapping */}
+          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">02 //</span>
+                <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Mapeo de Posiciones y Carriles</h4>
+              </div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
+                Actualiza y mapea la distribución de líneas (Top, Jng, Mid, Adc, Sup) preferidas de cada campeón conforme a los roles más jugados en el parche actual (Diamond+).
+              </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+
+            <div className="pt-2 flex items-center gap-3">
               <button 
                 onClick={() => runSync('SyncEstructuraLanes')}
                 disabled={!!isSyncing}
-                className={`px-8 py-3.5 font-black uppercase text-[10px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95 ${isSyncing ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' : 'bg-transparent border-border-warm hover:border-hextech-blue hover:text-white text-slate-400'}`}
+                className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
+                  ${isSyncing 
+                    ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
+                    : 'bg-transparent border-border-warm hover:border-slate-800 text-slate-400 hover:text-slate-200'}`}
               >
                 {isSyncing === 'SyncEstructuraLanes' ? 'Procesando...' : 'Actualizar Mapeo'}
               </button>
+              
               {isSyncing === 'SyncEstructuraLanes' && (
                 <button 
                   onClick={cancelSync}
                   className="px-5 py-3.5 bg-transparent border border-red-900/50 hover:bg-red-600/20 text-red-500 font-black uppercase text-[9px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95"
                 >
-                  Cancelar
+                  Detener
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* TERMINAL DE EVENTOS (SIN PANELES EXTERNOS DE CARDS) */}
-        <div className="border border-border-warm/30 bg-[#050508]/60 p-6 rounded-sm flex flex-col h-[400px]">
-          <div className="flex justify-between items-center mb-4 flex-shrink-0">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              <span className="text-purple-accent mr-2">//</span>Terminal de Eventos
-            </h3>
+        {/* TERMINAL DE EVENTOS (PREMIUM cyberpunk CONSOLE SHELL) */}
+        <div className="border border-border-warm bg-[#050508]/80 rounded-sm flex flex-col h-[400px] shadow-2xl relative overflow-hidden backdrop-blur-md">
+          {/* Header de Consola */}
+          <div className="flex justify-between items-center px-6 py-4 border-b border-border-warm/40 bg-black/40 flex-shrink-0 select-none">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-accent shadow-[0_0_8px_#9055ff] animate-pulse" />
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-mono">
+                HexDraft Core Event Log Console
+              </h3>
+            </div>
+            
             {isSyncing && (
-              <div className="text-[10px] font-mono text-purple-accent font-bold uppercase animate-pulse">
-                Fase: {progressPhase === 'opgg' ? 'OP.GG Scraper' : progressPhase === 'puppeteer' ? 'Builds & Matchups' : progressPhase === 'lanes' ? 'Tierlist Lanes' : progressPhase}
+              <div className="text-[9.5px] font-mono text-purple-accent font-black uppercase tracking-wider">
+                FASE: <span className="text-white font-bold">{
+                  progressPhase === 'opgg' 
+                    ? 'OP.GG SCRAPING' 
+                    : progressPhase === 'puppeteer' 
+                      ? 'BUILDS & COUNTERS' 
+                      : progressPhase === 'lanes' 
+                        ? 'MAPEO LANES' 
+                        : progressPhase.toUpperCase()
+                }</span>
               </div>
             )}
           </div>
 
-          {/* Barra de progreso integrada en la propia consola */}
-          {isSyncing && (
-            <div className="mb-4 pb-4 border-b border-border-warm/20 flex-shrink-0">
-              <div className="flex justify-between items-center mb-1.5 text-[9px] uppercase tracking-wider font-bold">
-                <span className="text-slate-300 font-mono">Progreso:</span>
-                <span className="text-purple-accent font-mono">{progressPercent}%</span>
+          {/* Consola principal */}
+          <div className="flex-1 flex flex-col p-6 min-h-0">
+            {/* Barra de progreso integrada */}
+            {isSyncing && (
+              <div className="mb-4 pb-4 border-b border-border-warm/20 flex-shrink-0">
+                <div className="flex justify-between items-center mb-2 text-[9.5px] uppercase tracking-wider font-bold">
+                  <span className="text-slate-400 font-mono">Progreso de la tarea:</span>
+                  <span className="text-purple-accent font-mono font-black">{progressPercent}%</span>
+                </div>
+                <div className="w-full bg-[#11111a] border border-border-warm/40 h-2 rounded-sm overflow-hidden relative">
+                  <div 
+                    className="bg-gradient-to-r from-purple-accent to-fuchsia-400 h-full rounded-sm transition-all duration-300 shadow-[0_0_10px_rgba(144,85,255,0.4)]" 
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-[#11111a] border border-border-warm/30 h-2 rounded-sm overflow-hidden relative">
-                <div 
-                  className="bg-gradient-to-r from-purple-accent to-fuchsia-400 h-full rounded-sm transition-all duration-300 shadow-[0_0_8px_rgba(144,85,255,0.5)]" 
-                  style={{ width: `${progressPercent}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
+            )}
 
-          <div 
-            ref={scrollRef}
-            className="space-y-2.5 font-mono text-[10px] md:text-[11px] flex-1 overflow-y-auto pr-2 scrollbar-thin"
-          >
-            {logs.map((log, i) => (
-              <div key={i} className="flex gap-4 animate-in fade-in slide-in-from-left-2">
-                <span className={`${log.type === 'error' ? 'text-red-500' : log.type === 'sync' ? 'text-yellow-500' : log.type === 'guard' ? 'text-purple-accent' : 'text-[#00f0ff]'} font-bold`}>
-                  [{log.time}]
-                </span>
-                <span className={log.type === 'error' ? 'text-red-400' : log.type === 'idle' ? 'text-slate-500' : 'text-slate-300'}>
-                  {log.msg}
-                </span>
-              </div>
-            ))}
+            {/* Lista de Logs */}
+            <div 
+              ref={scrollRef}
+              className="space-y-2.5 font-mono text-[10px] md:text-[11px] flex-1 overflow-y-auto pr-2 scrollbar-thin select-text"
+            >
+              {logs.map((log, i) => {
+                let textClass = 'text-slate-300';
+                let tagClass = 'text-cyan-400';
+                
+                if (log.type === 'error') {
+                  textClass = 'text-rose-400';
+                  tagClass = 'text-rose-500 font-black';
+                } else if (log.type === 'sync') {
+                  textClass = 'text-yellow-300';
+                  tagClass = 'text-yellow-500 font-black';
+                } else if (log.type === 'success') {
+                  textClass = 'text-emerald-300';
+                  tagClass = 'text-emerald-500 font-black';
+                } else if (log.type === 'guard') {
+                  textClass = 'text-purple-300';
+                  tagClass = 'text-purple-accent font-black';
+                }
+
+                return (
+                  <div key={i} className="flex gap-4 items-start select-text leading-relaxed">
+                    <span className={`${tagClass} select-none shrink-0`}>
+                      [{log.time}]
+                    </span>
+                    <span className={`${textClass} break-all`}>
+                      {log.msg}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
+        </div>
       </div>
     </>
   );

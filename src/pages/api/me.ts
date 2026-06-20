@@ -37,16 +37,16 @@ export const GET: APIRoute = async () => {
   };
 
   if (!lcu) {
-    console.log("❌ [LCU-ME] No se encontraron credenciales de LCU (juego cerrado o lockfile inaccesible).");
+    
     const cachedProfile = readLcuProfileCache();
     if (cachedProfile) {
-      console.log("ℹ️ [LCU-ME] Devolviendo perfil de invocador offline cacheado.");
+      
       return new Response(JSON.stringify(cachedProfile), { status: 200 });
     }
     return new Response(JSON.stringify(offlineEmptyPayload), { status: 200 });
   }
 
-  console.log(`🔌 [LCU-ME] Credenciales de LCU encontradas. Intentando conectar a 127.0.0.1:${lcu.port}...`);
+  
 
   const auth = btoa(`riot:${lcu.token}`);
   const headers = {
@@ -292,10 +292,9 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify(profileData), { status: 200 });
     
   } catch (e: any) {
-    console.error("⚠️ [LCU-ME] Error al conectar con LCU:", e.message || e);
+    console.error("Error al conectar con LCU:", e.message || e);
     const cachedProfile = readLcuProfileCache();
     if (cachedProfile) {
-      console.log("ℹ️ [LCU-ME] Fallback a perfil de invocador cacheado tras error de conexión.");
       return new Response(JSON.stringify({
         ...cachedProfile,
         error: "Error de conexión con el LCU"
@@ -306,4 +305,4 @@ export const GET: APIRoute = async () => {
       error: "Error de conexión con el LCU"
     }), { status: 200 });
   }
-};
+};

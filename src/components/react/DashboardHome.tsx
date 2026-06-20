@@ -208,8 +208,16 @@ export const DashboardHome = () => {
         </div>
 
         {/* LCU connection status indicator */}
-        <div className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${data.isConnected ? 'text-green-500' : 'text-slate-400'
-          } md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2`}>
+        <div 
+          className={`flex items-center justify-center gap-3 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${
+            data.isConnected ? 'text-green-500' : 'text-slate-400'
+          } md:absolute md:-translate-x-1/2 md:-translate-y-1/2`}
+          style={{
+            left: 'var(--header-status-left)',
+            top: 'var(--header-status-top)',
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
           <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
           {data.isConnected ? 'CONECTADO' : 'DESCONECTADO'}
         </div>

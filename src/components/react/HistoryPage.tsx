@@ -234,7 +234,9 @@ export const HistoryPage = () => {
         <div>
           <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">RESUMEN GENERAL</span>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-black text-white uppercase tracking-tight">Historial de Partidas</h1>
+            <h1 className="text-xl font-black text-white uppercase tracking-tight">
+                <span className="text-purple-accent">Historial</span> de Partidas
+              </h1>
           </div>
         </div>
         

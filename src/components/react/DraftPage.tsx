@@ -212,19 +212,6 @@ export const DraftPage = () => {
         return () => media.removeEventListener("change", listener);
     }, []);
 
-    // Toast de conexión al cliente
-    useEffect(() => {
-        if (prevConnected !== null && prevConnected !== isConnected) {
-            setToast({
-                message: isConnected ? "Conectado a LCU" : "Desconectado de LCU",
-                type: isConnected ? 'success' : 'error'
-            });
-            const timer = setTimeout(() => setToast(null), 4000);
-            return () => clearTimeout(timer);
-        }
-        setPrevConnected(isConnected);
-    }, [isConnected, prevConnected]);
-
     // Guardar configuraciones en localStorage
     useEffect(() => {
         localStorage.setItem('autoPick', String(autoPick));

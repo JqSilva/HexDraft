@@ -212,8 +212,7 @@ const RuneTree = ({ styleId, selections, isPrimary }: { styleId: number; selecti
   const rowsToShow = isPrimary ? tree.rows : tree.rows.slice(1);
 
   return (
-    <div className="flex flex-col gap-3.5 items-center">
-      {!isPrimary && <div className="h-10 w-10 shrink-0" aria-hidden="true" />}
+    <div className="flex flex-col gap-2 items-center">
       {rowsToShow.map((row, rowIdx) => {
         const isKeystoneRow = isPrimary && rowIdx === 0;
         return (
@@ -254,27 +253,26 @@ const RuneTree = ({ styleId, selections, isPrimary }: { styleId: number; selecti
 
 const ShardsTree = ({ selections }: { selections: number[] }) => {
   return (
-    <div className="flex flex-col gap-3.5 items-center">
-      <div className="h-10 w-10 shrink-0" aria-hidden="true" />
+    <div className="flex flex-col gap-2 items-center">
       {SHARDS_ROWS.map((row, rowIdx) => {
         const selectedId = selections[rowIdx];
         const normalizedSelectedId = normalizeShardIdForHighlight(selectedId, rowIdx);
         return (
-          <div key={rowIdx} className="flex gap-2.5 justify-center items-center">
+          <div key={rowIdx} className="flex gap-2 justify-center items-center">
             {row.map(shardId => {
               const s = hydrateAsset('shards', shardId);
               const isActive = shardId === normalizedSelectedId;
               return (
                 <div
                   key={shardId}
-                  className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 cursor-default
+                  className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-default
                     ${isActive 
-                      ? 'border-yellow-500/60 bg-yellow-500/15 shadow-[0_0_8px_rgba(234,179,8,0.3)] scale-110' 
-                      : 'border-slate-800/60 bg-black/30 opacity-30 grayscale hover:opacity-60 hover:border-slate-700/60'}`}
+                      ? 'border-yellow-500/50 bg-yellow-500/10 shadow-[0_0_6px_rgba(234,179,8,0.25)] scale-110' 
+                      : 'border-slate-800/40 bg-black/20 opacity-30 grayscale hover:opacity-60 hover:border-slate-700/40'}`}
                   title={s?.name}
                 >
                   {s?.icon && (
-                    <img src={s.icon} className="w-5 h-5 object-contain" alt={s.name} />
+                    <img src={s.icon} className="w-3.5 h-3.5 object-contain" alt={s.name} />
                   )}
                 </div>
               );
@@ -828,196 +826,204 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     return (
       <div className="w-full flex flex-col p-4 md:p-6 animate-in fade-in duration-300">
         
-        {/* Cabecera Táctica */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        {/* Cabecera Táctica (Ocupa todo el ancho) */}
+        <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-[0.2em] italic">
-              Estadísticas <span className="text-purple-accent">Campeones</span>
-            </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1 select-none">
-              <p className="text-xs uppercase tracking-widest font-extrabold text-slate-400">
-                Filtro Global de Meta // Análisis de Desempeño
-              </p>
-              {lastUpdated && lastUpdated !== '-' && (
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider sm:border-l sm:border-border-warm/30 sm:pl-2">
-                  Actualizado: {timeAgoText}
-                </span>
+            <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
+              FILTRO GLOBAL DE META // ANÁLISIS DE DESEMPEÑO
+            </span>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-black text-white uppercase tracking-tight">
+                Estadísticas de <span className="text-purple-accent">Campeones</span>
+              </h1>
+            </div>
+          </div>
+
+          {lastUpdated && lastUpdated !== '-' && (
+            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-mono select-none">
+              ACTUALIZADO: <span className="text-[#9055ff] font-bold">{timeAgoText}</span>
+            </div>
+          )}
+        </header>
+
+        {/* Contenido Principal Centrado */}
+        <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
+          
+          {/* Fila de Filtros y Buscador */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
+            {/* Filtros de Línea */}
+            <div className="flex flex-wrap gap-2">
+              {["ALL", "TOP", "JNG", "MID", "ADC", "SUP"].map((lane) => {
+                const isActive = selectedLane === lane;
+                const mappedIcon = posMapping[getRoleKey(lane)];
+                
+                return (
+                  <button
+                    key={lane}
+                    onClick={() => setSelectedLane(lane)}
+                    className={`flex items-center gap-2 px-4 py-2 border rounded-sm font-black text-xs tracking-widest uppercase transition-all duration-200 cursor-pointer active:scale-95
+                      ${isActive 
+                        ? "bg-purple-accent/20 border-purple-accent text-white shadow-[0_0_15px_rgba(144,85,255,0.15)]" 
+                        : "bg-panel-warm border-border-warm text-slate-400 hover:text-slate-200 hover:border-border-warm-hover"
+                      }`}
+                  >
+                    {mappedIcon && (
+                      <img
+                        src={`${POS_BASE}${mappedIcon}`}
+                        className="w-4 h-4 object-contain"
+                        style={{
+                          filter: isActive 
+                            ? 'hue-rotate(200deg) saturate(180%) brightness(1.4)' 
+                            : 'grayscale(60%) opacity(0.6)'
+                        }}
+                        alt={lane}
+                      />
+                    )}
+                    {lane === "ALL" ? "TODOS" : posLabels[getRoleKey(lane)]?.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Buscador de Campeones */}
+            <div className="relative w-full md:w-72">
+              <input
+                type="text"
+                placeholder="BUSCAR CAMPEÓN..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#060608] border border-border-warm rounded-sm px-4 py-2 text-xs font-black tracking-wider text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-accent focus:ring-1 focus:ring-purple-accent/30 transition-all duration-300 uppercase"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-wider"
+                >
+                  Limpiar
+                </button>
               )}
             </div>
           </div>
 
-          {/* Buscador de Campeones */}
-          <div className="relative w-full md:w-80">
-            <input
-              type="text"
-              placeholder="BUSCAR CAMPEÓN..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-input-warm border border-border-warm rounded-sm px-4 py-2.5 text-sm font-extrabold tracking-wider text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-accent focus:ring-1 focus:ring-purple-accent/30 transition-all duration-300 uppercase"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-black"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-        </div>
+          {/* Tabla de Estadísticas */}
+          <div className="bg-panel-warm border border-border-warm rounded-sm tech-corners shadow-xl overflow-hidden flex flex-col">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse select-none">
+                <thead>
+                  <tr className="border-b border-border-warm text-slate-300 font-extrabold uppercase text-[10px] tracking-wider bg-black/50">
+                    <th className="py-3 px-4 text-center w-14">#</th>
+                    <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('name')}>
+                      Campeón {renderSortIndicator('name')}
+                    </th>
+                    <th className="py-3 px-4">Línea Principal</th>
+                    <th className="py-3 px-4 text-center w-24 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('tier')}>
+                      Tier {renderSortIndicator('tier')}
+                    </th>
+                    <th className="py-3 px-4 text-center cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('winrate')}>
+                      Winrate {renderSortIndicator('winrate')}
+                    </th>
+                    <th className="py-3 px-4 text-center cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('pickrate')}>
+                      Pickrate {renderSortIndicator('pickrate')}
+                    </th>
+                    <th className="py-3 px-4 text-center">Partidas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {processedChampions.length > 0 ? (
+                    processedChampions.map((champ, index) => {
+                      const tierInfo = getTierInfo(champ.meta?.tier || 5);
+                      const isPositiveWin = (champ.meta?.winRate || 50.0) >= 50.0;
+                      
+                      return (
+                        <tr 
+                          key={champ.id}
+                          onClick={() => {
+                            const nameSlug = champ.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+                            const laneParam = champ.lane?.toLowerCase() || "unknown";
+                            window.location.href = `/champion/${nameSlug}/buildbuild?lane=${laneParam}`;
+                          }}
+                          className="border-b border-border-warm/60 hover:bg-white/[0.02] transition-colors duration-100 cursor-pointer group text-slate-300 font-bold text-xs"
+                        >
+                          {/* Rango */}
+                          <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">
+                            {index + 1}
+                          </td>
 
-        {/* Filtros de Línea */}
-        <div className="flex flex-wrap gap-2 mb-6 select-none">
-          {["ALL", "TOP", "JNG", "MID", "ADC", "SUP"].map((lane) => {
-            const isActive = selectedLane === lane;
-            const mappedIcon = posMapping[getRoleKey(lane)];
-            
-            return (
-              <button
-                key={lane}
-                onClick={() => setSelectedLane(lane)}
-                className={`flex items-center gap-2 px-5 py-2.5 border rounded-sm font-black text-xs tracking-widest uppercase transition-all duration-200 cursor-pointer active:scale-95
-                  ${isActive 
-                    ? "bg-purple-accent/20 border-purple-accent text-white shadow-[0_0_15px_rgba(144,85,255,0.15)]" 
-                    : "bg-panel-warm border-border-warm text-slate-400 hover:text-slate-200 hover:border-border-warm-hover"
-                  }`}
-              >
-                {mappedIcon && (
-                  <img
-                    src={`${POS_BASE}${mappedIcon}`}
-                    className="w-4 h-4 object-contain"
-                    style={{
-                      filter: isActive 
-                        ? 'hue-rotate(200deg) saturate(180%) brightness(1.4)' 
-                        : 'grayscale(60%) opacity(0.6)'
-                    }}
-                    alt={lane}
-                  />
-                )}
-                {lane === "ALL" ? "TODOS" : posLabels[getRoleKey(lane)]?.toUpperCase()}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tabla de Estadísticas */}
-        <div className="bg-panel-warm border border-border-warm rounded-sm tech-corners shadow-xl overflow-hidden flex flex-col">
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse select-none">
-              <thead>
-                <tr className="border-b border-border-warm text-slate-300 font-extrabold uppercase text-xs tracking-wider bg-black/50">
-                  <th className="py-4 px-6 text-center w-16">#</th>
-                  <th className="py-4 px-6 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('name')}>
-                    Campeón {renderSortIndicator('name')}
-                  </th>
-                  <th className="py-4 px-6">Línea Principal</th>
-                  <th className="py-4 px-6 text-center w-24 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('tier')}>
-                    Tier {renderSortIndicator('tier')}
-                  </th>
-                  <th className="py-4 px-6 text-center cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('winrate')}>
-                    Winrate {renderSortIndicator('winrate')}
-                  </th>
-                  <th className="py-4 px-6 text-center cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('pickrate')}>
-                    Pickrate {renderSortIndicator('pickrate')}
-                  </th>
-                  <th className="py-4 px-6 text-center">Partidas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedChampions.length > 0 ? (
-                  processedChampions.map((champ, index) => {
-                    const tierInfo = getTierInfo(champ.meta?.tier || 5);
-                    const isPositiveWin = (champ.meta?.winRate || 50.0) >= 50.0;
-                    
-                    return (
-                      <tr 
-                        key={champ.id}
-                        onClick={() => {
-                          const nameSlug = champ.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-                          const laneParam = champ.lane?.toLowerCase() || "unknown";
-                          window.location.href = `/champion/${nameSlug}/buildbuild?lane=${laneParam}`;
-                        }}
-                        className="border-b border-border-warm/60 hover:bg-white/[0.01] transition-colors duration-100 cursor-pointer group text-slate-300 font-semibold text-sm"
-                      >
-                        {/* Rango */}
-                        <td className="py-3.5 px-6 text-center font-mono font-bold text-slate-400">
-                          {index + 1}
-                        </td>
-
-                        {/* Campeón */}
-                        <td className="py-3.5 px-6">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${champ.id}.png`}
-                              className="w-9 h-9 rounded-sm border border-border-warm group-hover:border-purple-accent/60 transition-colors object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/favicon.svg";
-                              }}
-                              alt={champ.name}
-                            />
-                            <span className="font-extrabold text-[14px] text-slate-200 group-hover:text-white transition-colors uppercase tracking-wide">
-                              {champ.name}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Línea */}
-                        <td className="py-3.5 px-6">
-                          {champ.lane && posMapping[champ.lane.toUpperCase()] ? (
-                            <div className="flex items-center gap-2">
+                          {/* Campeón */}
+                          <td className="py-2.5 px-4">
+                            <div className="flex items-center gap-3">
                               <img
-                                src={`${POS_BASE}${posMapping[champ.lane.toUpperCase()]}`}
-                                className="w-4.5 h-4.5 object-contain brightness-110"
-                                style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
-                                alt={champ.lane}
+                                src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${champ.id}.png`}
+                                className="w-8 h-8 rounded-sm border border-border-warm group-hover:border-purple-accent/60 transition-colors object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/favicon.svg";
+                                }}
+                                alt={champ.name}
                               />
-                              <span className="text-xs font-bold uppercase text-slate-300 tracking-wider">
-                                {posLabels[champ.lane.toUpperCase()]}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-500">
-                                ({champ.lanesPickrate?.[champ.lane.toUpperCase()] ? `${champ.lanesPickrate[champ.lane.toUpperCase()].toFixed(1)}%` : '100%'})
+                              <span className="font-extrabold text-xs text-slate-200 group-hover:text-white transition-colors uppercase tracking-wide">
+                                {champ.name}
                               </span>
                             </div>
-                          ) : (
-                            <span className="text-slate-500 font-extrabold text-[10px] tracking-widest uppercase">UNKNOWN</span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* Tier */}
-                        <td className="py-3.5 px-6 text-center">
-                          <span className={`inline-block px-3 py-0.5 border text-xs font-black rounded-sm shadow-inner uppercase tracking-wider ${tierInfo.color}`}>
-                            {tierInfo.label}
-                          </span>
-                        </td>
+                          {/* Línea */}
+                          <td className="py-2.5 px-4">
+                            {champ.lane && posMapping[champ.lane.toUpperCase()] ? (
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={`${POS_BASE}${posMapping[champ.lane.toUpperCase()]}`}
+                                  className="w-4 h-4 object-contain brightness-110"
+                                  style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                  alt={champ.lane}
+                                />
+                                <span className="text-[11px] font-bold uppercase text-slate-300 tracking-wider">
+                                  {posLabels[champ.lane.toUpperCase()]}
+                                </span>
+                                <span className="text-[9px] font-mono text-slate-550">
+                                  ({champ.lanesPickrate?.[champ.lane.toUpperCase()] ? `${champ.lanesPickrate[champ.lane.toUpperCase()].toFixed(1)}%` : '100%'})
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-555 font-extrabold text-[9px] tracking-widest uppercase">UNKNOWN</span>
+                            )}
+                          </td>
 
-                        {/* Winrate */}
-                        <td className="py-3.5 px-6 text-center font-mono font-extrabold">
-                          <span className={isPositiveWin ? "text-emerald-400" : "text-red-400"}>
-                            {(champ.meta?.winRate || 50.0).toFixed(2)}%
-                          </span>
-                        </td>
+                          {/* Tier */}
+                          <td className="py-2.5 px-4 text-center">
+                            <span className={`inline-block px-2.5 py-0.5 border text-[10px] font-black rounded-sm shadow-inner uppercase tracking-wider ${tierInfo.color}`}>
+                              {tierInfo.label}
+                            </span>
+                          </td>
 
-                        {/* Pickrate */}
-                        <td className="py-3.5 px-6 text-center font-mono font-extrabold text-slate-300">
-                          {champ.pickrate}%
-                        </td>
+                          {/* Winrate */}
+                          <td className="py-2.5 px-4 text-center font-mono font-extrabold">
+                            <span className={isPositiveWin ? "text-emerald-400" : "text-red-400"}>
+                              {(champ.meta?.winRate || 50.0).toFixed(2)}%
+                            </span>
+                          </td>
 
-                        {/* Partidas */}
-                        <td className="py-3.5 px-6 text-center font-mono text-slate-400">
-                          {champ.matches.toLocaleString()}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="py-12 px-6 text-center text-slate-500 tracking-widest uppercase text-sm font-bold">
-                      No se encontraron campeones con los filtros aplicados.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                          {/* Pickrate */}
+                          <td className="py-2.5 px-4 text-center font-mono font-extrabold text-slate-300">
+                            {champ.pickrate}%
+                          </td>
+
+                          {/* Partidas */}
+                          <td className="py-2.5 px-4 text-center font-mono text-slate-400">
+                            {champ.matches.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-12 px-6 text-center text-slate-500 tracking-widest uppercase text-sm font-bold">
+                        No se encontraron campeones con los filtros aplicados.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1095,7 +1101,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
         </div>
 
         {/* Cabecera Premium */}
-        <div className="relative border border-border-warm rounded-sm p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 tech-corners shadow-2xl min-h-[150px]">
+        <div className="relative border border-border-warm rounded-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 tech-corners shadow-2xl min-h-[140px]">
           {/* Fondo Splash Art Blurred */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none scale-105"
@@ -1180,8 +1186,10 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           </div>
         </div>
 
-        {/* Pestañas de Múltiples Builds */}
-        {buildsList.length > 1 && (
+        {/* Contenido Principal Centrado */}
+        <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
+          {/* Pestañas de Múltiples Builds */}
+          {buildsList.length > 1 && (
           <div className="flex flex-wrap gap-3 mb-6 select-none">
             {buildsList.map((b: any, idx: number) => {
               const isActive = activeBuildIdx === idx;
@@ -1242,7 +1250,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
             
             {/* Sección 1: Runas (Izquierda) */}
-            <div className="xl:col-span-5 flex flex-row flex-wrap sm:flex-nowrap gap-4 items-start pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-4 justify-center">
+            <div className="xl:col-span-4 flex flex-row gap-16 items-start pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-6 justify-center">
               {primaryStyleId && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-black/60 border border-border-warm/60 flex items-center justify-center p-1.5" title={RUNE_TREES[primaryStyleId]?.name}>
@@ -1253,21 +1261,15 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
               )}
 
               {secondaryStyleId && (
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-1">
                   <div className="w-8 h-8 rounded-full bg-black/60 border border-border-warm/60 flex items-center justify-center p-1.5" title={RUNE_TREES[secondaryStyleId]?.name}>
                     {RUNE_TREES[secondaryStyleId] && <img src={RUNE_TREES[secondaryStyleId].icon} className="w-full h-full object-contain" alt="secondary tree" />}
                   </div>
                   <RuneTree styleId={secondaryStyleId} selections={secondarySelections} isPrimary={false} />
+                  <div className="w-full border-t border-border-warm/40 my-2"></div>
+                  <ShardsTree selections={shards} />
                 </div>
               )}
-
-              {/* Shards Column */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 flex items-center justify-center text-slate-500 font-black text-[10px] uppercase tracking-wider">
-                  Shards
-                </div>
-                <ShardsTree selections={shards} />
-              </div>
             </div>
 
             {/* Sección 2: Hechizos, Habilidades e Importación (Medio) */}
@@ -1374,7 +1376,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
             </div>
 
             {/* Sección 3: Ruta de Objetos (Flowchart Derecha) */}
-            <div className="xl:col-span-5 flex flex-col md:flex-row items-center gap-6 xl:pl-4 overflow-x-auto min-h-[140px] w-full">
+            <div className="xl:col-span-6 flex flex-col md:flex-row items-center gap-6 xl:pl-6 overflow-x-auto min-h-[140px] w-full">
               
               {/* Subsección A: Botas e Inicial (Izquierda) */}
               <div className="flex flex-col gap-4 justify-center shrink-0 border-b md:border-b-0 md:border-r border-border-warm/30 pb-4 md:pb-0 md:pr-6 select-none w-full md:w-auto">
@@ -1710,6 +1712,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
         </div>
 
       </div>
+    </div>
     );
   };
 

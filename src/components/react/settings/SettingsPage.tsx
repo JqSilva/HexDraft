@@ -67,7 +67,7 @@ export const SettingsPage = () => {
         const weights: Record<string, number> = {};
         Object.keys(engineWeights).forEach((key) => {
             const val = formData.get(`weight_${key}`);
-            weights[key] = parseFloat(val as string) || 0;
+            weights[key] = val !== null ? parseFloat(val as string) || 0 : engineWeights[key];
         });
 
         try {
@@ -104,16 +104,16 @@ export const SettingsPage = () => {
     };
 
     const getConcurrencyMessage = () => {
-        if (puppeteerConcurrency <= 2) return { text: "Seguro y estable. Ideal para conexiones o proxies sencillos.", color: "text-slate-500" };
-        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Súper rápido. Opción recomendada para FlareSolverr.", color: "text-purple-400" };
-        return { text: "Extremo. Sincronización ultra-rápida. Requiere buena capacidad en tu FlareSolverr local.", color: "text-red-500 font-bold" };
+        if (puppeteerConcurrency <= 2) return { text: "Seguro y estable. Ideal para conexiones sencillas.", color: "text-slate-500 font-mono text-[9px]" };
+        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Súper rápido. Recomendado para FlareSolverr.", color: "text-purple-400 font-mono text-[9px]" };
+        return { text: "Extremo. Requiere alta capacidad en tu FlareSolverr local.", color: "text-red-500 font-bold font-mono text-[9px]" };
     };
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[500px] text-slate-300">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#9055ff] mb-4"></div>
-                <p className="uppercase tracking-[0.2em] text-[10px] font-bold">Cargando Ajustes...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-accent border-t-transparent mb-4"></div>
+                <p className="uppercase tracking-[0.3em] text-[9px] font-black text-slate-500">Cargando Ajustes...</p>
             </div>
         );
     }
@@ -121,236 +121,234 @@ export const SettingsPage = () => {
     const concurrencyMsg = getConcurrencyMessage();
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-6 w-full text-slate-200 mt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <form onSubmit={handleSave} className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
+            <form onSubmit={handleSave} className="w-full flex flex-col">
                 
-                {/* Cabecera sin fondo de tarjeta */}
-                <header className="border-b border-border-warm/30 pb-5">
-                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white">
-                        Panel de <span className="text-[#9055ff]">Ajustes</span>
-                    </h1>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-extrabold mt-1">
-                        Configuración del motor HexDraft & Automatización
-                    </p>
+                {/* Cabecera Táctica (Ocupa todo el ancho) */}
+                <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
+                    <div>
+                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
+                            SISTEMA // PANEL DE CONFIGURACIÓN GLOBAL
+                        </span>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-xl font-black text-white uppercase tracking-tight">
+                                Panel de <span className="text-purple-accent">Ajustes</span>
+                            </h1>
+                        </div>
+                    </div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                    {/* Columna Izquierda: Integración y Rendimiento (8 col) */}
-                    <div className="lg:col-span-8 flex flex-col gap-6">
-                        
-                        {/* Tarjeta 1: Integración con League & LCU */}
-                        <div className="bg-[#0c0c10] border border-border-warm/40 p-6 rounded-sm tech-corners shadow-xl flex flex-col gap-6">
-                            <div>
-                                <h3 className="text-sm text-[#9055ff] font-black uppercase tracking-[0.2em] italic mb-1">
-                                    Integración del Cliente (LCU)
-                                </h3>
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold">
-                                    Enlace activo con el juego y automatización
-                                </p>
+                {/* Contenido Principal Centrado */}
+                <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                        {/* Columna Izquierda: Integración y Rendimiento (8 col) */}
+                        <div className="lg:col-span-8 flex flex-col gap-6">
+                            
+                            {/* Tarjeta 1: Integración con League & LCU */}
+                            <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col gap-6">
+                                <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+                                
+                                <div>
+                                    <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
+                                        Integración del Cliente (LCU)
+                                    </h3>
+                                    <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
+                                        Enlace activo con el juego y automatización
+                                    </p>
+                                </div>
+
+                                {/* Ruta de LoL */}
+                                <div className="space-y-2.5">
+                                    <label className="block text-[9.5px] uppercase font-black tracking-widest text-slate-300">
+                                        Ruta de League of Legends
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        name="lolPath"
+                                        defaultValue={lolPath} 
+                                        placeholder="C:\Riot Games\League of Legends\lockfile" 
+                                        className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-3 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                    />
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed">
+                                        Indica la ruta absoluta hacia el archivo <code className="text-white lowercase font-mono">lockfile</code> de Riot Games para habilitar la lectura de fases en vivo.
+                                    </p>
+                                </div>
+
+                                {/* Toggles de Auto-Pick / Auto-Ban */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                        ${autoPick 
+                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]' 
+                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Pick</span>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Fija automáticamente el recomendado</span>
+                                        </div>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={autoPick} 
+                                            onChange={(e) => setAutoPick(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${autoPick ? 'bg-purple-accent' : 'bg-slate-800'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-md ${autoPick ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                    </label>
+
+                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                        ${autoBan 
+                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]' 
+                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Ban</span>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Banea automáticamente la sugerencia</span>
+                                        </div>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={autoBan} 
+                                            onChange={(e) => setAutoBan(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${autoBan ? 'bg-purple-accent' : 'bg-slate-800'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-md ${autoBan ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
 
-                            {/* Ruta de LoL */}
-                            <div className="space-y-2.5">
-                                <label className="block text-[10px] uppercase font-black tracking-widest text-slate-300">Ruta de League of Legends</label>
-                                <input 
-                                    type="text" 
-                                    name="lolPath"
-                                    defaultValue={lolPath} 
-                                    placeholder="C:\Riot Games\League of Legends\lockfile" 
-                                    className="w-full bg-[#111117] border border-[#23232c] focus:border-[#9055ff]/80 text-[11px] font-mono text-slate-200 rounded-sm px-4 py-3 transition-colors focus:outline-none"
-                                />
-                                <p className="text-[9px] text-slate-500 font-medium leading-relaxed uppercase tracking-wide">
-                                    Indica la ruta absoluta hacia el archivo <code className="text-white lowercase">lockfile</code> de Riot Games para habilitar la lectura de fases en vivo.
-                                </p>
-                            </div>
+                            {/* Tarjeta 2: Tiempos y Concurrencia */}
+                            <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl relative overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="absolute top-0 right-0 h-32 w-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                            {/* Toggles de Auto-Pick / Auto-Ban */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                <div className="flex items-center justify-between p-4 bg-black/20 border border-[#23232c] rounded-sm hover:border-[#9055ff]/30 transition-all duration-300">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Auto-Pick</span>
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-wide mt-0.5">Fija automáticamente el recomendado</span>
+                                {/* Segundos de autoejecución */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
+                                        <label className="text-purple-accent tracking-widest font-black">Auto-Acción a falta de</label>
+                                        <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoExecuteSeconds}s</span>
                                     </div>
                                     <input 
-                                        type="checkbox" 
-                                        checked={autoPick} 
-                                        onChange={(e) => setAutoPick(e.target.checked)}
-                                        className="w-4.5 h-4.5 text-[#9055ff] border-[#23232c] bg-[#111117] focus:ring-0 rounded cursor-pointer transition-colors"
+                                        type="range" 
+                                        min="1" 
+                                        max="10" 
+                                        step="0.5" 
+                                        value={autoExecuteSeconds} 
+                                        onChange={(e) => setAutoExecuteSeconds(parseFloat(e.target.value))}
+                                        className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
                                     />
+                                    <p className="text-[9px] text-slate-500 font-bold tracking-wider leading-relaxed uppercase">
+                                        Tiempo restante en la fase para que el bot tome control.
+                                    </p>
                                 </div>
-                                <div className="flex items-center justify-between p-4 bg-black/20 border border-[#23232c] rounded-sm hover:border-[#9055ff]/30 transition-all duration-300">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Auto-Ban</span>
-                                        <span className="text-[9px] text-slate-500 uppercase tracking-wide mt-0.5">Banea automáticamente la sugerencia</span>
+
+                                {/* Concurrencia de Scraper */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
+                                        <label className="text-purple-accent tracking-widest font-black">Hilos simultáneos (Scraper)</label>
+                                        <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
                                     </div>
                                     <input 
-                                        type="checkbox" 
-                                        checked={autoBan} 
-                                        onChange={(e) => setAutoBan(e.target.checked)}
-                                        className="w-4.5 h-4.5 text-[#9055ff] border-[#23232c] bg-[#111117] focus:ring-0 rounded cursor-pointer transition-colors"
+                                        type="range" 
+                                        min="1" 
+                                        max="6" 
+                                        step="1" 
+                                        value={puppeteerConcurrency} 
+                                        onChange={(e) => setPuppeteerConcurrency(parseInt(e.target.value))}
+                                        className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
                                     />
+                                    <p className={`uppercase tracking-wider leading-relaxed ${concurrencyMsg.color}`}>
+                                        {concurrencyMsg.text}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tarjeta 2: Tiempos y Concurrencia */}
-                        <div className="bg-[#0c0c10] border border-border-warm/40 p-6 rounded-sm tech-corners shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Segundos de autoejecución */}
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
-                                    <label className="text-[#9055ff] tracking-widest">Auto-Acción a falta de</label>
-                                    <span className="font-mono text-white bg-[#1a1a24] px-2.5 py-0.5 rounded-sm">{autoExecuteSeconds}s</span>
+                        {/* Columna Derecha: Periodicidad de Sincronización (4 col) */}
+                        <div className="lg:col-span-4 flex flex-col gap-6">
+                            <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+                                
+                                <div>
+                                    <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
+                                        Sincronización
+                                    </h3>
+                                    <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
+                                        Intervalos de actualización del meta
+                                    </p>
                                 </div>
-                                <input 
-                                    type="range" 
-                                    min="1" 
-                                    max="10" 
-                                    step="0.5" 
-                                    value={autoExecuteSeconds} 
-                                    onChange={(e) => setAutoExecuteSeconds(parseFloat(e.target.value))}
-                                    className="w-full h-1 bg-[#1a1a24] rounded-lg appearance-none cursor-pointer accent-[#9055ff]"
-                                />
-                                <p className="text-[9px] text-slate-500 font-medium tracking-wide leading-relaxed uppercase">
-                                    Tiempo restante en la fase para que el bot tome control.
-                                </p>
-                            </div>
 
-                            {/* Concurrencia de Scraper */}
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
-                                    <label className="text-[#9055ff] tracking-widest">Hilos simultáneos (FlareSolverr)</label>
-                                    <span className="font-mono text-white bg-[#1a1a24] px-2.5 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="1" 
-                                    max="6" 
-                                    step="1" 
-                                    value={puppeteerConcurrency} 
-                                    onChange={(e) => setPuppeteerConcurrency(parseInt(e.target.value))}
-                                    className="w-full h-1 bg-[#1a1a24] rounded-lg appearance-none cursor-pointer accent-[#9055ff]"
-                                />
-                                <p className={`text-[9px] font-medium tracking-wide leading-relaxed uppercase ${concurrencyMsg.color}`}>
-                                    {concurrencyMsg.text}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                                <div className="space-y-5 flex-1 flex flex-col justify-center">
+                                    <div className="space-y-2">
+                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Meta & Builds</span>
+                                        <select 
+                                            value={syncPeriodDays}
+                                            onChange={(e) => setSyncPeriodDays(parseInt(e.target.value))}
+                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                        >
+                                            <option value={1}>Cada 1 día</option>
+                                            <option value={3}>Cada 3 días (Recomendado)</option>
+                                            <option value={5}>Cada 5 días</option>
+                                            <option value={7}>Cada 7 días (1 semana)</option>
+                                            <option value={15}>Cada 15 días</option>
+                                        </select>
+                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                            Tiempo antes de obligar una recarga de builds al arrancar.
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Mapeo de Posiciones (Lanes)</span>
+                                        <select 
+                                            value={laneSyncPeriodDays}
+                                            onChange={(e) => setLaneSyncPeriodDays(parseInt(e.target.value))}
+                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                        >
+                                            <option value={15}>Cada 15 días</option>
+                                            <option value={21}>Cada 21 días (3 semanas)</option>
+                                            <option value={30}>Cada 30 días (1 mes - Recomendado)</option>
+                                            <option value={60}>Cada 60 días (2 meses)</option>
+                                        </select>
+                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                            Tiempo antes de forzar el mapeo de carriles preferidos.
+                                        </span>
+                                    </div>
 
-                    {/* Columna Derecha: Periodicidad de Sincronización (4 col) */}
-                    <div className="lg:col-span-4 flex flex-col gap-6">
-                        <div className="bg-[#0c0c10] border border-border-warm/40 p-6 rounded-sm tech-corners shadow-xl flex-1 flex flex-col justify-between gap-6">
-                            <div>
-                                <h3 className="text-sm text-[#9055ff] font-black uppercase tracking-[0.2em] italic mb-1">
-                                    Sincronización
-                                </h3>
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold">
-                                    Intervalos de actualización del meta
-                                </p>
-                            </div>
-
-                            <div className="space-y-4 flex-1 flex flex-col justify-center">
-                                <div className="space-y-2">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-300 tracking-wider">Meta & Builds</span>
-                                    <select 
-                                        value={syncPeriodDays}
-                                        onChange={(e) => setSyncPeriodDays(parseInt(e.target.value))}
-                                        className="w-full bg-[#111117] border border-[#23232c] text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-[#9055ff]/80 cursor-pointer"
-                                    >
-                                        <option value={1}>Cada 1 día</option>
-                                        <option value={3}>Cada 3 días (Recomendado)</option>
-                                        <option value={5}>Cada 5 días</option>
-                                        <option value={7}>Cada 7 días (1 semana)</option>
-                                        <option value={15}>Cada 15 días</option>
-                                    </select>
-                                    <span className="block text-[9px] text-slate-500 font-medium uppercase tracking-wide">
-                                        Tiempo antes de obligar una recarga de builds al arrancar.
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-300 tracking-wider">Mapeo de Posiciones (Lanes)</span>
-                                    <select 
-                                        value={laneSyncPeriodDays}
-                                        onChange={(e) => setLaneSyncPeriodDays(parseInt(e.target.value))}
-                                        className="w-full bg-[#111117] border border-[#23232c] text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-[#9055ff]/80 cursor-pointer"
-                                    >
-                                        <option value={15}>Cada 15 días</option>
-                                        <option value={21}>Cada 21 días (3 semanas)</option>
-                                        <option value={30}>Cada 30 días (1 mes - Recomendado)</option>
-                                        <option value={60}>Cada 60 días (2 meses)</option>
-                                    </select>
-                                    <span className="block text-[9px] text-slate-500 font-medium uppercase tracking-wide">
-                                        Tiempo antes de forzar el mapeo de carriles preferidos.
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    <span className="block text-[10px] uppercase font-bold text-slate-300 tracking-wider">Frecuencia de actualizacion del meta</span>
-                                    <select 
-                                        value={metaSyncFrequency}
-                                        onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
-                                        className="w-full bg-[#111117] border border-[#23232c] text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-[#9055ff]/80 cursor-pointer"
-                                    >
-                                        <option value={0}>Desactivado</option>
-                                        <option value={-1}>Al iniciar el programa</option>
-                                        <option value={2}>Cada 2 horas</option>
-                                        <option value={4}>Cada 4 horas</option>
-                                        <option value={12}>Cada 12 horas</option>
-                                        <option value={24}>Cada 24 horas</option>
-                                    </select>
-                                    <span className="block text-[9px] text-slate-500 font-medium uppercase tracking-wide">
-                                        Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
-                                    </span>
+                                    <div className="space-y-2">
+                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider font-sans">Frecuencia Sincronización Ligera</span>
+                                        <select 
+                                            value={metaSyncFrequency}
+                                            onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
+                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                        >
+                                            <option value={0}>Desactivado</option>
+                                            <option value={-1}>Al iniciar el programa</option>
+                                            <option value={2}>Cada 2 horas</option>
+                                            <option value={4}>Cada 4 horas</option>
+                                            <option value={12}>Cada 12 horas</option>
+                                            <option value={24}>Cada 24 horas</option>
+                                        </select>
+                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                            Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Tarjeta 4: Coeficientes del Motor de Recomendación */}
-                <div className="bg-[#0c0c10] border border-border-warm/40 p-6 rounded-sm tech-corners shadow-2xl relative overflow-hidden mt-2">
-                    <div className="absolute top-0 right-0 h-32 w-32 bg-[#9055ff]/5 rounded-full blur-3xl pointer-events-none" />
-                    
-                    <div className="mb-6">
-                        <h3 className="text-sm text-cyan-400 font-black uppercase tracking-[0.2em] italic mb-1">
-                            Coeficientes del Motor de Recomendación
-                        </h3>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold">
-                            Pesos relativos asignados a cada factor de evaluación algorítmica
-                        </p>
+                    {/* Botón Guardar en contenedor transparente */}
+                    <div className="flex justify-end mt-4 pt-4 border-t border-border-warm">
+                        <button 
+                            type="submit" 
+                            disabled={saving}
+                            className={`px-8 py-3.5 rounded-sm text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 active:scale-95 ${
+                                saveSuccess 
+                                ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500'
+                                : 'bg-purple-accent hover:bg-purple-accent/90 text-white shadow-[0_0_15px_rgba(144,85,255,0.25)] border border-purple-accent'
+                            }`}
+                        >
+                            {saving ? 'Guardando...' : (saveSuccess ? '✓ Ajustes Guardados' : 'Guardar Ajustes')}
+                        </button>
                     </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {Object.entries(engineWeights).map(([key, val]: [string, any]) => (
-                            <div key={key} className="bg-[#111117] border border-[#23232c] p-4 rounded-sm hover:border-cyan-500/30 transition-all duration-300 group">
-                                <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider font-mono mb-2 group-hover:text-cyan-400 transition-colors">
-                                    {key.replace('_', ' ')}
-                                </span>
-                                <input 
-                                    type="number" 
-                                    step="0.05"
-                                    min="0"
-                                    name={`weight_${key}`}
-                                    defaultValue={val}
-                                    className="w-full bg-[#0a0a0d] border border-[#23232c] focus:border-cyan-500/80 text-xs font-mono font-bold text-white px-3 py-2 rounded-sm focus:outline-none transition-colors"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Botón Guardar en contenedor transparente */}
-                <div className="flex justify-end mt-4 pt-4 border-t border-border-warm/30">
-                    <button 
-                        type="submit" 
-                        disabled={saving}
-                        className={`px-8 py-3.5 rounded-sm text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 active:scale-95 ${
-                            saveSuccess 
-                            ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]'
-                            : 'bg-[#9055ff] hover:bg-[#a26eff] text-white shadow-[0_0_15px_rgba(144,85,255,0.3)]'
-                        }`}
-                    >
-                        {saving ? 'Guardando...' : (saveSuccess ? '✓ Ajustes Guardados' : 'Guardar Ajustes')}
-                    </button>
                 </div>
             </form>
         </div>
