@@ -9,7 +9,7 @@ interface DraftSettingsProps {
 
 export const DraftSettings = memo(({ autoPick, setAutoPick, autoBan, setAutoBan }: DraftSettingsProps) => {
     return (
-        <div className="flex justify-center gap-12 mt-8 z-50 pt-8 border-t border-border-warm/50">
+        <div className="flex justify-center gap-12 mt-4 z-50 pt-3 border-t border-border-warm/50 shrink-0">
             <label className="flex items-center gap-3 cursor-pointer group select-none">
                 <input
                     type="checkbox"

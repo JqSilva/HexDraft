@@ -583,7 +583,7 @@ export async function scrapeSingleChampion(
       };
 
       // Guardar en SQLite en tiempo real
-      const currentChampStmt = dbInstance.prepare('SELECT lane, tier, win_rate, play_lanes, lanes_pickrate, lanes_stats FROM champions WHERE id = ?');
+      const currentChampStmt = dbInstance.prepare('SELECT * FROM champions WHERE id = ?');
       const current = currentChampStmt.get(champId) as any;
 
       championsRepo.saveChampion({
@@ -592,13 +592,22 @@ export async function scrapeSingleChampion(
         lane: current?.lane || cData.lane || "UNKNOWN",
         tier: current?.tier || 5,
         win_rate: current?.win_rate || 50.0,
-        scaling_type: cData.scalingType || "Mid",
+        scaling_type: CHAMPIONS_DB[champId]?.scalingType || current?.scaling_type || cData.scalingType || "Mid",
         damage_type: CHAMPIONS_DB[champId]?.damageType || "Adaptive",
         class: CHAMPIONS_DB[champId]?.class || "Unknown",
         is_frontline: CHAMPIONS_DB[champId]?.isFrontline ? 1 : 0,
         is_hypercarry: CHAMPIONS_DB[champId]?.isHypercarry ? 1 : 0,
         has_hard_cc: CHAMPIONS_DB[champId]?.hasHardCC ? 1 : 0,
         tags: JSON.stringify(CHAMPIONS_DB[champId]?.tags || []),
+        tactic_role: CHAMPIONS_DB[champId]?.tacticRole || current?.tactic_role,
+        mobility: CHAMPIONS_DB[champId]?.mobility || current?.mobility,
+        target_priority: CHAMPIONS_DB[champId]?.targetPriority || current?.target_priority,
+        team_needs: JSON.stringify(CHAMPIONS_DB[champId]?.teamNeeds || JSON.parse(current?.team_needs || '[]')),
+        team_provides: JSON.stringify(CHAMPIONS_DB[champId]?.teamProvides || JSON.parse(current?.team_provides || '[]')),
+        has_shield: CHAMPIONS_DB[champId]?.hasShield !== undefined ? (CHAMPIONS_DB[champId].hasShield ? 1 : 0) : current?.has_shield,
+        has_sustain: CHAMPIONS_DB[champId]?.hasSustain !== undefined ? (CHAMPIONS_DB[champId].hasSustain ? 1 : 0) : current?.has_sustain,
+        lane_phase: CHAMPIONS_DB[champId]?.lanePhase || current?.lane_phase,
+        resource_dependency: CHAMPIONS_DB[champId]?.resourceDependency || current?.resource_dependency,
         play_lanes: current?.play_lanes || "[]",
         lanes_pickrate: current?.lanes_pickrate || "{}",
         lanes_stats: current?.lanes_stats || "{}"

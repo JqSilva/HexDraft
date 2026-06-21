@@ -12261,8 +12261,50 @@
         }
       ]
     },
-    "counters": [],
-    "godMatchups": [],
+    "counters": [
+      {
+        "name": "Xerath",
+        "winrate": "47.1%",
+        "goldDiff": "-450",
+        "xpDiff": "-310",
+        "csDiff": "-12.8",
+        "count": 620,
+        "laneTag": "Bad Lane",
+        "dominanceScore": 2.4
+      },
+      {
+        "name": "Ziggs",
+        "winrate": "48.2%",
+        "goldDiff": "-310",
+        "xpDiff": "-210",
+        "csDiff": "-9.5",
+        "count": 380,
+        "laneTag": "Bad Lane",
+        "dominanceScore": 1.8
+      }
+    ],
+    "godMatchups": [
+      {
+        "name": "Ryze",
+        "winrate": "54.5%",
+        "goldDiff": "420",
+        "xpDiff": "310",
+        "csDiff": "14.2",
+        "count": 450,
+        "laneTag": "Lane Counter",
+        "dominanceScore": 2.2
+      },
+      {
+        "name": "Azir",
+        "winrate": "53.8%",
+        "goldDiff": "380",
+        "xpDiff": "270",
+        "csDiff": "11.5",
+        "count": 850,
+        "laneTag": "Lane Counter",
+        "dominanceScore": 2
+      }
+    ],
     "synergies": {
       "JUNGLE": [
         {
@@ -227098,7 +227140,7 @@
     }
   },
   "Trundle": {
-    "lane": "JUNGLE",
+    "lane": "TOP",
     "tags": [
       "Fighter",
       "Tank"

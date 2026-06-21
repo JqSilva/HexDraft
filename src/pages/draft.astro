@@ -4,7 +4,7 @@ import { DraftPage } from '../components/react/DraftPage';
 ---
 
 <Layout title="HexDraft | LCU Real-Time">
-  <main class="w-full h-full p-4 md:p-6 flex flex-col relative text-slate-200 overflow-x-hidden font-sans">
+  <main class="w-full h-full p-4 md:p-6 flex flex-col relative text-slate-200 overflow-hidden font-sans">
     <!-- React toma el control de toda la lógica de la página -->
     <DraftPage client:only="react" />
   </main>
@@ -13,4 +13,10 @@ import { DraftPage } from '../components/react/DraftPage';
 <style is:global>
   /* Tus estilos hexágonales se quedan aquí porque son globales */
   .clip-hex { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+
+  /* Desactivar scroll global y en main-content wrapper para la página de Draft */
+  html, body, #app-layout, #main-content {
+    overflow: hidden !important;
+    height: 100% !important;
+  }
 </style>

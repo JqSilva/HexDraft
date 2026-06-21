@@ -255,9 +255,18 @@ try {
 }
 
 // Iniciar el planificador automático de meta-cache en segundo plano
-try {
-  const { startAutomaticMetaCacheScheduler } = await import('../services/sync.service.js');
-  startAutomaticMetaCacheScheduler();
-} catch (e) {
-  console.error('❌ Error al iniciar el planificador de meta-cache:', e);
-}
+// Usamos setTimeout para romper el interbloqueo circular de ESM (Top-Level Await circular deadlock)
+setTimeout(async () => {
+  try {
+    const isScript = process.argv[1]?.includes('migrate') || 
+                     process.argv[1]?.includes('test-engine') || 
+                     process.argv[1]?.includes('sync-champions-cdrag') ||
+                     process.argv[1]?.includes('update-champion-db');
+    if (isScript) return;
+
+    const { startAutomaticMetaCacheScheduler } = await import('../services/sync.service.js');
+    startAutomaticMetaCacheScheduler();
+  } catch (e) {
+    console.error('❌ Error al iniciar el planificador de meta-cache:', e);
+  }
+}, 500);

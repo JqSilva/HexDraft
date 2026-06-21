@@ -1,5 +1,6 @@
 // src/lib/scripts/sync-champions-cdrag.ts
 import { db } from '../db/sqlite.js';
+import { CHAMPIONS_DB } from '../data/championdb.js';
 
 // Listas curadas para inferencia precisa
 const CHAMPS_WITH_SHIELDS = new Set([
@@ -162,16 +163,18 @@ export async function syncChampionsSemanticData() {
     let count = 0;
     for (const champ of champions) {
       const name = champ.name;
-      const role = inferTacticRole(champ);
-      const mobility = inferMobility(name);
-      const targetPriority = inferTargetPriority(champ.class, role);
-      const resourceDependency = inferResourceDependency(name);
-      const teamNeeds = JSON.stringify(inferTeamNeeds(champ, role));
-      const teamProvides = JSON.stringify(inferTeamProvides(champ, role));
+      const baseChamp = CHAMPIONS_DB[champ.id];
       
-      const hasShield = CHAMPS_WITH_SHIELDS.has(name) ? 1 : 0;
-      const hasSustain = CHAMPS_WITH_SUSTAIN.has(name) ? 1 : 0;
-      const lanePhase = inferLanePhase(name, champ.scaling_type);
+      const role = baseChamp?.tacticRole || inferTacticRole(champ);
+      const mobility = baseChamp?.mobility || inferMobility(name);
+      const targetPriority = baseChamp?.targetPriority || inferTargetPriority(champ.class, role);
+      const resourceDependency = baseChamp?.resourceDependency || inferResourceDependency(name);
+      const teamNeeds = JSON.stringify(baseChamp?.teamNeeds || inferTeamNeeds(champ, role));
+      const teamProvides = JSON.stringify(baseChamp?.teamProvides || inferTeamProvides(champ, role));
+      
+      const hasShield = baseChamp?.hasShield !== undefined ? (baseChamp.hasShield ? 1 : 0) : (CHAMPS_WITH_SHIELDS.has(name) ? 1 : 0);
+      const hasSustain = baseChamp?.hasSustain !== undefined ? (baseChamp.hasSustain ? 1 : 0) : (CHAMPS_WITH_SUSTAIN.has(name) ? 1 : 0);
+      const lanePhase = baseChamp?.lanePhase || inferLanePhase(name, champ.scaling_type);
 
       updateStmt.run(
         role,

@@ -11,12 +11,13 @@ export interface ChampionData {
   tags: string[]; // Para sinergias (ej: ["Knockup", "Global", "Poke"])
 
   // --- CAMPOS NUEVOS ---
+  scalingType?: string,
   tacticRole?: 'engage' | 'peel' | 'poke' | 'dive' | 'burst' | 
               'splitpush' | 'skirmish' | 'teamfight' | 'siege' | 'utility';
   mobility?: 'low' | 'medium' | 'high';
   targetPriority?: 'squishy' | 'tank' | 'any' | 'healer';
   resourceDependency?: 'high' | 'medium' | 'low';
-  teamNeeds?: ('peel' | 'engage' | 'healing' | 'followup' | 'none')[];
+  teamNeeds?: ('peel' | 'engage' | 'healing' | 'followup' | 'frontline' | 'none')[];
   teamProvides?: ('engage' | 'peel' | 'healing' | 'shielding' | 'cc' | 'vision')[];
   hasShield?: boolean;
   hasSustain?: boolean;
@@ -24,7 +25,7 @@ export interface ChampionData {
 }
 
 export const CHAMPIONS_DB: Record<number, ChampionData> = {
-  "1": {
+    "1": {
     id: 1,
     name: "Annie",
     damageType: "AP",
@@ -33,9 +34,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","AOE","Stun"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "2": {
+    "2": {
     id: 2,
     name: "Olaf",
     damageType: "AD",
@@ -44,9 +50,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","EarlyGame","Slow"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Early",
   },
-  "3": {
+      "3": {
     id: 3,
     name: "Galio",
     damageType: "AP",
@@ -55,9 +66,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Global","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "4": {
+    "4": {
     id: 4,
     name: "Twisted Fate",
     damageType: "Adaptive",
@@ -66,9 +82,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Global","Stun","Roam"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc","vision"],
+    scalingType: "Mid",
   },
-  "5": {
+    "5": {
     id: 5,
     name: "Xin Zhao",
     damageType: "AD",
@@ -77,9 +98,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Knockup","EarlyGame"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "6": {
+    "6": {
     id: 6,
     name: "Urgot",
     damageType: "AD",
@@ -88,9 +114,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Frontline","Shielding","Execute"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "7": {
+    "7": {
     id: 7,
     name: "LeBlanc",
     damageType: "AP",
@@ -99,9 +130,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "8": {
+    "8": {
     id: 8,
     name: "Vladimir",
     damageType: "AP",
@@ -110,9 +146,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","AOE","Scaling"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "9": {
+    "9": {
     id: 9,
     name: "Fiddlesticks",
     damageType: "AP",
@@ -121,9 +162,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","CC","Ambush"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "10": {
+    "10": {
     id: 10,
     name: "Kayle",
     damageType: "Hybrid",
@@ -132,20 +178,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Scaling","Invulnerability"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["shielding"],
+    scalingType: "Late",
   },
-  "11": {
+    "11": {
     id: 11,
     name: "Maestro Yi",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: true,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Reset","Sustain"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "12": {
+      "12": {
     id: 12,
     name: "Alistar",
     damageType: "AD",
@@ -154,20 +210,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: ["Knockup"],
+    tags: ["Knockup","Frontline","Disengage"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Mid",
   },
-  "13": {
+      "13": {
     id: 13,
     name: "Ryze",
     damageType: "AP",
     class: "Mage",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Scaling","Immobile","HyperCarry"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","engage"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "14": {
+      "14": {
     id: 14,
     name: "Sion",
     damageType: "AD",
@@ -176,9 +242,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Engage","Tank","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Late",
   },
-  "15": {
+    "15": {
     id: 15,
     name: "Sivir",
     damageType: "AD",
@@ -187,9 +258,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Waveclear","Speedboost","Disengage"],
+
+    tacticRole: "utility",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["peel"],
+    scalingType: "Mid",
   },
-  "16": {
+    "16": {
     id: 16,
     name: "Soraka",
     damageType: "AP",
@@ -198,9 +274,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Silence","Global"],
+
+    tacticRole: "peel",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["healing","cc"],
+    scalingType: "Mid",
   },
-  "17": {
+    "17": {
     id: 17,
     name: "Teemo",
     damageType: "AP",
@@ -209,20 +290,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","Blind","ZoneControl"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "18": {
+      "18": {
     id: 18,
     name: "Tristana",
     damageType: "AD",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Siege","HyperCarry"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "19": {
+    "19": {
     id: 19,
     name: "Warwick",
     damageType: "AD",
@@ -231,9 +322,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Stun","EarlyGame"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "20": {
+    "20": {
     id: 20,
     name: "Nunu y Willump",
     damageType: "AP",
@@ -242,9 +338,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["ObjectiveControl","Sustain","CC"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "21": {
+    "21": {
     id: 21,
     name: "Miss Fortune",
     damageType: "AD",
@@ -253,9 +354,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","Burst","Ranged"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "22": {
+      "22": {
     id: 22,
     name: "Ashe",
     damageType: "AD",
@@ -264,9 +370,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Utility","Vision","Kiting"],
+
+    tacticRole: "utility",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc","vision"],
+    scalingType: "Mid",
   },
-  "23": {
+    "23": {
     id: 23,
     name: "Tryndamere",
     damageType: "AD",
@@ -275,20 +386,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Splitpush","Sustain","Invulnerability"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "24": {
+      "24": {
     id: 24,
     name: "Jax",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: true,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Frontline","Sustain"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "25": {
+    "25": {
     id: 25,
     name: "Morgana",
     damageType: "AP",
@@ -297,9 +418,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Shielding","CC","Disengage"],
+
+    tacticRole: "peel",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc","peel","shielding"],
+    scalingType: "Mid",
   },
-  "26": {
+    "26": {
     id: 26,
     name: "Zilean",
     damageType: "AP",
@@ -308,9 +434,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Revive","Speedboost","Stun"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc","peel"],
+    scalingType: "Late",
   },
-  "27": {
+    "27": {
     id: 27,
     name: "Singed",
     damageType: "AP",
@@ -319,9 +450,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Slow","Fling"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "28": {
+    "28": {
     id: 28,
     name: "Evelynn",
     damageType: "AP",
@@ -330,20 +466,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Stealth","Burst"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "29": {
+    "29": {
     id: 29,
     name: "Twitch",
     damageType: "Adaptive",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Stealth","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "30": {
+    "30": {
     id: 30,
     name: "Karthus",
     damageType: "AP",
@@ -352,9 +498,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","Scaling","Global"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "31": {
+    "31": {
     id: 31,
     name: "Cho'Gath",
     damageType: "AP",
@@ -363,9 +514,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: ["Knockup"],
+    tags: ["Frontline","Sustain","Knockup"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "32": {
+    "32": {
     id: 32,
     name: "Amumu",
     damageType: "AP",
@@ -374,9 +530,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Engage","AOECC","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "33": {
+    "33": {
     id: 33,
     name: "Rammus",
     damageType: "AP",
@@ -385,9 +546,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["AntiAD","Engage","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "34": {
+      "34": {
     id: 34,
     name: "Anivia",
     damageType: "AP",
@@ -396,9 +562,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Slow","Stun","Revive","WallControl"],
+
+    tacticRole: "siege",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc","peel"],
+    scalingType: "Late",
   },
-  "35": {
+    "35": {
     id: 35,
     name: "Shaco",
     damageType: "Adaptive",
@@ -407,9 +578,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Stealth","Clones"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "36": {
+    "36": {
     id: 36,
     name: "Dr. Mundo",
     damageType: "AP",
@@ -418,9 +594,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Sustain","Frontline","Tanky"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "37": {
+    "37": {
     id: 37,
     name: "Sona",
     damageType: "AP",
@@ -429,9 +610,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Shielding","AOECC"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["healing","shielding","cc"],
+    scalingType: "Late",
   },
-  "38": {
+    "38": {
     id: 38,
     name: "Kassadin",
     damageType: "AP",
@@ -440,9 +626,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Mobility","HyperCarry"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "39": {
+      "39": {
     id: 39,
     name: "Irelia",
     damageType: "AD",
@@ -451,9 +642,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Sustain"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "40": {
+      "40": {
     id: 40,
     name: "Janna",
     damageType: "AP",
@@ -462,9 +658,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Disengage","Shielding","Knockup"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "41": {
+    "41": {
     id: 41,
     name: "Gangplank",
     damageType: "AD",
@@ -473,9 +674,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","Scaling","Global"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "42": {
+      "42": {
     id: 42,
     name: "Corki",
     damageType: "AD",
@@ -484,9 +690,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Siege","Poke","MidRange"],
+
+    tacticRole: "poke",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "43": {
+      "43": {
     id: 43,
     name: "Karma",
     damageType: "AP",
@@ -495,9 +706,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","Shield","Disengage","Speedboost"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline"],
+    teamProvides: ["peel","shielding","cc"],
+    scalingType: "Early",
   },
-  "44": {
+    "44": {
     id: 44,
     name: "Taric",
     damageType: "AP",
@@ -506,9 +722,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Invulnerability","Healing","Shielding","Frontline"],
+
+    tacticRole: "peel",
+    teamNeeds: ["engage"],
+    teamProvides: ["peel","cc","shielding","healing"],
+    scalingType: "Mid",
   },
-  "45": {
+    "45": {
     id: 45,
     name: "Veigar",
     damageType: "AP",
@@ -517,9 +738,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Scaling","Burst","ZoneControl"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "48": {
+      "48": {
     id: 48,
     name: "Trundle",
     damageType: "AD",
@@ -528,9 +754,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AntiTank","ObjectiveControl","Duelist"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "50": {
+    "50": {
     id: 50,
     name: "Swain",
     damageType: "AP",
@@ -539,9 +770,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","AOE","Frontline"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["engage","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "51": {
+      "51": {
     id: 51,
     name: "Caitlyn",
     damageType: "AD",
@@ -550,9 +786,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Siege","Poke","LongRange"],
+
+    tacticRole: "poke",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "53": {
+      "53": {
     id: 53,
     name: "Blitzcrank",
     damageType: "AP",
@@ -561,9 +802,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Hook","Pick"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Early",
   },
-  "54": {
+      "54": {
     id: 54,
     name: "Malphite",
     damageType: "AP",
@@ -572,9 +818,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: ["Knockup"],
+    tags: ["Knockup","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "55": {
+      "55": {
     id: 55,
     name: "Katarina",
     damageType: "AP",
@@ -583,9 +834,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Reset","Melee"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "56": {
+    "56": {
     id: 56,
     name: "Nocturne",
     damageType: "AD",
@@ -594,9 +850,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Global","Pick","Fearsome"],
+
+    tacticRole: "dive",
+    teamNeeds: ["followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Mid",
   },
-  "57": {
+      "57": {
     id: 57,
     name: "Maokai",
     damageType: "AP",
@@ -605,9 +866,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","ZoneControl"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Mid",
   },
-  "58": {
+      "58": {
     id: 58,
     name: "Renekton",
     damageType: "AD",
@@ -616,9 +882,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Frontline"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "59": {
+      "59": {
     id: 59,
     name: "Jarvan IV",
     damageType: "AD",
@@ -627,9 +898,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Engage","Followup","ZoneDenial"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "60": {
+    "60": {
     id: 60,
     name: "Elise",
     damageType: "AP",
@@ -638,9 +914,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Burst","Stun","EarlyGame"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "61": {
+      "61": {
     id: 61,
     name: "Orianna",
     damageType: "AP",
@@ -649,9 +930,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Shielding"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc","shielding"],
+    scalingType: "Late",
   },
-  "62": {
+    "62": {
     id: 62,
     name: "Wukong",
     damageType: "AD",
@@ -660,9 +946,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Knockup","Frontline","Stealth"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "63": {
+      "63": {
     id: 63,
     name: "Brand",
     damageType: "AP",
@@ -671,9 +962,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "64": {
+      "64": {
     id: 64,
     name: "Lee Sin",
     damageType: "AD",
@@ -682,9 +978,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Mobility","Sustain"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["none"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Early",
   },
-  "67": {
+      "67": {
     id: 67,
     name: "Vayne",
     damageType: "AD",
@@ -693,9 +994,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","TrueDamage","HyperCarry"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "68": {
+      "68": {
     id: 68,
     name: "Rumble",
     damageType: "AP",
@@ -704,20 +1010,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","ZoneControl"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "69": {
+    "69": {
     id: 69,
     name: "Cassiopeia",
     damageType: "AP",
     class: "Mage",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["DPS","ZoneControl","HyperCarry"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "72": {
+    "72": {
     id: 72,
     name: "Skarner",
     damageType: "AD",
@@ -726,9 +1042,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","CC","Suppression"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "74": {
+    "74": {
     id: 74,
     name: "Heimerdinger",
     damageType: "AP",
@@ -737,9 +1058,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Siege","Poke"],
+
+    tacticRole: "siege",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "75": {
+    "75": {
     id: 75,
     name: "Nasus",
     damageType: "AD",
@@ -748,9 +1074,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Scaling","Sustain","Slow"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "76": {
+    "76": {
     id: 76,
     name: "Nidalee",
     damageType: "AP",
@@ -759,9 +1090,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst", "Poke"],
+    tags: ["Poke","Burst","Healing"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Early",
   },
-  "77": {
+    "77": {
     id: 77,
     name: "Udyr",
     damageType: "Adaptive",
@@ -770,9 +1106,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Frontline","Sustain","Stun"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "78": {
+      "78": {
     id: 78,
     name: "Poppy",
     damageType: "AD",
@@ -781,9 +1122,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Disengage","Frontline"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc"],
+    scalingType: "Mid",
   },
-  "79": {
+      "79": {
     id: 79,
     name: "Gragas",
     damageType: "AP",
@@ -792,9 +1138,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Disengage","Sustain","Knockup"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Mid",
   },
-  "80": {
+    "80": {
     id: 80,
     name: "Pantheon",
     damageType: "AD",
@@ -803,9 +1154,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Global","Stun","EarlyGame"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Early",
   },
-  "81": {
+      "81": {
     id: 81,
     name: "Ezreal",
     damageType: "Adaptive",
@@ -814,9 +1170,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Poke"],
+    tags: ["Poke","Kite","Disengage"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "82": {
+    "82": {
     id: 82,
     name: "Mordekaiser",
     damageType: "AP",
@@ -825,9 +1186,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Isolation","Sustain","Frontline"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "83": {
+    "83": {
     id: 83,
     name: "Yorick",
     damageType: "AD",
@@ -836,9 +1202,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Siege","Splitpush","TowerDestroyer"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "84": {
+      "84": {
     id: 84,
     name: "Akali",
     damageType: "AP",
@@ -847,9 +1218,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Reset","Melee"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "85": {
+    "85": {
     id: 85,
     name: "Kennen",
     damageType: "Adaptive",
@@ -858,9 +1234,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOECC","Mobility","Engage"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Mid",
   },
-  "86": {
+      "86": {
     id: 86,
     name: "Garen",
     damageType: "AD",
@@ -869,9 +1250,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Tanky","Silence","Frontline"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "89": {
+      "89": {
     id: 89,
     name: "Leona",
     damageType: "AD",
@@ -880,9 +1266,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","CC"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "90": {
+    "90": {
     id: 90,
     name: "Malzahar",
     damageType: "AP",
@@ -891,9 +1282,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Suppression","Waveclear"],
+
+    tacticRole: "siege",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "91": {
+    "91": {
     id: 91,
     name: "Talon",
     damageType: "AD",
@@ -902,9 +1298,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "92": {
+    "92": {
     id: 92,
     name: "Riven",
     damageType: "AD",
@@ -913,9 +1314,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Shielding","CC"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "96": {
+    "96": {
     id: 96,
     name: "Kog'Maw",
     damageType: "Adaptive",
@@ -924,9 +1330,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Range","DPS"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "98": {
+    "98": {
     id: 98,
     name: "Shen",
     damageType: "AD",
@@ -935,9 +1346,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Global","Shielding","Frontline"],
+
+    tacticRole: "peel",
+    teamNeeds: ["engage"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "99": {
+      "99": {
     id: 99,
     name: "Lux",
     damageType: "AP",
@@ -946,9 +1362,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","Shielding"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc","shielding"],
+    scalingType: "Mid",
   },
-  "101": {
+    "101": {
     id: 101,
     name: "Xerath",
     damageType: "AP",
@@ -957,9 +1378,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","LongRange","Siege"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "102": {
+    "102": {
     id: 102,
     name: "Shyvana",
     damageType: "Adaptive",
@@ -968,9 +1394,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOE","Scaling","Dragon"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["engage","peel"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "103": {
+      "103": {
     id: 103,
     name: "Ahri",
     damageType: "AP",
@@ -979,9 +1410,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Burst"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "104": {
+    "104": {
     id: 104,
     name: "Graves",
     damageType: "AD",
@@ -990,9 +1426,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","DPS","Mobility"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["frontline","engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "105": {
+    "105": {
     id: 105,
     name: "Fizz",
     damageType: "AP",
@@ -1001,9 +1442,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "106": {
+    "106": {
     id: 106,
     name: "Volibear",
     damageType: "AD",
@@ -1012,9 +1458,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Frontline","Stun"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "107": {
+    "107": {
     id: 107,
     name: "Rengar",
     damageType: "AD",
@@ -1023,9 +1474,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Sustain"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "110": {
+    "110": {
     id: 110,
     name: "Varus",
     damageType: "Adaptive",
@@ -1034,9 +1490,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","CC","Ranged"],
+
+    tacticRole: "poke",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "111": {
+      "111": {
     id: 111,
     name: "Nautilus",
     damageType: "AP",
@@ -1045,9 +1506,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Hook"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Mid",
   },
-  "112": {
+    "112": {
     id: 112,
     name: "Viktor",
     damageType: "AP",
@@ -1056,9 +1522,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","AOE","Scaling"],
+
+    tacticRole: "siege",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "113": {
+      "113": {
     id: 113,
     name: "Sejuani",
     damageType: "AP",
@@ -1067,20 +1538,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","CC"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Mid",
   },
-  "114": {
+      "114": {
     id: 114,
     name: "Fiora",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: true,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Duelist","Sustain","TrueDamage"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "115": {
+      "115": {
     id: 115,
     name: "Ziggs",
     damageType: "AP",
@@ -1089,9 +1570,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Siege","Poke","TowerDestroyer","LongRange"],
+
+    tacticRole: "siege",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "117": {
+      "117": {
     id: 117,
     name: "Lulu",
     damageType: "AP",
@@ -1100,9 +1586,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Shielding","Utility"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "119": {
+    "119": {
     id: 119,
     name: "Draven",
     damageType: "AD",
@@ -1111,9 +1602,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["EarlyGame","Damage","Snowball"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "120": {
+    "120": {
     id: 120,
     name: "Hecarim",
     damageType: "AD",
@@ -1122,9 +1618,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Engage","Mobility","AOE"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "121": {
+    "121": {
     id: 121,
     name: "Kha'Zix",
     damageType: "AD",
@@ -1133,9 +1634,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Isolation","Reset"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "122": {
+      "122": {
     id: 122,
     name: "Darius",
     damageType: "AD",
@@ -1144,9 +1650,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Execute"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "126": {
+      "126": {
     id: 126,
     name: "Jayce",
     damageType: "AD",
@@ -1155,9 +1666,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Poke"],
+    tags: ["Poke","Siege","Flex","LongRange"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "127": {
+    "127": {
     id: 127,
     name: "Lissandra",
     damageType: "AP",
@@ -1166,9 +1682,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["CC","Engage","Invulnerability"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "131": {
+    "131": {
     id: 131,
     name: "Diana",
     damageType: "AP",
@@ -1177,9 +1698,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOECC","Burst","Shielding"],
+
+    tacticRole: "dive",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Mid",
   },
-  "133": {
+    "133": {
     id: 133,
     name: "Quinn",
     damageType: "AD",
@@ -1188,9 +1714,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Roam","Vision","Splitpush"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc","vision"],
+    scalingType: "Early",
   },
-  "134": {
+    "134": {
     id: 134,
     name: "Syndra",
     damageType: "AP",
@@ -1199,20 +1730,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","Stun","Scaling"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "136": {
+      "136": {
     id: 136,
     name: "Aurelion Sol",
     damageType: "AP",
     class: "Mage",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Waveclear"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "141": {
+    "141": {
     id: 141,
     name: "Kayn",
     damageType: "AD",
@@ -1221,9 +1762,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Burst","Sustain"],
+
+    tacticRole: "dive",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "142": {
+    "142": {
     id: 142,
     name: "Zoe",
     damageType: "AP",
@@ -1232,9 +1778,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Poke"],
+    tags: ["Poke","Burst","Pick"],
+
+    tacticRole: "poke",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "143": {
+    "143": {
     id: 143,
     name: "Zyra",
     damageType: "AP",
@@ -1243,20 +1794,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Disengage","AOECC"],
+
+    tacticRole: "siege",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc","peel"],
+    scalingType: "Mid",
   },
-  "145": {
+      "145": {
     id: 145,
     name: "Kai'Sa",
     damageType: "Adaptive",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","Mobility","Isolation"],
+
+    tacticRole: "dive",
+    teamNeeds: ["engage","peel"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "147": {
+    "147": {
     id: 147,
     name: "Seraphine",
     damageType: "AP",
@@ -1265,9 +1826,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Shielding","AOECC"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["healing","shielding","cc","peel"],
+    scalingType: "Late",
   },
-  "150": {
+    "150": {
     id: 150,
     name: "Gnar",
     damageType: "AD",
@@ -1276,9 +1842,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Knockup","Frontline","Ranged"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "154": {
+    "154": {
     id: 154,
     name: "Zac",
     damageType: "AP",
@@ -1287,9 +1858,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: ["Knockup"],
+    tags: ["Knockup","Sustain","Frontline"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "157": {
+      "157": {
     id: 157,
     name: "Yasuo",
     damageType: "AD",
@@ -1298,9 +1874,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Knockup","Shielding"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "161": {
+    "161": {
     id: 161,
     name: "Vel'Koz",
     damageType: "AP",
@@ -1309,9 +1890,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Poke","TrueDamage","LongRange"],
+
+    tacticRole: "poke",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "163": {
+    "163": {
     id: 163,
     name: "Taliyah",
     damageType: "AP",
@@ -1320,9 +1906,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","WallControl","Roam"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "164": {
+      "164": {
     id: 164,
     name: "Camille",
     damageType: "AD",
@@ -1331,9 +1922,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Pick","Dive","Isolation"],
+
+    tacticRole: "dive",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Late",
   },
-  "166": {
+    "166": {
     id: 166,
     name: "Akshan",
     damageType: "AD",
@@ -1342,9 +1938,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Revive","Roam"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "200": {
+    "200": {
     id: 200,
     name: "Bel'Veth",
     damageType: "AP",
@@ -1353,9 +1954,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Mobility","ObjectiveControl"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "201": {
+      "201": {
     id: 201,
     name: "Braum",
     damageType: "AP",
@@ -1364,9 +1970,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Shielding","Frontline"],
+
+    tacticRole: "peel",
+    teamNeeds: ["followup"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "202": {
+      "202": {
     id: 202,
     name: "Jhin",
     damageType: "AD",
@@ -1375,31 +1986,46 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Range","Execute"],
+
+    tacticRole: "utility",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "203": {
+    "203": {
     id: 203,
     name: "Kindred",
     damageType: "AD",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Invulnerability","Kiting","Scaling"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "221": {
+    "221": {
     id: 221,
     name: "Zeri",
     damageType: "AD",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Mobility","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "222": {
+      "222": {
     id: 222,
     name: "Jinx",
     damageType: "AD",
@@ -1408,9 +2034,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","AOE","Range"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "223": {
+    "223": {
     id: 223,
     name: "Tahm Kench",
     damageType: "AP",
@@ -1419,9 +2050,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Sustain","Shielding"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc"],
+    scalingType: "Late",
   },
-  "233": {
+    "233": {
     id: 233,
     name: "Briar",
     damageType: "AD",
@@ -1430,31 +2066,46 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Frenzy","Global"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "234": {
+      "234": {
     id: 234,
     name: "Viego",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: true,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Reset"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "235": {
+      "235": {
     id: 235,
     name: "Senna",
     damageType: "AD",
     class: "Support",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: true,
-    tags: [],
+    tags: ["Range","Healing"],
+
+    tacticRole: "utility",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["healing","cc"],
+    scalingType: "Late",
   },
-  "236": {
+    "236": {
     id: 236,
     name: "Lucian",
     damageType: "AD",
@@ -1463,9 +2114,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["EarlyGame","Mobility","Burst"],
+
+    tacticRole: "burst",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Early",
   },
-  "238": {
+    "238": {
     id: 238,
     name: "Zed",
     damageType: "AD",
@@ -1474,9 +2130,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "240": {
+    "240": {
     id: 240,
     name: "Kled",
     damageType: "AD",
@@ -1485,9 +2146,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Engage","Sustain","Frontline"],
+
+    tacticRole: "dive",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Early",
   },
-  "245": {
+    "245": {
     id: 245,
     name: "Ekko",
     damageType: "AP",
@@ -1496,9 +2162,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "246": {
+    "246": {
     id: 246,
     name: "Qiyana",
     damageType: "AP",
@@ -1507,9 +2178,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","AOECC","Burst"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "254": {
+    "254": {
     id: 254,
     name: "Vi",
     damageType: "AD",
@@ -1518,9 +2194,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Engage","Knockup","Frontline"],
+
+    tacticRole: "dive",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Mid",
   },
-  "266": {
+      "266": {
     id: 266,
     name: "Aatrox",
     damageType: "AD",
@@ -1529,9 +2210,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","Frontline"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage","peel"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Mid",
   },
-  "267": {
+    "267": {
     id: 267,
     name: "Nami",
     damageType: "AP",
@@ -1540,20 +2226,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Knockup","Disengage"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline"],
+    teamProvides: ["healing","cc","peel"],
+    scalingType: "Mid",
   },
-  "268": {
+      "268": {
     id: 268,
     name: "Azir",
     damageType: "AP",
     class: "Mage",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","Mobility"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: ["engage","cc"],
+    scalingType: "Late",
   },
-  "350": {
+    "350": {
     id: 350,
     name: "Yuumi",
     damageType: "AP",
@@ -1562,9 +2258,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Shielding","Untargetable"],
+
+    tacticRole: "utility",
+    teamNeeds: ["frontline"],
+    teamProvides: ["healing","shielding","cc"],
+    scalingType: "Late",
   },
-  "360": {
+    "360": {
     id: 360,
     name: "Samira",
     damageType: "AD",
@@ -1573,9 +2274,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Burst","Reset","AOE"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","peel"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "412": {
+      "412": {
     id: 412,
     name: "Thresh",
     damageType: "AP",
@@ -1584,9 +2290,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Hook","Lantern"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","engage"],
+    scalingType: "Mid",
   },
-  "420": {
+    "420": {
     id: 420,
     name: "Illaoi",
     damageType: "AD",
@@ -1595,9 +2306,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","AntiDive","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
-  "421": {
+    "421": {
     id: 421,
     name: "Rek'Sai",
     damageType: "AD",
@@ -1606,9 +2322,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Knockup","Sustain","Mobility"],
+
+    tacticRole: "dive",
+    teamNeeds: ["followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Early",
   },
-  "427": {
+    "427": {
     id: 427,
     name: "Ivern",
     damageType: "AP",
@@ -1617,9 +2338,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Shielding","Summon","Utility"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "429": {
+    "429": {
     id: 429,
     name: "Kalista",
     damageType: "AD",
@@ -1628,9 +2354,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Kiting","ObjectiveControl","EarlyGame"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Early",
   },
-  "432": {
+      "432": {
     id: 432,
     name: "Bardo",
     damageType: "AP",
@@ -1639,9 +2370,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Global","Utility","Roam"],
+
+    tacticRole: "utility",
+    teamNeeds: ["none"],
+    teamProvides: ["cc","peel","healing"],
+    scalingType: "Mid",
   },
-  "497": {
+      "497": {
     id: 497,
     name: "Rakan",
     damageType: "AP",
@@ -1650,20 +2386,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Mobility","Knockup"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "498": {
+    "498": {
     id: 498,
     name: "Xayah",
     damageType: "AD",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Kiting","AntiDive","Invulnerability"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "516": {
+      "516": {
     id: 516,
     name: "Ornn",
     damageType: "AD",
@@ -1672,9 +2418,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Knockup"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Late",
   },
-  "517": {
+      "517": {
     id: 517,
     name: "Sylas",
     damageType: "AP",
@@ -1683,9 +2434,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","Sustain"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "518": {
+    "518": {
     id: 518,
     name: "Neeko",
     damageType: "AP",
@@ -1694,20 +2450,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AOECC","Stealth","Engage"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline","followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Mid",
   },
-  "523": {
+    "523": {
     id: 523,
     name: "Aphelios",
     damageType: "AD",
     class: "Marksman",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","DPS","Ranged"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "526": {
+    "526": {
     id: 526,
     name: "Rell",
     damageType: "AD",
@@ -1716,9 +2482,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Knockup","Shielding"],
+
+    tacticRole: "engage",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","cc","shielding"],
+    scalingType: "Mid",
   },
-  "555": {
+    "555": {
     id: 555,
     name: "Pyke",
     damageType: "AD",
@@ -1727,9 +2498,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Hook","Execute","Roam"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","followup"],
+    teamProvides: ["cc","engage"],
+    scalingType: "Early",
   },
-  "711": {
+    "711": {
     id: 711,
     name: "Vex",
     damageType: "AP",
@@ -1738,18 +2514,28 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["AntiMobility","Burst","Fearsome"],
+
+    tacticRole: "burst",
+    teamNeeds: ["frontline","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "777": {
+      "777": {
     id: 777,
     name: "Yone",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: false,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: ["Knockup"],
+    tags: ["Knockup","Mobility"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
   "799": {
     id: 799,
@@ -1784,7 +2570,7 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     hasHardCC: false,
     tags: [],
   },
-  "875": {
+    "875": {
     id: 875,
     name: "Sett",
     damageType: "AD",
@@ -1793,9 +2579,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Frontline","Shielding","CC"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "876": {
+    "876": {
     id: 876,
     name: "Lillia",
     damageType: "AP",
@@ -1804,9 +2595,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","AOE","Sustain"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "887": {
+    "887": {
     id: 887,
     name: "Gwen",
     damageType: "AP",
@@ -1815,9 +2611,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Scaling","TrueDamage","Sustain"],
+
+    tacticRole: "splitpush",
+    teamNeeds: ["engage"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "888": {
+    "888": {
     id: 888,
     name: "Renata Glasc",
     damageType: "AP",
@@ -1826,9 +2627,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Disengage","Shielding","Revive"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","shielding"],
+    scalingType: "Mid",
   },
-  "893": {
+    "893": {
     id: 893,
     name: "Aurora",
     damageType: "AP",
@@ -1837,20 +2643,30 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["Mobility","ZoneControl","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["frontline"],
+    teamProvides: ["cc"],
+    scalingType: "Mid",
   },
-  "895": {
+    "895": {
     id: 895,
     name: "Nilah",
     damageType: "AD",
     class: "Fighter",
 
     isFrontline: true,
-    isHypercarry: false,
+    isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["Sustain","AOE","Shielding"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["engage","peel"],
+    teamProvides: ["cc"],
+    scalingType: "Late",
   },
-  "897": {
+      "897": {
     id: 897,
     name: "K'Sante",
     damageType: "AD",
@@ -1859,9 +2675,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: true,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Frontline","Mobility"],
+
+    tacticRole: "skirmish",
+    teamNeeds: ["followup"],
+    teamProvides: ["engage","peel","cc"],
+    scalingType: "Late",
   },
-  "901": {
+    "901": {
     id: 901,
     name: "Smolder",
     damageType: "AD",
@@ -1870,9 +2691,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: true,
     hasHardCC: false,
-    tags: [],
+    tags: ["HyperCarry","Scaling","AOE"],
+
+    tacticRole: "teamfight",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: [],
+    scalingType: "Late",
   },
-  "902": {
+    "902": {
     id: 902,
     name: "Milio",
     damageType: "AP",
@@ -1881,7 +2707,12 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: true,
-    tags: [],
+    tags: ["Healing","Shielding","Cleansing"],
+
+    tacticRole: "peel",
+    teamNeeds: ["none"],
+    teamProvides: ["peel","cc","healing","shielding"],
+    scalingType: "Late",
   },
   "904": {
     id: 904,
@@ -1894,7 +2725,7 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     hasHardCC: false,
     tags: [],
   },
-  "910": {
+      "910": {
     id: 910,
     name: "Hwei",
     damageType: "AP",
@@ -1903,9 +2734,14 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: [],
+    tags: ["ZoneControl","AOE"],
+
+    tacticRole: "siege",
+    teamNeeds: ["peel","frontline"],
+    teamProvides: ["cc","peel"],
+    scalingType: "Late",
   },
-  "950": {
+    "950": {
     id: 950,
     name: "Naafiri",
     damageType: "AD",
@@ -1914,6 +2750,11 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     isFrontline: false,
     isHypercarry: false,
     hasHardCC: false,
-    tags: ["Burst"],
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: [],
+    scalingType: "Mid",
   },
 };

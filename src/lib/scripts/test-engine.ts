@@ -168,6 +168,35 @@ async function runTests() {
     console.log("⚠️ Advertencia: No se encontró Lulu en NAME_TO_ID.");
   }
 
+  // 5. Escenario 4: Capa 2.5 y Doble Análisis (Allies: Karma, Ezreal; Enemies: Jayce, Ryze, Ziggs)
+  console.log("\n--- ESCENARIO 4: Capa 2.5 y Doble Análisis de Arquetipos (Karma+Ezreal vs Jayce+Ryze+Ziggs) ---");
+  const compAllies = ["Karma", "Ezreal"];
+  const compEnemies = ["Jayce", "Ryze", "Ziggs"];
+  const compAlliedIds = compAllies.map(name => NAME_TO_ID[name]).filter(Boolean) as number[];
+  const compEnemyIds = compEnemies.map(name => NAME_TO_ID[name]).filter(Boolean) as number[];
+
+  console.log("\n🔍 Buscando recomendaciones para rol: MIDDLE...");
+  const compRecs = getProcessedRecommendations(compAlliedIds, compEnemyIds, [], "middle");
+  console.log("Top 5 Recomendaciones de Selección en MID:");
+  compRecs.slice(0, 5).forEach((rec, idx) => {
+    console.log(`  ${idx + 1}. ${rec.name} (Score: ${rec.score})`);
+    console.log(`     Razones: ${rec.reasons.filter(r => r.includes("Respuesta:")).join(' | ') || "Ninguna razón de Capa 2.5"}`);
+  });
+
+  const aniviaRec = compRecs.find(r => r.name === "Anivia");
+  if (aniviaRec) {
+    console.log(`\nAnivia - Score: ${aniviaRec.score}`);
+    console.log(`Razones Anivia: ${aniviaRec.reasons.join(' | ')}`);
+    const hasIntersectionBonus = aniviaRec.reasons.some(r => r.includes("Respuesta:") && r.includes("SIEGE"));
+    if (hasIntersectionBonus) {
+      console.log("✅ ÉXITO: Se detectó el bonus de intersección de la Capa 2.5 para Anivia.");
+    } else {
+      console.log("❌ FALLO: No se aplicó el bonus de intersección de la Capa 2.5 para Anivia.");
+    }
+  } else {
+    console.log("⚠️ Advertencia: No se encontró Anivia en las recomendaciones.");
+  }
+
   console.log("\n🧪 [TEST] Finalizado.");
 }
 

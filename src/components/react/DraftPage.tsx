@@ -48,16 +48,16 @@ const importToClient = async (buildData: any) => {
         };
         await Promise.all([
             fetch('/api/set-runes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runePayload) }),
-            fetch('/api/set-items', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ 
-                    championId: id, 
-                    championName: name, 
-                    items: build.items, 
+            fetch('/api/set-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    championId: id,
+                    championName: name,
+                    items: build.items,
                     skillOrder: build.skillOrder,
                     criticalSwaps: coreItemSwaps
-                }) 
+                })
             }),
             fetch('/api/set-spells', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spell1Id: build.summoners[0].id, spell2Id: build.summoners[1].id }) })
         ]);
@@ -161,7 +161,7 @@ export const DraftPage = () => {
         const loadDb = async () => {
             try {
                 console.log("🔌 Sincronizando motor HexDraft con bases de datos locales...");
-                
+
                 // 1. Obtener y configurar Pesos del Motor
                 const configRes = await fetch('/api/config');
                 if (configRes.ok) {
@@ -230,12 +230,12 @@ export const DraftPage = () => {
                 const now = Date.now();
                 const elapsed = now - timestampAtSyncRef.current;
                 const remaining = Math.max(0, apiTimeAtSyncRef.current - elapsed);
-                
+
                 setLocalTimeLeft(Math.floor(remaining));
 
                 // Lógica de ejecución automática (3.5s)
                 if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
-                    if ((activeActionRef.current.type === 'pick' && autoPick) || 
+                    if ((activeActionRef.current.type === 'pick' && autoPick) ||
                         (activeActionRef.current.type === 'ban' && autoBan)) {
                         handleAutoExecution();
                     }
@@ -258,7 +258,7 @@ export const DraftPage = () => {
             const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
             const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
             const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
-            
+
             const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
             const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
 
@@ -273,7 +273,7 @@ export const DraftPage = () => {
                 const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
                 const availablePicks = picks.filter(p => !allyHovered.includes(p.id));
                 if (availablePicks.length > 0) targetId = availablePicks[0].id;
-            } else if (currentAction.type === 'ban'){
+            } else if (currentAction.type === 'ban') {
                 const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
                 const allyHoveredOrSelected = data.myTeam.map((p: any) => p.championId || p.championPickIntent || 0).filter((id: number) => id !== 0);
                 const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
@@ -307,7 +307,7 @@ export const DraftPage = () => {
 
             if (lastActionKeyRef.current !== actionKey && riotPhase !== "PLANNING") {
                 console.log(`Sincronizando ancla para: ${riotPhase}`);
-                
+
                 lastActionKeyRef.current = actionKey;
                 activeActionRef.current = myAction;
 
@@ -326,7 +326,7 @@ export const DraftPage = () => {
 
     const resetDraftState = useCallback(() => {
         console.log("🧹 Limpiando estado del Nexo (Fin de Draft)");
-        
+
         lastFingerprintRef.current = "";
         lastImportedIdRef.current = 0;
         lastImportedSignatureRef.current = "";
@@ -368,7 +368,7 @@ export const DraftPage = () => {
                     currentDataRef.current = data;
                     setMyTeam(data.myTeam);
                     setTheirTeam(data.theirTeam);
-                    handleTimerSync(data); 
+                    handleTimerSync(data);
 
                     const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
                     const myId = myPlayer?.championId || 0;
@@ -377,12 +377,12 @@ export const DraftPage = () => {
                     localStorage.setItem('last_my_team', JSON.stringify(data.myTeam));
                     localStorage.setItem('last_their_team', JSON.stringify(data.theirTeam));
                     localStorage.setItem('last_my_role', currentRole);
-                    
+
                     const myHoverIntent = myPlayer?.championPickIntent || 0;
                     const activeIdForEngine = myId > 0 ? myId : myHoverIntent;
 
                     const cleanMyTeam = data.myTeam
-                        .filter((p: any) => p.cellId !== data.localPlayerCellId) 
+                        .filter((p: any) => p.cellId !== data.localPlayerCellId)
                         .map((p: any) => p.championId || p.championPickIntent)
                         .filter((id: number) => id !== 0);
 
@@ -435,8 +435,8 @@ export const DraftPage = () => {
                             const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
 
                             // Comprobar si todos los participantes de la selección han bloqueado sus campeones
-                            const everyonePicked = myId > 0 && 
-                                data.myTeam.every((p: any) => p.championId > 0) && 
+                            const everyonePicked = myId > 0 &&
+                                data.myTeam.every((p: any) => p.championId > 0) &&
                                 (data.theirTeam.length === 0 || data.theirTeam.every((p: any) => p.championId > 0));
 
                             let triggerImport = false;
@@ -462,17 +462,17 @@ export const DraftPage = () => {
                         const fingerprint = `${data.isBanPhase}-${cleanMyTeam.join(',')}-${myHoverIntent}`;
                         if (fingerprint !== lastFingerprintRef.current) {
                             lastFingerprintRef.current = fingerprint;
-                    
+
                             // Permitimos recomendar baneo de preselecciones en la UI
                             const bans = getProcessedBans(picks).filter(b => !lockedAndBannedIds.includes(b.id));
 
-                            setRecommendations(picks.slice(0, 20));
+                            setRecommendations(picks.slice(0, 30));
                             setBanRecommendations(bans.slice(0, 20));
                             setView(data.isBanPhase ? 'bans' : 'picks');
                         }
                     }
                 }
-            } 
+            }
             else if (phase === 'InProgress') {
                 nextInterval = 30000;
 
@@ -586,10 +586,10 @@ export const DraftPage = () => {
     }, [inDraft, view, currentBuild]);
 
     return (
-        <div className="flex-1 flex flex-col justify-center w-full max-w-[1550px] mx-auto px-4 py-8 overflow-x-hidden relative">
+        <div className="h-full w-full max-w-[1550px] mx-auto px-4 py-3 flex flex-col justify-center overflow-hidden relative min-h-0">
             {/* TOAST DE CONEXIÓN */}
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 duration-350 select-none
+                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 duration-350 select-none
                     ${toast.type === 'success' 
                         ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40' 
                         : 'bg-red-950/85 border-red-500/40 text-red-200 shadow-red-950/40'
@@ -600,7 +600,7 @@ export const DraftPage = () => {
                 </div>
             )}
 
-            <div className={`flex flex-row w-full items-start relative z-10 px-2 md:px-4 transition-all duration-700 ${
+            <div className={`flex flex-row w-full items-center h-full min-h-0 relative z-10 px-2 md:px-4 transition-all duration-700 ${
                 isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
             }`}>
                 {/* LISTADO DE ALIADOS */}
@@ -612,17 +612,17 @@ export const DraftPage = () => {
                 />
 
                 {/* AREA CENTRAL */}
-                <div className={`transition-all duration-700 ease-in-out ${
+                <div className={`transition-all duration-700 ease-in-out h-full max-h-[780px] min-h-[600px] ${
                     isPlaying 
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto' 
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
                 }`}>
-                    <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm backdrop-blur-md min-h-[600px] relative overflow-hidden flex flex-col tech-corners">
+                    <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners">
                         
                         {/* CABECERA DINÁMICA */}
-                        <header className="mb-6 flex justify-between items-center border-b border-border-warm pb-5">
+                        <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
                             <div>
-                                <h2 className="text-xl md:text-2xl font-black uppercase tracking-[0.3em] text-white italic">
+                                <h2 className="text-lg md:text-xl font-black uppercase tracking-[0.3em] text-white italic">
                                     {isBuildOrReasonsView && currentBuild ? (
                                         <>Análisis Táctico: <span className="text-[#9055ff]">{currentBuild.name}</span></>
                                     ) : (
@@ -633,13 +633,13 @@ export const DraftPage = () => {
                                         )
                                     )}
                                 </h2>
-                                <p className="text-[9px] md:text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-2">
+                                <p className="text-[8px] md:text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">
                                     {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
                                 </p>
                             </div>
                             
                             <div className="flex items-center gap-3">
-                                <div className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 border rounded-sm select-none ${
+                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 border rounded-sm select-none ${
                                     isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
                                 }`}>
                                     Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
@@ -647,7 +647,7 @@ export const DraftPage = () => {
                             </div>
                         </header>
 
-                        <div className="relative flex-1">
+                        <div className={`relative flex-1 min-h-0 pr-1 ${isBuildOrReasonsView && currentBuild ? 'overflow-hidden' : 'overflow-y-auto scrollbar-thin'}`}>
                             {/* 1. ESPERA / LOBBY */}
                             {!inDraft && !isPlaying && (
                                 <DraftLobby />
@@ -655,41 +655,63 @@ export const DraftPage = () => {
 
                             {/* 2. VISTA DE PARTIDA / BUILD */}
                             {isBuildOrReasonsView && currentBuild && tacticalDirectives ? (
-                                <div className="grid grid-cols-12 gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                    {/* FILA 1: EVOLUCIÓN DE HABILIDADES (Ancho completo) */}
-                                    <div className="col-span-12">
+                                <div className="flex flex-col gap-2 h-full min-h-0">
+                                    {/* Banner de Composición (fila compacta) */}
+                                    {myTeamAnalysis && allyNames.length > 0 && (
+                                        <div className="flex items-center justify-between gap-6 py-2 border-b border-border-warm/20 shrink-0">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-1.5 h-1.5 bg-[#9055ff] rounded-full shadow-[0_0_6px_#9055ff]" />
+                                                <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">
+                                                    <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
+                                                </span>
+                                                {myTeamAnalysis.gaps.length > 0 && (
+                                                    <span className="text-[9px] text-slate-500 font-medium tracking-wider italic">
+                                                        — falta {myTeamAnalysis.gaps.map(g => GAP_TRANSLATIONS[g] || g).join(', ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2.5 flex-1 max-w-[280px]">
+                                                <span className="text-[8px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile.physicalPct}%</span>
+                                                <div className="h-1 flex-1 bg-slate-950 rounded-full overflow-hidden flex border border-border-warm/15">
+                                                    <div style={{ width: `${myTeamAnalysis.damageProfile.physicalPct}%` }} className="bg-gradient-to-r from-red-600 to-orange-500 h-full" />
+                                                    <div style={{ width: `${myTeamAnalysis.damageProfile.magicPct}%` }} className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full" />
+                                                </div>
+                                                <span className="text-[8px] font-bold text-cyan-400/80 shrink-0">AP {myTeamAnalysis.damageProfile.magicPct}%</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Evolución de Habilidades */}
+                                    <div className="shrink-0">
                                         <SkillTimeline
                                             skillOrder={currentBuild.build?.skillOrder}
                                             tacticalData={tacticalData}
                                         />
                                     </div>
 
-                                    {/* FILA 2: MÓDULOS DE ANÁLISIS */}
-                                    {/* COL 1: BUILD */}
-                                    <div className="col-span-12 md:col-span-6 lg:col-span-4">
-                                        <ItemBuild
-                                            currentBuild={currentBuild}
-                                            onReImport={handleReImport}
-                                        />
-                                    </div>
-
-                                    {/* COL 2: DIRECTIVAS GENERALES */}
-                                    <div className="col-span-12 md:col-span-6 lg:col-span-4">
-                                        <CombatDirectivesPanel
-                                            scalingType={tacticalDirectives.scalingType}
-                                            combatStyle={tacticalDirectives.combatStyle}
-                                            winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
-                                            generalDirectives={tacticalDirectives.generalDirectives}
-                                            enemyNames={enemyNames}
-                                        />
-                                    </div>
-
-                                    {/* COL 3: ENFRENTAMIENTOS Y SINERGIAS */}
-                                    <div className="col-span-12 lg:col-span-4">
-                                        <MatchupAnalysisPanel
-                                            matchups={tacticalDirectives.matchups}
-                                            synergies={tacticalDirectives.synergies}
-                                        />
+                                    {/* Módulos de Análisis — 3 columnas */}
+                                    <div className="grid grid-cols-3 gap-3 flex-1 min-h-0">
+                                        <div className="min-h-0 overflow-hidden">
+                                            <ItemBuild
+                                                currentBuild={currentBuild}
+                                                onReImport={handleReImport}
+                                            />
+                                        </div>
+                                        <div className="min-h-0 overflow-hidden">
+                                            <CombatDirectivesPanel
+                                                scalingType={tacticalDirectives.scalingType}
+                                                combatStyle={tacticalDirectives.combatStyle}
+                                                winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
+                                                generalDirectives={tacticalDirectives.generalDirectives}
+                                                enemyNames={enemyNames}
+                                            />
+                                        </div>
+                                        <div className="min-h-0 overflow-hidden">
+                                            <MatchupAnalysisPanel
+                                                matchups={tacticalDirectives.matchups}
+                                                synergies={tacticalDirectives.synergies}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
@@ -698,36 +720,7 @@ export const DraftPage = () => {
                                     <div className="space-y-6">
                                         {/* Panel de Composición del Equipo */}
                                         {myTeamAnalysis && allyNames.length > 0 && (
-                                            <div className="p-4 bg-slate-900/40 border border-border-warm/50 rounded-sm tech-corners space-y-4 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
-                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border-warm/30 pb-3">
-                                                     <div>
-                                                         <span className="text-[9px] text-[#9055ff] font-black uppercase tracking-wider">
-                                                             Análisis de Composición Aliada
-                                                         </span>
-                                                         <h4 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
-                                                             Estrategia: <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
-                                                         </h4>
-                                                     </div>
-
-                                                     {/* Gaps / Roles Faltantes */}
-                                                     <div className="flex flex-wrap gap-2 items-center">
-                                                         <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
-                                                             Falta:
-                                                         </span>
-                                                         {myTeamAnalysis.gaps.length > 0 ? (
-                                                             myTeamAnalysis.gaps.map((gap) => (
-                                                                 <span key={gap} className="text-[8px] font-black uppercase px-2 py-0.5 bg-red-950/60 border border-red-500/40 text-red-400 rounded-sm">
-                                                                     {GAP_TRANSLATIONS[gap] || gap}
-                                                                 </span>
-                                                             ))
-                                                         ) : (
-                                                             <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 rounded-sm">
-                                                                 Composición Balanceada
-                                                             </span>
-                                                         )}
-                                                     </div>
-                                                 </div>
-
+                                            <div className="p-4">
                                                  {/* Fila de balance de Daño */}
                                                  <div className="space-y-1.5">
                                                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">

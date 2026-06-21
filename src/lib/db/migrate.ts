@@ -77,7 +77,7 @@ export function runMigration() {
       lane: extra?.lane || "UNKNOWN",
       tier: 99, // Valor por defecto
       win_rate: 50.0, // Valor por defecto
-      scaling_type: "Mid", // Valor por defecto, se calcula luego
+      scaling_type: c.scalingType || "Mid", // Valor por defecto, se calcula luego
       damage_type: c.damageType || "Adaptive",
       class: c.class || "Unknown",
       is_frontline: c.isFrontline ? 1 : 0,
@@ -287,7 +287,7 @@ export function runMigration() {
       lane: primaryLane,
       tier: parseInt(bestStat.rank) || 99,
       win_rate: parseFloat(bestStat.winRate) || 50.0,
-      scaling_type: current?.scaling_type || "Mid",
+      scaling_type: baseChamp.scalingType || current?.scaling_type || "Mid",
       damage_type: baseChamp.damageType || "Adaptive",
       class: baseChamp.class || "Unknown",
       is_frontline: baseChamp.isFrontline ? 1 : 0,
@@ -321,4 +321,8 @@ export function runMigration() {
 // Ejecutar si se corre directamente
 if (process.argv[1] === path.resolve(process.cwd(), 'src/lib/db/migrate.ts') || process.argv[1]?.endsWith('migrate.ts')) {
   runMigration();
+  setTimeout(() => {
+    console.log("👋 Migración terminada. Forzando salida del proceso.");
+    process.exit(0);
+  }, 4000);
 }

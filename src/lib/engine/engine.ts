@@ -6,13 +6,13 @@ import { analyzeComposition } from './compositionAnalyzer.js';
 
 export let engineWeights = {
   meta_base: 0.4,
-  synergy: 2.2,
+  synergy: 0.8,
   matchup: 0.45,
   counter: 0.35,
   composition: 0.8,
   utility: 0.5,
   scaling: 1.0,
-  tactic_role_bonus: 1.5,
+  tactic_role_bonus: 1.2,
   personal_mastery: 0.8,
   flex_value: 0.6,
   phase_multiplier_pick5: 1.4
@@ -119,7 +119,7 @@ export function getProcessedRecommendations(
 
     for (const c of pool) {
         if (unavailableIds.includes(c.id)) continue;
-        const { score, reasons } = calculateScore(c, allies, enemies);
+        const { score, reasons } = calculateScore(c, allies, enemies, unavailableIds);
         const rawBuild = c.buildData;
 
         const hydratedBuild = {
@@ -271,11 +271,231 @@ export function getBanRecommendations(
   return results;
 }
 
+type EnemyArchetype = 
+  | 'siege'
+  | 'engage_heavy'
+  | 'poke'
+  | 'pick_comp'
+  | 'scaling'
+  | 'split_push'
+  | 'teamfight'
+  | 'mixed';
+
+type AllyArchetype =
+  | 'poke'
+  | 'engage'
+  | 'teamfight'
+  | 'protect_the_carry'
+  | 'dive'
+  | 'incomplete';
+
+interface ArchetypeReading {
+  enemyArchetype: EnemyArchetype;
+  allyArchetype: AllyArchetype;
+  confidence: 'low' | 'medium' | 'high';
+  enemyPicksAnalyzed: number;
+}
+
+function detectEnemyArchetype(enemies: EnrichedChampion[]): EnemyArchetype {
+  if (enemies.length < 2) {
+    return 'mixed';
+  }
+
+  const signals = {
+    siege: enemies.filter(e => 
+      e.tags.includes('Siege') || e.tags.includes('Poke') || (e.tacticRole || e.tactic_role) === 'siege'
+    ).length,
+
+    engage_heavy: enemies.filter(e => 
+      (e.tacticRole || e.tactic_role) === 'engage' || e.tags.includes('Knockup') || e.hasHardCC
+    ).length,
+
+    scaling: enemies.filter(e => 
+      e.isHypercarry || e.meta?.scalingType === 'Late' || e.scalingType === 'Late'
+    ).length,
+
+    poke: enemies.filter(e => 
+      (e.tacticRole || e.tactic_role) === 'poke' || e.tags.includes('Poke')
+    ).length,
+
+    pick_comp: enemies.filter(e => 
+      (e.tacticRole || e.tactic_role) === 'burst' || (e.tacticRole || e.tactic_role) === 'dive' || e.tags.includes('Pick') || e.tags.includes('Isolation')
+    ).length,
+
+    split_push: enemies.filter(e => 
+      e.tags.includes('SplitPush') || e.tags.includes('Splitpush') || (e.tacticRole || e.tactic_role) === 'splitpush'
+    ).length,
+
+    teamfight: enemies.filter(e => 
+      (e.tacticRole || e.tactic_role) === 'teamfight'
+    ).length,
+  };
+
+  const priorityOrder: (keyof typeof signals)[] = [
+    'siege', 'engage_heavy', 'scaling', 'poke', 'pick_comp', 'split_push', 'teamfight'
+  ];
+
+  const sorted = Object.entries(signals)
+    .sort((a, b) => {
+      if (b[1] !== a[1]) {
+        return b[1] - a[1];
+      }
+      return priorityOrder.indexOf(a[0] as any) - priorityOrder.indexOf(b[0] as any);
+    });
+
+  const dominant = sorted[0];
+
+  return dominant[1] >= 2 ? (dominant[0] as EnemyArchetype) : 'mixed';
+}
+
+function detectAllyArchetype(allies: EnrichedChampion[]): AllyArchetype {
+  if (allies.length < 2) {
+    return 'incomplete';
+  }
+
+  const signals = {
+    poke: allies.filter(a => 
+      (a.tacticRole || a.tactic_role) === 'poke' || a.tags.includes('Poke') || a.tags.includes('Kite')
+    ).length,
+
+    engage: allies.filter(a => 
+      (a.tacticRole || a.tactic_role) === 'engage' || a.tags.includes('Engage') || a.tags.includes('Knockup')
+    ).length,
+
+    teamfight: allies.filter(a => 
+      (a.tacticRole || a.tactic_role) === 'teamfight'
+    ).length,
+
+    protect_the_carry: allies.filter(a => 
+      a.isHypercarry || a.tags.includes('HyperCarry') || a.tags.includes('Shielding') || (a.tacticRole || a.tactic_role) === 'peel' || a.teamProvides?.includes('peel')
+    ).length,
+
+    dive: allies.filter(a => 
+      (a.tacticRole || a.tactic_role) === 'dive' || a.tags.includes('Dive')
+    ).length,
+  };
+
+  const priorityOrder: (keyof typeof signals)[] = [
+    'poke', 'engage', 'teamfight', 'protect_the_carry', 'dive'
+  ];
+
+  const sorted = Object.entries(signals)
+    .sort((a, b) => {
+      if (b[1] !== a[1]) {
+        return b[1] - a[1];
+      }
+      return priorityOrder.indexOf(a[0] as any) - priorityOrder.indexOf(b[0] as any);
+    });
+
+  const dominant = sorted[0];
+
+  return dominant[1] >= 2 ? (dominant[0] as AllyArchetype) : 'incomplete';
+}
+
+const COUNTER_MAP: Record<Exclude<EnemyArchetype, 'mixed'>, {
+  roles: string[],
+  tags: string[],
+  bonus: number
+}> = {
+  siege:       { roles: ['siege','utility'], tags: ['ZoneControl','Disengage'], bonus: 1.5 },
+  engage_heavy:{ roles: ['poke','disengage'], tags: ['Poke','Disengage','Shield','Shielding'], bonus: 1.3 },
+  poke:        { roles: ['dive','engage'], tags: ['Dive','Gap Close','Tank','Frontline'], bonus: 1.2 },
+  pick_comp:   { roles: ['peel','teamfight'], tags: ['Peel','Grouping','Frontline'], bonus: 1.0 },
+  scaling:     { roles: ['skirmish','dive'], tags: ['EarlyPressure','Pick','Dive'], bonus: 1.2 },
+  split_push:  { roles: ['teamfight','utility'], tags: ['Global','Teleport','Engage'], bonus: 1.0 },
+  teamfight:   { roles: ['poke','burst'], tags: ['Poke','Burst','Disengage','Kite'], bonus: 1.1 }
+};
+
+function calcArchetypeCounterBonus(
+  candidate: EnrichedChampion,
+  reading: ArchetypeReading,
+  weights: typeof engineWeights,
+  phaseMultiplier: number
+): { bonus: number; details: string[] } {
+  const details: string[] = [];
+  if (reading.enemyArchetype === 'mixed') {
+    return { bonus: 0, details };
+  }
+
+  const confidenceMultiplier = 
+    reading.confidence === 'high'   ? 1.0 :
+    reading.confidence === 'medium' ? 0.6 :
+    0.2;
+
+  const counter = COUNTER_MAP[reading.enemyArchetype];
+  if (!counter) return { bonus: 0, details };
+
+  let rawBonus = 0;
+  const candidateRole = candidate.tacticRole || candidate.tactic_role || 'teamfight';
+  
+  if (counter.roles.includes(candidateRole)) {
+    rawBonus += counter.bonus;
+  }
+
+  const candidateTags = candidate.tags || [];
+  const matchingTags = candidateTags.filter(t => counter.tags.includes(t));
+  rawBonus += matchingTags.length * 0.4;
+
+  const poorResponses: Record<Exclude<EnemyArchetype, 'mixed'>, string[]> = {
+    siege:        ['burst', 'dive', 'assassin', 'skirmish'],
+    engage_heavy: ['splitpush', 'burst'],
+    scaling:      ['siege'],
+    poke:         ['splitpush'],
+    pick_comp:    [],
+    split_push:   [],
+    teamfight:    []
+  };
+
+  const isPoorResponse = 
+    poorResponses[reading.enemyArchetype]?.includes(candidateRole) ||
+    (poorResponses[reading.enemyArchetype]?.includes('assassin') && (candidate.tags.includes('Assassin') || candidate.class === 'Assassin'));
+
+  if (isPoorResponse) {
+    rawBonus -= 1.8;
+  }
+
+  // Penalización por ausencia de respuesta estructural
+  const hasAnyCounterTag = candidateTags.some(t => counter.tags.includes(t));
+  const hasAnyCounterRole = counter.roles.includes(candidateRole);
+
+  if (!hasAnyCounterTag && !hasAnyCounterRole) {
+    rawBonus -= 1.2;
+  }
+
+  // --- DOBLE ANÁLISIS: Intersección con Arquetipo Aliado ---
+  let intersectionBonus = 0;
+  if (reading.allyArchetype !== 'incomplete') {
+    if (reading.allyArchetype === 'poke' && (reading.enemyArchetype === 'siege' || reading.enemyArchetype === 'scaling')) {
+      if (candidateTags.includes('ZoneControl') || candidateTags.includes('Disengage')) {
+        intersectionBonus += 0.8;
+      }
+    }
+    if (reading.allyArchetype === 'engage' && reading.enemyArchetype === 'poke') {
+      if (candidateTags.includes('Gap Close') || candidateTags.includes('Dive') || candidate.isFrontline) {
+        intersectionBonus += 0.6;
+      }
+    }
+    if (reading.allyArchetype === 'protect_the_carry' && (reading.enemyArchetype === 'engage_heavy' || reading.enemyArchetype === 'pick_comp')) {
+      if (candidateTags.includes('Peel') || candidateTags.includes('Disengage') || candidateTags.includes('Shield') || candidateTags.includes('Shielding')) {
+        intersectionBonus += 0.7;
+      }
+    }
+  }
+
+  const finalBonus = (rawBonus + intersectionBonus) * confidenceMultiplier * phaseMultiplier * (weights.composition ?? 0.8);
+
+  if (finalBonus !== 0) {
+    const direction = finalBonus > 0 ? 'Counter estructural / Sinergia' : 'Peligro estructural';
+    details.push(`Respuesta: ${direction} vs comp enemiga de ${reading.enemyArchetype.toUpperCase()} (${finalBonus > 0 ? '+' : ''}${finalBonus.toFixed(2)})`);
+  }
+
+  return { bonus: finalBonus, details };
+}
 
 /**
  * CALCULAR PUNTAJE
  */
-function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[]): { score: number; reasons: string[] } {
+function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[], unavailableIds: number[] = []): { score: number; reasons: string[] } {
     // 1. CONSTANTES DE PESO REEQUILIBRADAS POR FASE
     const pickedCount = allies.length;
     let phaseKey: 'pick1' | 'pick3' | 'pick5' = 'pick3';
@@ -285,23 +505,23 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     const PHASE_WEIGHTS = {
       pick1: {
         meta_base: 1.5,
-        synergy: 0.3,
+        synergy: 0.5,
         counter: 0.5,
         composition: 0.5,
         flex_bonus: 1.0
       },
       pick3: {
         meta_base: 1.0,
-        synergy: 1.5,
+        synergy: 1.0,
         counter: 1.0,
-        composition: 1.5,
+        composition: 1.2,
         flex_bonus: 0.2
       },
       pick5: {
         meta_base: 0.8,
-        synergy: 2.0,
-        counter: 2.5,
-        composition: 2.0,
+        synergy: 1.5,
+        counter: 2.0,
+        composition: 1.8,
         flex_bonus: 0.0
       }
     };
@@ -310,13 +530,13 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
 
     const WEIGHTS = {
         META_BASE: (engineWeights.meta_base ?? 0.4) * phase.meta_base,
-        SYNERGY: (engineWeights.synergy ?? 2.2) * phase.synergy,
+        SYNERGY: (engineWeights.synergy ?? 0.8) * phase.synergy,
         MATCHUP: engineWeights.matchup ?? 0.45,
         COUNTER: (engineWeights.counter ?? 0.35) * phase.counter,
         COMPOSITION: (engineWeights.composition ?? 0.8) * phase.composition,
         UTILITY: engineWeights.utility ?? 0.5,
         SCALING: engineWeights.scaling ?? 1.0,
-        tactic_role_bonus: engineWeights.tactic_role_bonus ?? 1.5,
+        tactic_role_bonus: engineWeights.tactic_role_bonus ?? 1.2,
         flex_value: engineWeights.flex_value ?? 0.6,
         personal_mastery: engineWeights.personal_mastery ?? 0.8
     };
@@ -346,47 +566,83 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
       }
     }
 
-    // --- CAPA 0.9: ROL TÁCTICO FALTANTE ---
+    // --- CAPA 0.9: ROL TÁCTICO FALTANTE / SATURACIÓN ---
     const allyComp = analyzeComposition(allies);
     const gaps = allyComp.gaps;
     const tacticRole = target.tacticRole || target.tactic_role || 'teamfight';
     
-    if (allies.length >= 1 && gaps.includes(tacticRole as any)) {
-      score += WEIGHTS.tactic_role_bonus;
-      reasons.push(`Balance: Aporta el rol táctico faltante (${tacticRole.toUpperCase()})`);
+    // Contar cuántos aliados tienen el mismo rol táctico
+    let sameRoleAlliesCount = 0;
+    allies.forEach(allyName => {
+      const allyData = ENRICHED_DB[allyName];
+      if (allyData) {
+        const allyRole = allyData.tacticRole || allyData.tactic_role || 'teamfight';
+        if (allyRole === tacticRole) {
+          sameRoleAlliesCount++;
+        }
+      }
+    });
+
+    if (allies.length >= 1) {
+      if (gaps.includes(tacticRole as any)) {
+        score += WEIGHTS.tactic_role_bonus;
+        reasons.push(`Balance: Aporta el rol táctico faltante (${tacticRole.toUpperCase()})`);
+      }
     }
 
-    // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) ---
+    // --- CAPA 1: FORTALEZA INDIVIDUAL (SUAVIZADA) Y CAP DE CONTEXTO ---
     const rank = target.meta.tier || 50;
+    let metaBonus = 0.0;
     if (rank === 1) {
-        score += 4.0; // Rey del Meta
+        metaBonus = 3.5;
         reasons.push("Meta: Prioridad Máxima (Top 1 Global)");
-    } else if (rank === 2) {
-        score += 3.5;
-        reasons.push("Meta: Selección dominante (Top 2 Global)");
-    } else if (rank === 3) {
-        score += 3.0;
+    } else if (rank <= 3) {
+        metaBonus = 2.8;
         reasons.push("Meta: Selección muy fuerte (Top 3 Global)");
     } else if (rank <= 6) {
-        score += 2.2;
+        metaBonus = 2.0;
         reasons.push("Meta: Selección Top Tier sólida");
     } else if (rank <= 12) {
-        score += 1.2;
+        metaBonus = 1.2;
         reasons.push("Meta: Pick estable de la Tierlist");
-    } else if (rank <= 25) {
-        score += 0.4;
+    } else if (rank <= 20) {
+        metaBonus = 0.6;
         reasons.push("Análisis: Pick situacional viable");
-    } else if (rank > 35) {
-        score -= 2.5;
+    } else if (rank <= 30) {
+        // Neutro: no bonus ni penalización
+    } else if (rank > 30) {
+        metaBonus = -1.5;
         reasons.push("Nota: Fuera del meta prioritario");
     }
+
+    if (enemies.length >= 2 && metaBonus > 0) {
+      const enemyEnrichedForMeta = enemies
+        .map(name => ENRICHED_DB[name])
+        .filter(Boolean) as EnrichedChampion[];
+      
+      const detectedArch = detectEnemyArchetype(enemyEnrichedForMeta);
+      
+      if (detectedArch !== 'mixed') {
+        const counterMapCheck = COUNTER_MAP[detectedArch];
+        const candidateRole = target.tacticRole || target.tactic_role || 'teamfight';
+        const hasResponse = 
+          counterMapCheck.roles.includes(candidateRole) ||
+          (target.tags || []).some(t => counterMapCheck.tags.includes(t));
+        
+        if (!hasResponse) {
+          metaBonus *= 0.5; // Reducir a la mitad si no tiene respuesta
+        }
+      }
+    }
+
+    score += metaBonus * WEIGHTS.META_BASE;
     
     // Impacto directo del Win Rate global
     score += (target.meta.winRate - 50) * WEIGHTS.META_BASE;
 
     // Modificador adaptativo por estado de Blind Pick (Solo si el campeón es genuinamente Top Tier)
-    if (allies.length <= 1 && enemies.length <= 2 && rank <= 6 && target.meta.winRate >= 51.0) {
-        score += 1.0;
+    if (pickedCount === 0 && enemies.length <= 1 && rank <= 6 && target.meta.winRate >= 51.5) {
+        score += 0.8;
         reasons.push("Safe Pick: Excelente opción a ciegas para abrir el Draft");
     }
 
@@ -433,6 +689,36 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         }
     });
 
+    // --- CAPA 2.5: RESPUESTA AL ARQUETIPO ENEMIGO Y DOBLE ANÁLISIS ---
+    let collectiveArchetypeBonus = 0.0;
+    if (enemies.length >= 1) {
+      const enemyEnrichedPicks = enemies
+        .map(name => ENRICHED_DB[name])
+        .filter(Boolean) as EnrichedChampion[];
+
+      const allyEnrichedPicks = allies
+        .map(name => ENRICHED_DB[name])
+        .filter(Boolean) as EnrichedChampion[];
+
+      const enemyArch = detectEnemyArchetype(enemyEnrichedPicks);
+      const allyArch = detectAllyArchetype(allyEnrichedPicks);
+      const confidence = enemies.length >= 3 ? 'high' 
+        : enemies.length === 2 ? 'medium' 
+        : 'low';
+
+      const reading: ArchetypeReading = {
+        enemyArchetype: enemyArch,
+        allyArchetype: allyArch,
+        confidence,
+        enemyPicksAnalyzed: enemies.length
+      };
+
+      const result = calcArchetypeCounterBonus(target, reading, engineWeights, phase.composition);
+      collectiveArchetypeBonus = result.bonus;
+      reasons.push(...result.details);
+    }
+    score += collectiveArchetypeBonus;
+
     // --- CAPA 3: GOD MATCHUPS ---
     enemies.forEach(enemyName => {
         const godMatch = target.godMatchups?.find(m => normalizeKey(m.name) === normalizeKey(enemyName));
@@ -447,6 +733,39 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
             }
         }
     });
+
+    // --- CAPA 3.5: NEGACIÓN DE WIN CONDITION ENEMIGA ---
+    let winCondNegationBonus = 0.0;
+    if (enemies.length >= 1) {
+      enemies.forEach(enemyName => {
+        const enemyData = ENRICHED_DB[enemyName];
+        if (!enemyData) return;
+
+        // A. Hypercarry Late vs ZoneControl
+        const isLateHypercarry = enemyData.isHypercarry && (enemyData.scalingType === 'Late' || enemyData.scaling_type === 'Late');
+        const hasZoneControl = target.tags.includes('ZoneControl') || target.tags.includes('Zone Control');
+        if (isLateHypercarry && hasZoneControl) {
+          winCondNegationBonus += 0.8;
+          reasons.push(`Negación: ZoneControl dificulta el escalado del carry enemigo ${enemyName}`);
+        }
+
+        // B. Cruzar teamNeeds enemigo con tacticRole del candidato
+        const enemyNeeds = enemyData.teamNeeds || [];
+        if (enemyNeeds.includes('peel') && (tacticRole === 'dive' || tacticRole === 'burst')) {
+          winCondNegationBonus += 0.6;
+          reasons.push(`Castigo: Explota la falta de peel enemigo (${enemyName})`);
+        }
+        if (enemyNeeds.includes('engage') && (tacticRole === 'poke' || tacticRole === 'siege' || tacticRole === 'splitpush')) {
+          winCondNegationBonus += 0.6;
+          reasons.push(`Castigo: Explota la falta de iniciación enemiga (${enemyName})`);
+        }
+      });
+      
+      if (winCondNegationBonus > 0) {
+        const finalWinCondBonus = Math.min(winCondNegationBonus, 1.5) * phase.counter;
+        score += finalWinCondBonus;
+      }
+    }
 
     // --- CAPA 4: COUNTERS ---
     enemies.forEach(enemyName => {
@@ -463,28 +782,68 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
     });
 
     // --- CAPA 5: BALANCE DE EQUIPO (Utilidad/CC) ---
-    const teamHasTank = allies.some(a => ENRICHED_DB[a]?.tags.includes("Tank"));
-    const teamHasCC = allies.some(a => ENRICHED_DB[a]?.tags.includes("Support") || ENRICHED_DB[a]?.tags.includes("Mage"));
-    const teamHasUtility = allies.some(a => 
-        ENRICHED_DB[a]?.tags.includes("Support") || 
-        ENRICHED_DB[a]?.lane === "UTILITY"
-    );
+    const alliesProvides = new Set<string>();
+    let alliesTankCount = 0;
+    allies.forEach(allyName => {
+      const allyData = ENRICHED_DB[allyName];
+      if (!allyData) return;
+      if (allyData.tags.includes("Tank") || allyData.isFrontline) {
+        alliesTankCount++;
+      }
+      if (allyData.teamProvides) {
+        allyData.teamProvides.forEach((p: string) => alliesProvides.add(p));
+      }
+      if (allyData.tags.includes("Support") || allyData.class === "Support") {
+        alliesProvides.add("peel");
+      }
+      if (allyData.hasHardCC) {
+        alliesProvides.add("cc");
+      }
+    });
 
     const isTankRole = ["TOP", "JUNGLE", "UTILITY"].includes(targetLane);
+    const targetProvides = target.teamProvides || [];
 
-    if (allies.length >= 2 && isTankRole && !teamHasTank && target.tags.includes("Tank")) {
+    if (allies.length >= 2 && isTankRole && alliesTankCount === 0 && (target.tags.includes("Tank") || target.isFrontline)) {
         score += WEIGHTS.UTILITY * 1.5; 
         reasons.push("Balance: Necesidad de Frontline (Falta Tanque en el equipo)");
     }
 
-    if (allies.length >= 2 && !teamHasUtility) {
-        const providesCC = target.tags.includes("Support") || target.lane === "UTILITY" || target.tags.includes("Mage");
-        if (providesCC) {
-            score += WEIGHTS.UTILITY;
-            reasons.push("Balance: Aporta el Control de Masas/Utilidad faltante");
-        }
+    if (allies.length >= 2) {
+      const candidateProvidesCc = targetProvides.includes("cc") || target.hasHardCC;
+      const candidateProvidesPeel = targetProvides.includes("peel") || target.tags.includes("Support");
+      const candidateProvidesHealing = targetProvides.includes("healing") || targetProvides.includes("shielding") || target.hasShield || target.hasSustain;
+
+      let addedUtility = false;
+      if (candidateProvidesCc && !alliesProvides.has("cc")) {
+        score += WEIGHTS.UTILITY;
+        reasons.push("Balance: Aporta Control de Masas (CC) faltante");
+        addedUtility = true;
+      }
+      if (candidateProvidesPeel && !alliesProvides.has("peel") && !addedUtility) {
+        score += WEIGHTS.UTILITY * 0.8;
+        reasons.push("Balance: Aporta Protección (Peel) faltante");
+        addedUtility = true;
+      }
+      if (candidateProvidesHealing && !alliesProvides.has("healing") && !alliesProvides.has("shielding") && !addedUtility) {
+        score += WEIGHTS.UTILITY * 0.8;
+        reasons.push("Balance: Aporta Sustento/Escudos faltantes");
+        addedUtility = true;
+      }
     }
 
+    // --- CAPA 5.5: SATURACIÓN DE ROL TÁCTICO (DEDICADA) ---
+    if (allies.length >= 1 && sameRoleAlliesCount >= 2) {
+      let penaltyBase = 0.5;
+      if (tacticRole === 'poke' || tacticRole === 'burst' || tacticRole === 'splitpush') {
+        penaltyBase = 1.2;
+      } else if (tacticRole === 'teamfight' || tacticRole === 'utility') {
+        penaltyBase = 0.3;
+      }
+      const scaledPenalty = (sameRoleAlliesCount - 1) * penaltyBase * phase.composition;
+      score -= scaledPenalty;
+      reasons.push(`Saturación Táctica: Exceso de campeones de tipo ${tacticRole.toUpperCase()} (-${scaledPenalty.toFixed(1)})`);
+    }
 
     // --- CAPA 6: BALANCE DE DAÑO ---
     const damage = target.combat.damageComposition;
@@ -521,21 +880,34 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         }
     }
 
-    // --- CAPA 7: ESCALADO (winrateCurve) ---
+    // --- CAPA 7: ESCALADO (winrateCurve) PONDERADO POR ROL ---
     const getScalingMetrics = (champ: any) => {
         const curve = champ.combat.winrateCurve;
-        // Buscamos los puntos exactos que me diste
         const midGame = curve.find((p: any) => p.time === 1500)?.value || 50;
         const lateGame = curve.find((p: any) => p.time === 2700)?.value || 50;
-        
         return { midGame, lateGame };
     };
 
+    let totalWeight = 0;
+    let weightedLateSum = 0;
     
-    const enemyMetrics = enemies.map(e => getScalingMetrics(ENRICHED_DB[e]));
-    const enemyLateAvg = enemyMetrics.reduce((acc, m) => acc + m.lateGame, 0) / (enemies.length || 1);
+    enemies.forEach(enemyName => {
+      const enemyData = ENRICHED_DB[enemyName];
+      if (!enemyData) return;
 
-   
+      const metrics = getScalingMetrics(enemyData);
+      let weight = 1.0;
+      if (enemyData.isHypercarry) {
+        weight = 2.5; // El hypercarry pesa más en el promedio de escalado tardío
+      } else if (enemyData.class === 'Support' || enemyData.lane === 'UTILITY') {
+        weight = 0.5; // El support pesa menos
+      }
+
+      weightedLateSum += metrics.lateGame * weight;
+      totalWeight += weight;
+    });
+
+    const enemyLateAvg = totalWeight > 0 ? (weightedLateSum / totalWeight) : 50;
     const targetMetrics = getScalingMetrics(target);
 
     if (targetMetrics.lateGame > 53 && enemyLateAvg < 50) {
@@ -553,14 +925,42 @@ function calculateScore(target: EnrichedChampion, allies: string[], enemies: str
         reasons.push("Timing: Powerspike agresivo al minuto 25");
     }
 
+    // --- CAPA 9: FLEXIBILIDAD POST-PICK ---
+    const candidateNeeds = target.teamNeeds?.filter((n: string) => n !== 'none') || [];
+    if (candidateNeeds.length > 0) {
+      const allChamps = Object.values(ENRICHED_DB) as EnrichedChampion[];
+      const availableChamps = allChamps.filter(c => !unavailableIds.includes(c.id));
+
+      let minProvidersCount = 999;
+      candidateNeeds.forEach(need => {
+        const count = availableChamps.filter(c => c.teamProvides?.includes(need as any)).length;
+        if (count < minProvidersCount) {
+          minProvidersCount = count;
+        }
+      });
+
+      if (minProvidersCount !== 999) {
+        let flexBonusOrPenalty = 0.0;
+        if (minProvidersCount < 4) {
+          flexBonusOrPenalty = -1.2;
+          reasons.push(`Draft Cerrado: Menos de 4 opciones disponibles para cubrir ${candidateNeeds.join('/')} (-${(Math.abs(flexBonusOrPenalty) * phase.flex_bonus).toFixed(1)})`);
+        } else if (minProvidersCount >= 8) {
+          flexBonusOrPenalty = 0.8;
+          reasons.push(`Flexibilidad: Quedan ${minProvidersCount} opciones para cubrir ${candidateNeeds.join('/')} (+${(flexBonusOrPenalty * phase.flex_bonus).toFixed(1)})`);
+        }
+
+        const finalFlexValue = flexBonusOrPenalty * phase.flex_bonus;
+        score += finalFlexValue;
+      }
+    }
 
     // --- CAPA 8: VARIABILIDAD (ANTITUNNELING) ---
     const entropy = Math.random() * 0.3;
     score += entropy;
 
     // --- AJUSTE FINAL (SOFT CAP) ---
-    if (score > 9.0) {
-        score = 9.0 + (score - 9.0) * 0.25;
+    if (score > 8.0) {
+        score = 8.0 + (score - 8.0) * 0.12;
     }
 
     const finalScore = parseFloat(Math.min(Math.max(score, 0.1), 10.0).toFixed(2));
