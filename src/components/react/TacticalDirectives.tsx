@@ -95,7 +95,7 @@ export const CombatDirectivesPanel = memo(({
                 </div>
             </div>
 
-            <div className="space-y-2.5 flex-1 min-h-0 overflow-hidden">
+            <div className="space-y-4.5 flex-1 min-h-0 overflow-hidden">
                 {/* ESTRATEGIA */}
                 <div className="flex flex-col gap-0.5 border-l-2 border-hextech-blue/50 pl-2.5">
                     <span className="text-hextech-blue font-black tracking-wider uppercase text-[8px]">
@@ -119,39 +119,6 @@ export const CombatDirectivesPanel = memo(({
                     </p>
                 </div>
 
-                {/* PERFIL DE DAÑO */}
-                <div className="pl-2.5 border-l-2 border-slate-500/50 space-y-1">
-                    <span className="text-[8px] text-slate-400 font-black uppercase tracking-wider block">
-                        Distribución de Daño
-                    </span>
-                    
-                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden flex border border-border-warm/20">
-                        {combatStyle.physicalPct > 0 && (
-                            <div 
-                                style={{ width: `${combatStyle.physicalPct}%` }} 
-                                className="bg-gradient-to-r from-red-600 to-orange-500 h-full"
-                            />
-                        )}
-                        {combatStyle.magicPct > 0 && (
-                            <div 
-                                style={{ width: `${combatStyle.magicPct}%` }} 
-                                className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full"
-                            />
-                        )}
-                        {combatStyle.truePct > 0 && (
-                            <div 
-                                style={{ width: `${combatStyle.truePct}%` }} 
-                                className="bg-gradient-to-r from-slate-300 to-white h-full"
-                            />
-                        )}
-                    </div>
-                    
-                    <div className="flex justify-between text-[8px] font-mono text-slate-500">
-                        <span>AD: {combatStyle.physicalPct}%</span>
-                        <span>AP: {combatStyle.magicPct}%</span>
-                        <span>TRUE: {combatStyle.truePct}%</span>
-                    </div>
-                </div>
 
                 {/* AMENAZA ESTRATÉGICA ENEMIGA */}
                 {enemyNames && enemyNames.length > 0 ? (() => {

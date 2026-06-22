@@ -3,7 +3,7 @@ import type { LcuPlayer } from './PlayerSlot';
 import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
 import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/engine';
 import { initializeEngineData, initializeItemsData } from '../../lib/engine/dataProvider';
-import { CombatDirectivesPanel, MatchupAnalysisPanel } from './TacticalDirectives';
+import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
 
@@ -565,9 +565,10 @@ export const DraftPage = () => {
     }, []);
 
     // Callbacks optimizados
-    const handleReImport = useCallback(() => {
-        if (currentBuild) {
-            importToClient(currentBuild);
+    const handleReImport = useCallback((customBuild?: any) => {
+        const data = customBuild || currentBuild;
+        if (data) {
+            importToClient(data);
         }
     }, [currentBuild]);
 
@@ -660,15 +661,10 @@ export const DraftPage = () => {
                                     {myTeamAnalysis && allyNames.length > 0 && (
                                         <div className="flex items-center justify-between gap-6 py-2 border-b border-border-warm/20 shrink-0">
                                             <div className="flex items-center gap-2.5">
-                                                <div className="w-1.5 h-1.5 bg-[#9055ff] rounded-full shadow-[0_0_6px_#9055ff]" />
+                                                
                                                 <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">
-                                                    <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
+                                                    Estrategia: <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
                                                 </span>
-                                                {myTeamAnalysis.gaps.length > 0 && (
-                                                    <span className="text-[9px] text-slate-500 font-medium tracking-wider italic">
-                                                        — falta {myTeamAnalysis.gaps.map(g => GAP_TRANSLATIONS[g] || g).join(', ')}
-                                                    </span>
-                                                )}
                                             </div>
                                             <div className="flex items-center gap-2.5 flex-1 max-w-[280px]">
                                                 <span className="text-[8px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile.physicalPct}%</span>
@@ -689,8 +685,8 @@ export const DraftPage = () => {
                                         />
                                     </div>
 
-                                    {/* Módulos de Análisis — 3 columnas */}
-                                    <div className="grid grid-cols-3 gap-3 flex-1 min-h-0">
+                                    {/* Módulos de Análisis — 2 columnas */}
+                                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
                                         <div className="min-h-0 overflow-hidden">
                                             <ItemBuild
                                                 currentBuild={currentBuild}
@@ -704,12 +700,6 @@ export const DraftPage = () => {
                                                 winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
                                                 generalDirectives={tacticalDirectives.generalDirectives}
                                                 enemyNames={enemyNames}
-                                            />
-                                        </div>
-                                        <div className="min-h-0 overflow-hidden">
-                                            <MatchupAnalysisPanel
-                                                matchups={tacticalDirectives.matchups}
-                                                synergies={tacticalDirectives.synergies}
                                             />
                                         </div>
                                     </div>

@@ -323,7 +323,11 @@ export const championsRepo = {
         lane: b.lane
       }));
 
-      const buildData = builds.find(b => b.is_default) || builds[0] || null;
+      const buildData = builds.find(b => b.is_default && b.special_notes?.dpmData)
+        || builds.find(b => b.is_default && b.lane !== 'UNKNOWN')
+        || builds.find(b => b.is_default)
+        || builds[0]
+        || null;
 
       // Reconstruir curva de winrate dummy o basada en base de datos en el futuro
       const tagsList = JSON.parse(c.tags);

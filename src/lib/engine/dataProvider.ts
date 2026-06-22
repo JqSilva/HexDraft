@@ -73,6 +73,13 @@ export interface EnrichedChampion extends ChampionData {
   };
   
   scalingType: 'Early' | 'Mid' | 'Late';
+  buildData?: any;
+  builds?: any[];
+  tactic_role?: string;
+  is_frontline?: number;
+  is_hypercarry?: number;
+  has_hard_cc?: number;
+  has_sustain?: number;
 }
 
 const CHAMPION_ALIAS: Record<string, string> = {

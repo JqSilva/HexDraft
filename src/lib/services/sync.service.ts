@@ -424,8 +424,8 @@ export async function scrapeSingleChampion(
     const internalName = API_NAME_MAP[name] || name;
     const urlName = internalName.replace(/[^a-zA-Z0-9]/g, "");
     
-    // El endpoint de dpm.lol usa 'support' para UTILITY
-    const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'support' : lane.toLowerCase();
+    // El endpoint de dpm.lol usa 'utility' para UTILITY
+    const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'utility' : lane.toLowerCase();
     const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
     
     try {
@@ -579,7 +579,15 @@ export async function scrapeSingleChampion(
           paths: defaultPaths,
           slotItems: data.items
         },
-        skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null
+        skills: data.skillLevelUp?.sort((a:any, b:any) => b.winrate - a.winrate)[0] || null,
+        dpmData: {
+          coreBuilds: data.coreBuilds,
+          items: data.items,
+          boots: data.boots,
+          runes: data.runes,
+          summoners: data.summoners,
+          startItems: data.startItems
+        }
       };
 
       // Guardar en SQLite en tiempo real
@@ -683,7 +691,8 @@ export async function scrapeSingleChampion(
           last_update: new Date().toISOString(),
           winrate: laneBuildData.skills?.winrate || 50.0,
           pickrate: laneBuildData.skills?.pickrate || 100.0,
-          style: "Default"
+          style: "Default",
+          dpmData: laneBuildData.dpmData
         }),
         lane: lane
       });

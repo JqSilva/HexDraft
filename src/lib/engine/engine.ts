@@ -2,7 +2,7 @@ import { DATA_BY_LANE, ENRICHED_DB, normalizeKey, initializeEngineData, type Enr
 import { NAME_TO_ID } from './constants.js';
 import { hydrateAsset } from './hydrator.js';
 import { getAdaptedBuild } from './itemEngine.js';
-import { analyzeComposition } from './compositionAnalyzer.js';
+import { analyzeComposition, detectEnemyArchetype, detectAllyArchetype, type EnemyArchetype, type AllyArchetype, type ArchetypeReading } from './compositionAnalyzer.js';
 
 export let engineWeights = {
   meta_base: 0.4,
@@ -271,126 +271,7 @@ export function getBanRecommendations(
   return results;
 }
 
-type EnemyArchetype = 
-  | 'siege'
-  | 'engage_heavy'
-  | 'poke'
-  | 'pick_comp'
-  | 'scaling'
-  | 'split_push'
-  | 'teamfight'
-  | 'mixed';
 
-type AllyArchetype =
-  | 'poke'
-  | 'engage'
-  | 'teamfight'
-  | 'protect_the_carry'
-  | 'dive'
-  | 'incomplete';
-
-interface ArchetypeReading {
-  enemyArchetype: EnemyArchetype;
-  allyArchetype: AllyArchetype;
-  confidence: 'low' | 'medium' | 'high';
-  enemyPicksAnalyzed: number;
-}
-
-function detectEnemyArchetype(enemies: EnrichedChampion[]): EnemyArchetype {
-  if (enemies.length < 2) {
-    return 'mixed';
-  }
-
-  const signals = {
-    siege: enemies.filter(e => 
-      e.tags.includes('Siege') || e.tags.includes('Poke') || (e.tacticRole || e.tactic_role) === 'siege'
-    ).length,
-
-    engage_heavy: enemies.filter(e => 
-      (e.tacticRole || e.tactic_role) === 'engage' || e.tags.includes('Knockup') || e.hasHardCC
-    ).length,
-
-    scaling: enemies.filter(e => 
-      e.isHypercarry || e.meta?.scalingType === 'Late' || e.scalingType === 'Late'
-    ).length,
-
-    poke: enemies.filter(e => 
-      (e.tacticRole || e.tactic_role) === 'poke' || e.tags.includes('Poke')
-    ).length,
-
-    pick_comp: enemies.filter(e => 
-      (e.tacticRole || e.tactic_role) === 'burst' || (e.tacticRole || e.tactic_role) === 'dive' || e.tags.includes('Pick') || e.tags.includes('Isolation')
-    ).length,
-
-    split_push: enemies.filter(e => 
-      e.tags.includes('SplitPush') || e.tags.includes('Splitpush') || (e.tacticRole || e.tactic_role) === 'splitpush'
-    ).length,
-
-    teamfight: enemies.filter(e => 
-      (e.tacticRole || e.tactic_role) === 'teamfight'
-    ).length,
-  };
-
-  const priorityOrder: (keyof typeof signals)[] = [
-    'siege', 'engage_heavy', 'scaling', 'poke', 'pick_comp', 'split_push', 'teamfight'
-  ];
-
-  const sorted = Object.entries(signals)
-    .sort((a, b) => {
-      if (b[1] !== a[1]) {
-        return b[1] - a[1];
-      }
-      return priorityOrder.indexOf(a[0] as any) - priorityOrder.indexOf(b[0] as any);
-    });
-
-  const dominant = sorted[0];
-
-  return dominant[1] >= 2 ? (dominant[0] as EnemyArchetype) : 'mixed';
-}
-
-function detectAllyArchetype(allies: EnrichedChampion[]): AllyArchetype {
-  if (allies.length < 2) {
-    return 'incomplete';
-  }
-
-  const signals = {
-    poke: allies.filter(a => 
-      (a.tacticRole || a.tactic_role) === 'poke' || a.tags.includes('Poke') || a.tags.includes('Kite')
-    ).length,
-
-    engage: allies.filter(a => 
-      (a.tacticRole || a.tactic_role) === 'engage' || a.tags.includes('Engage') || a.tags.includes('Knockup')
-    ).length,
-
-    teamfight: allies.filter(a => 
-      (a.tacticRole || a.tactic_role) === 'teamfight'
-    ).length,
-
-    protect_the_carry: allies.filter(a => 
-      a.isHypercarry || a.tags.includes('HyperCarry') || a.tags.includes('Shielding') || (a.tacticRole || a.tactic_role) === 'peel' || a.teamProvides?.includes('peel')
-    ).length,
-
-    dive: allies.filter(a => 
-      (a.tacticRole || a.tactic_role) === 'dive' || a.tags.includes('Dive')
-    ).length,
-  };
-
-  const priorityOrder: (keyof typeof signals)[] = [
-    'poke', 'engage', 'teamfight', 'protect_the_carry', 'dive'
-  ];
-
-  const sorted = Object.entries(signals)
-    .sort((a, b) => {
-      if (b[1] !== a[1]) {
-        return b[1] - a[1];
-      }
-      return priorityOrder.indexOf(a[0] as any) - priorityOrder.indexOf(b[0] as any);
-    });
-
-  const dominant = sorted[0];
-
-  return dominant[1] >= 2 ? (dominant[0] as AllyArchetype) : 'incomplete';
-}
 
 const COUNTER_MAP: Record<Exclude<EnemyArchetype, 'mixed'>, {
   roles: string[],

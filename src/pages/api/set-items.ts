@@ -4,54 +4,7 @@ import { getLockfileData } from '../../lib/services/lcu.service.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-function buildSituationalBlock(
-    snowball: any[] = [],
-    neutral: any[] = [],
-    behind: any[] = [],
-    mainBuildItems: any[] = [], // Excluidos de situacionales
-    criticalSwaps: any[] = []
-): any[] {
-    const itemsSet = new Set<string>();
-    const result: any[] = [];
-
-    const getCleanId = (item: any): string | null => {
-        if (!item) return null;
-        if (typeof item === 'object') {
-            const id = item.id || item.itemId || item.Id;
-            return id ? String(id) : null;
-        }
-        return String(item);
-    };
-
-    const mainBuildSet = new Set<string>();
-    (mainBuildItems || []).forEach(i => {
-        const id = getCleanId(i);
-        if (id) mainBuildSet.add(id);
-    });
-
-    // 1. Agregar swaps críticos (como Morellonomicón si se adapta)
-    (criticalSwaps || []).forEach((swap: any) => {
-        const withId = getCleanId(swap?.withItem);
-        if (withId && !mainBuildSet.has(withId)) {
-            itemsSet.add(withId);
-        }
-    });
-
-    // 2. Agregar ítems de las 3 rutas
-    const allPaths = [...(behind || []), ...(neutral || []), ...(snowball || [])];
-    allPaths.forEach(item => {
-        const id = getCleanId(item);
-        if (id && !mainBuildSet.has(id)) {
-            itemsSet.add(id);
-        }
-    });
-
-    itemsSet.forEach(id => {
-        result.push({ id, count: 1 });
-    });
-
-    return result;
-}
+// buildSituationalBlock fue reemplazado por la lista estática común.
 
 export const POST: APIRoute = async ({ request }) => {
     const lcu = getLockfileData(); 
@@ -71,9 +24,6 @@ export const POST: APIRoute = async ({ request }) => {
         const summoner = await resSummoner.json();
         const summonerId = summoner.summonerId;
 
-        const snowball = items.paths?.snowball || [];
-        const neutral = items.paths?.neutral || [];
-        const behind = items.paths?.behind || [];
         const coreItems = items.core || [];
         const starter = items.starter || [];
         const boots = items.boots;
@@ -87,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
             return String(item);
         };
 
-        // Construir la Build Principal (core completo: core + items del neutral path) de-duplicados
+        // Construir la Build Principal (core recomendado)
         const mainBuildItemsSet = new Set<string>();
         const mainBuildItemsList: any[] = [];
 
@@ -99,22 +49,32 @@ export const POST: APIRoute = async ({ request }) => {
             }
         });
 
-        (neutral || []).forEach((i: any) => {
+        // Filtrar objetos situacionales estáticos para no repetir lo que ya está en la build principal, iniciales o botas
+        const filterSet = new Set<string>(mainBuildItemsSet);
+        if (boots) {
+            const bootsId = getCleanId(boots);
+            if (bootsId) filterSet.add(bootsId);
+        }
+        (starter || []).forEach((i: any) => {
             const id = getCleanId(i);
-            if (id && !mainBuildItemsSet.has(id)) {
-                mainBuildItemsSet.add(id);
-                mainBuildItemsList.push({ id, count: 1 });
-            }
+            if (id) filterSet.add(id);
         });
 
-        // Los situacionales serán la combinación de snowball, neutral, y defensive, excluyendo lo que ya está en la Build Principal
-        const situationalItems = buildSituationalBlock(
-            snowball,
-            neutral,
-            behind,
-            mainBuildItemsList.map(x => x.id),
-            criticalSwaps || items.coreItemSwaps || []
-        );
+        const COMMON_SITUATIONAL_IDS = [
+            "3165", // Morellonomicon (Anti-curación AP)
+            "3033", // Recordatorio Mortal (Anti-curación AD)
+            "3075", // Cota de Espinas (Anti-curación Tank)
+            "3135", // Bastón del Vacío (Penetración AP)
+            "3036", // Recuerdos de Lord Dominik (Penetración AD)
+            "3157", // Reloj de Arena de Zhonya (Defensa/AP)
+            "3026", // Ángel Guardián (Defensa/AD)
+            "6657", // Rookern Kaénico (Resistencia Mágica)
+            "3156"  // Fauces de Malmortius (Resistencia Mágica/AD)
+        ];
+
+        const situationalItems = COMMON_SITUATIONAL_IDS
+            .filter(id => !filterSet.has(id))
+            .map(id => ({ id, count: 1 }));
 
         // 2. Construir los bloques reorganizados
         const payload = {
@@ -123,18 +83,18 @@ export const POST: APIRoute = async ({ request }) => {
             associatedChampions: [Number(championId)], // Vincula el set al campeón
             blocks: [
                 {
-                    type: "Inicio",
+                    type: "Iniciales",
                     items: [
                         ...starter.map((i: any) => ({ id: String(i.id || i), count: 1 })),
                         ...(boots ? [{ id: String(boots.id || boots), count: 1 }] : [])
                     ]
                 },
                 {
-                    type: "Build Principal",
+                    type: "Build Recomendada",
                     items: mainBuildItemsList
                 },
                 {
-                    type: "Situacionales — Ajusta según la partida",
+                    type: "Situacionales",
                     items: situationalItems
                 },
                 {
@@ -178,6 +138,11 @@ export const POST: APIRoute = async ({ request }) => {
         });
 
         if (!response.ok) throw new Error("Error LCU al guardar items");
+
+        console.log(`📤 [LCU EXPORT ITEMS] ${championName} (ID: ${championId})`);
+        console.log(`   Starter:`, starter.map((i: any) => typeof i === 'object' ? (i.id || i.itemId) : i));
+        console.log(`   Boots:`, typeof boots === 'object' ? (boots.id || boots.itemId) : boots);
+        console.log(`   Core:`, coreItems.map((i: any) => typeof i === 'object' ? (i.id || i.itemId) : i));
 
         return new Response(JSON.stringify({
             success: true

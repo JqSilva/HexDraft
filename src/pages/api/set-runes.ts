@@ -51,6 +51,11 @@ export const POST: APIRoute = async ({ request }) => {
             return new Response(JSON.stringify({ error: "Error al actualizar", details: errorText }), { status: 400 });
         }
 
+        console.log(`📤 [LCU EXPORT RUNES] ${body.name || "HexDraft Build"}`);
+        console.log(`   Primary Style ID: ${body.primaryStyleId}`);
+        console.log(`   Sub Style ID: ${body.subStyleId}`);
+        console.log(`   Selected Perks:`, body.selectedPerkIds);
+
         return new Response(JSON.stringify({ success: true }), { status: 200 });
 
     } catch (e: any) {
