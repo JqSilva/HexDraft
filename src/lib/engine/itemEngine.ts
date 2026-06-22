@@ -176,6 +176,28 @@ export const RUNE_TREE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
   8400: 'Hybrid', // Resolve
 };
 
+export const PLAYSTYLE_KEYSTONES: Record<string, number[]> = {
+  'AD Letalidad': [9923, 8112, 8128, 8369],      // Hail of Blades, Electrocute, Dark Harvest, First Strike
+  'AD Crítico': [8008, 9923, 8005, 8021, 8010],    // Lethal Tempo, Hail of Blades, Press the Attack, Fleet, Conqueror
+  'AD Combatiente': [8010, 8005, 8992, 8008],     // Conqueror, Press the Attack, Grasp, Lethal Tempo
+  'AP Quemado': [8229, 8230, 8128, 8992],         // Comet, Aery, Dark Harvest, Grasp
+  'AP Ráfaga': [8112, 8128, 8369, 8229, 8214],    // Electrocute, Dark Harvest, First Strike, Comet, Phase Rush
+  'AP Mágico': [8229, 8112, 8128, 8230],          // Comet, Electrocute, Dark Harvest, Aery
+  'AD Físico': [8005, 8008, 8010, 9923, 8021],    // Press the Attack, Lethal Tempo, Conqueror, Hail of Blades, Fleet
+  'Híbrido': [8128, 8112, 9923, 8369],            // Dark Harvest, Electrocute, Hail of Blades, First Strike
+};
+
+export const PLAYSTYLE_SECONDARY_STYLES: Record<string, number[]> = {
+  'AD Letalidad': [8000, 8200],      // Precision, Sorcery
+  'AD Crítico': [8300, 8100, 8400],  // Inspiration, Domination, Resolve
+  'AD Combatiente': [8400, 8300, 8000], // Resolve, Inspiration, Precision
+  'AP Quemado': [8300, 8000, 8400],     // Inspiration, Precision, Resolve
+  'AP Ráfaga': [8200, 8300],         // Sorcery, Inspiration
+  'AP Mágico': [8300, 8100, 8200],   // Inspiration, Domination, Sorcery
+  'AD Físico': [8300, 8000, 8100],   // Inspiration, Precision, Domination
+  'Híbrido': [8300, 8000, 8200],     // Inspiration, Precision, Sorcery
+};
+
 // Fallbacks seguros de items para rellenar rutas de continuación vacías por clase
 const AD_ASSASSIN_FALLBACKS = {
   offensive: [3031, 6676, 6699, 3142], // IE, Collector, Voltaic Cyclosword, Youmuu's Ghostblade
@@ -1326,7 +1348,7 @@ export function selectBootsForCluster(
 /**
  * Helper to select the best rune from options.
  */
-function selectBestRune(options: RuneOption[], isKeystone: boolean = false, clusterDmgType?: 'AD' | 'AP' | 'Hybrid'): number {
+function selectBestRune(options: RuneOption[], isKeystone: boolean = false, clusterDmgType?: 'AD' | 'AP' | 'Hybrid', playstyle?: string): number {
   if (!Array.isArray(options) || options.length === 0) return 0;
   
   const filtered = options.filter(o => (o.pickrate || 0) >= 1.0);
@@ -1342,9 +1364,14 @@ function selectBestRune(options: RuneOption[], isKeystone: boolean = false, clus
     
     let score = viabilityScore(wr, pr);
 
-    if (isKeystone && clusterDmgType) {
+    if (isKeystone && playstyle) {
+      const preferred = PLAYSTYLE_KEYSTONES[playstyle] || [];
+      if (preferred.includes(id)) {
+        score += 15.0; // Gran bonificación para alinear la runa con el playstyle
+      }
+    } else if (isKeystone && clusterDmgType) {
       const apKeystones = [8112, 8128, 8229, 8214];
-      const adKeystones = [8010, 8128, 8008, 8000];
+      const adKeystones = [8010, 8128, 8008, 9923]; // Corregido: incluye 9923 (Hail of Blades) y remueve 8000
       
       if (clusterDmgType === 'AP' && apKeystones.includes(id)) {
         score += 2.0;
@@ -1425,7 +1452,8 @@ export function getBestSecondaryRunesForCluster(
   primaryStyleId: number,
   clusterDamageType: 'AD' | 'AP' | 'Hybrid',
   runeToStyle: Record<number, number>,
-  champData?: EnrichedChampion
+  champData?: EnrichedChampion,
+  playstyle?: string
 ): { styleId: number; runes: RuneOption[] } {
   const EXCLUDED_SECONDARY_TREES: Record<string, number[]> = {
     AD: [8200],     // Sorcery
@@ -1483,6 +1511,13 @@ export function getBestSecondaryRunesForCluster(
       opts.forEach((o: any) => {
         totalScore += viabilityScore(o.winrate || 50.0, o.pickrate || 0);
       });
+
+      if (playstyle) {
+        const preferredStyles = PLAYSTYLE_SECONDARY_STYLES[playstyle] || [];
+        if (preferredStyles.includes(styleId)) {
+          totalScore += 10.0; // Bonificación de estilo secundario por playstyle
+        }
+      }
 
       if (totalScore > maxScore) {
         maxScore = totalScore;
@@ -1630,10 +1665,14 @@ export function selectRunesForCluster(
   const clusterDamageType = cluster.damageType || 'Hybrid';
   const runeToStyle = assetsMap.runeToStyle as Record<number, number>;
 
+  // Deducir playstyle usando getClusterTitle
+  const coreItemIds = cluster.representativeCore || [];
+  const playstyle = getClusterTitle(coreItemIds, clusterDamageType);
+
   // 1. Filtrar y seleccionar keystone
   const keystones = runesData.primaryRuneId || [];
   const filteredKeystones = filterKeystonesByCluster(keystones, clusterDamageType);
-  const primaryRuneId = selectBestRune(filteredKeystones, true, clusterDamageType);
+  const primaryRuneId = selectBestRune(filteredKeystones, true, clusterDamageType, playstyle);
   const primaryStyleId = Number(runeToStyle[primaryRuneId]) || 8000;
 
   // 2. Filtrar y seleccionar árbol primario
@@ -1656,7 +1695,8 @@ export function selectRunesForCluster(
     primaryStyleId,
     clusterDamageType,
     runeToStyle,
-    champData
+    champData,
+    playstyle
   );
 
   // 4. Filtrar y seleccionar shards
