@@ -72,3 +72,13 @@ hexdraft-config.json
 
 # --- Cache de LCU ---
 src/lib/data/lcu-cache.json
+
+# --- Test & Simulation System ---
+scripts/simulate-draft.js
+src/lib/scripts/test-engine.ts
+inspect_dpm_runes.js
+src/lib/scripts/inspect_kayn_raw.js
+src/lib/scripts/test_opgg_scrape.js
+src/lib/scripts/si.ts
+src/lib/scripts/a.ts
+launcher/test-lcu.js

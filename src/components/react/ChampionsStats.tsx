@@ -1719,9 +1719,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   // Renderizado del componente principal con loader corregido (fixed viewport)
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#08080a] z-50 select-none animate-in fade-in duration-300">
-        <div className="w-10 h-10 border-2 border-purple-accent border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-xs uppercase font-black tracking-[0.25em] text-purple-accent mt-4 animate-pulse">
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#08080a] z-50 select-none">
+        <span className="text-xs uppercase font-black tracking-[0.25em] text-purple-accent animate-pulse">
           CONECTANDO CON BASE DE DATOS SQLITE...
         </span>
       </div>
