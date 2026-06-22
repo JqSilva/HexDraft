@@ -1507,10 +1507,14 @@ export function getBestSecondaryRunesForCluster(
       const styleId = Number(styleKey);
       if (opts.length < 2) return;
       
-      let totalScore = 0;
-      opts.forEach((o: any) => {
-        totalScore += viabilityScore(o.winrate || 50.0, o.pickrate || 0);
-      });
+      // Calcular los scores individuales de todas las opciones en este árbol
+      const individualScores = opts.map((o: any) => viabilityScore(o.winrate || 50.0, o.pickrate || 0));
+      
+      // Ordenar de mayor a menor
+      individualScores.sort((a, b) => b - a);
+      
+      // Sumar solo los 2 mejores, que es el número real de runas elegibles secundarias
+      let totalScore = individualScores[0] + individualScores[1];
 
       if (playstyle) {
         const preferredStyles = PLAYSTYLE_SECONDARY_STYLES[playstyle] || [];
