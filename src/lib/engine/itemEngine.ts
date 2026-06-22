@@ -1366,8 +1366,12 @@ function selectBestRune(options: RuneOption[], isKeystone: boolean = false, clus
 
     if (isKeystone && playstyle) {
       const preferred = PLAYSTYLE_KEYSTONES[playstyle] || [];
-      if (preferred.includes(id)) {
-        score += 15.0; // Gran bonificación para alinear la runa con el playstyle
+      const prefIdx = preferred.indexOf(id);
+      if (prefIdx !== -1) {
+        // Bonificación decreciente según la prioridad del playstyle
+        // Ejemplo: 1er elemento = +25.0, 2do = +20.0, 3er = +15.0, etc.
+        const bonus = Math.max(5.0, 25.0 - prefIdx * 5.0);
+        score += bonus;
       }
     } else if (isKeystone && clusterDmgType) {
       const apKeystones = [8112, 8128, 8229, 8214];
@@ -1518,8 +1522,12 @@ export function getBestSecondaryRunesForCluster(
 
       if (playstyle) {
         const preferredStyles = PLAYSTYLE_SECONDARY_STYLES[playstyle] || [];
-        if (preferredStyles.includes(styleId)) {
-          totalScore += 10.0; // Bonificación de estilo secundario por playstyle
+        const prefIdx = preferredStyles.indexOf(styleId);
+        if (prefIdx !== -1) {
+          // Bonificación decreciente según la prioridad del playstyle
+          // Ejemplo: 1er elemento = +15.0, 2do = +10.0, etc.
+          const bonus = Math.max(2.0, 15.0 - prefIdx * 5.0);
+          totalScore += bonus;
         }
       }
 

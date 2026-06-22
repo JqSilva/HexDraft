@@ -138,6 +138,13 @@ export const DraftPage = () => {
 
     const isPlaying = gamePhase === 'InProgress';
 
+    const everyonePicked = useMemo(() => {
+        if (!inDraft) return false;
+        const myLocked = myTeam.every(p => p.championId > 0);
+        const theirLocked = theirTeam.length === 0 || theirTeam.every(p => p.championId > 0);
+        return myLocked && theirLocked;
+    }, [inDraft, myTeam, theirTeam]);
+
     // Nombres de campeones aliados y enemigos para el motor táctico
     const allyNames = useMemo(() => {
         return myTeam.map(p => getNameFromId(p.championId || p.championPickIntent)).filter(Boolean) as string[];
@@ -400,11 +407,23 @@ export const DraftPage = () => {
                     if (myId > 0) {
                         // 1. Calcular y actualizar la build en la interfaz (React state)
                         const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
-                        if (buildData && (!currentBuild || currentBuild.name !== buildData.name || JSON.stringify(currentBuild.build.items.core) !== JSON.stringify(buildData.build.items.core))) {
-                            setCurrentBuild(buildData);
-                            localStorage.setItem('last_build_data', JSON.stringify(buildData));
-                            if (view !== 'reasons' && view !== 'build') {
-                                setView('build');
+                        if (buildData) {
+                            const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
+                            const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
+                            const scoresStr = (buildData.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
+                            const currentSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}-${scoresStr}`;
+                            
+                            const oldCoreIds = (currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
+                            const oldRunesIds = (currentBuild?.build?.runes?.selections || []).map((r: any) => r.id || r).join(',');
+                            const oldScoresStr = (currentBuild?.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
+                            const prevSig = currentBuild ? `${currentBuild.id || myId}-${currentBuild.name}-${oldCoreIds}-${oldRunesIds}-${oldScoresStr}` : '';
+
+                            if (currentSig !== prevSig) {
+                                setCurrentBuild(buildData);
+                                localStorage.setItem('last_build_data', JSON.stringify(buildData));
+                                if (view !== 'reasons' && view !== 'build') {
+                                    setView('build');
+                                }
                             }
                         }
 
@@ -691,6 +710,8 @@ export const DraftPage = () => {
                                             <ItemBuild
                                                 currentBuild={currentBuild}
                                                 onReImport={handleReImport}
+                                                inDraft={inDraft}
+                                                everyonePicked={everyonePicked}
                                             />
                                         </div>
                                         <div className="min-h-0 overflow-hidden">

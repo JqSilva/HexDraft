@@ -15,6 +15,8 @@ interface ScoredCluster {
 interface ItemBuildProps {
     currentBuild: any;
     onReImport: (activeBuildData?: any) => void;
+    inDraft?: boolean;
+    everyonePicked?: boolean;
 }
 
 const COMMON_SITUATIONAL_ITEMS = [
@@ -109,18 +111,31 @@ const ClusterTab = ({
     );
 };
 
-export const ItemBuild = memo(({ currentBuild, onReImport }: ItemBuildProps) => {
+export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePicked }: ItemBuildProps) => {
     const scoredClusters: ScoredCluster[] = currentBuild?.scoredClusters || [];
-    const [activeIdx, setActiveIdx] = useState(0);
+    const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
+    const [isManualSelection, setIsManualSelection] = useState(false);
 
-    // Reset active index when selected champion changes
+    // Reset tab selections when champion changes
     useEffect(() => {
-        setActiveIdx(0);
+        setIsManualSelection(false);
+        if (scoredClusters.length > 0) {
+            setActiveTabKey(scoredClusters[0].title);
+        } else {
+            setActiveTabKey(null);
+        }
     }, [currentBuild?.name]);
+
+    // Reactively follow the new winner if user hasn't made a manual selection
+    useEffect(() => {
+        if (!isManualSelection && scoredClusters.length > 0) {
+            setActiveTabKey(scoredClusters[0].title);
+        }
+    }, [scoredClusters, isManualSelection]);
 
     if (!currentBuild) return null;
 
-    const activeCluster = scoredClusters[activeIdx] || scoredClusters[0];
+    const activeCluster = scoredClusters.find(c => c.title === activeTabKey) || scoredClusters[0];
     const build = activeCluster ? activeCluster.build : currentBuild.build;
     const coreItemSwaps = activeCluster ? activeCluster.coreItemSwaps : currentBuild.coreItemSwaps;
 
@@ -160,8 +175,11 @@ export const ItemBuild = memo(({ currentBuild, onReImport }: ItemBuildProps) => 
                             <ClusterTab
                                 key={`cluster-tab-${idx}`}
                                 cluster={cluster}
-                                isActive={idx === activeIdx}
-                                onClick={() => setActiveIdx(idx)}
+                                isActive={cluster.title === activeCluster?.title}
+                                onClick={() => {
+                                    setActiveTabKey(cluster.title);
+                                    setIsManualSelection(true);
+                                }}
                             />
                         ))}
                     </div>
@@ -174,6 +192,25 @@ export const ItemBuild = memo(({ currentBuild, onReImport }: ItemBuildProps) => 
 
             {/* Panel de Contenido de la Build Activa (sin scrollbar) */}
             <div className="flex-grow p-2 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
+                {/* Banner de Estado del Draft */}
+                {inDraft && (
+                    <div className={`py-1 px-3 text-center text-[9px] uppercase font-bold tracking-[0.15em] border rounded-sm flex items-center justify-center gap-2 select-none shrink-0 ${
+                        everyonePicked
+                            ? 'bg-emerald-950/20 border-emerald-500/25 text-emerald-400'
+                            : 'bg-amber-950/20 border-amber-500/25 text-amber-400 animate-pulse'
+                    }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                            everyonePicked 
+                                ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' 
+                                : 'bg-amber-400 shadow-[0_0_6px_#fbbf24] animate-pulse'
+                        }`} />
+                        <span>
+                            {everyonePicked 
+                                ? 'Draft completo: Análisis finalizado e importado con éxito' 
+                                : 'Esperando selecciones: Adaptando build en tiempo real'}
+                        </span>
+                    </div>
+                )}
                 {/* 1. RUNAS */}
                 {build?.runes && (
                     <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">
