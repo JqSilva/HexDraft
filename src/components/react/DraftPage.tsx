@@ -138,6 +138,9 @@ export const DraftPage = () => {
 
     const isPlaying = gamePhase === 'InProgress';
 
+    const myPlayer = myTeam.find(p => p.cellId === currentDataRef.current?.localPlayerCellId);
+    const myId = myPlayer?.championId || 0;
+
     const everyonePicked = useMemo(() => {
         if (!inDraft) return false;
         const myLocked = myTeam.every(p => p.championId > 0);
@@ -155,9 +158,10 @@ export const DraftPage = () => {
     }, [theirTeam]);
 
     const tacticalDirectives = useMemo(() => {
-        if (!currentBuild) return null;
-        return getTacticalDirectives(currentBuild.name, myRole, allyNames, enemyNames);
-    }, [currentBuild, myRole, allyNames, enemyNames]);
+        const champName = getNameFromId(myId) || (currentBuild ? currentBuild.name : null);
+        if (!champName) return null;
+        return getTacticalDirectives(champName, myRole, allyNames, enemyNames);
+    }, [myId, currentBuild, myRole, allyNames, enemyNames]);
 
     const myTeamAnalysis = useMemo(() => {
         return analyzeComposition(allyNames);
@@ -405,76 +409,80 @@ export const DraftPage = () => {
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine);
 
                     if (myId > 0) {
-                        // 1. Calcular y actualizar la build en la interfaz (React state)
-                        const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
-                        if (buildData) {
-                            const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
-                            const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
-                            const scoresStr = (buildData.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
-                            const currentSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}-${scoresStr}`;
-                            
-                            const oldCoreIds = (currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
-                            const oldRunesIds = (currentBuild?.build?.runes?.selections || []).map((r: any) => r.id || r).join(',');
-                            const oldScoresStr = (currentBuild?.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
-                            const prevSig = currentBuild ? `${currentBuild.id || myId}-${currentBuild.name}-${oldCoreIds}-${oldRunesIds}-${oldScoresStr}` : '';
+                        // Cambiar la vista a 'build' si no lo está ya, para mostrar el panel de análisis
+                        if (view !== 'reasons' && view !== 'build') {
+                            setView('build');
+                        }
 
-                            if (currentSig !== prevSig) {
-                                setCurrentBuild(buildData);
-                                localStorage.setItem('last_build_data', JSON.stringify(buildData));
-                                if (view !== 'reasons' && view !== 'build') {
-                                    setView('build');
+                        // Comprobar si todos los participantes de la selección han bloqueado sus campeones
+                        const everyonePicked = myId > 0 &&
+                            data.myTeam.every((p: any) => p.championId > 0) &&
+                            (data.theirTeam.length === 0 || data.theirTeam.every((p: any) => p.championId > 0));
+
+                        if (everyonePicked) {
+                            // 1. Calcular y actualizar la build en la interfaz (React state)
+                            const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
+                            if (buildData) {
+                                const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
+                                const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
+                                const scoresStr = (buildData.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
+                                const currentSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}-${scoresStr}`;
+                                
+                                const oldCoreIds = (currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
+                                const oldRunesIds = (currentBuild?.build?.runes?.selections || []).map((r: any) => r.id || r).join(',');
+                                const oldScoresStr = (currentBuild?.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
+                                const prevSig = currentBuild ? `${currentBuild.id || myId}-${currentBuild.name}-${oldCoreIds}-${oldRunesIds}-${oldScoresStr}` : '';
+
+                                if (currentSig !== prevSig) {
+                                    setCurrentBuild(buildData);
+                                    localStorage.setItem('last_build_data', JSON.stringify(buildData));
                                 }
                             }
-                        }
 
-                        // 2. Cargar razones de recomendación (una sola vez)
-                        const pickedRec = picks.find(r => r.id === myId);
-                        if (pickedRec && !selectedRecommendation) {
-                            console.log("✅ Razones capturadas con éxito");
-                            setSelectedRecommendation(pickedRec);
-                            localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
-                        }
-
-                        // 3. Cargar datos tácticos adicionales (una sola vez)
-                        const champName = getNameFromId(myId);
-                        if (champName && !tacticalData) {
-                            fetch(`/api/tactical-data?champion=${champName}&role=${currentRole}`)
-                                .then(res => res.json())
-                                .then(tData => {
-                                    setTacticalData(tData);
-                                    console.log("🔥 Data táctica cargada:", tData);
-                                })
-                                .catch(err => console.error("Error táctico:", err));
-                        }
-
-                        // 4. Exportación automática al LCU de LoL al bloquear o cambiar de playstyle
-                        if (buildData) {
-                            const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
-                            const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
-                            const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
-
-                            // Comprobar si todos los participantes de la selección han bloqueado sus campeones
-                            const everyonePicked = myId > 0 &&
-                                data.myTeam.every((p: any) => p.championId > 0) &&
-                                (data.theirTeam.length === 0 || data.theirTeam.every((p: any) => p.championId > 0));
-
-                            let triggerImport = false;
-
-                            if (buildSig !== lastImportedSignatureRef.current) {
-                                lastImportedSignatureRef.current = buildSig;
-                                triggerImport = true;
+                            // 2. Cargar razones de recomendación (una sola vez)
+                            const pickedRec = picks.find(r => r.id === myId);
+                            if (pickedRec && !selectedRecommendation) {
+                                console.log("✅ Razones capturadas con éxito");
+                                setSelectedRecommendation(pickedRec);
+                                localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
                             }
 
-                            // Si todos acaban de elegir, forzamos una importación final definitiva con las recomendaciones finales
-                            if (everyonePicked && !lastEveryonePickedRef.current) {
-                                lastEveryonePickedRef.current = true;
-                                triggerImport = true;
-                                console.log(`[FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
+                            // 3. Cargar datos tácticos adicionales (una sola vez)
+                            const champName = getNameFromId(myId);
+                            if (champName && !tacticalData) {
+                                fetch(`/api/tactical-data?champion=${champName}&role=${currentRole}`)
+                                    .then(res => res.json())
+                                    .then(tData => {
+                                        setTacticalData(tData);
+                                        console.log("🔥 Data táctica cargada:", tData);
+                                    })
+                                    .catch(err => console.error("Error táctico:", err));
                             }
 
-                            if (triggerImport) {
-                                console.log(`[AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
-                                await importToClient({ ...buildData, id: myId });
+                            // 4. Exportación automática al LCU de LoL al bloquear o cambiar de playstyle
+                            if (buildData) {
+                                const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
+                                const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
+                                const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
+
+                                let triggerImport = false;
+
+                                if (buildSig !== lastImportedSignatureRef.current) {
+                                    lastImportedSignatureRef.current = buildSig;
+                                    triggerImport = true;
+                                }
+
+                                // Si todos acaban de elegir, forzamos una importación final definitiva con las recomendaciones finales
+                                if (!lastEveryonePickedRef.current) {
+                                    lastEveryonePickedRef.current = true;
+                                    triggerImport = true;
+                                    console.log(`[FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
+                                }
+
+                                if (triggerImport) {
+                                    console.log(`[AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
+                                    await importToClient({ ...buildData, id: myId });
+                                }
                             }
                         }
                     } else {
@@ -667,14 +675,14 @@ export const DraftPage = () => {
                             </div>
                         </header>
 
-                        <div className={`relative flex-1 min-h-0 pr-1 ${isBuildOrReasonsView && currentBuild ? 'overflow-hidden' : 'overflow-y-auto scrollbar-thin'}`}>
+                        <div className={`relative flex-1 min-h-0 pr-1 ${isBuildOrReasonsView && (currentBuild || myId > 0) ? 'overflow-hidden' : 'overflow-y-auto scrollbar-thin'}`}>
                             {/* 1. ESPERA / LOBBY */}
                             {!inDraft && !isPlaying && (
                                 <DraftLobby />
                             )}
 
                             {/* 2. VISTA DE PARTIDA / BUILD */}
-                            {isBuildOrReasonsView && currentBuild && tacticalDirectives ? (
+                            {isBuildOrReasonsView && (currentBuild || myId > 0) && tacticalDirectives ? (
                                 <div className="flex flex-col gap-2 h-full min-h-0">
                                     {/* Banner de Composición (fila compacta) */}
                                     {myTeamAnalysis && allyNames.length > 0 && (
@@ -699,7 +707,7 @@ export const DraftPage = () => {
                                     {/* Evolución de Habilidades */}
                                     <div className="shrink-0">
                                         <SkillTimeline
-                                            skillOrder={currentBuild.build?.skillOrder}
+                                            skillOrder={currentBuild?.build?.skillOrder}
                                             tacticalData={tacticalData}
                                         />
                                     </div>

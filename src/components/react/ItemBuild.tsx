@@ -133,6 +133,14 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
         }
     }, [scoredClusters, isManualSelection]);
 
+    if (inDraft && !everyonePicked) {
+        return (
+            <div className="h-full w-full flex items-center justify-center text-slate-400 font-bold uppercase tracking-wider text-[11px] text-center select-none">
+                esperando que todos confirmen seleccion.
+            </div>
+        );
+    }
+
     if (!currentBuild) return null;
 
     const activeCluster = scoredClusters.find(c => c.title === activeTabKey) || scoredClusters[0];
@@ -192,25 +200,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
 
             {/* Panel de Contenido de la Build Activa (sin scrollbar) */}
             <div className="flex-grow p-2 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
-                {/* Banner de Estado del Draft */}
-                {inDraft && (
-                    <div className={`py-1 px-3 text-center text-[9px] uppercase font-bold tracking-[0.15em] border rounded-sm flex items-center justify-center gap-2 select-none shrink-0 ${
-                        everyonePicked
-                            ? 'bg-emerald-950/20 border-emerald-500/25 text-emerald-400'
-                            : 'bg-amber-950/20 border-amber-500/25 text-amber-400 animate-pulse'
-                    }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                            everyonePicked 
-                                ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' 
-                                : 'bg-amber-400 shadow-[0_0_6px_#fbbf24] animate-pulse'
-                        }`} />
-                        <span>
-                            {everyonePicked 
-                                ? 'Draft completo: Análisis finalizado e importado con éxito' 
-                                : 'Esperando selecciones: Adaptando build en tiempo real'}
-                        </span>
-                    </div>
-                )}
                 {/* 1. RUNAS */}
                 {build?.runes && (
                     <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">
