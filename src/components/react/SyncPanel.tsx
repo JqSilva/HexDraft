@@ -21,6 +21,7 @@ export const SyncPanel = () => {
   const [forceSync, setForceSync] = useState<boolean>(false);
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [progressPhase, setProgressPhase] = useState<string>('idle');
+  const [showRecommendAlert, setShowRecommendAlert] = useState<boolean>(false);
 
   const [logs, setLogs] = useState<LogItem[]>([
     { time: '--:--', msg: 'Esperando inicialización de sincronización masiva...', type: 'idle' }
@@ -35,25 +36,23 @@ export const SyncPanel = () => {
     }
   }, [logs]);
 
-  // Cargar versión LCU y timestamps iniciales
+  // Cargar versión y estado de recomendación de sincronización
   const fetchInitialData = async () => {
     try {
-      const vRes = await fetch('/api/game-version');
-      const vData = await vRes.json();
-      if (vData.short) {
-        setVersion(vData.short);
+      const checkRes = await fetch('/api/sync?type=check');
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        setVersion(checkData.version || '--.--');
+        setLastSync(checkData.last_sync_timestamp || '-');
+        setLastLaneSync(checkData.last_lane_sync_timestamp || '-');
+        if (checkData.needs_build_sync || checkData.needs_lane_sync) {
+          setShowRecommendAlert(true);
+        } else {
+          setShowRecommendAlert(false);
+        }
       }
     } catch (e) {
-      console.error("No se pudo obtener la versión de LoL");
-    }
-
-    try {
-      const cRes = await fetch('/api/config');
-      const cData = await cRes.json();
-      setLastSync(cData.last_sync_timestamp || '-');
-      setLastLaneSync(cData.last_lane_sync_timestamp || '-');
-    } catch (e) {
-      console.error("No se pudo obtener las marcas de tiempo de configuración");
+      console.error("No se pudo comprobar el estado de sincronización:", e);
     }
   };
 
@@ -201,6 +200,24 @@ export const SyncPanel = () => {
             </div>
           </div>
         </header>
+
+        {/* Alerta de Actualización Recomendada */}
+        {showRecommendAlert && (
+          <div className="mb-6 bg-amber-500/10 border border-amber-500/20 rounded-sm p-4 text-slate-200 relative overflow-hidden shadow-lg animate-in slide-in-from-top-4 duration-300">
+            <div className="absolute top-0 left-0 w-[3px] h-full bg-amber-500" />
+            <div className="flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <div className="flex-1">
+                <h4 className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
+                  Sincronización recomendada
+                </h4>
+                <p className="text-[9.5px] uppercase tracking-wide font-bold text-slate-400 mt-0.5">
+                  Se ha detectado un parche nuevo o han pasado más de 3 días desde la última sincronización masiva. Se recomienda realizar una actualización manual para asegurar la precisión de los análisis de composición.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contenido Principal Centrado */}
         <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
@@ -354,7 +371,6 @@ export const SyncPanel = () => {
           {/* Header de Consola */}
           <div className="flex justify-between items-center px-6 py-4 border-b border-border-warm/40 bg-black/40 flex-shrink-0 select-none">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-accent shadow-[0_0_8px_#9055ff] animate-pulse" />
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-mono">
                 HexDraft Core Event Log Console
               </h3>

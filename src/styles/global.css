@@ -164,4 +164,14 @@ h1, h2, h3, h4, h5, h6 {
     --header-status-top: calc(50% - 8px);
   }
 }
+
+/* Deshabilitar animaciones por defecto de View Transitions para transiciones instantáneas sin lag */
+::view-transition-group(root) {
+  animation-duration: 0s !important;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0s !important;
+  mix-blend-mode: normal;
+}
 

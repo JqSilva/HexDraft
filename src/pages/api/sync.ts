@@ -79,6 +79,7 @@ export const GET: APIRoute = async ({ url }) => {
             const laneSyncPeriodDays = parseInt(configs.lane_sync_period_days || '21') || 21;
             const lastSyncTimestamp = configs.last_sync_timestamp || '-';
             const lastLaneSyncTimestamp = configs.last_lane_sync_timestamp || '-';
+            const lastSyncVersion = configs.last_sync_version || '-';
 
             // Obtener versión de LoL (LCU o fallback a DDragon)
             let shortVersion = '16.12'; // Fallback por defecto si todo falla
@@ -132,7 +133,8 @@ export const GET: APIRoute = async ({ url }) => {
                 }
             };
 
-            const needsBuildSync = isOutdated(lastSyncTimestamp, syncPeriodDays);
+            const isNewPatch = lastSyncVersion !== '-' && lastSyncVersion !== '0' && shortVersion !== lastSyncVersion;
+            const needsBuildSync = isOutdated(lastSyncTimestamp, syncPeriodDays) || isNewPatch;
             const needsLaneSync = isOutdated(lastLaneSyncTimestamp, laneSyncPeriodDays);
 
             return new Response(JSON.stringify({
@@ -140,9 +142,11 @@ export const GET: APIRoute = async ({ url }) => {
                 needs_lane_sync: needsLaneSync,
                 last_sync_timestamp: lastSyncTimestamp,
                 last_lane_sync_timestamp: lastLaneSyncTimestamp,
+                last_sync_version: lastSyncVersion,
                 sync_period_days: syncPeriodDays,
                 lane_sync_period_days: laneSyncPeriodDays,
-                version: shortVersion
+                version: shortVersion,
+                is_new_patch: isNewPatch
             }), { 
                 status: 200,
                 headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }

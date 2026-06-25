@@ -1153,35 +1153,79 @@ export function scoreClusterInContext(
 
   let highMrCount = 0;
   enemyEnriched.forEach(e => {
-    const isTank = e.class === 'Tank' || e.isFrontline || (e.tags && e.tags.includes('Tank'));
+    const isTankClass = e.class === 'Tank';
     const coreItems = e.buildData?.items?.core || [];
     const hasMrItem = coreItems.some((id: number) => {
       const baseId = id > 220000 ? id % 220000 : id;
-      return ITEM_CATEGORIES.MAGIC_RESIST.includes(baseId);
+      const item = ITEMS_DB[baseId];
+      if (!item) return false;
+      return item.categories.includes('GivesMagicResist') && item.gold >= 2000;
     });
-    if (isTank || hasMrItem) {
+    const isSquishy = ['Marksman', 'Assassin', 'Mage'].includes(e.class);
+    if ((isTankClass || hasMrItem) && !isSquishy) {
       highMrCount++;
     }
   });
 
-  if (cluster.damageType === 'AP' && healersCount >= 2) {
-    score += 2.0;
-    bonuses.push({ label: `AP healer bonus (${healersCount} healers)`, value: 2.0 });
+  // Healers bonus for AP
+  if (cluster.damageType === 'AP' && healersCount > 0) {
+    let healerBonus = 0;
+    if (healersCount === 1) healerBonus = 1.0;
+    else if (healersCount === 2) healerBonus = 3.0;
+    else healerBonus = 5.0;
+    score += healerBonus;
+    bonuses.push({ label: `AP healer bonus (${healersCount} healers)`, value: healerBonus });
   }
-  if (cluster.damageType === 'AP' && highMrCount >= 2) {
-    score -= 1.5;
-    bonuses.push({ label: `AP highMR penalty (${highMrCount} MR enemies)`, value: -1.5 });
+
+  // High MR penalty for AP
+  if (cluster.damageType === 'AP' && highMrCount > 0) {
+    let mrPenalty = 0;
+    if (highMrCount === 1) mrPenalty = -2.0;
+    else if (highMrCount === 2) mrPenalty = -6.0;
+    else if (highMrCount === 3) mrPenalty = -12.0;
+    else mrPenalty = -18.0;
+    score += mrPenalty;
+    bonuses.push({ label: `AP highMR penalty (${highMrCount} MR enemies)`, value: mrPenalty });
+  }
+
+  // High Armor penalty for AD
+  let highArmorCount = 0;
+  enemyEnriched.forEach(e => {
+    const isTankClass = e.class === 'Tank';
+    const coreItems = e.buildData?.items?.core || [];
+    const hasArmorItem = coreItems.some((id: number) => {
+      const baseId = id > 220000 ? id % 220000 : id;
+      const item = ITEMS_DB[baseId];
+      if (!item) return false;
+      return item.categories.includes('GivesArmor') && item.gold >= 2000;
+    });
+    const isSquishy = ['Marksman', 'Assassin', 'Mage'].includes(e.class);
+    if ((isTankClass || hasArmorItem) && !isSquishy) {
+      highArmorCount++;
+    }
+  });
+
+  if (cluster.damageType === 'AD' && highArmorCount > 0) {
+    let armorPenalty = 0;
+    if (highArmorCount === 1) armorPenalty = -2.0;
+    else if (highArmorCount === 2) armorPenalty = -6.0;
+    else if (highArmorCount === 3) armorPenalty = -12.0;
+    else armorPenalty = -18.0;
+    score += armorPenalty;
+    bonuses.push({ label: `AD highArmor penalty (${highArmorCount} Armor enemies)`, value: armorPenalty });
   }
 
   // Penalización por sobrecarga de tipo de daño aliado (evitar stacking defensivo enemigo)
   const allyComp = analyzeComposition(allies);
   if (cluster.damageType === 'AD' && allyComp.adCount >= 3) {
-    score -= 2.0;
-    bonuses.push({ label: `AD ally overload penalty (${allyComp.adCount} AD allies)`, value: -2.0 });
+    const penalty = allyComp.adCount === 3 ? -6.0 : -16.0;
+    score += penalty;
+    bonuses.push({ label: `AD ally overload penalty (${allyComp.adCount} AD allies)`, value: penalty });
   }
   if (cluster.damageType === 'AP' && allyComp.apCount >= 3) {
-    score -= 2.0;
-    bonuses.push({ label: `AP ally overload penalty (${allyComp.apCount} AP allies)`, value: -2.0 });
+    const penalty = allyComp.apCount === 3 ? -6.0 : -16.0;
+    score += penalty;
+    bonuses.push({ label: `AP ally overload penalty (${allyComp.apCount} AP allies)`, value: penalty });
   }
 
   // Adjuntar desglose al objeto retornado para debug (se imprime desde getAdaptedBuild)
@@ -1804,6 +1848,17 @@ export function selectSummonersForCluster(
   return bestSumms;
 }
 
+function getPivotItemName(pivotId: number): string | null {
+  const item = ITEMS_DB[pivotId];
+  if (!item || !item.name) return null;
+  const name = item.name as string;
+  if (name.length <= 14) return name;
+  if (name.includes("'")) return name.split("'")[0] + "'s";
+  return name.split(" ")[0];
+}
+
+
+
 function getClusterTitle(coreItems: number[], damageType: string): string {
   if (damageType === 'AP') {
     const hasBurn = coreItems.some(id => [6653, 2503].includes(id));
@@ -2058,13 +2113,16 @@ export function getAdaptedBuild(
     return arr1.filter(x => set2.has(x)).length;
   };
 
-  const filteredClusters: any[] = [];
-
+  const runFiltering = (threshold: number) => {
+  const result: any[] = [];
   for (const c of scoredClusters) {
-    if (filteredClusters.length >= 4) break;
+    if (result.length >= 4) break;
 
-    // Generar temporalmente core items completos para comparar
-    const cBootId = selectBootsForCluster(rawBoots, c, enemyNames, champ.tacticRole || champ.tactic_role, champ.class, champ);
+    const cBootId = selectBootsForCluster(
+      rawBoots, c, enemyNames,
+      champ.tacticRole || champ.tactic_role,
+      champ.class, champ
+    );
     const cDynamicPaths = getDynamicPaths(
       dpmData.items || {},
       c.representativeCore,
@@ -2081,37 +2139,30 @@ export function getAdaptedBuild(
       }
     }
 
-    // Comprobación de similitud: compartir 3 o más items core
+    // FIX 1: comparar representativeCore original, NO fullCoreIds
     let isSimilar = false;
-    for (const accepted of filteredClusters) {
-      const commonCount = getCommonCount(cFullCoreIds, accepted.fullCoreIds);
-      if (commonCount >= 3) {
+    for (const accepted of result) {
+      const commonCount = getCommonCount(
+        c.representativeCore,
+        accepted.representativeCore  // ← era accepted.fullCoreIds
+      );
+      if (commonCount >= threshold) {
         isSimilar = true;
         break;
       }
     }
 
     if (!isSimilar) {
-      // Construir la build final para este cluster
       const clusterBuildOutput = buildOutputForCluster(
-        c,
-        champ,
-        dpmData,
-        rawBoots,
-        rawRunes,
-        rawStarters,
-        rawSummoners,
-        myRole,
-        enemyNames,
-        enemyContext,
-        isAssassin,
-        defaultBuild
+        c, champ, dpmData, rawBoots, rawRunes,
+        rawStarters, rawSummoners, myRole,
+        enemyNames, enemyContext, isAssassin, defaultBuild
       );
-
       const title = getClusterTitle(c.representativeCore, c.damageType);
 
-      filteredClusters.push({
+      result.push({
         pivotItem: c.pivotItem,
+        representativeCore: c.representativeCore,  // ← nuevo, necesario para Fix 1
         damageType: c.damageType,
         totalPickrate: c.totalPickrate,
         weightedWinrate: c.weightedWinrate,
@@ -2125,10 +2176,72 @@ export function getAdaptedBuild(
       });
     }
   }
+  return result;
+};
 
-  if (filteredClusters.length > 0) {
-    filteredClusters[0].isWinner = true;
+// FIX 2: thresholds ajustados para representativeCore de 2-3 items
+let filteredClusters = runFiltering(2);
+
+if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
+  filteredClusters = runFiltering(1);
+}
+
+// Último recurso: incluir todos sin filtrar (máx 4)
+if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
+  filteredClusters = scoredClusters.slice(0, 4).map(c => {
+    const clusterBuildOutput = buildOutputForCluster(
+      c, champ, dpmData, rawBoots, rawRunes,
+      rawStarters, rawSummoners, myRole,
+      enemyNames, enemyContext, isAssassin, defaultBuild
+    );
+    const title = getClusterTitle(c.representativeCore, c.damageType);
+    return {
+      pivotItem: c.pivotItem,
+      representativeCore: c.representativeCore,
+      damageType: c.damageType,
+      totalPickrate: c.totalPickrate,
+      weightedWinrate: c.weightedWinrate,
+      score: +(c.score.toFixed(2)),
+      isWinner: false,
+      fullCoreIds: clusterBuildOutput.fullCoreIds,
+      title,
+      build: clusterBuildOutput.build,
+      coreItemSwaps: clusterBuildOutput.coreItemSwaps,
+      chosenBootId: clusterBuildOutput.chosenBootId
+    };
+  });
+}
+
+// FIX 3: detectar títulos duplicados y diferenciarlos con nombre del pivot
+const titleCounts: Record<string, number> = {};
+filteredClusters.forEach(c => {
+  titleCounts[c.title] = (titleCounts[c.title] || 0) + 1;
+});
+
+const titleIndices: Record<string, number> = {};
+filteredClusters = filteredClusters.map(c => {
+  if (titleCounts[c.title] > 1) {
+    titleIndices[c.title] = (titleIndices[c.title] || 0) + 1;
+    const pivotName = getPivotItemName(c.pivotItem);
+    return {
+      ...c,
+      title: pivotName
+        ? `${c.title} (${pivotName})`
+        : `${c.title} ${titleIndices[c.title]}`
+    };
   }
+  return c;
+});
+
+if (filteredClusters.length > 0) {
+  filteredClusters[0].isWinner = true;
+}
+
+// Log de verificación
+console.log(`📑 [CLUSTERS FINALES] ${name}: ${filteredClusters.length} pestañas`);
+filteredClusters.forEach((c, i) => {
+  console.log(`   ${i + 1}. "${c.title}" | pivot: ${c.pivotItem} | score: ${c.score}`);
+});
 
   const winningClusterData = filteredClusters[0];
   const chosenBootId = winningClusterData.chosenBootId;

@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { hydrateAsset } from '../../lib/engine/hydrator';
 import { getPathsForBuild } from '../../lib/engine/itemEngine';
+import { CHAMPIONS_DB } from '../../lib/data/championdb.js';
+import META_CACHE from '../../lib/data/meta-cache.json';
 
 // Mapeos de imágenes de posición de League of Legends
 const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
@@ -305,13 +307,131 @@ const formatTimeAgo = (dateStr: string): string => {
   return `Hace ${days} ${days === 1 ? 'día' : 'días'}`;
 };
 
+const getEnrichedChampionsFromMeta = (metaData: any) => {
+  const tempStats: Record<string, {
+    name: string;
+    laneStats: Array<{
+      lane: string;
+      winRate: number;
+      pickRate: number;
+      rank: number;
+      counters: string[];
+    }>;
+  }> = {};
+
+  const roleToLaneMap: Record<string, string> = {
+    'top': 'TOP',
+    'jungle': 'JUNGLE',
+    'mid': 'MIDDLE',
+    'adc': 'BOTTOM',
+    'support': 'UTILITY'
+  };
+
+  const lanes = ['top', 'jungle', 'mid', 'adc', 'support'];
+  if (metaData) {
+    lanes.forEach(laneKey => {
+      const list = metaData[laneKey] || [];
+      list.forEach((entry: any) => {
+        const normName = entry.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (!tempStats[normName]) {
+          tempStats[normName] = { name: entry.name, laneStats: [] };
+        }
+        const wr = parseFloat(entry.winRate) || 50.0;
+        const pr = parseFloat(entry.pickRate) || 0.0;
+        const rank = parseInt(entry.rank) || 99;
+        const dbLane = roleToLaneMap[laneKey];
+        tempStats[normName].laneStats.push({
+          lane: dbLane,
+          winRate: wr,
+          pickRate: pr,
+          rank: rank,
+          counters: entry.counters || []
+        });
+      });
+    });
+  }
+
+  const getRoleKey = (lane: string) => {
+    const upper = (lane || "").toUpperCase();
+    if (upper === "JNG" || upper === "JUNGLE") return "JUNGLE";
+    if (upper === "MID" || upper === "MIDDLE") return "MIDDLE";
+    if (upper === "BOT" || upper === "ADC" || upper === "BOTTOM") return "BOTTOM";
+    if (upper === "SUP" || upper === "SUPPORT" || upper === "UTILITY") return "UTILITY";
+    return upper;
+  };
+
+  return Object.values(CHAMPIONS_DB).map((champ: any) => {
+    const normName = champ.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const statsEntry = tempStats[normName];
+    
+    let bestLane = champ.lane || "MID";
+    let wr = 50.0;
+    let tierVal = 99;
+    let pickrate = 1.5;
+    let matches = 1000;
+    let lanesStats: Record<string, any> = {};
+    let lanesPickrate: Record<string, number> = {};
+
+    if (statsEntry && statsEntry.laneStats.length > 0) {
+      let maxPick = -1;
+      let primaryEntry = statsEntry.laneStats[0];
+      statsEntry.laneStats.forEach(le => {
+        lanesStats[le.lane] = { winRate: le.winRate, tier: le.rank };
+        lanesPickrate[le.lane] = le.pickRate;
+        if (le.pickRate > maxPick) {
+          maxPick = le.pickRate;
+          primaryEntry = le;
+        }
+      });
+
+      bestLane = primaryEntry.lane;
+      wr = primaryEntry.winRate;
+      tierVal = primaryEntry.rank;
+      
+      const totalPick = statsEntry.laneStats.reduce((sum, le) => sum + le.pickRate, 0);
+      pickrate = parseFloat(totalPick.toFixed(1));
+      matches = Math.floor(pickrate * 1420) + 1200 + (champ.id % 7) * 110;
+    } else {
+      const baseLane = getRoleKey(champ.lane || "MID");
+      lanesStats[baseLane] = { winRate: 50.0, tier: 99 };
+      lanesPickrate[baseLane] = 1.5;
+    }
+
+    return {
+      id: champ.id,
+      name: champ.name,
+      lane: bestLane,
+      damageType: champ.damageType || "Adaptive",
+      class: champ.class || "Mage",
+      isFrontline: champ.isFrontline || false,
+      isHypercarry: champ.isHypercarry || false,
+      hasHardCC: champ.hasHardCC || false,
+      tags: champ.tags || [],
+      scalingType: champ.scalingType || "Mid",
+      pickrate,
+      matches,
+      lanesStats,
+      lanesPickrate,
+      meta: {
+        winRate: wr,
+        tier: tierVal
+      }
+    };
+  });
+};
+
 export const ChampionsStats = ({ initialChampionId, initialLane }: { initialChampionId?: number; initialLane?: string }) => {
+  // Convertir CHAMPIONS_DB a array y enriquecerlo de forma básica para carga instantánea
+  const initialChamps = useMemo(() => {
+    return getEnrichedChampionsFromMeta(META_CACHE);
+  }, []);
+
   // Estados de datos
-  const [champions, setChampions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [champions, setChampions] = useState<any[]>(initialChamps);
+  const [loading, setLoading] = useState(false); // Carga instantánea desde JSON
   const [error, setError] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState("14.9.1");
-  const [metaCache, setMetaCache] = useState<any>(null);
+  const [metaCache, setMetaCache] = useState<any>(META_CACHE);
   const [lastUpdated, setLastUpdated] = useState<string>("-");
   const [timeAgoText, setTimeAgoText] = useState<string>("Nunca");
 
@@ -332,17 +452,23 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Vista de detalle
-  const [selectedChamp, setSelectedChamp] = useState<any | null>(null);
+  const [selectedChamp, setSelectedChamp] = useState<any | null>(() => {
+    if (initialChampionId) {
+      return initialChamps.find((c: any) => c.id === initialChampionId) || null;
+    }
+    return null;
+  });
+  const [champDetails, setChampDetails] = useState<any | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [activeBuildIdx, setActiveBuildIdx] = useState(0);
   const [tacticalData, setTacticalData] = useState<any | null>(null);
   const [tacticalLoading, setTacticalLoading] = useState(false);
   const [spellImages, setSpellImages] = useState<Record<string, string>>({});
 
-  // Cargar campeones y versión al montar
+  // Cargar lista básica de base de datos y metaCache en segundo plano al montar
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setLoading(true);
         // Intentar obtener la versión actual del LCU
         try {
           const meRes = await fetch('/api/me');
@@ -356,13 +482,15 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           console.warn("No se pudo obtener versión de /api/me, usando default 14.9.1", e);
         }
 
-        // Cargar meta cache
+        // Cargar meta cache (OP.GG stats)
         try {
           const metaRes = await fetch('/api/meta');
           if (metaRes.ok) {
             const metaData = await metaRes.json();
             if (metaData.meta) {
               setMetaCache(metaData.meta);
+              const freshChamps = getEnrichedChampionsFromMeta(metaData.meta);
+              setChampions(freshChamps);
             }
             if (metaData.lastUpdated) {
               setLastUpdated(metaData.lastUpdated);
@@ -371,44 +499,38 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
         } catch (e) {
           console.warn("No se pudo obtener el meta cache de /api/meta", e);
         }
-
-        const res = await fetch('/api/champions');
-        if (!res.ok) throw new Error("Fallo al obtener campeones de la base de datos");
-        const data = await res.json();
-        
-        // Pre-calcular metadatos enriquecidos una sola vez para mejorar rendimiento dramáticamente
-        const enriched = data.map((champ: any) => {
-          const id = champ.id;
-          const wr = champ.meta?.winRate || 50.0;
-          const tierVal = champ.meta?.tier || 99;
-          const basePick = Math.max(1.5, (100 - tierVal) * 0.15);
-          const wave = Math.sin(id) * 2;
-          const pickrate = parseFloat(Math.min(28.5, Math.max(0.8, basePick + wave + (wr - 50.0) * 0.4)).toFixed(1));
-          const matches = Math.floor(pickrate * 1420) + 1200 + (id % 7) * 110;
-          
-          return {
-            ...champ,
-            pickrate,
-            matches
-          };
-        });
-
-        setChampions(enriched);
-        if (initialChampionId) {
-          const matched = enriched.find((c: any) => c.id === initialChampionId);
-          if (matched) {
-            setSelectedChamp(matched);
-          }
-        }
       } catch (err: any) {
-        setError(err.message || "Error desconocido");
-      } finally {
-        setLoading(false);
+        console.error("Error al cargar lista en background:", err);
       }
     };
 
     loadInitialData();
-  }, [initialChampionId]);
+  }, []);
+
+  // Cargar detalles específicos (builds, runes, counters, synergies) del campeón seleccionado
+  useEffect(() => {
+    if (!selectedChamp) {
+      setChampDetails(null);
+      return;
+    }
+
+    const loadChampDetails = async () => {
+      setDetailsLoading(true);
+      try {
+        const res = await fetch(`/api/champions?id=${selectedChamp.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setChampDetails(data);
+        }
+      } catch (e) {
+        console.error("Fallo al obtener detalles del campeón de la base de datos:", e);
+      } finally {
+        setDetailsLoading(false);
+      }
+    };
+
+    loadChampDetails();
+  }, [selectedChamp]);
 
   // Actualizar el texto dinámico "Hace x minutos" cada 30 segundos si la pestaña está abierta
   useEffect(() => {
@@ -645,18 +767,19 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
   // Obtener builds para el campeón seleccionado
   const buildsList = useMemo(() => {
-    if (!selectedChamp) return [];
+    const champ = champDetails || selectedChamp;
+    if (!champ) return [];
     
     const activeDetailLane = selectedLane === "ALL" 
-      ? (getRoleKey(selectedChamp.lane) !== "UNKNOWN" ? getRoleKey(selectedChamp.lane) : (getRoleKey(selectedChamp.playLanes?.[0]) || "TOP"))
+      ? (getRoleKey(champ.lane) !== "UNKNOWN" ? getRoleKey(champ.lane) : (getRoleKey(champ.playLanes?.[0]) || "TOP"))
       : getRoleKey(selectedLane);
 
-    let list = [...(selectedChamp.builds || [])].filter(b => getRoleKey(b.lane) === activeDetailLane);
+    let list = [...(champ.builds || [])].filter(b => getRoleKey(b.lane) === activeDetailLane);
     if (list.length === 0) {
-      list = [...(selectedChamp.builds || [])];
+      list = [...(champ.builds || [])];
     }
-    if (list.length === 0 && selectedChamp.buildData) {
-      list = [{ ...selectedChamp.buildData, build_name: "Recomendada", is_default: true }];
+    if (list.length === 0 && champ.buildData) {
+      list = [{ ...champ.buildData, build_name: "Recomendada", is_default: true }];
     }
 
     // Ordenar de modo que las por defecto/recomendadas o con mayor winrate/pickrate vayan primero
@@ -718,8 +841,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     // Si solo hay 1 build, agregamos una alternativa simulada que difiera por 3 cambios
     if (filtered.length === 1) {
       const b = filtered[0];
-      const isAD = selectedChamp.damageType === "AD";
-      const isAssassin = selectedChamp.class === "Assassin";
+      const isAD = champ.damageType === "AD";
+      const isAssassin = champ.class === "Assassin";
       
       const altBuild = {
         ...b,
@@ -740,13 +863,13 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
         special_notes: {
           ...b.special_notes,
           winrate: 49.2,
-          games: Math.max(1000, Math.round(selectedChamp.matches * 0.28))
+          games: Math.max(1000, Math.round(champ.matches * 0.28))
         }
       };
       filtered.push(altBuild);
     }
     return filtered;
-  }, [selectedChamp, selectedLane]);
+  }, [selectedChamp, champDetails, selectedLane]);
 
   const activeBuild = useMemo(() => {
     return buildsList[activeBuildIdx] || buildsList[0] || null;
@@ -775,7 +898,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   }, [bootsId]);
 
   const activeBuildPaths = useMemo(() => {
-    if (!activeBuild || !selectedChamp) return null;
+    const champ = champDetails || selectedChamp;
+    if (!activeBuild || !champ) return null;
     if (activeBuild.items?.paths) {
       const p = activeBuild.items.paths;
       return {
@@ -790,7 +914,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
     const pathsIds = getPathsForBuild(
       activeBuild.items?.slotItems || {},
       coreIds,
-      selectedChamp.damageType || 'AD',
+      champ.damageType || 'AD',
       bootsId ? Number(bootsId) : 3047
     );
     
@@ -799,7 +923,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
       neutral: (pathsIds.neutral || []).map(id => hydrateAsset('items', id)),
       behind: (pathsIds.behind || []).map(id => hydrateAsset('items', id))
     };
-  }, [activeBuild, coreSlots, selectedChamp, bootsId]);
+  }, [activeBuild, coreSlots, selectedChamp, champDetails, bootsId]);
 
   const uniqueItem4Options = useMemo(() => {
     if (!activeBuildPaths) return [];
@@ -838,10 +962,11 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
               </h1>
             </div>
           </div>
-
+        
           {lastUpdated && lastUpdated !== '-' && (
-            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-mono select-none">
-              ACTUALIZADO: <span className="text-[#9055ff] font-bold">{timeAgoText}</span>
+            <div className="flex flex-row gap-4 text-[12px] text-slate-400 uppercase tracking-widest font-mono select-none">
+              <div>META: <span className="text-[#9055ff] font-bold text-right">Diamante  </span></div>
+              <div>ACTUALIZADO: <span className="text-[#9055ff] font-bold">{timeAgoText}</span></div>
             </div>
           )}
         </header>
@@ -1034,7 +1159,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
   const renderDetailView = () => {
     if (!selectedChamp) return null;
 
-    const champ = selectedChamp;
+    const champ = champDetails || selectedChamp;
     const activeDetailLane = selectedLane === "ALL" 
       ? (getRoleKey(champ.lane) !== "UNKNOWN" ? getRoleKey(champ.lane) : (getRoleKey(champ.playLanes?.[0]) || "TOP"))
       : getRoleKey(selectedLane);
@@ -1188,7 +1313,16 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
 
         {/* Contenido Principal Centrado */}
         <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
-          {/* Pestañas de Múltiples Builds */}
+          {detailsLoading || !champDetails ? (
+            <div className="w-full py-20 flex flex-col items-center justify-center gap-3">
+              <div className="w-5 h-5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-500 font-mono">
+                Cargando análisis y builds...
+              </span>
+            </div>
+          ) : (
+            <>
+              {/* Pestañas de Múltiples Builds */}
           {buildsList.length > 1 && (
           <div className="flex flex-wrap gap-3 mb-6 select-none">
             {buildsList.map((b: any, idx: number) => {
@@ -1710,9 +1844,11 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           </div>
 
         </div>
+            </>
+          )}
+        </div>
 
       </div>
-    </div>
     );
   };
 

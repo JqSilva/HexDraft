@@ -15,20 +15,23 @@ export interface LCUData {
 export function getLolPath(): string {
   const dbPath = configRepo.getConfig('lol_path');
   if (dbPath && dbPath.trim() !== '') {
-    if (fs.existsSync(dbPath)) {
+    const dir = path.dirname(dbPath);
+    if (fs.existsSync(dir)) {
       return dbPath;
     }
   }
 
-  if (fs.existsSync(DEFAULT_PATH)) {
+  const defaultDir = path.dirname(DEFAULT_PATH);
+  if (fs.existsSync(defaultDir)) {
     saveLolPath(DEFAULT_PATH);
     return DEFAULT_PATH;
   }
 
   // Buscar en otras unidades (D:, E:, F:, G:, H:, B:)
   for (const drive of ['D', 'E', 'F', 'G', 'H', 'B']) {
-    const altPath = `${drive}:\\Riot Games\\League of Legends\\lockfile`;
-    if (fs.existsSync(altPath)) {
+    const altDir = `${drive}:\\Riot Games\\League of Legends`;
+    if (fs.existsSync(altDir)) {
+      const altPath = path.join(altDir, 'lockfile');
       saveLolPath(altPath);
       return altPath;
     }
@@ -50,7 +53,18 @@ export function saveLolPath(inputPath: string): string {
 
 // --- FUNCIONES DE CACHÉ DE LCU ---
 
+let cachedInMemory: LCUData | null = null;
+
 export function writeLcuCredentialsCache(data: LCUData) {
+  if (cachedInMemory && 
+      cachedInMemory.port === data.port && 
+      cachedInMemory.token === data.token && 
+      cachedInMemory.protocol === data.protocol) {
+    return;
+  }
+  
+  cachedInMemory = data;
+
   try {
     fs.mkdirSync(path.dirname(CACHE_FILE_PATH), { recursive: true });
     let existing: any = {};
@@ -59,6 +73,13 @@ export function writeLcuCredentialsCache(data: LCUData) {
         existing = JSON.parse(fs.readFileSync(CACHE_FILE_PATH, 'utf8'));
       } catch (e) {}
     }
+    
+    if (existing.port === data.port && 
+        existing.token === data.token && 
+        existing.protocol === data.protocol) {
+      return;
+    }
+
     existing.port = data.port;
     existing.token = data.token;
     existing.protocol = data.protocol;
@@ -69,11 +90,13 @@ export function writeLcuCredentialsCache(data: LCUData) {
 }
 
 export function readLcuCredentialsCache(): LCUData | null {
+  if (cachedInMemory) return cachedInMemory;
   try {
     if (fs.existsSync(CACHE_FILE_PATH)) {
       const data = JSON.parse(fs.readFileSync(CACHE_FILE_PATH, 'utf8'));
       if (data.port && data.token && data.protocol) {
-        return { port: data.port, token: data.token, protocol: data.protocol };
+        cachedInMemory = { port: data.port, token: data.token, protocol: data.protocol };
+        return cachedInMemory;
       }
     }
   } catch (e) {}
@@ -122,12 +145,8 @@ export function getLockfileData(): LCUData | null {
       return data;
     }
 
-    // Fallback a las credenciales en caché si el cliente de LoL está cerrado
-    const cached = readLcuCredentialsCache();
-    if (cached) {
-      return cached;
-    }
-
+    // Limpiar caché en memoria si ya no se detecta ejecución física
+    cachedInMemory = null;
     return null;
   } catch (error) {
     console.error("Error leyendo el lockfile de LoL:", error);

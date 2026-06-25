@@ -198,7 +198,16 @@ export function analyzeComposition(champNames: string[]): CompositionAnalysis {
     }
     
     // Damage type
-    if (champ.damageType === 'AP' || champ.damage_type === 'AP') {
+    const dmgComp = champ.combat?.damageComposition;
+    if (dmgComp && (dmgComp.physical > 0 || dmgComp.magic > 0)) {
+      totalPhysical += dmgComp.physical;
+      totalMagic += dmgComp.magic;
+      if (dmgComp.magic > dmgComp.physical) {
+        apCount++;
+      } else {
+        adCount++;
+      }
+    } else if (champ.damageType === 'AP' || champ.damage_type === 'AP') {
       apCount++;
       totalMagic += 80;
       totalPhysical += 20;

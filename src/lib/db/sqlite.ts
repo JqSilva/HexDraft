@@ -200,6 +200,7 @@ insertConfigStmt.run('sync_period_days', '3');
 insertConfigStmt.run('lane_sync_period_days', '21');
 insertConfigStmt.run('last_sync_timestamp', '-');
 insertConfigStmt.run('last_lane_sync_timestamp', '-');
+insertConfigStmt.run('last_sync_version', '-');
 insertConfigStmt.run('meta_sync_frequency', '2');
 insertConfigStmt.run('last_meta_cache_sync', '-');
 

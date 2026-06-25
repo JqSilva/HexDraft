@@ -737,33 +737,37 @@ export const DraftPage = () => {
                                 /* 3. DRAFT GRID (SELECCIÓN / BANEOS) */
                                 inDraft && (
                                     <div className="space-y-6">
-                                        {/* Panel de Composición del Equipo */}
-                                        {myTeamAnalysis && allyNames.length > 0 && (
-                                            <div className="p-4">
-                                                 {/* Fila de balance de Daño */}
-                                                 <div className="space-y-1.5">
-                                                     <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                         <span>Daño Físico (AD): {myTeamAnalysis.damageProfile.physicalPct}%</span>
-                                                         <span>Daño Mágico (AP): {myTeamAnalysis.damageProfile.magicPct}%</span>
-                                                     </div>
-                                                     <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
-                                                         <div 
-                                                             style={{ width: `${myTeamAnalysis.damageProfile.physicalPct}%` }}
-                                                             className="bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500"
-                                                         />
-                                                         <div 
-                                                             style={{ width: `${myTeamAnalysis.damageProfile.magicPct}%` }}
-                                                             className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500"
-                                                         />
-                                                     </div>
-                                                     {!myTeamAnalysis.damageProfile.isBalanced && (
-                                                         <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
-                                                             ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
-                                                         </span>
-                                                     )}
-                                                 </div>
-                                            </div>
-                                        )}
+                                        {myTeamAnalysis && (
+                                             <div className="p-4 border-b border-border-warm/20 mb-4 bg-slate-950/20 rounded-sm">
+                                                  {/* Fila de balance de Daño */}
+                                                  <div className="space-y-1.5">
+                                                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                          <span>Daño Físico (AD): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%</span>
+                                                          <span>Daño Mágico (AP): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%</span>
+                                                      </div>
+                                                      <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
+                                                          <div 
+                                                              style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%` }}
+                                                              className={`bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
+                                                          />
+                                                          <div 
+                                                              style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%` }}
+                                                              className={`bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
+                                                          />
+                                                      </div>
+                                                      {allyNames.length > 0 && !myTeamAnalysis.damageProfile.isBalanced && (
+                                                          <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
+                                                              ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
+                                                          </span>
+                                                      )}
+                                                      {allyNames.length === 0 && (
+                                                          <span className="text-[9px] text-slate-500 font-medium block italic">
+                                                              Esperando selecciones de campeones...
+                                                          </span>
+                                                      )}
+                                                  </div>
+                                             </div>
+                                         )}
 
                                         <DraftGrid
                                             recommendations={view === 'bans' ? banRecommendations : recommendations}

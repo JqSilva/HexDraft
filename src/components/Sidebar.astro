@@ -182,6 +182,7 @@ const activePath = Astro.url.pathname;
         <span class="sidebar-text transition-all duration-200"
           >Sincronización</span
         >
+        <span id="sidebar-sync-badge" class="hidden w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 ml-auto" title="Actualización recomendada"></span>
       </a>
 
       <a
@@ -359,6 +360,16 @@ const activePath = Astro.url.pathname;
         if (levelFill) levelFill.style.width = `${data.xpPercent}%`;
         if (xpVals)
           xpVals.textContent = `${data.xpCurrent.toLocaleString()} / ${data.xpMax.toLocaleString()} XP`;
+
+        // Control del badge de recomendación de actualización
+        const badge = document.getElementById("sidebar-sync-badge");
+        if (badge) {
+          if (data.syncRecommended) {
+            badge.classList.remove("hidden");
+          } else {
+            badge.classList.add("hidden");
+          }
+        }
       }
     } catch (e) {
       console.warn("Could not poll stats dynamically for Sidebar profile:", e);

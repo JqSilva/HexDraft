@@ -243,24 +243,46 @@ export const championsRepo = {
   // Recupera la lista completa de campeones con todos sus datos anidados estructurados
   // para alimentar el motor en memoria (dataProvider.ts)
   getAllEnrichedChampions(): any[] {
+    const start = Date.now();
+    
+    // 1. Cargar todos los campeones
     const champsQuery = db.prepare('SELECT * FROM champions');
     const champs = champsQuery.all() as DbChampion[];
 
+    // 2. Cargar todos los matchups, sinergias y builds de una sola vez
+    const allMatchups = db.prepare('SELECT opponent_id, champion_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, matchup_type FROM matchups').all() as any[];
+    const allSynergies = db.prepare('SELECT partner_id, champion_id, lane, delta FROM synergies').all() as any[];
+    const allBuilds = db.prepare('SELECT * FROM builds ORDER BY is_default DESC').all() as DbBuild[];
+
+    // 3. Crear mapas de agrupación por champion_id
+    const matchupsByChamp: Record<number, any[]> = {};
+    allMatchups.forEach(m => {
+      if (!matchupsByChamp[m.champion_id]) matchupsByChamp[m.champion_id] = [];
+      matchupsByChamp[m.champion_id].push(m);
+    });
+
+    const synergiesByChamp: Record<number, any[]> = {};
+    allSynergies.forEach(s => {
+      if (!synergiesByChamp[s.champion_id]) synergiesByChamp[s.champion_id] = [];
+      synergiesByChamp[s.champion_id].push(s);
+    });
+
+    const buildsByChamp: Record<number, DbBuild[]> = {};
+    allBuilds.forEach(b => {
+      if (!buildsByChamp[b.champion_id]) buildsByChamp[b.champion_id] = [];
+      buildsByChamp[b.champion_id].push(b);
+    });
+
     const nameIdMap = this.getChampionNameIdMap();
 
-    return champs.map(c => {
+    const result = champs.map(c => {
       const champId = c.id;
 
-      // 1. Obtener matchups (counters y godMatchups)
-      const matchupsStmt = db.prepare(`
-        SELECT opponent_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, matchup_type 
-        FROM matchups 
-        WHERE champion_id = ?
-      `);
-      const rawMatchups = matchupsStmt.all(champId) as any[];
-
+      // Matchups (counters y godMatchups)
+      const rawMatchups = matchupsByChamp[champId] || [];
       const counters: any[] = [];
       const godMatchups: any[] = [];
+      
       rawMatchups.forEach(m => {
         const opponentName = nameIdMap[m.opponent_id] || `Unknown (${m.opponent_id})`;
         const matchupObj = {
@@ -270,7 +292,7 @@ export const championsRepo = {
           goldDiff: String(m.gold_diff),
           xpDiff: String(m.xp_diff),
           csDiff: String(m.cs_diff),
-          count: 500, // Valor dummy para compatibilidad
+          count: 500,
           laneTag: m.gold_diff + m.xp_diff > 200 ? "Good Lane" : "Bad Lane",
           dominanceScore: m.dominance_score
         };
@@ -282,14 +304,8 @@ export const championsRepo = {
         }
       });
 
-      // 2. Obtener sinergias
-      const synergiesStmt = db.prepare(`
-        SELECT partner_id, lane, delta 
-        FROM synergies 
-        WHERE champion_id = ?
-      `);
-      const rawSynergies = synergiesStmt.all(champId) as any[];
-
+      // Sinergias
+      const rawSynergies = synergiesByChamp[champId] || [];
       const synergies: Record<string, Array<{ name: string; delta: string }>> = {};
       rawSynergies.forEach(s => {
         const partnerName = nameIdMap[s.partner_id] || `Unknown (${s.partner_id})`;
@@ -301,14 +317,8 @@ export const championsRepo = {
         });
       });
 
-      // 3. Obtener todas las builds
-      const buildsStmt = db.prepare(`
-        SELECT * FROM builds 
-        WHERE champion_id = ?
-        ORDER BY is_default DESC
-      `);
-      const rawBuilds = buildsStmt.all(champId) as DbBuild[];
-
+      // Builds
+      const rawBuilds = buildsByChamp[champId] || [];
       const builds = rawBuilds.map(b => ({
         id: b.id,
         build_name: b.build_name,
@@ -329,8 +339,7 @@ export const championsRepo = {
         || builds[0]
         || null;
 
-      // Reconstruir curva de winrate dummy o basada en base de datos en el futuro
-      const tagsList = JSON.parse(c.tags);
+      const tagsList = JSON.parse(c.tags || '[]');
 
       return {
         id: c.id,
@@ -343,7 +352,6 @@ export const championsRepo = {
         isHypercarry: c.is_hypercarry === 1,
         hasHardCC: c.has_hard_cc === 1,
         
-        // Nuevos campos semánticos
         tacticRole: c.tactic_role || 'teamfight',
         mobility: c.mobility || 'medium',
         targetPriority: c.target_priority || 'any',
@@ -373,5 +381,159 @@ export const championsRepo = {
         builds
       };
     });
+
+    console.log(`[PERF] getAllEnrichedChampions completed in ${Date.now() - start}ms`);
+    return result;
+  },
+
+  getBasicChampionsList(): any[] {
+    const champsQuery = db.prepare('SELECT id, name, lane, tier, win_rate, damage_type, class, play_lanes, lanes_pickrate, lanes_stats, scaling_type, is_frontline, is_hypercarry, has_hard_cc, tags FROM champions');
+    const champs = champsQuery.all() as DbChampion[];
+    return champs.map(c => ({
+      id: c.id,
+      name: c.name,
+      lane: c.lane,
+      damageType: c.damage_type,
+      class: c.class,
+      isFrontline: c.is_frontline === 1,
+      isHypercarry: c.is_hypercarry === 1,
+      hasHardCC: c.has_hard_cc === 1,
+      tags: JSON.parse(c.tags || '[]'),
+      scalingType: c.scaling_type,
+      playLanes: JSON.parse(c.play_lanes || '[]'),
+      lanesPickrate: JSON.parse(c.lanes_pickrate || '{}'),
+      lanesStats: JSON.parse(c.lanes_stats || '{}'),
+      meta: {
+        winRate: c.win_rate,
+        tier: c.tier
+      }
+    }));
+  },
+
+  getSingleEnrichedChampion(champId: number): any | null {
+    const c = db.prepare('SELECT * FROM champions WHERE id = ?').get(champId) as DbChampion | undefined;
+    if (!c) return null;
+
+    const nameIdMap = this.getChampionNameIdMap();
+
+    // 1. Obtener matchups (counters y godMatchups)
+    const matchupsStmt = db.prepare(`
+      SELECT opponent_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, matchup_type 
+      FROM matchups 
+      WHERE champion_id = ?
+    `);
+    const rawMatchups = matchupsStmt.all(champId) as any[];
+
+    const counters: any[] = [];
+    const godMatchups: any[] = [];
+    rawMatchups.forEach(m => {
+      const opponentName = nameIdMap[m.opponent_id] || `Unknown (${m.opponent_id})`;
+      const matchupObj = {
+        name: opponentName,
+        lane: m.lane,
+        winrate: m.winrate,
+        goldDiff: String(m.gold_diff),
+        xpDiff: String(m.xp_diff),
+        csDiff: String(m.cs_diff),
+        count: 500,
+        laneTag: m.gold_diff + m.xp_diff > 200 ? "Good Lane" : "Bad Lane",
+        dominanceScore: m.dominance_score
+      };
+
+      if (m.matchup_type === 'counter') {
+        counters.push(matchupObj);
+      } else {
+        godMatchups.push(matchupObj);
+      }
+    });
+
+    // 2. Obtener sinergias
+    const synergiesStmt = db.prepare(`
+      SELECT partner_id, lane, delta 
+      FROM synergies 
+      WHERE champion_id = ?
+    `);
+    const rawSynergies = synergiesStmt.all(champId) as any[];
+
+    const synergies: Record<string, Array<{ name: string; delta: string }>> = {};
+    rawSynergies.forEach(s => {
+      const partnerName = nameIdMap[s.partner_id] || `Unknown (${s.partner_id})`;
+      const pos = s.lane.toLowerCase();
+      if (!synergies[pos]) synergies[pos] = [];
+      synergies[pos].push({
+        name: partnerName,
+        delta: String(s.delta)
+      });
+    });
+
+    // 3. Obtener todas las builds
+    const buildsStmt = db.prepare(`
+      SELECT * FROM builds 
+      WHERE champion_id = ?
+      ORDER BY is_default DESC
+    `);
+    const rawBuilds = buildsStmt.all(champId) as DbBuild[];
+
+    const builds = rawBuilds.map(b => ({
+      id: b.id,
+      build_name: b.build_name,
+      is_default: b.is_default === 1,
+      patch: b.patch,
+      summoners: JSON.parse(b.summoners),
+      runes: JSON.parse(b.runes),
+      items: JSON.parse(b.items),
+      skills: JSON.parse(b.skills),
+      tags: JSON.parse(b.tags),
+      special_notes: JSON.parse(b.special_notes),
+      lane: b.lane
+    }));
+
+    const buildData = builds.find(b => b.is_default && b.special_notes?.dpmData)
+      || builds.find(b => b.is_default && b.lane !== 'UNKNOWN')
+      || builds.find(b => b.is_default)
+      || builds[0]
+      || null;
+
+    const tagsList = JSON.parse(c.tags || '[]');
+
+    return {
+      id: c.id,
+      name: c.name,
+      lane: c.lane,
+      tags: tagsList,
+      damageType: c.damage_type,
+      class: c.class,
+      isFrontline: c.is_frontline === 1,
+      isHypercarry: c.is_hypercarry === 1,
+      hasHardCC: c.has_hard_cc === 1,
+      
+      tacticRole: c.tactic_role || 'teamfight',
+      mobility: c.mobility || 'medium',
+      targetPriority: c.target_priority || 'any',
+      teamNeeds: JSON.parse(c.team_needs || '[]'),
+      teamProvides: JSON.parse(c.team_provides || '[]'),
+      hasShield: c.has_shield === 1,
+      hasSustain: c.has_sustain === 1,
+      lanePhase: c.lane_phase || 'average',
+      resourceDependency: c.resource_dependency || 'medium',
+
+      meta: {
+        winRate: c.win_rate,
+        tier: c.tier
+      },
+      playLanes: JSON.parse(c.play_lanes || '[]'),
+      lanesPickrate: JSON.parse(c.lanes_pickrate || '{}'),
+      lanesStats: JSON.parse(c.lanes_stats || '{}'),
+      scalingType: c.scaling_type,
+      combat: {
+        damageComposition: { physical: c.damage_type === 'AD' ? 80 : 20, magic: c.damage_type === 'AP' ? 80 : 20, true: 0 },
+        winrateCurve: c.scaling_type === 'Early' ? [52, 51, 50, 49, 48, 47] : (c.scaling_type === 'Late' ? [48, 49, 50, 51, 52, 53] : [50, 50, 50, 50, 50, 50])
+      },
+      counters: counters.sort((a, b) => a.dominanceScore - b.dominanceScore),
+      godMatchups: godMatchups.sort((a, b) => b.dominanceScore - a.dominanceScore),
+      synergies,
+      buildData,
+      builds
+    };
   }
 };

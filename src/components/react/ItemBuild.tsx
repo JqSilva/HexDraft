@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 
 interface ScoredCluster {
     pivotItem: number;
@@ -51,7 +51,7 @@ const ClusterTab = ({
     isActive,
     onClick
 }: {
-    cluster: any;
+    cluster: ScoredCluster;
     isActive: boolean;
     onClick: () => void;
 }) => {
@@ -70,7 +70,7 @@ const ClusterTab = ({
     return (
         <button
             onClick={onClick}
-            className={`flex flex-col gap-0.5 p-1.5 px-2.5 transition-all duration-200 cursor-pointer text-left flex-1 min-w-0 ${tabStyle}`}
+            className={`flex flex-col gap-0.5 p-1.5 px-2.5 transition-all duration-200 cursor-pointer text-left w-[145px] shrink-0 ${tabStyle}`}
         >
             <div className="flex justify-between items-center w-full gap-1.5">
                 <span className={`text-[10px] font-black uppercase tracking-wider ${colors.title} truncate max-w-[90px]`}>
@@ -83,7 +83,6 @@ const ClusterTab = ({
 
             {/* Icons row */}
             <div className="flex items-center gap-1.5 mt-0.5">
-                {/* Keystone Rune Icon */}
                 {keystone?.icon && (
                     <img
                         src={keystone.icon}
@@ -92,11 +91,9 @@ const ClusterTab = ({
                         title={keystone.name}
                     />
                 )}
-                {/* separator if runes & items both exist */}
                 {keystone?.icon && coreItems.length > 0 && (
                     <div className="h-4.5 w-px bg-border-warm/30 mx-0.5"></div>
                 )}
-                {/* First 2 Core Item Icons */}
                 {coreItems.slice(0, 2).map((item: any, idx: number) => (
                     <img
                         key={idx}
@@ -113,25 +110,31 @@ const ClusterTab = ({
 
 export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePicked }: ItemBuildProps) => {
     const scoredClusters: ScoredCluster[] = currentBuild?.scoredClusters || [];
-    const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
+
+    // FIX: usar índice en vez de título como clave de tab activa
+    // El título puede cambiar si el engine regenera los clusters con nuevos sufijos
+    const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
     const [isManualSelection, setIsManualSelection] = useState(false);
 
-    // Reset tab selections when champion changes
+    // Guardar el nombre del campeón anterior para detectar cambio real de campeón
+    const prevChampName = useRef<string | null>(null);
+
+    // Solo resetear cuando cambia el campeón, NO cuando cambia scoredClusters
     useEffect(() => {
-        setIsManualSelection(false);
-        if (scoredClusters.length > 0) {
-            setActiveTabKey(scoredClusters[0].title);
-        } else {
-            setActiveTabKey(null);
+        if (currentBuild?.name !== prevChampName.current) {
+            prevChampName.current = currentBuild?.name ?? null;
+            setActiveTabIndex(0);
+            setIsManualSelection(false);
         }
     }, [currentBuild?.name]);
 
-    // Reactively follow the new winner if user hasn't made a manual selection
+    // Si el engine actualizó los clusters (cambio de draft) y el usuario
+    // no hizo selección manual, volver al ganador (índice 0)
     useEffect(() => {
-        if (!isManualSelection && scoredClusters.length > 0) {
-            setActiveTabKey(scoredClusters[0].title);
+        if (!isManualSelection) {
+            setActiveTabIndex(0);
         }
-    }, [scoredClusters, isManualSelection]);
+    }, [currentBuild?.name, isManualSelection]);
 
     if (inDraft && !everyonePicked) {
         return (
@@ -143,7 +146,9 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
 
     if (!currentBuild) return null;
 
-    const activeCluster = scoredClusters.find(c => c.title === activeTabKey) || scoredClusters[0];
+    // FIX: usar índice directamente, sin búsqueda por título
+    const clampedIndex = Math.min(activeTabIndex, scoredClusters.length - 1);
+    const activeCluster = scoredClusters[clampedIndex] ?? scoredClusters[0];
     const build = activeCluster ? activeCluster.build : currentBuild.build;
     const coreItemSwaps = activeCluster ? activeCluster.coreItemSwaps : currentBuild.coreItemSwaps;
 
@@ -176,16 +181,15 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
         <div className="h-full flex flex-col gap-0">
             {/* Cabecera / Tabs */}
             <div className="flex justify-between items-end gap-3 shrink-0">
-                {/* Selector de Clusters / Tabs (max 4) */}
-                {scoredClusters.length >= 2 ? (
+                {scoredClusters.length >= 1 ? (
                     <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
                         {scoredClusters.map((cluster, idx) => (
                             <ClusterTab
-                                key={`cluster-tab-${idx}`}
+                                key={`cluster-tab-${cluster.pivotItem}-${idx}`}
                                 cluster={cluster}
-                                isActive={cluster.title === activeCluster?.title}
+                                isActive={idx === clampedIndex}
                                 onClick={() => {
-                                    setActiveTabKey(cluster.title);
+                                    setActiveTabIndex(idx);
                                     setIsManualSelection(true);
                                 }}
                             />
@@ -198,7 +202,7 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                 )}
             </div>
 
-            {/* Panel de Contenido de la Build Activa (sin scrollbar) */}
+            {/* Panel de Contenido de la Build Activa */}
             <div className="flex-grow p-2 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
                 {/* 1. RUNAS */}
                 {build?.runes && (
@@ -207,7 +211,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                             Runas
                         </span>
                         <div className="flex items-center justify-center gap-2 flex-wrap w-full">
-                            {/* Keystone */}
                             {build.runes.keystone && (
                                 <div className="relative group shrink-0" title={build.runes.keystone.name}>
                                     <img
@@ -220,7 +223,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
 
                             <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
 
-                            {/* Primary Selections */}
                             <div className="flex gap-1.5 justify-center shrink-0">
                                 {build.runes.selections?.slice(1, 4).map((rune: any, idx: number) => rune && (
                                     <div key={`prim-${idx}`} className="relative group w-[38px] h-[38px]" title={rune.name}>
@@ -235,7 +237,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
 
                             <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
 
-                            {/* Secondary Selections */}
                             <div className="flex gap-1.5 justify-center shrink-0">
                                 {build.runes.selections?.slice(4, 6).map((rune: any, idx: number) => rune && (
                                     <div key={`sec-${idx}`} className="relative group w-[38px] h-[38px]" title={rune.name}>
@@ -250,7 +251,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
 
                             <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
 
-                            {/* Shards */}
                             <div className="flex gap-1 justify-center shrink-0">
                                 {build.runes.shards?.map((shard: any, idx: number) => shard && (
                                     <div key={`shard-${idx}`} className="relative group w-[34px] h-[34px]" title={shard.name}>
@@ -267,12 +267,11 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                 )}
 
                 {/* 2. BUILD COMPLETA */}
-                <div className=" py-0.5 px-2 flex flex-col gap-2.5 shrink-0">
+                <div className="py-0.5 px-2 flex flex-col gap-2.5 shrink-0">
                     <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block text-center w-full">
                         Objetos de Inicio y Core Build
                     </span>
                     <div className="flex flex-wrap gap-1 items-center justify-center w-full">
-                        {/* Iniciales / Starter */}
                         {build?.items?.starter && build.items.starter.length > 0 && (
                             <>
                                 <div className="flex gap-1.5 justify-center">
@@ -290,7 +289,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                             </>
                         )}
 
-                        {/* Botas */}
                         {build?.items?.boots && (
                             <>
                                 <div className="relative w-12 h-12 shrink-0" title={build.items.boots.name}>
@@ -307,7 +305,6 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                             </>
                         )}
 
-                        {/* Core Items */}
                         <div className="flex gap-1.5 justify-center">
                             {build?.items?.core?.map((item: any, idx: number) => (
                                 <div key={`core-${idx}`} className="relative w-12 h-12 group" title={item.name}>
@@ -343,11 +340,13 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                     </div>
                 </div>
 
-                {/* Botón Re-Importar Centrado al Final con mt-auto */}
-                <div className="flex justify-center items-center  shrink-0">
+                {/* Botón Re-Importar */}
+                <div className="flex justify-center items-center shrink-0">
                     <button
                         onClick={() => onReImport({
-                            name: activeCluster?.title ? `${currentBuild.name} (${activeCluster.title})` : currentBuild.name,
+                            name: activeCluster?.title
+                                ? `${currentBuild.name} (${activeCluster.title})`
+                                : currentBuild.name,
                             id: currentBuild.id,
                             build: build,
                             coreItemSwaps: coreItemSwaps

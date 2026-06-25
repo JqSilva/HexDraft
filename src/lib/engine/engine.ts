@@ -172,7 +172,16 @@ export function getProcessedBans(
             const counterId = NAME_TO_ID[counterName];
             if (!counterId) return;
 
-            const wr = parseFloat(counter.winrate.replace('%', ''));
+            let wr = 50.0;
+            if (counter && counter.winrate) {
+                if (typeof counter.winrate === 'string') {
+                    wr = parseFloat(counter.winrate.replace('%', ''));
+                } else if (typeof counter.winrate === 'number') {
+                    wr = counter.winrate;
+                }
+            }
+            if (isNaN(wr)) wr = 50.0;
+
             const dangerWeight = wr > 50 ? (wr - 50) * 2 : 0.5;
 
             if (!banScores[counterName]) {
@@ -188,13 +197,62 @@ export function getProcessedBans(
         });
     });
 
-    const results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
+    let results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
         id: data.id,
         name: name,
         score: parseFloat(Math.min(Math.max(data.score + (data.count * 0.5), 0.1), 10.0).toFixed(2))
     }));
 
-    return results.sort((a, b) => b.score - a.score).slice(0, 30);
+    results.sort((a, b) => b.score - a.score);
+
+    if (results.length < 5) {
+        const metaBans: { name: string; id: number; score: number }[] = [];
+        Object.entries(ENRICHED_DB).forEach(([name, champ]) => {
+            const champId = NAME_TO_ID[name];
+            if (!champId) return;
+
+            const tier = champ.meta?.tier || 5;
+            const winRate = champ.meta?.winRate || 50.0;
+
+            const tierFactor = Math.max(0, 6 - tier); // Tier 1 -> 5, Tier 2 -> 4, etc.
+            const winrateFactor = Math.max(0, winRate - 45.0); // e.g. 52% -> 7, 49% -> 4
+            const metaScore = parseFloat((tierFactor * 1.2 + winrateFactor * 0.2).toFixed(2));
+
+            metaBans.push({
+                name,
+                id: champId,
+                score: Math.min(Math.max(metaScore, 0.1), 10.0)
+            });
+        });
+
+        metaBans.sort((a, b) => {
+            const champA = ENRICHED_DB[a.name];
+            const champB = ENRICHED_DB[b.name];
+            const tierA = champA.meta?.tier || 5;
+            const tierB = champB.meta?.tier || 5;
+            if (tierA !== tierB) {
+                return tierA - tierB;
+            }
+            const wrA = champA.meta?.winRate || 50.0;
+            const wrB = champB.meta?.winRate || 50.0;
+            return wrB - wrA;
+        });
+
+        const existingNames = new Set(results.map(r => r.name));
+        for (const metaBan of metaBans) {
+            if (!existingNames.has(metaBan.name)) {
+                results.push({
+                    id: metaBan.id,
+                    name: metaBan.name,
+                    score: metaBan.score
+                });
+                existingNames.add(metaBan.name);
+                if (results.length >= 30) break;
+            }
+        }
+    }
+
+    return results.slice(0, 30);
 }
 
 export function getBanRecommendations(

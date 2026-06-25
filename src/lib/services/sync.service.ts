@@ -426,7 +426,7 @@ export async function scrapeSingleChampion(
     
     // El endpoint de dpm.lol usa 'utility' para UTILITY
     const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'utility' : lane.toLowerCase();
-    const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=emerald_plus&timeframe=${version}&gameMode=ranked`;
+    const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=diamond&timeframe=${version}&gameMode=ranked`;
     
     try {
       const responseHtml = await fetchWithFlareSolverr(url);
@@ -1117,6 +1117,7 @@ export async function syncMetaAndBuilds(
 
   try {
     configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
+    configRepo.setConfig('last_sync_version', version);
   } catch (err) {}
   
   // --- PARTE 3: Sincronizar datos semánticos de campeones ---
