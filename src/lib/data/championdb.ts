@@ -2757,4 +2757,20 @@ export const CHAMPIONS_DB: Record<number, ChampionData> = {
     teamProvides: [],
     scalingType: "Mid",
   },
+    "805": {
+    id: 805,
+    name: "Locke",
+    damageType: "AP",
+    class: "Assassin",
+
+    isFrontline: false,
+    isHypercarry: false,
+    hasHardCC: false,
+    tags: ["Assassin","Burst","Mobility"],
+
+    tacticRole: "burst",
+    teamNeeds: ["engage","followup"],
+    teamProvides: [],
+    scalingType: "Mid",
+  },
 };

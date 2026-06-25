@@ -4,7 +4,10 @@ import { championsRepo } from '../../lib/db/champions.repo';
 import fs from 'fs';
 import path from 'path';
 
-const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
+const normalizeKey = (name: string) => name.toLowerCase()
+  .replace(/\s+&\s+/g, ' y ')
+  .replace(/\s+and\s+/g, ' y ')
+  .replace(/[^a-z0-9]/g, "");
 
 export const GET: APIRoute = async ({ url }) => {
   try {

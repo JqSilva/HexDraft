@@ -24,7 +24,10 @@ try {
 
 let loadedMetaCache: any = defaultMetaCache;
 
-export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
+export const normalizeKey = (name: string) => name.toLowerCase()
+  .replace(/\s+&\s+/g, ' y ')
+  .replace(/\s+and\s+/g, ' y ')
+  .replace(/[^a-z0-9]/g, "");
 
 const ENRICHED_DB: any = {};
 

@@ -640,7 +640,11 @@ export const DraftPage = () => {
                 />
 
                 {/* AREA CENTRAL */}
-                <div className={`transition-all duration-700 ease-in-out h-full max-h-[780px] min-h-[600px] ${
+                <div className={`transition-all duration-700 ease-in-out h-full ${
+                    (hasPicked || isPlaying)
+                        ? 'max-h-[780px] min-h-[600px]' 
+                        : 'max-h-[650px] min-h-[400px]'
+                } ${
                     isPlaying 
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto' 
                         : 'flex-1 min-w-0 mx-2 md:mx-4'

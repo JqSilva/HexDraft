@@ -307,6 +307,14 @@ const formatTimeAgo = (dateStr: string): string => {
   return `Hace ${days} ${days === 1 ? 'día' : 'días'}`;
 };
 
+const normalizeKey = (name: string) => {
+  if (!name) return "";
+  return name.toLowerCase()
+    .replace(/\s+&\s+/g, ' y ')
+    .replace(/\s+and\s+/g, ' y ')
+    .replace(/[^a-z0-9]/g, "");
+};
+
 const getEnrichedChampionsFromMeta = (metaData: any) => {
   const tempStats: Record<string, {
     name: string;
@@ -332,7 +340,7 @@ const getEnrichedChampionsFromMeta = (metaData: any) => {
     lanes.forEach(laneKey => {
       const list = metaData[laneKey] || [];
       list.forEach((entry: any) => {
-        const normName = entry.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const normName = normalizeKey(entry.name);
         if (!tempStats[normName]) {
           tempStats[normName] = { name: entry.name, laneStats: [] };
         }
@@ -361,7 +369,7 @@ const getEnrichedChampionsFromMeta = (metaData: any) => {
   };
 
   return Object.values(CHAMPIONS_DB).map((champ: any) => {
-    const normName = champ.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normName = normalizeKey(champ.name);
     const statsEntry = tempStats[normName];
     
     let bestLane = champ.lane || "MID";
@@ -643,8 +651,8 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
       
       laneList.forEach((metaChamp: any) => {
         // Encontrar el campeón por nombre normalizado
-        const normMetaName = metaChamp.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const dbChamp = champions.find(c => c.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normMetaName);
+        const normMetaName = normalizeKey(metaChamp.name);
+        const dbChamp = champions.find(c => normalizeKey(c.name) === normMetaName);
         if (dbChamp) {
           const winRate = parseFloat(metaChamp.winRate) || 50.0;
           const tier = parseInt(metaChamp.rank) || 99;
@@ -1226,13 +1234,13 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
         </div>
 
         {/* Cabecera Premium */}
-        <div className="relative border border-border-warm rounded-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 tech-corners shadow-2xl min-h-[140px]">
+        <div className="relative border border-border-warm rounded-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 tech-corners shadow-2xl min-h-[160px]">
           {/* Fondo Splash Art Blurred */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none scale-105"
             style={{ 
               backgroundImage: `url(https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${splashName}_0.jpg)`,
-              filter: 'blur(25px) brightness(0.25)'
+              filter: 'blur(5px) brightness(0.45)'
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent pointer-events-none z-0" />
@@ -1240,11 +1248,11 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           {/* Información Principal del Campeón */}
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-5">
             {/* Avatar Loading Frame */}
-            <div className="w-20 h-28 border border-purple-accent/40 rounded-sm overflow-hidden bg-black shrink-0 shadow-lg relative group">
+            <div className="w-20 h-35 border-2 border-purple-accent/40 rounded-sm overflow-hidden bg-black shrink-0 shadow-lg relative hover:scale-110 transition-transform duration-500 ">
               <img 
                 src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${splashName}_0.jpg`} 
                 alt={champ.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-full object-cover scale-110"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/favicon.svg";
                 }}
@@ -1289,7 +1297,7 @@ export const ChampionsStats = ({ initialChampionId, initialLane }: { initialCham
           </div>
 
           {/* Stats de Meta Destacados */}
-          <div className="relative z-10 grid grid-cols-3 gap-5 bg-black/50 border border-border-warm/40 p-4 rounded-sm backdrop-blur-md max-w-sm w-full md:self-end">
+          <div className="relative z-10 grid grid-cols-3 gap-5 bg-black/50 border border-border-warm/40 p-4 rounded-sm backdrop-blur-md max-w-sm w-full md:self-center">
             <div className="text-center">
               <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-black mb-1">Win Rate</span>
               <span className={`text-base font-mono font-black ${winRateVal >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>

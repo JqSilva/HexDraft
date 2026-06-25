@@ -79,7 +79,10 @@ async function fetchWithFlareSolverr(url: string): Promise<any> {
   throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
 }
 
-const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
+const normalizeKey = (name: string) => name.toLowerCase()
+  .replace(/\s+&\s+/g, ' y ')
+  .replace(/\s+and\s+/g, ' y ')
+  .replace(/[^a-z0-9]/g, "");
 
 function resolveChampionId(name: string, nameIdMap: Record<string, number>): number | null {
   const norm = normalizeKey(name);

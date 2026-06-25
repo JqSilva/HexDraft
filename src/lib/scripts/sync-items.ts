@@ -1,9 +1,12 @@
 // src/lib/scripts/sync-items.ts
 import { db } from '../db/sqlite.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export async function syncItemsFromCommunityDragon(): Promise<number> {
-  console.log("Sincronizando items desde Community Dragon...");
-  const url = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json';
+  console.log("Sincronizando items desde Community Dragon (ES)...");
+  const url = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/es_ar/v1/items.json';
+  const ASSETS_MAP_PATH = './src/lib/data/assets-map.json';
   
   try {
     const response = await fetch(url);
@@ -56,7 +59,37 @@ export async function syncItemsFromCommunityDragon(): Promise<number> {
     }
     
     db.exec('COMMIT;');
-    console.log(`Sincronizacion de items completada: ${count} items guardados.`);
+    console.log(`Sincronizacion de items completada: ${count} items guardados en base de datos.`);
+
+    // Actualizar assets-map.json
+    try {
+      let currentAssets: any = { runes: {}, items: {}, shards: {}, runeToStyle: {}, summoners: {} };
+      if (fs.existsSync(ASSETS_MAP_PATH)) {
+        currentAssets = JSON.parse(fs.readFileSync(ASSETS_MAP_PATH, 'utf-8'));
+      }
+
+      const itemsMap: Record<string, any> = {};
+      for (const item of Object.values(items)) {
+        if (!item.inStore && item.priceTotal === 0) continue;
+        const id = String(item.id);
+        // Normalizar la ruta del icono removiendo el prefijo /lol-game-data/assets/
+        const icon = item.iconPath ? item.iconPath.replace(/^\/lol-game-data\/assets\/(v1\/)?/i, '') : '';
+        
+        itemsMap[id] = {
+          name: item.name,
+          description: item.description || '',
+          gold: item.priceTotal,
+          icon: icon
+        };
+      }
+
+      currentAssets.items = itemsMap;
+      fs.writeFileSync(ASSETS_MAP_PATH, JSON.stringify(currentAssets, null, 2));
+      console.log(`assets-map.json actualizado con ${Object.keys(itemsMap).length} items.`);
+    } catch (e: any) {
+      console.error("Error al actualizar assets-map.json:", e);
+    }
+
     return count;
   } catch (error) {
     try {

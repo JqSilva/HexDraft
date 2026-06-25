@@ -1,0 +1,1196 @@
+========================================================
+SIMULATING SHACO SCORING ACROSS VARIOUS COMPOSITIONS
+========================================================
+
+
+--- RUNNING TEST: 1. Balanced Compo (Base Case) ---
+
+🔍 [ENGINE] getAdaptedBuild → Shaco (ID: 35)
+   tacticRole: burst | class: Assassin | isAssassin: true
+   hasDpmData: true | builds count: 0
+   allies: [164, 120, 110, 53] | enemies: [266, 60, 517, 51, 16]
+
+╔══ [CLUSTER SCORING] Shaco ════════════════════════
+║ 🏆 GANADOR Cluster AP (pivot: 2503)
+║    WR: 58.03% → wrContrib: 16.056
+║    PR: 20.90% → prContrib: 2.640
+║    baseScore: 18.697
+║    [bonus] AP healer bonus (3 healers): +5.000
+║    ► FINAL: 23.697
+║    Cluster AP (pivot: 6655)
+║    WR: 54.00% → wrContrib: 8.000
+║    PR: 4.42% → prContrib: 1.290
+║    baseScore: 9.290
+║    [bonus] AP healer bonus (3 healers): +5.000
+║    ► FINAL: 14.290
+║    Cluster AD (pivot: 3179)
+║    WR: 51.86% → wrContrib: 3.727
+║    PR: 9.48% → prContrib: 1.954
+║    baseScore: 5.680
+║    [bonus] ninguno
+║    ► FINAL: 5.680
+║    Cluster AD (pivot: 6699)
+║    WR: 49.24% → wrContrib: -1.527
+║    PR: 7.71% → prContrib: 1.774
+║    baseScore: 0.248
+║    [bonus] ninguno
+║    ► FINAL: 0.248
+║    Cluster AD (pivot: 3142)
+║    WR: 47.60% → wrContrib: -4.795
+║    PR: 8.60% → prContrib: 1.869
+║    baseScore: -2.926
+║    [bonus] ninguno
+║    ► FINAL: -2.926
+╚════════════════════════════════════════════════════════
+✅ [CLUSTER] Shaco → cluster_AP (score: 23.70) sobre cluster_AP (score: 14.29), cluster_AD (score: 5.68), cluster_AD (score: 0.25), cluster_AD (score: -2.93)
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+
+Results for 1. Balanced Compo (Base Case):
+  Cluster 0: AP Quemado (AP)
+    Weighted WR: 58.03% | Total PR: 20.90%
+    Engine Score: 23.70
+  Cluster 1: AD Letalidad (AD)
+    Weighted WR: 51.86% | Total PR: 9.48%
+    Engine Score: 5.68
+
+--- RUNNING TEST: 2. Heavy AD Ally Compo (AP Shaco favored) ---
+
+🔍 [ENGINE] getAdaptedBuild → Shaco (ID: 35)
+   tacticRole: burst | class: Assassin | isAssassin: true
+   hasDpmData: true | builds count: 0
+   allies: [266, 120, 51, 53] | enemies: [268, 517, 16, 60, 164]
+
+╔══ [CLUSTER SCORING] Shaco ════════════════════════
+║ 🏆 GANADOR Cluster AP (pivot: 2503)
+║    WR: 58.03% → wrContrib: 16.056
+║    PR: 20.90% → prContrib: 2.640
+║    baseScore: 18.697
+║    [bonus] AP healer bonus (2 healers): +3.000
+║    ► FINAL: 21.697
+║    Cluster AP (pivot: 6655)
+║    WR: 54.00% → wrContrib: 8.000
+║    PR: 4.42% → prContrib: 1.290
+║    baseScore: 9.290
+║    [bonus] AP healer bonus (2 healers): +3.000
+║    ► FINAL: 12.290
+║    Cluster AD (pivot: 3179)
+║    WR: 51.86% → wrContrib: 3.727
+║    PR: 9.48% → prContrib: 1.954
+║    baseScore: 5.680
+║    [bonus] AD ally overload penalty (3 AD allies): -6.000
+║    ► FINAL: -0.320
+║    Cluster AD (pivot: 6699)
+║    WR: 49.24% → wrContrib: -1.527
+║    PR: 7.71% → prContrib: 1.774
+║    baseScore: 0.248
+║    [bonus] AD ally overload penalty (3 AD allies): -6.000
+║    ► FINAL: -5.752
+║    Cluster AD (pivot: 3142)
+║    WR: 47.60% → wrContrib: -4.795
+║    PR: 8.60% → prContrib: 1.869
+║    baseScore: -2.926
+║    [bonus] AD ally overload penalty (3 AD allies): -6.000
+║    ► FINAL: -8.926
+╚════════════════════════════════════════════════════════
+✅ [CLUSTER] Shaco → cluster_AP (score: 21.70) sobre cluster_AP (score: 12.29), cluster_AD (score: -0.32), cluster_AD (score: -5.75), cluster_AD (score: -8.93)
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": -2,
+    "total": -5.9762118802295845
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+
+Results for 2. Heavy AD Ally Compo (AP Shaco favored):
+  Cluster 0: AP Quemado (AP)
+    Weighted WR: 58.03% | Total PR: 20.90%
+    Engine Score: 21.70
+  Cluster 1: AD Letalidad (AD)
+    Weighted WR: 51.86% | Total PR: 9.48%
+    Engine Score: -0.32
+
+--- RUNNING TEST: 3. Heavy AP Ally Compo (AD Shaco favored) ---
+
+🔍 [ENGINE] getAdaptedBuild → Shaco (ID: 35)
+   tacticRole: burst | class: Assassin | isAssassin: true
+   hasDpmData: true | builds count: 0
+   allies: [268, 517, 16, 53] | enemies: [266, 51, 120, 60, 164]
+
+╔══ [CLUSTER SCORING] Shaco ════════════════════════
+║ 🏆 GANADOR Cluster AD (pivot: 3179)
+║    WR: 51.86% → wrContrib: 3.727
+║    PR: 9.48% → prContrib: 1.954
+║    baseScore: 5.680
+║    [bonus] ninguno
+║    ► FINAL: 5.680
+║    Cluster AP (pivot: 2503)
+║    WR: 58.03% → wrContrib: 16.056
+║    PR: 20.90% → prContrib: 2.640
+║    baseScore: 18.697
+║    [bonus] AP healer bonus (1 healers): +1.000
+║    [bonus] AP ally overload penalty (4 AP allies): -16.000
+║    ► FINAL: 3.697
+║    Cluster AD (pivot: 6699)
+║    WR: 49.24% → wrContrib: -1.527
+║    PR: 7.71% → prContrib: 1.774
+║    baseScore: 0.248
+║    [bonus] ninguno
+║    ► FINAL: 0.248
+║    Cluster AD (pivot: 3142)
+║    WR: 47.60% → wrContrib: -4.795
+║    PR: 8.60% → prContrib: 1.869
+║    baseScore: -2.926
+║    [bonus] ninguno
+║    ► FINAL: -2.926
+║    Cluster AP (pivot: 6655)
+║    WR: 54.00% → wrContrib: 8.000
+║    PR: 4.42% → prContrib: 1.290
+║    baseScore: 9.290
+║    [bonus] AP healer bonus (1 healers): +1.000
+║    [bonus] AP ally overload penalty (4 AP allies): -16.000
+║    ► FINAL: -5.710
+╚════════════════════════════════════════════════════════
+✅ [CLUSTER] Shaco → cluster_AD (score: 5.68) sobre cluster_AP (score: 3.70), cluster_AD (score: 0.25), cluster_AD (score: -2.93), cluster_AP (score: -5.71)
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+
+Results for 3. Heavy AP Ally Compo (AD Shaco favored):
+  Cluster 0: AD Letalidad (AD)
+    Weighted WR: 51.86% | Total PR: 9.48%
+    Engine Score: 5.68
+  Cluster 1: AP Quemado (AP)
+    Weighted WR: 58.03% | Total PR: 20.90%
+    Engine Score: 3.70
+
+--- RUNNING TEST: 4. Enemy High MR/Tank Compo (AP Shaco penalized) ---
+
+🔍 [ENGINE] getAdaptedBuild → Shaco (ID: 35)
+   tacticRole: burst | class: Assassin | isAssassin: true
+   hasDpmData: true | builds count: 0
+   allies: [164, 120, 110, 53] | enemies: [86, 201, 12, 517, 266]
+
+╔══ [CLUSTER SCORING] Shaco ════════════════════════
+║ 🏆 GANADOR Cluster AP (pivot: 2503)
+║    WR: 58.03% → wrContrib: 16.056
+║    PR: 20.90% → prContrib: 2.640
+║    baseScore: 18.697
+║    [bonus] AP healer bonus (2 healers): +3.000
+║    [bonus] AP highMR penalty (2 MR enemies): -6.000
+║    ► FINAL: 15.697
+║    Cluster AP (pivot: 6655)
+║    WR: 54.00% → wrContrib: 8.000
+║    PR: 4.42% → prContrib: 1.290
+║    baseScore: 9.290
+║    [bonus] AP healer bonus (2 healers): +3.000
+║    [bonus] AP highMR penalty (2 MR enemies): -6.000
+║    ► FINAL: 6.290
+║    Cluster AD (pivot: 3179)
+║    WR: 51.86% → wrContrib: 3.727
+║    PR: 9.48% → prContrib: 1.954
+║    baseScore: 5.680
+║    [bonus] AD highArmor penalty (2 Armor enemies): -6.000
+║    ► FINAL: -0.320
+║    Cluster AD (pivot: 6699)
+║    WR: 49.24% → wrContrib: -1.527
+║    PR: 7.71% → prContrib: 1.774
+║    baseScore: 0.248
+║    [bonus] AD highArmor penalty (2 Armor enemies): -6.000
+║    ► FINAL: -5.752
+║    Cluster AD (pivot: 3142)
+║    WR: 47.60% → wrContrib: -4.795
+║    PR: 8.60% → prContrib: 1.869
+║    baseScore: -2.926
+║    [bonus] AD highArmor penalty (2 Armor enemies): -6.000
+║    ► FINAL: -8.926
+╚════════════════════════════════════════════════════════
+✅ [CLUSTER] Shaco → cluster_AP (score: 15.70) sobre cluster_AP (score: 6.29), cluster_AD (score: -0.32), cluster_AD (score: -5.75), cluster_AD (score: -8.93)
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 0,
+    "total": -2.1962313190383327
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 2.5,
+    "total": 3.923728813559322
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+[BOOTS DEBUG] Scores calculados: [
+  {
+    "id": 3158,
+    "viability": -2.1962313190383327,
+    "contextBonus": 2.5,
+    "total": 0.3037686809616673
+  },
+  {
+    "id": 3009,
+    "viability": -4.084594650632383,
+    "contextBonus": 0,
+    "total": -4.084594650632383
+  },
+  {
+    "id": 3020,
+    "viability": 1.4237288135593218,
+    "contextBonus": 0,
+    "total": 1.4237288135593218
+  },
+  {
+    "id": 3047,
+    "viability": -3.976211880229584,
+    "contextBonus": 3,
+    "total": -0.976211880229584
+  },
+  {
+    "id": 3111,
+    "viability": 0,
+    "contextBonus": 0,
+    "total": 0
+  },
+  {
+    "id": 3008,
+    "viability": -0.6915151096051448,
+    "contextBonus": 0,
+    "total": -0.6915151096051448
+  }
+]
+
+Results for 4. Enemy High MR/Tank Compo (AP Shaco penalized):
+  Cluster 0: AP Quemado (AP)
+    Weighted WR: 58.03% | Total PR: 20.90%
+    Engine Score: 15.70
+  Cluster 1: AD Letalidad (AD)
+    Weighted WR: 51.86% | Total PR: 9.48%
+    Engine Score: -0.32

@@ -145,11 +145,6 @@ export const BOOTS_BLACKLIST: Record<string, number[]> = {
 // Mapeos de coherencia para runas
 export const KEYSTONE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
   // AD / Physical
-  8010: 'AD',   // Hail of Blades ( Precision / Domination context )
-  8008: 'AD',   // Lethal Tempo  
-  8021: 'AD',   // Fleet Footwork
-  8005: 'AD',   // Press the Attack
-  8000: 'AD',   // Conqueror
   
   // AP / Magic
   8229: 'AP',   // Arcane Comet
@@ -158,7 +153,12 @@ export const KEYSTONE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
   8351: 'AP',   // Glacial Augment
   8360: 'AP',   // Unsealed Spellbook
   
-  // Hybrid
+  // Hybrid / Adaptive (usable by both AD and AP classes)
+  8010: 'Hybrid', // Conqueror / Conquistador (adaptive force)
+  8008: 'Hybrid', // Lethal Tempo / Compás Letal
+  8021: 'Hybrid', // Fleet Footwork / Sobre la marcha (adaptive stats/healing)
+  8005: 'Hybrid', // Press the Attack / Estrategia Ofensiva (amplifies all damage types)
+  8000: 'Hybrid', // Precision Style
   8128: 'Hybrid', // Dark Harvest
   8112: 'Hybrid', // Electrocute
   8992: 'Hybrid', // Grasp of the Undying
