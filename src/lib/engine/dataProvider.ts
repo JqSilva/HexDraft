@@ -1,5 +1,6 @@
 // src/lib/engine/dataProvider.ts
 import { CHAMPIONS_DB, type ChampionData } from '../data/championdb';
+import { normalizeChampionName } from '../championMapper';
 import fs from 'fs';
 import path from 'path';
 
@@ -24,10 +25,7 @@ try {
 
 let loadedMetaCache: any = defaultMetaCache;
 
-export const normalizeKey = (name: string) => name.toLowerCase()
-  .replace(/\s+&\s+/g, ' y ')
-  .replace(/\s+and\s+/g, ' y ')
-  .replace(/[^a-z0-9]/g, "");
+export const normalizeKey = (name: string) => normalizeChampionName(name);
 
 const ENRICHED_DB: any = {};
 
@@ -89,7 +87,8 @@ const CHAMPION_ALIAS: Record<string, string> = {
     "Maestro Yi": "MasterYi",
     "Nunu y Willump": "Nunu",
     "Bardo": "Bard",
-    "Renata Glasc": "Renata"
+    "Renata Glasc": "Renata",
+    "Wukong": "MonkeyKing"
 };
 
 export const DATA_BY_LANE: Record<string, EnrichedChampion[]> = {

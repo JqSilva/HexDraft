@@ -412,10 +412,14 @@ export async function scrapeSingleChampion(
   if (!champId) return;
 
   // Obtener carriles jugables desde la base de datos
-  const laneRow = dbInstance.prepare('SELECT play_lanes FROM champions WHERE id = ?').get(champId) as { play_lanes: string } | undefined;
+  const laneRow = dbInstance.prepare('SELECT lane, play_lanes FROM champions WHERE id = ?').get(champId) as { lane: string, play_lanes: string } | undefined;
   const playLanes = JSON.parse(laneRow?.play_lanes || '[]');
   if (playLanes.length === 0) {
-    playLanes.push(dbMemory[name]?.lane || "UNKNOWN");
+    let fallbackLane = laneRow?.lane || dbMemory[name]?.lane || "UNKNOWN";
+    if (!fallbackLane || fallbackLane === "UNKNOWN") {
+      fallbackLane = "MIDDLE";
+    }
+    playLanes.push(fallbackLane);
   }
 
   const cData = dbMemory[name] || {};
@@ -1004,8 +1008,9 @@ export async function syncMetaAndBuilds(
   const cachePath = './src/lib/data/meta-cache.json';
   const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 
-  const champions = Object.keys(db);
   const nameIdMap = championsRepo.getChampionIdNameMap();
+  const nameMap = championsRepo.getChampionNameIdMap();
+  const champions = Object.values(nameMap); // Obtener todos los campeones de SQLite para soportar nuevos campeones
 
   writeLog(`[SYNC] Iniciando sincronizacion general - Parche: ${version}`);
 

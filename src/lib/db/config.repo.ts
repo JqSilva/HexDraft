@@ -3,7 +3,15 @@ import { db } from './sqlite.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const CONFIG_FILE = path.join(process.cwd(), 'hexdraft-config.json');
+const isDev = fs.existsSync(path.join(process.cwd(), 'tsconfig.json'));
+let CONFIG_FILE: string;
+
+if (isDev) {
+  CONFIG_FILE = path.join(process.cwd(), 'hexdraft-config.json');
+} else {
+  const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || '', 'AppData', 'Local');
+  CONFIG_FILE = path.join(localAppData, 'HexDraft', 'hexdraft-config.json');
+}
 
 export const configRepo = {
   // Obtener un valor de configuración individual

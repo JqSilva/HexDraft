@@ -68,57 +68,97 @@ def verificar_dependencias_python():
             print(f"[OK] {dep} detectada.")
 
 def build_python():
-    print(f"\n>>> Generando ejecutable {NOMBRE_EXE} en modo carpeta (onedir)...")
     temp_dist_dir = os.path.abspath("build/pyinstaller_temp")
     release_dir = os.path.abspath("release/HexDraft")
     os.makedirs(release_dir, exist_ok=True)
     icon_path = os.path.join("public", "app-icon.ico")
     
-    # Usamos sys.executable para asegurar que use el mismo python
-    command = [
+    # 1. COMPILAR LAUNCHER EN SEGUNDO PLANO (HexDraft.exe)
+    print(f"\n>>> Generando ejecutable HexDraft (Segundo Plano) en modo carpeta (onedir)...")
+    script_bg = os.path.join("launcher", "automatizador-hexdraft.py")
+    command_bg = [
         sys.executable, "-m", "PyInstaller",
         "--noconsole", "--onedir",
-        f"--name={NOMBRE_EXE}",
+        "--name=HexDraft",
         f"--distpath={temp_dist_dir}",
         f"--icon={icon_path}" if os.path.exists(icon_path) else "",
         "--clean", "--noconfirm",
-        NOMBRE_SCRIPT
+        script_bg
     ]
-    command = [c for c in command if c]
+    command_bg = [c for c in command_bg if c]
 
     try:
-        # Ejecutar PyInstaller en la carpeta temporal build/pyinstaller_temp/HexDraft
-        subprocess.run(command, check=True)
-        print(f"[OK] PyInstaller finalizado correctamente.")
+        subprocess.run(command_bg, check=True)
+        print(f"[OK] PyInstaller finalizado para HexDraft.exe.")
         
-        # Mover los archivos de PyInstaller directamente a la raíz de release/HexDraft
-        pyinstaller_out = os.path.join(temp_dist_dir, NOMBRE_EXE)
+        # Mover HexDraft.exe
+        shutil.copy2(
+            os.path.join(temp_dist_dir, "HexDraft", "HexDraft.exe"),
+            os.path.join(release_dir, "HexDraft.exe")
+        )
         
-        # 1. Copiar HexDraft.exe
-        exe_src = os.path.join(pyinstaller_out, f"{NOMBRE_EXE}.exe")
-        exe_dest = os.path.join(release_dir, f"{NOMBRE_EXE}.exe")
-        print(f"Copiando {NOMBRE_EXE}.exe a la raíz de release...")
-        shutil.copy2(exe_src, exe_dest)
-        
-        # 2. Copiar carpeta _internal
-        internal_src = os.path.join(pyinstaller_out, "_internal")
+        # Mover carpeta _internal
+        internal_src = os.path.join(temp_dist_dir, "HexDraft", "_internal")
         internal_dest = os.path.join(release_dir, "_internal")
         if os.path.exists(internal_dest):
             shutil.rmtree(internal_dest)
-        print("Copiando dependencias (_internal) a la raíz de release...")
         shutil.copytree(internal_src, internal_dest)
-        
-        # 3. Limpiar carpeta temporal de compilación
-        try:
-            shutil.rmtree(temp_dist_dir)
-        except Exception as e:
-            print(f"[WARN] No se pudo limpiar la carpeta temporal {temp_dist_dir}: {e}")
-        
-        # 4. Copiar todos los recursos requeridos para el lanzamiento
-        copiar_recursos_release(release_dir)
-        print(f"\n[OK] Carpeta de lanzamiento lista en: {release_dir}")
+        print("[OK] Copiado HexDraft.exe y _internal a release.")
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] en PyInstaller: {e}")
+        print(f"[ERROR] en PyInstaller para HexDraft: {e}")
+        return
+
+    # 2. COMPILAR LAUNCHER DIRECTO (HexDraftApp.exe)
+    print(f"\n>>> Generando ejecutable HexDraftApp (Directo) en modo carpeta (onedir)...")
+    script_dir = os.path.join("launcher", "app-hexdraft.py")
+    command_dir = [
+        sys.executable, "-m", "PyInstaller",
+        "--noconsole", "--onedir",
+        "--name=HexDraftApp",
+        f"--distpath={temp_dist_dir}",
+        f"--icon={icon_path}" if os.path.exists(icon_path) else "",
+        "--clean", "--noconfirm",
+        script_dir
+    ]
+    command_dir = [c for c in command_dir if c]
+
+    try:
+        subprocess.run(command_dir, check=True)
+        print(f"[OK] PyInstaller finalizado para HexDraftApp.exe.")
+        
+        # Mover HexDraftApp.exe
+        shutil.copy2(
+            os.path.join(temp_dist_dir, "HexDraftApp", "HexDraftApp.exe"),
+            os.path.join(release_dir, "HexDraftApp.exe")
+        )
+        
+        # Fusionar cualquier dependencia nueva en _internal
+        internal_app_src = os.path.join(temp_dist_dir, "HexDraftApp", "_internal")
+        if os.path.exists(internal_app_src):
+            print("Fusionando carpetas _internal para soportar ambos ejecutables...")
+            for item in os.listdir(internal_app_src):
+                s = os.path.join(internal_app_src, item)
+                d = os.path.join(internal_dest, item)
+                if os.path.isdir(s):
+                    if not os.path.exists(d):
+                        shutil.copytree(s, d)
+                else:
+                    shutil.copy2(s, d)
+        
+        print("[OK] Copiado HexDraftApp.exe y fusionado _internal a release.")
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] en PyInstaller para HexDraftApp: {e}")
+        return
+
+    # 3. Limpiar carpeta temporal de compilación
+    try:
+        shutil.rmtree(temp_dist_dir)
+    except Exception as e:
+        print(f"[WARN] No se pudo limpiar la carpeta temporal {temp_dist_dir}: {e}")
+        
+    # 4. Copiar todos los recursos requeridos para el lanzamiento
+    copiar_recursos_release(release_dir)
+    print(f"\n[OK] Carpeta de lanzamiento lista en: {release_dir}")
 
 def copiar_recursos_release(release_dir):
     print("\n>>> Preparando y copiando recursos adicionales a la carpeta de lanzamiento...")

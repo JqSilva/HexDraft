@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getNameFromId } from '../../lib/engine/engine';
 import assetsMap from '../../lib/data/assets-map.json';
+import { getChampionCdnName } from '../../lib/championMapper';
 
 interface Participant {
   championId: number;
@@ -58,29 +59,6 @@ const QUEUE_MAP: Record<number, string> = {
   400: "Normal Draft",
   430: "Normal Blind",
   0: "Personalizada"
-};
-
-const getChampionCdnName = (name: string): string => {
-  if (!name) return "Garen";
-  const special: Record<string, string> = {
-    "Wukong": "MonkeyKing",
-    "Nunu y Willump": "Nunu",
-    "Maestro Yi": "MasterYi",
-    "Dr. Mundo": "DrMundo",
-    "Jarvan IV": "JarvanIV",
-    "Lee Sin": "LeeSin",
-    "Aurelion Sol": "AurelionSol",
-    "K'Sante": "Ksante",
-    "Kai'Sa": "Kaisa",
-    "Kha'Zix": "Khazix",
-    "Vel'Koz": "Velkoz",
-    "Bel'Veth": "Belveth",
-    "Renata Glasc": "Renata",
-    "LeBlanc": "Leblanc",
-    "Cho'Gath": "Chogath",
-  };
-  if (special[name]) return special[name];
-  return name.replace(/[^a-zA-Z0-9]/g, "");
 };
 
 // Map lane pairings based on user specs:

@@ -2,8 +2,26 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 
-// Ruta del archivo de base de datos en el directorio raíz del proyecto
-const dbPath = path.resolve(process.cwd(), 'hexdraft.db');
+import fs from 'node:fs';
+
+// Determinar si estamos en desarrollo comprobando la existencia de tsconfig.json
+const isDev = fs.existsSync(path.join(process.cwd(), 'tsconfig.json'));
+let dbPath: string;
+
+if (isDev) {
+  dbPath = path.resolve(process.cwd(), 'hexdraft.db');
+} else {
+  const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || '', 'AppData', 'Local');
+  const appDataDir = path.join(localAppData, 'HexDraft');
+  if (!fs.existsSync(appDataDir)) {
+    try {
+      fs.mkdirSync(appDataDir, { recursive: true });
+    } catch (e) {
+      console.error(`❌ Error creando directorio AppData para base de datos:`, e);
+    }
+  }
+  dbPath = path.join(appDataDir, 'hexdraft.db');
+}
 
 console.log(`🔌 Conectando a base de datos SQLite en: ${dbPath}`);
 
@@ -250,9 +268,68 @@ try {
     console.log('✏️ La base de datos SQLite está vacía. Realizando carga inicial desde JSON...');
     const { populateDatabase } = await import('./initial-populate.js');
     populateDatabase(db);
+  } else {
+    // Si la base de datos ya tiene datos, verificamos si falta algún campeón de CHAMPIONS_DB
+    console.log('🔍 Verificando consistencia de campeones en SQLite...');
+    let CHAMPIONS_DB;
+    try {
+      const mod = await import('../data/championdb.js');
+      CHAMPIONS_DB = mod.CHAMPIONS_DB;
+    } catch (e) {
+      const mod = await import('../data/championdb.ts');
+      CHAMPIONS_DB = mod.CHAMPIONS_DB;
+    }
+    const existingIdsStmt = db.prepare('SELECT id FROM champions');
+    const existingIds = new Set((existingIdsStmt.all() as { id: number }[]).map(r => r.id));
+    
+    let addedCount = 0;
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      const insertChampStmt = db.prepare(`
+        INSERT INTO champions (
+          id, name, lane, tier, win_rate, scaling_type, damage_type, class, 
+          is_frontline, is_hypercarry, has_hard_cc, tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      for (const champ of Object.values(CHAMPIONS_DB)) {
+        if (!existingIds.has(champ.id)) {
+          console.log(`➕ Insertando campeón faltante en BD: ${champ.name} (ID: ${champ.id})`);
+          let defaultLane = champ.lane;
+          if (!defaultLane || defaultLane === "UNKNOWN") {
+            if (champ.class === "Marksman") defaultLane = "BOTTOM";
+            else if (champ.class === "Support") defaultLane = "UTILITY";
+            else defaultLane = "MIDDLE";
+          }
+
+          insertChampStmt.run(
+            champ.id,
+            champ.name,
+            defaultLane,
+            5,
+            50.0,
+            champ.scalingType || "Mid",
+            champ.damageType || "Adaptive",
+            champ.class || "Unknown",
+            champ.isFrontline ? 1 : 0,
+            champ.isHypercarry ? 1 : 0,
+            champ.hasHardCC ? 1 : 0,
+            JSON.stringify(champ.tags || [])
+          );
+          addedCount++;
+        }
+      }
+      db.exec('COMMIT;');
+      if (addedCount > 0) {
+        console.log(`🎉 Se agregaron ${addedCount} campeones nuevos a la base de datos.`);
+      }
+    } catch (err) {
+      db.exec('ROLLBACK;');
+      console.error('❌ Error al insertar campeones faltantes:', err);
+    }
   }
 } catch (err) {
-  console.error('❌ Error al realizar la carga inicial de datos en SQLite:', err);
+  console.error('❌ Error al realizar la carga/verificación de datos en SQLite:', err);
 }
 
 // Iniciar el planificador automático de meta-cache en segundo plano

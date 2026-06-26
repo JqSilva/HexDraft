@@ -3,6 +3,7 @@ import { hydrateAsset } from '../../lib/engine/hydrator';
 import { getPathsForBuild } from '../../lib/engine/itemEngine';
 import { CHAMPIONS_DB } from '../../lib/data/championdb.js';
 import META_CACHE from '../../lib/data/meta-cache.json';
+import { getChampionCdnName } from '../../lib/championMapper';
 
 // Mapeos de imágenes de posición de League of Legends
 const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
@@ -35,29 +36,6 @@ const posLabels: Record<string, string> = {
   "SUPPORT": "Soporte"
 };
 
-// Casos especiales de Riot para nombres de archivos DDragon
-const getChampionCdnName = (name: string): string => {
-  if (!name) return "Garen";
-  const special: Record<string, string> = {
-    "Wukong": "MonkeyKing",
-    "Nunu y Willump": "Nunu",
-    "Maestro Yi": "MasterYi",
-    "Dr. Mundo": "DrMundo",
-    "Jarvan IV": "JarvanIV",
-    "Lee Sin": "LeeSin",
-    "Aurelion Sol": "AurelionSol",
-    "K'Sante": "Ksante",
-    "Kai'Sa": "Kaisa",
-    "Kha'Zix": "Khazix",
-    "Vel'Koz": "Velkoz",
-    "Bel'Veth": "Belveth",
-    "Renata Glasc": "Renata",
-    "LeBlanc": "Leblanc",
-    "Cho'Gath": "Chogath",
-  };
-  if (special[name]) return special[name];
-  return name.replace(/[^a-zA-Z0-9]/g, "");
-};
 
 // Mapear rank a Tier
 const getTierInfo = (tierNum: number) => {

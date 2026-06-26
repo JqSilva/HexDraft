@@ -1,14 +1,9 @@
 // src/lib/db/champions.repo.ts
 import { db } from './sqlite';
 import { getStoredMeta } from '../metaManager.js';
+import { normalizeChampionName } from '../championMapper.js';
 
-const normalizeKey = (name: string) => {
-  if (!name) return "";
-  return name.toLowerCase()
-    .replace(/\s+&\s+/g, ' y ')
-    .replace(/\s+and\s+/g, ' y ')
-    .replace(/[^a-z0-9]/g, "");
-};
+const normalizeKey = (name: string) => normalizeChampionName(name);
 
 export interface DbChampion {
   id: number;

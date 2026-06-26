@@ -4,9 +4,9 @@
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft
-AppVersion=1.2
-AppVerName=HexDraft 1.2.0
-VersionInfoVersion=1.2.0.0
+AppVersion=1.3
+AppVerName=HexDraft 1.3.0
+VersionInfoVersion=1.3.0.0
 AppPublisher=HexDraft
 AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
 AppSupportURL=https://github.com/JqSilva/HexDraft-Launcher
@@ -14,7 +14,7 @@ AppUpdatesURL=https://github.com/JqSilva/HexDraft-Launcher/releases
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=HexDraft-Setup-1.2.0
+OutputBaseFilename=HexDraft-Setup-1.3.0
 SetupIconFile=..\public\app-icon.ico
 UninstallDisplayIcon={app}\HexDraft.exe
 Compression=lzma
@@ -39,14 +39,17 @@ Name: "startup"; Description: "Iniciar HexDraft automáticamente al iniciar sesi
 Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-; Acceso directo al monitor/launcher principal
-Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"
-Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: desktopicon
+; Acceso directo al lanzador directo principal
+Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraftApp.exe"; IconFilename: "{app}\public\app-icon.ico"
+Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraftApp.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: desktopicon
+
+; Acceso directo opcional para el monitor en segundo plano
+Name: "{autoprograms}\HexDraft Monitor"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"
 
 ; Acceso directo para detener el servicio
 Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 
-; Acceso directo de inicio automático (Startup)
+; Acceso directo de inicio automático (Startup) - Ejecuta el monitor en segundo plano
 Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: startup
 
 [Run]

@@ -56,7 +56,11 @@ def acquire_mutex():
 def get_lol_path():
     """Lee la ruta de instalación de League of Legends configurada o busca en rutas y unidades alternativas."""
     path_val = None
-    config_path = os.path.join(PROYECTO_DIR, 'hexdraft-config.json')
+    is_dev = os.path.exists(os.path.join(PROYECTO_DIR, 'tsconfig.json'))
+    if is_dev:
+        config_path = os.path.join(PROYECTO_DIR, 'hexdraft-config.json')
+    else:
+        config_path = os.path.join(LOG_DIR, 'hexdraft-config.json')
     if os.path.exists(config_path):
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -235,6 +239,53 @@ def stop_services():
                 write_log(f"Error al forzar cierre de Node: {e_kill}")
     node_process = None
 
+def is_window_active_by_title_pattern(title_pattern):
+    """Busca ventanas cuyos títulos coinciden con el patrón regex indicado usando APIs nativas de Windows."""
+    found = [False]
+    try:
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        
+        user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
+        user32.GetWindowTextLengthW.restype = ctypes.c_int
+        
+        user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        user32.GetWindowTextW.restype = ctypes.c_int
+        
+        user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        user32.GetClassNameW.restype = ctypes.c_int
+        
+        WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        
+        user32.EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
+        user32.EnumWindows.restype = wintypes.BOOL
+
+        compiled_regex = re.compile(title_pattern)
+        
+        def enum_windows_callback(hwnd, lparam):
+            try:
+                class_buffer = ctypes.create_unicode_buffer(256)
+                user32.GetClassNameW(hwnd, class_buffer, 256)
+                if class_buffer.value in ["CabinetWClass", "ExploreWClass"]:
+                    return True
+
+                length = user32.GetWindowTextLengthW(hwnd)
+                if length > 0:
+                    buffer = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, buffer, length + 1)
+                    if compiled_regex.match(buffer.value):
+                        found[0] = True
+                        return False
+            except Exception as e:
+                pass
+            return True
+            
+        callback_ref = WNDENUMPROC(enum_windows_callback)
+        user32.EnumWindows(callback_ref, 0)
+    except Exception as e:
+        write_log(f"Error en is_window_active_by_title_pattern: {e}")
+    return found[0]
+
 def main():
     write_log("=== MONITOR INICIADO EN SEGUNDO PLANO ===")
     write_log(f"Directorio del proyecto: {PROYECTO_DIR}")
@@ -254,19 +305,32 @@ def main():
     write_log(f"Ruta de League of Legends (lockfile) configurada: {get_lol_path()}")
 
     server_active = False
+    was_started_by_us = False
+    pattern = r"^(HexDraft|HexDraft \| .*)$"
 
     while True:
         try:
             lol_on = is_lol_active()
             if lol_on and not server_active:
-                write_log("League of Legends detectado activo. Iniciando servicios...")
-                start_services(node_path)
-                server_active = True
+                # Comprobar si la ventana ya está abierta (HexDraftApp.exe está corriendo)
+                if is_window_active_by_title_pattern(pattern):
+                    write_log("League of Legends detectado activo, pero la ventana de HexDraft ya está abierta. Sincronizando estado sin iniciar servicios duplicados.")
+                    server_active = True
+                    was_started_by_us = False
+                else:
+                    write_log("League of Legends detectado activo. Iniciando servicios...")
+                    start_services(node_path)
+                    server_active = True
+                    was_started_by_us = True
                 time.sleep(30)
             elif not lol_on and server_active:
-                write_log("League of Legends ya no está activo. Deteniendo servicios...")
-                stop_services()
+                if was_started_by_us:
+                    write_log("League of Legends ya no está activo y los servicios fueron iniciados por este monitor. Deteniendo servicios...")
+                    stop_services()
+                else:
+                    write_log("League of Legends ya no está activo. Los servicios fueron iniciados externamente, manteniéndolos activos.")
                 server_active = False
+                was_started_by_us = False
                 time.sleep(10)
             
             interval = 8 if not server_active else 20

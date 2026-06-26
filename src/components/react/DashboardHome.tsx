@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getNameFromId } from '../../lib/engine/engine';
 import metaCache from '../../lib/data/meta-cache.json';
+import { getChampionCdnName } from '../../lib/championMapper';
 
 // Interfaces para tipar la respuesta del API
 interface RankedStats {
@@ -44,29 +45,6 @@ interface SummonerData {
   error?: string;
 }
 
-// Casos especiales de Riot para nombres de archivos DDragon
-const getChampionCdnName = (name: string): string => {
-  if (!name) return "Garen";
-  const special: Record<string, string> = {
-    "Wukong": "MonkeyKing",
-    "Nunu y Willump": "Nunu",
-    "Maestro Yi": "MasterYi",
-    "Dr. Mundo": "DrMundo",
-    "Jarvan IV": "JarvanIV",
-    "Lee Sin": "LeeSin",
-    "Aurelion Sol": "AurelionSol",
-    "K'Sante": "Ksante",
-    "Kai'Sa": "Kaisa",
-    "Kha'Zix": "Khazix",
-    "Vel'Koz": "Velkoz",
-    "Bel'Veth": "Belveth",
-    "Renata Glasc": "Renata",
-    "LeBlanc": "Leblanc",
-    "Cho'Gath": "Chogath",
-  };
-  if (special[name]) return special[name];
-  return name.replace(/[^a-zA-Z0-9]/g, "");
-};
 
 const getChampionRole = (name: string): string => {
   const roles: Record<string, string> = {

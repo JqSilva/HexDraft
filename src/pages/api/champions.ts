@@ -3,11 +3,9 @@ import type { APIRoute } from 'astro';
 import { championsRepo } from '../../lib/db/champions.repo';
 import fs from 'fs';
 import path from 'path';
+import { normalizeChampionName } from '../../lib/championMapper';
 
-const normalizeKey = (name: string) => name.toLowerCase()
-  .replace(/\s+&\s+/g, ' y ')
-  .replace(/\s+and\s+/g, ' y ')
-  .replace(/[^a-z0-9]/g, "");
+const normalizeKey = (name: string) => normalizeChampionName(name);
 
 export const GET: APIRoute = async ({ url }) => {
   try {
@@ -20,7 +18,7 @@ export const GET: APIRoute = async ({ url }) => {
         champId = parseInt(idParam);
       } else if (nameParam) {
         const nameIdMap = championsRepo.getChampionIdNameMap();
-        const normName = nameParam.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const normName = normalizeChampionName(nameParam);
         champId = nameIdMap[normName] || null;
       }
 

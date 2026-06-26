@@ -73,6 +73,7 @@ export const NAME_TO_ID: Record<string, number> = {
   "Leona": 89,
   "Lillia": 876,
   "Lissandra": 127,
+  "Locke": 805,
   "Lucian": 236,
   "Lulu": 117,
   "Lux": 99,
