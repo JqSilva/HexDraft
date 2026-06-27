@@ -1,7 +1,9 @@
 // src/components/react/settings/SettingsPage.tsx
 import React, { useState, useEffect } from 'react';
+import { useAppMode } from '../useAppMode';
 
 export const SettingsPage = () => {
+    const { isAdmin, loaded: modeLoaded } = useAppMode();
     // --- ESTADOS DE CONFIGURACIÓN ---
     const [lolPath, setLolPath] = useState<string>('');
     const [autoPick, setAutoPick] = useState<boolean>(false);
@@ -141,8 +143,8 @@ export const SettingsPage = () => {
                 {/* Contenido Principal Centrado */}
                 <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                        {/* Columna Izquierda: Integración y Rendimiento (8 col) */}
-                        <div className="lg:col-span-8 flex flex-col gap-6">
+                        {/* Columna Izquierda: Integración y Rendimiento (8 col o 12 col si no es admin) */}
+                        <div className={isAdmin ? "lg:col-span-8 flex flex-col gap-6" : "lg:col-span-12 flex flex-col gap-6"}>
                             
                             {/* Tarjeta 1: Integración con League & LCU */}
                             <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col gap-6">
@@ -217,7 +219,7 @@ export const SettingsPage = () => {
                             </div>
 
                             {/* Tarjeta 2: Tiempos y Concurrencia */}
-                            <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl relative overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className={`bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl relative overflow-hidden ${isAdmin ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'flex flex-col gap-6'}`}>
                                 <div className="absolute top-0 right-0 h-32 w-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
                                 {/* Segundos de autoejecución */}
@@ -241,98 +243,102 @@ export const SettingsPage = () => {
                                 </div>
 
                                 {/* Concurrencia de Scraper */}
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
-                                        <label className="text-purple-accent tracking-widest font-black">Hilos simultáneos (Scraper)</label>
-                                        <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
+                                {isAdmin && (
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
+                                            <label className="text-purple-accent tracking-widest font-black">Hilos simultáneos (Scraper)</label>
+                                            <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
+                                        </div>
+                                        <input 
+                                            type="range" 
+                                            min="1" 
+                                            max="6" 
+                                            step="1" 
+                                            value={puppeteerConcurrency} 
+                                            onChange={(e) => setPuppeteerConcurrency(parseInt(e.target.value))}
+                                            className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
+                                        />
+                                        <p className={`uppercase tracking-wider leading-relaxed ${concurrencyMsg.color}`}>
+                                            {concurrencyMsg.text}
+                                        </p>
                                     </div>
-                                    <input 
-                                        type="range" 
-                                        min="1" 
-                                        max="6" 
-                                        step="1" 
-                                        value={puppeteerConcurrency} 
-                                        onChange={(e) => setPuppeteerConcurrency(parseInt(e.target.value))}
-                                        className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
-                                    />
-                                    <p className={`uppercase tracking-wider leading-relaxed ${concurrencyMsg.color}`}>
-                                        {concurrencyMsg.text}
-                                    </p>
-                                </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Columna Derecha: Periodicidad de Sincronización (4 col) */}
-                        <div className="lg:col-span-4 flex flex-col gap-6">
-                            <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
-                                
-                                <div>
-                                    <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
-                                        Sincronización
-                                    </h3>
-                                    <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
-                                        Intervalos de actualización del meta
-                                    </p>
-                                </div>
-
-                                <div className="space-y-5 flex-1 flex flex-col justify-center">
-                                    <div className="space-y-2">
-                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Meta & Builds</span>
-                                        <select 
-                                            value={syncPeriodDays}
-                                            onChange={(e) => setSyncPeriodDays(parseInt(e.target.value))}
-                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
-                                        >
-                                            <option value={1}>Cada 1 día</option>
-                                            <option value={3}>Cada 3 días (Recomendado)</option>
-                                            <option value={5}>Cada 5 días</option>
-                                            <option value={7}>Cada 7 días (1 semana)</option>
-                                            <option value={15}>Cada 15 días</option>
-                                        </select>
-                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                            Tiempo antes de obligar una recarga de builds al arrancar.
-                                        </span>
-                                    </div>
+                        {isAdmin && (
+                            <div className="lg:col-span-4 flex flex-col gap-6">
+                                <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
                                     
-                                    <div className="space-y-2">
-                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Mapeo de Posiciones (Lanes)</span>
-                                        <select 
-                                            value={laneSyncPeriodDays}
-                                            onChange={(e) => setLaneSyncPeriodDays(parseInt(e.target.value))}
-                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
-                                        >
-                                            <option value={15}>Cada 15 días</option>
-                                            <option value={21}>Cada 21 días (3 semanas)</option>
-                                            <option value={30}>Cada 30 días (1 mes - Recomendado)</option>
-                                            <option value={60}>Cada 60 días (2 meses)</option>
-                                        </select>
-                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                            Tiempo antes de forzar el mapeo de carriles preferidos.
-                                        </span>
+                                    <div>
+                                        <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
+                                            Sincronización
+                                        </h3>
+                                        <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
+                                            Intervalos de actualización del meta
+                                        </p>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider font-sans">Frecuencia Sincronización Ligera</span>
-                                        <select 
-                                            value={metaSyncFrequency}
-                                            onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
-                                            className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
-                                        >
-                                            <option value={0}>Desactivado</option>
-                                            <option value={-1}>Al iniciar el programa</option>
-                                            <option value={2}>Cada 2 horas</option>
-                                            <option value={4}>Cada 4 horas</option>
-                                            <option value={12}>Cada 12 horas</option>
-                                            <option value={24}>Cada 24 horas</option>
-                                        </select>
-                                        <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                            Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
-                                        </span>
+                                    <div className="space-y-5 flex-1 flex flex-col justify-center">
+                                        <div className="space-y-2">
+                                            <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Meta & Builds</span>
+                                            <select 
+                                                value={syncPeriodDays}
+                                                onChange={(e) => setSyncPeriodDays(parseInt(e.target.value))}
+                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                            >
+                                                <option value={1}>Cada 1 día</option>
+                                                <option value={3}>Cada 3 días (Recomendado)</option>
+                                                <option value={5}>Cada 5 días</option>
+                                                <option value={7}>Cada 7 días (1 semana)</option>
+                                                <option value={15}>Cada 15 días</option>
+                                            </select>
+                                            <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                                Tiempo antes de obligar una recarga de builds al arrancar.
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Mapeo de Posiciones (Lanes)</span>
+                                            <select 
+                                                value={laneSyncPeriodDays}
+                                                onChange={(e) => setLaneSyncPeriodDays(parseInt(e.target.value))}
+                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                            >
+                                                <option value={15}>Cada 15 días</option>
+                                                <option value={21}>Cada 21 días (3 semanas)</option>
+                                                <option value={30}>Cada 30 días (1 mes - Recomendado)</option>
+                                                <option value={60}>Cada 60 días (2 meses)</option>
+                                            </select>
+                                            <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                                Tiempo antes de forzar el mapeo de carriles preferidos.
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider font-sans">Frecuencia Sincronización Ligera</span>
+                                            <select 
+                                                value={metaSyncFrequency}
+                                                onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
+                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                            >
+                                                <option value={0}>Desactivado</option>
+                                                <option value={-1}>Al iniciar el programa</option>
+                                                <option value={2}>Cada 2 horas</option>
+                                                <option value={4}>Cada 4 horas</option>
+                                                <option value={12}>Cada 12 horas</option>
+                                                <option value={24}>Cada 24 horas</option>
+                                            </select>
+                                            <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
+                                                Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Botón Guardar en contenedor transparente */}

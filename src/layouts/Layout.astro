@@ -3,6 +3,7 @@ import "../styles/global.css";
 import HextechBackground from "../components/HextechBackground.astro";
 import Sidebar from "../components/Sidebar.astro";
 import { AutoUpdateGuard } from "../components/react/AutoUpdateGuard";
+import { UpdatePopup } from "../components/react/UpdatePopup";
 import { ClientRouter } from "astro:transitions";
 
 const { title = "HexDraft" } = Astro.props;
@@ -26,6 +27,7 @@ const { title = "HexDraft" } = Astro.props;
 			
 			<!-- Main content area -->
 			<div id="main-content" class="flex-1 flex flex-col h-full overflow-y-auto relative z-10">
+				<UpdatePopup client:only="react" />
 				<HextechBackground />
 				<slot />
 			</div>

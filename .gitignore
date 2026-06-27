@@ -69,6 +69,9 @@ hexdraft.db
 hexdraft.db-shm
 hexdraft.db-wal
 hexdraft-config.json
+data/
+data/config.json
+data/db-version.json
 
 # --- Cache de LCU ---
 src/lib/data/lcu-cache.json

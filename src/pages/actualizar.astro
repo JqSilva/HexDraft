@@ -1,11 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { SyncPanel } from '../components/react/SyncPanel';
+import { appConfig } from '../lib/services/config.service.js';
+
+if (appConfig.mode !== 'admin') {
+  return Astro.redirect('/');
+}
 ---
 
 <Layout title="HexDraft | Panel de Control">
   <main class="w-full h-full flex flex-col">
-    <!-- Componente React Inteligente -->
     <SyncPanel client:load />
   </main>
 </Layout>

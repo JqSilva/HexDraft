@@ -1,6 +1,7 @@
 ---
 // src/components/Sidebar.astro
 import ChampionsIcon from "../assets/champions.svg";
+import { appConfig } from "../lib/services/config.service.js";
 const activePath = Astro.url.pathname;
 ---
 
@@ -161,29 +162,31 @@ const activePath = Astro.url.pathname;
         >
       </a>
 
-      <a
-        href="/actualizar"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/actualizar" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
-      >
-        <svg
-          class="w-4 h-4 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+      {appConfig.mode === 'admin' && (
+        <a
+          href="/actualizar"
+          class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/actualizar" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-          ></path>
-        </svg>
-        <span class="sidebar-text transition-all duration-200"
-          >Sincronización</span
-        >
-        <span id="sidebar-sync-badge" class="hidden w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 ml-auto" title="Actualización recomendada"></span>
-      </a>
+          <svg
+            class="w-4 h-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+            ></path>
+          </svg>
+          <span class="sidebar-text transition-all duration-200"
+            >Sincronización</span
+          >
+          <span id="sidebar-sync-badge" class="hidden w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 ml-auto" title="Actualización recomendada"></span>
+        </a>
+      )}
 
       <a
         href="/settings"

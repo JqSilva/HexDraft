@@ -25,7 +25,29 @@ if (isDev) {
 
 console.log(`🔌 Conectando a base de datos SQLite en: ${dbPath}`);
 
-export const db = new DatabaseSync(dbPath);
+export { dbPath };
+export let db = new DatabaseSync(dbPath);
+
+export function closeDb() {
+  try {
+    db.close();
+    console.log(`🔒 Conexión a la base de datos cerrada.`);
+  } catch (e) {
+    console.error('❌ Error al cerrar la base de datos:', e);
+  }
+}
+
+export function reopenDb() {
+  try {
+    db = new DatabaseSync(dbPath);
+    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec('PRAGMA journal_mode = WAL;');
+    db.exec('PRAGMA synchronous = NORMAL;');
+    console.log(`🔌 Conexión a la base de datos reabierta.`);
+  } catch (e) {
+    console.error('❌ Error al reabrir la base de datos:', e);
+  }
+}
 
 // Configuración inicial de rendimiento y restricciones
 db.exec('PRAGMA foreign_keys = ON;');

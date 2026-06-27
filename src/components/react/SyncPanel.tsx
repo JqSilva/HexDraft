@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAppMode } from './useAppMode';
 
 interface LogItem {
   time: string;
@@ -14,6 +15,7 @@ interface ToastState {
 }
 
 export const SyncPanel = () => {
+  const { mode, isAdmin, loaded: modeLoaded } = useAppMode();
   const [isSyncing, setIsSyncing] = useState<'meta_builds' | 'SyncEstructuraLanes' | null>(null);
   const [version, setVersion] = useState<string>('--.--');
   const [lastSync, setLastSync] = useState<string>('-');
@@ -27,6 +29,19 @@ export const SyncPanel = () => {
     { time: '--:--', msg: 'Esperando inicialización de sincronización masiva...', type: 'idle' }
   ]);
   const [toast, setToast] = useState<ToastState>({ visible: false, title: '', body: '', type: 'info' });
+
+  // Estados para Publicación de GitHub (Admin)
+  const [publishStatus, setPublishStatus] = useState<{
+    lastPublishDate: string;
+    lastPublishVersion: number;
+    lastPublishPatch: string;
+    currentPatch: string;
+    lastSyncTimestamp: string;
+    pendingPublish: boolean;
+  } | null>(null);
+  const [loadingPublish, setLoadingPublish] = useState(true);
+  const [actionState, setActionState] = useState<'idle' | 'syncing' | 'publishing' | 'done' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('Listo');
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -56,9 +71,51 @@ export const SyncPanel = () => {
     }
   };
 
+  const fetchPublishStatus = async () => {
+    try {
+      const res = await fetch('/api/sync/status');
+      if (res.ok) {
+        const data = await res.json();
+        setPublishStatus(data);
+      }
+    } catch (e) {
+      console.error('Error al obtener estado de sincronización:', e);
+    } finally {
+      setLoadingPublish(false);
+    }
+  };
+
+  const handlePublishGithub = async () => {
+    setActionState('publishing');
+    setStatusMessage('Compilando base de datos y subiendo a GitHub...');
+
+    try {
+      const res = await fetch('/api/sync/publish', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Fallo en la publicación');
+      }
+      setActionState('done');
+      setStatusMessage(`Publicado con éxito: Versión ${data.version} (Parche ${data.patch})`);
+      fetchPublishStatus();
+      
+      setTimeout(() => {
+        setActionState('idle');
+        setStatusMessage('Listo');
+      }, 5000);
+
+    } catch (e: any) {
+      setActionState('error');
+      setStatusMessage(`Error en publicación: ${e.message || 'Error desconocido'}`);
+    }
+  };
+
   useEffect(() => {
     fetchInitialData();
-  }, []);
+    if (modeLoaded && isAdmin) {
+      fetchPublishStatus();
+    }
+  }, [modeLoaded, isAdmin]);
 
   const triggerToast = (title: string, body: string, type: string) => {
     setToast({ visible: true, title, body, type });
@@ -197,6 +254,15 @@ export const SyncPanel = () => {
               <h1 className="text-xl font-black text-white uppercase tracking-tight">
                 Sincronización <span className="text-purple-accent">de Datos</span>
               </h1>
+              {modeLoaded && (
+                <span className={`px-2 py-0.5 text-[9px] uppercase font-black tracking-wider border rounded-sm ${
+                  isAdmin 
+                    ? 'bg-purple-950/40 border-purple-500/40 text-purple-300' 
+                    : 'bg-slate-900 border-slate-700 text-slate-400'
+                }`}>
+                  Modo: {mode}
+                </span>
+              )}
             </div>
           </div>
         </header>
@@ -271,7 +337,7 @@ export const SyncPanel = () => {
           </div>
 
         {/* ACCIONES DE SINCRONIZACIÓN */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Card 1: Builds & Meta */}
           <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
@@ -361,6 +427,66 @@ export const SyncPanel = () => {
                 >
                   Detener
                 </button>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: GitHub Releases (Publicación) */}
+          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">03 //</span>
+                <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Distribución en GitHub</h4>
+              </div>
+              <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
+                Empaqueta la base de datos local actual, calcula su checksum SHA256 y la publica como un asset binario en una nueva release de GitHub.
+              </p>
+            </div>
+
+            {/* Telemetría de GitHub */}
+            {!loadingPublish && publishStatus && (
+              <div className="text-[9.5px] uppercase font-mono space-y-1.5 py-1.5 border-t border-b border-border-warm-hover/30">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Última Release:</span>
+                  <span className="font-bold text-slate-300">
+                    {publishStatus.lastPublishVersion ? `v${publishStatus.lastPublishVersion} (Parche ${publishStatus.lastPublishPatch})` : 'Ninguna'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Publicado el:</span>
+                  <span className="font-bold text-slate-300">
+                    {publishStatus.lastPublishDate !== '-' ? formatTimestamp(publishStatus.lastPublishDate) : 'Nunca'}
+                  </span>
+                </div>
+                {publishStatus.pendingPublish && (
+                  <div className="text-amber-500 font-black animate-pulse text-[9px] pt-1">
+                    ⚠ Cambios locales pendientes de publicar
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="pt-2 flex flex-col gap-2.5">
+              <button 
+                onClick={handlePublishGithub}
+                disabled={actionState === 'publishing' || !!isSyncing}
+                className={`w-full px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
+                  ${actionState === 'publishing' || !!isSyncing
+                    ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
+                    : 'bg-[#0e1c14] border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]'}`}
+              >
+                {actionState === 'publishing' ? 'Publicando...' : 'Publicar en GitHub'}
+              </button>
+              
+              {/* Mensaje de estado */}
+              {actionState !== 'idle' && (
+                <div className={`text-[9.5px] uppercase font-bold tracking-wider text-center ${
+                  actionState === 'error' ? 'text-red-400' : 'text-emerald-400'
+                }`}>
+                  {statusMessage}
+                </div>
               )}
             </div>
           </div>

@@ -1,11 +1,11 @@
-; Script de Inno Setup para HexDraft
-; Este script toma todo el contenido de la carpeta "release/HexDraft" y genera el instalador final.
+; Script de Inno Setup para HexDraft (Administrador)
+; Este script toma todo el contenido de la carpeta "release/HexDraft" y genera el instalador final para el Administrador.
 
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
-AppName=HexDraft
+AppName=HexDraft Admin
 AppVersion=1.3
-AppVerName=HexDraft 1.3.0
+AppVerName=HexDraft 1.3.0 (Admin)
 VersionInfoVersion=1.3.0.0
 AppPublisher=HexDraft
 AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
@@ -14,7 +14,7 @@ AppUpdatesURL=https://github.com/JqSilva/HexDraft-Launcher/releases
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=HexDraft-Setup-1.3.0
+OutputBaseFilename=HexDraft-Setup-Admin-1.3.0
 SetupIconFile=..\public\app-icon.ico
 UninstallDisplayIcon={app}\HexDraft.exe
 Compression=lzma
@@ -24,7 +24,7 @@ PrivilegesRequired=lowest
 AppMutex=Global\HexDraft_App_Mutex_928F6DFD
 CloseApplications=yes
 SetupLogging=yes
-AppComments=Herramienta de análisis de draft en tiempo real para League of Legends
+AppComments=Herramienta de análisis de draft en tiempo real para League of Legends (Administrador)
 AppContact=support@hexdraft.cl
 
 [Languages]
@@ -37,7 +37,7 @@ Name: "startup"; Description: "Iniciar HexDraft automáticamente al iniciar sesi
 [Files]
 ; Copiar todos los archivos generados en el directorio de lanzamiento
 Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\launcher\config-user.json"; DestDir: "{app}\data"; DestName: "config.json"; Flags: ignoreversion
+Source: "..\launcher\config-admin.json"; DestDir: "{app}\data"; DestName: "config.json"; Flags: ignoreversion
 
 [Icons]
 ; Acceso directo al lanzador directo principal
