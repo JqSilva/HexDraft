@@ -36,7 +36,6 @@ def preparar_entorno_node():
             print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
-
     # 3. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
     print("Limpiando compilación anterior y compilando proyecto Astro...")
     if os.path.exists(CARPETA_BUILD_NODE):
@@ -56,14 +55,42 @@ def preparar_entorno_node():
 
 def verificar_dependencias_python():
     print("\n>>> Verificando dependencias de Python...")
+    
+    # Detectar si estamos dentro de un entorno virtual (.venv)
+    en_entorno_virtual = (
+        sys.prefix != sys.base_prefix 
+        or "VIRTUAL_ENV" in os.environ
+    )
+    
+    # Detectamos si 'uv' está disponible
+    usa_uv = shutil.which("uv") is not None
+    if usa_uv:
+        print("[INFO] Se detectó 'uv'. Se usará para la gestión de paquetes.")
+
     for dep in DEPENDENCIAS_PY:
-        spec = importlib.util.find_spec(dep) if dep != "pyinstaller" else shutil.which("pyinstaller")
+        # CORRECCIÓN: PyInstaller se registra en Python como "PyInstaller" (con mayúsculas)
+        nombre_modulo = "PyInstaller" if dep.lower() == "pyinstaller" else dep
+        spec = importlib.util.find_spec(nombre_modulo)
+        
         if spec is None:
-            print(f"[WARN] Instalando {dep}...")
-            comando = [sys.executable, "-m", "pip", "install", dep]
-            if sys.version_info >= (3, 11):
-                comando.append("--break-system-packages")
-            subprocess.check_call(comando)
+            print(f"[WARN] {dep} no detectado. Instalando...")
+            
+            if usa_uv:
+                if en_entorno_virtual:
+                    comando = ["uv", "pip", "install", dep]
+                else:
+                    comando = ["uv", "pip", "install", "--system", dep]
+            else:
+                comando = [sys.executable, "-m", "pip", "install", dep]
+                if sys.version_info >= (3, 11) and not en_entorno_virtual:
+                    comando.append("--break-system-packages")
+            
+            try:
+                subprocess.check_call(comando)
+                print(f"[OK] {dep} instalado correctamente.")
+            except subprocess.CalledProcessError as e:
+                print(f"[ERROR] No se pudo instalar la dependencia {dep}: {e}")
+                sys.exit(1)
         else:
             print(f"[OK] {dep} detectada.")
 
@@ -199,7 +226,7 @@ def copiar_recursos_release(release_dir):
         shutil.rmtree(target_public)
     os.makedirs(target_public, exist_ok=True)
     
-    archivos_public = ["app-icon.ico", "app-icon.svg", "favicon.ico", "favicon.svg"]
+    archivos_public = ["app-icon.ico", "app-icon.svg", "favicon.svg"]
     for archivo in archivos_public:
         src_path = os.path.join("public", archivo)
         dest_path = os.path.join(target_public, archivo)
@@ -214,7 +241,6 @@ def copiar_recursos_release(release_dir):
     if os.path.exists(bat_path):
         print("Copiando Detener-HexDraft.bat...")
         shutil.copy2(bat_path, os.path.join(release_dir, "Detener-HexDraft.bat"))
-
 
 
 if __name__ == "__main__":

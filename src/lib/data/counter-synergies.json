@@ -651434,7 +651434,8 @@
           }
         ]
       }
-    }
+    },
+    "lane": "UTILITY"
   },
   "Renata Glasc": {
     "combat": {},
@@ -654977,6 +654978,7 @@
           }
         ]
       }
-    }
+    },
+    "lane": "UTILITY"
   }
 }
