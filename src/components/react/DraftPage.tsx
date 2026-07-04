@@ -6,6 +6,7 @@ import { initializeEngineData, initializeItemsData } from '../../lib/engine/data
 import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
+import { getChampionCdnName } from '../../lib/championMapper';
 
 // Importación de subcomponentes modulares
 import { ConnectionStatus } from './ConnectionStatus';
@@ -706,21 +707,30 @@ export const DraftPage = () => {
                         
                         {/* CABECERA DINÁMICA */}
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
-                            <div>
-                                <h2 className="text-lg md:text-xl font-black uppercase tracking-[0.3em] text-white italic">
-                                    {isBuildOrReasonsView && currentBuild ? (
-                                        <>Análisis Táctico: <span className="text-[#9055ff]">{currentBuild.name}</span></>
-                                    ) : (
-                                        view === 'bans' ? (
-                                            <><span className="text-[#9055ff]">Bans</span> Recomendados</>
+                            <div className="flex items-center gap-3">
+                                {isBuildOrReasonsView && currentBuild && (
+                                    <img 
+                                        src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(currentBuild.name)}.png`}
+                                        className="w-12 h-12 rounded-sm border border-[#9055ff]/80 shadow-[0_0_10px_rgba(144,85,255,0.4)] shrink-0 select-none pointer-events-none"
+                                        alt={currentBuild.name}
+                                    />
+                                )}
+                                <div>
+                                    <h2 className="text-lg md:text-xl font-black uppercase tracking-[0.3em] text-white italic leading-tight">
+                                        {isBuildOrReasonsView && currentBuild ? (
+                                            <>Análisis Táctico: <span className="text-[#9055ff]">{currentBuild.name}</span></>
                                         ) : (
-                                            <>Hex<span className="text-[#9055ff]">Draft</span></>
-                                        )
-                                    )}
-                                </h2>
-                                <p className="text-[8px] md:text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">
-                                    {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
-                                </p>
+                                            view === 'bans' ? (
+                                                <><span className="text-[#9055ff]">Bans</span> Recomendados</>
+                                            ) : (
+                                                <>Hex<span className="text-[#9055ff]">Draft</span></>
+                                            )
+                                        )}
+                                    </h2>
+                                    <p className="text-[8px] md:text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-0.5">
+                                        {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
+                                    </p>
+                                </div>
                             </div>
                             
                             <div className="flex items-center gap-3">
@@ -764,13 +774,13 @@ export const DraftPage = () => {
                                     {/* Evolución de Habilidades */}
                                     <div className="shrink-0">
                                         <SkillTimeline
-                                            skillOrder={currentBuild?.build?.skillOrder}
+                        skillOrder={currentBuild?.build?.skillOrder}
                                             tacticalData={tacticalData}
                                         />
                                     </div>
 
                                     {/* Módulos de Análisis — 2 columnas */}
-                                    <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
+                                    <div className="grid grid-cols-2 gap-4 md:gap-6 flex-1 min-h-0">
                                         <div className="min-h-0 overflow-hidden">
                                             <ItemBuild
                                                 currentBuild={currentBuild}

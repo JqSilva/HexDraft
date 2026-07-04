@@ -186,7 +186,7 @@ export const ItemBuild = memo(({
             </div>
 
             {/* Panel de Contenido de la Build Activa */}
-            <div className="flex-grow p-2 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
+            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
                 {/* 1. RUNAS */}
                 {build?.runes && (
                     <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">
