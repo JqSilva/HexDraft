@@ -37,6 +37,32 @@ const importToClient = async (buildData: any) => {
     if (!buildData) return;
     try {
         const { build, name, id, coreItemSwaps } = buildData;
+
+        // Determinar y ordenar los Summoner Spells (Flash a la izquierda / tecla D, Smite a la derecha / tecla F)
+        let s1 = build.summoners[0]?.id || build.summoners[0];
+        let s2 = build.summoners[1]?.id || build.summoners[1];
+
+        let spell1Id = Number(s1);
+        let spell2Id = Number(s2);
+
+        // 1. Si Destello (ID 4) está presente, forzarlo a la izquierda
+        if (spell1Id === 4 || spell2Id === 4) {
+            if (spell1Id !== 4) {
+                const temp = spell1Id;
+                spell1Id = 4;
+                spell2Id = temp;
+            }
+        }
+
+        // 2. Si Aplastar (ID 11) está presente, forzarlo a la derecha
+        if (spell1Id === 11 || spell2Id === 11) {
+            if (spell2Id !== 11) {
+                const temp = spell2Id;
+                spell2Id = 11;
+                spell1Id = temp;
+            }
+        }
+
         const runePayload = {
             name: `HexDraft: ${name}`,
             primaryStyleId: build.runes.primaryStyle,
@@ -59,7 +85,11 @@ const importToClient = async (buildData: any) => {
                     criticalSwaps: coreItemSwaps
                 })
             }),
-            fetch('/api/set-spells', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ spell1Id: build.summoners[0].id, spell2Id: build.summoners[1].id }) })
+            fetch('/api/set-spells', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ spell1Id, spell2Id }) 
+            })
         ]);
         console.log("✅ Configuración enviada al LCU");
     } catch (e) {
@@ -119,6 +149,7 @@ export const DraftPage = () => {
     const [myRole, setMyRole] = useState<string>('jungle');
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
     const [prevConnected, setPrevConnected] = useState<boolean | null>(null);
+    const [activePlaystyleIndex, setActivePlaystyleIndex] = useState<number>(0);
 
     // --- CONFIGURACIÓN ---
     const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
@@ -140,6 +171,10 @@ export const DraftPage = () => {
 
     const myPlayer = myTeam.find(p => p.cellId === currentDataRef.current?.localPlayerCellId);
     const myId = myPlayer?.championId || 0;
+
+    useEffect(() => {
+        setActivePlaystyleIndex(0);
+    }, [myId]);
 
     const everyonePicked = useMemo(() => {
         if (!inDraft) return false;
@@ -285,10 +320,17 @@ export const DraftPage = () => {
                 const availablePicks = picks.filter(p => !allyHovered.includes(p.id));
                 if (availablePicks.length > 0) targetId = availablePicks[0].id;
             } else if (currentAction.type === 'ban') {
-                const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
                 const allyHoveredOrSelected = data.myTeam.map((p: any) => p.championId || p.championPickIntent || 0).filter((id: number) => id !== 0);
-                const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
-                if (bans.length > 0) targetId = bans[0].id;
+                // Usar las recomendaciones de ban ya calculadas y renderizadas en la UI
+                const availableBans = banRecommendations.filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
+                if (availableBans.length > 0) {
+                    targetId = availableBans[0].id;
+                } else {
+                    // Recalcular solo como fallback si la lista de la UI está vacía
+                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
+                    const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
+                    if (bans.length > 0) targetId = bans[0].id;
+                }
             }
 
             if (targetId > 0) {
@@ -352,6 +394,7 @@ export const DraftPage = () => {
         setMyTeam(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
         setTheirTeam(Array(5).fill({ championId: 0, championPickIntent: 0, assignedPosition: '', cellId: 0 }));
         setView('lobby');
+        setActivePlaystyleIndex(0);
     }, []);
 
     // =========================================================
@@ -461,9 +504,16 @@ export const DraftPage = () => {
 
                             // 4. Exportación automática al LCU de LoL al bloquear o cambiar de playstyle
                             if (buildData) {
-                                const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
-                                const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
-                                const buildSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}`;
+                                const selectedCluster = buildData.scoredClusters?.[activePlaystyleIndex];
+                                const activeBuild = selectedCluster ? selectedCluster.build : buildData.build;
+                                const activeSwaps = selectedCluster ? selectedCluster.coreItemSwaps : buildData.coreItemSwaps;
+                                const activeName = selectedCluster?.title 
+                                    ? `${buildData.name} (${selectedCluster.title})`
+                                    : buildData.name;
+
+                                const coreIds = (activeBuild.items.core || []).map((i: any) => i.id || i).join(',');
+                                const runesIds = (activeBuild.runes.selections || []).map((r: any) => r.id || r).join(',');
+                                const buildSig = `${myId}-${activeName}-${coreIds}-${runesIds}`;
 
                                 let triggerImport = false;
 
@@ -481,7 +531,12 @@ export const DraftPage = () => {
 
                                 if (triggerImport) {
                                     console.log(`[AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
-                                    await importToClient({ ...buildData, id: myId });
+                                    await importToClient({
+                                        build: activeBuild,
+                                        name: activeName,
+                                        id: myId,
+                                        coreItemSwaps: activeSwaps
+                                    });
                                 }
                             }
                         }
@@ -565,18 +620,16 @@ export const DraftPage = () => {
                 }
             }
             else {
-                if (phase === 'None' || phase === 'Lobby') {
-                    if (inDraft || lastFingerprintRef.current !== "" || currentBuild) {
-                        resetDraftState();
-                        setSelectedRecommendation(null);
-                        setCurrentBuild(null);
-                        setTacticalData(null);
-                        localStorage.removeItem('last_build_data');
-                        localStorage.removeItem('last_my_team');
-                        localStorage.removeItem('last_their_team');
-                        localStorage.removeItem('last_my_role');
-                        nextInterval = 10000;
-                    }
+                if (inDraft || lastFingerprintRef.current !== "" || currentBuild) {
+                    resetDraftState();
+                    setSelectedRecommendation(null);
+                    setCurrentBuild(null);
+                    setTacticalData(null);
+                    localStorage.removeItem('last_build_data');
+                    localStorage.removeItem('last_my_team');
+                    localStorage.removeItem('last_their_team');
+                    localStorage.removeItem('last_my_role');
+                    nextInterval = 10000;
                 }
             }
         } catch (e) {
@@ -724,6 +777,8 @@ export const DraftPage = () => {
                                                 onReImport={handleReImport}
                                                 inDraft={inDraft}
                                                 everyonePicked={everyonePicked}
+                                                activePlaystyleIndex={activePlaystyleIndex}
+                                                setActivePlaystyleIndex={setActivePlaystyleIndex}
                                             />
                                         </div>
                                         <div className="min-h-0 overflow-hidden">

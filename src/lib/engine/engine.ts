@@ -255,6 +255,33 @@ export function getProcessedBans(
     return results.slice(0, 30);
 }
 
+// Función auxiliar para determinar si un campeón candidato coincide con el arquetipo del enemigo
+function championMatchesArchetype(c: EnrichedChampion, archetype: EnemyArchetype): boolean {
+  const tactic = c.tacticRole || c.tactic_role || 'teamfight';
+  if (archetype === 'siege') {
+    return c.tags.includes('Siege') || c.tags.includes('Poke') || tactic === 'siege';
+  }
+  if (archetype === 'engage_heavy') {
+    return tactic === 'engage' || c.tags.includes('Knockup') || !!c.hasHardCC;
+  }
+  if (archetype === 'scaling') {
+    return !!c.isHypercarry || c.scalingType === 'Late';
+  }
+  if (archetype === 'poke') {
+    return tactic === 'poke' || c.tags.includes('Poke');
+  }
+  if (archetype === 'pick_comp') {
+    return tactic === 'burst' || tactic === 'dive' || c.tags.includes('Pick') || c.tags.includes('Isolation');
+  }
+  if (archetype === 'split_push') {
+    return c.tags.includes('SplitPush') || c.tags.includes('Splitpush') || tactic === 'splitpush';
+  }
+  if (archetype === 'teamfight') {
+    return tactic === 'teamfight';
+  }
+  return false;
+}
+
 export function getBanRecommendations(
   myChampion: string | null,
   myRole: string,
@@ -267,30 +294,134 @@ export function getBanRecommendations(
   const normAllies = alliedPicks.map(normalizeKey);
   const normEnemies = enemyPicks.map(normalizeKey);
 
-  const results = allAvailableChamps
-    .filter(name => {
-      const normName = normalizeKey(name);
-      return !normBanned.includes(normName) && !normAllies.includes(normName) && !normEnemies.includes(normName);
-    })
+  const posMap: Record<string, string> = {
+    "top": "TOP",
+    "jng": "JUNGLE",
+    "jungle": "JUNGLE",
+    "mid": "MIDDLE",
+    "middle": "MIDDLE",
+    "bot": "BOTTOM",
+    "adc": "BOTTOM",
+    "bottom": "BOTTOM",
+    "sup": "UTILITY",
+    "support": "UTILITY",
+    "utility": "UTILITY"
+  };
+  const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
+
+  // Obtener el arquetipo del equipo enemigo parcial
+  const enrichedEnemies = enemyPicks.map(name => ENRICHED_DB[name]).filter(Boolean) as EnrichedChampion[];
+  const enemyArchetype = detectEnemyArchetype(enrichedEnemies);
+
+  // 1. Filtrar los candidatos que no están baneados ni seleccionados
+  const availableCandidates = allAvailableChamps.filter(name => {
+    const normName = normalizeKey(name);
+    return !normBanned.includes(normName) && !normAllies.includes(normName) && !normEnemies.includes(normName);
+  });
+
+  // 2. Clasificar en relevantes y no relevantes según rol y contexto
+  const relevantCandidates: string[] = [];
+  const nonRelevantCandidates: string[] = [];
+
+  availableCandidates.forEach(name => {
+    const champData = ENRICHED_DB[name] as EnrichedChampion | undefined;
+    if (!champData) return;
+
+    // Criterio 1: Oponente directo en el mismo rol
+    const playsSameRole = champData.lane?.toUpperCase() === targetLane;
+
+    // Criterio 2: Es un campeón flex
+    const isFlex = isFlexChampion(champData);
+
+    // Criterio 3: Counter directo de myChampion
+    let isCounterOfMyChamp = false;
+    if (myChampion) {
+      const myData = ENRICHED_DB[myChampion] as EnrichedChampion | undefined;
+      isCounterOfMyChamp = !!myData?.counters?.some((ct) => normalizeKey(ct.name) === normalizeKey(name));
+    }
+
+    // Criterio 4: Refuerza el arquetipo enemigo
+    let reinforcesEnemyArchetype = false;
+    if (enemyPicks.length >= 2 && enemyArchetype !== 'mixed') {
+      reinforcesEnemyArchetype = championMatchesArchetype(champData, enemyArchetype);
+    }
+
+    // Criterio 5: Tier <= 2 con pickrate alto (>= 5.0) en el rol del usuario
+    const targetLaneStats = champData.lanesStats?.[targetLane];
+    const targetLanePickRate = champData.lanesPickrate?.[targetLane];
+    const hasHighPickRate = targetLanePickRate ? (parseFloat(String(targetLanePickRate)) >= 5.0) : false;
+    const hasLowTier = targetLaneStats ? (targetLaneStats.tier <= 2) : false;
+    const isRelevantMetaInRole = hasLowTier && hasHighPickRate;
+
+    const isRelevant = playsSameRole || isFlex || isCounterOfMyChamp || reinforcesEnemyArchetype || isRelevantMetaInRole;
+
+    if (isRelevant) {
+      relevantCandidates.push(name);
+    } else {
+      nonRelevantCandidates.push(name);
+    }
+  });
+
+  // 3. Fallback: si hay menos de 5 relevantes, incluir Tier 1-2 globales
+  let selectedCandidates = [...relevantCandidates];
+  if (selectedCandidates.length < 5) {
+    const fallbackCandidates = nonRelevantCandidates.filter(name => {
+      const champData = ENRICHED_DB[name] as EnrichedChampion | undefined;
+      return champData?.meta ? champData.meta.tier <= 2 : false;
+    });
+
+    for (const fbName of fallbackCandidates) {
+      if (selectedCandidates.length >= 5) break;
+      if (!selectedCandidates.includes(fbName)) {
+        selectedCandidates.push(fbName);
+      }
+    }
+  }
+
+  // 4. Puntuación de los candidatos seleccionados
+  const results = selectedCandidates
     .map(name => {
       let banScore = 1.0;
       const reasons: string[] = [];
-      const champData = ENRICHED_DB[name];
+      const champData = ENRICHED_DB[name] as EnrichedChampion | undefined;
       const champId = NAME_TO_ID[name];
 
       if (!champData || !champId) return { id: 0, name, score: -99, reasons: [] };
 
-      // 1. ¿Counterea a mi campeón?
+      // Criterio A: Counter directo de myChampion (+4.0)
       if (myChampion) {
-        const myData = ENRICHED_DB[myChampion];
-        const isCounter = myData?.counters?.some((ct: any) => normalizeKey(ct.name) === normalizeKey(name));
+        const myData = ENRICHED_DB[myChampion] as EnrichedChampion | undefined;
+        const isCounter = myData?.counters?.some((ct) => normalizeKey(ct.name) === normalizeKey(name));
         if (isCounter) {
           banScore += 4.0;
           reasons.push(`Counter directo de tu pick (${myChampion})`);
         }
       }
 
-      // 2. ¿Es Tier S en el meta actual?
+      // Criterio B: Refuerza el arquetipo enemigo (+2.5)
+      if (enemyPicks.length >= 2 && enemyArchetype !== 'mixed') {
+        if (championMatchesArchetype(champData, enemyArchetype)) {
+          banScore += 2.5;
+          reasons.push(`Refuerza arquetipo enemigo (${enemyArchetype})`);
+        }
+      }
+
+      // Criterio C: Counter de aliado pickeado (+1.5)
+      let isCounterOfAlly = false;
+      const otherAllies = alliedPicks.filter(a => !myChampion || normalizeKey(a) !== normalizeKey(myChampion));
+      for (const ally of otherAllies) {
+        const allyData = ENRICHED_DB[ally] as EnrichedChampion | undefined;
+        if (allyData?.counters?.some((ct) => normalizeKey(ct.name) === normalizeKey(name))) {
+          isCounterOfAlly = true;
+          reasons.push(`Counter de aliado (${ally})`);
+          break;
+        }
+      }
+      if (isCounterOfAlly) {
+        banScore += 1.5;
+      }
+
+      // Criterio D: Tier meta alto (+2.5)
       if (champData.meta) {
         const tier = champData.meta.tier || 5;
         const winRate = champData.meta.winRate || 50.0;
@@ -300,12 +431,12 @@ export function getBanRecommendations(
         }
       }
 
-      // 3. ¿Deshace la táctica emergente de nuestro equipo?
+      // Criterio E: Contramedida táctica aliada (+3.0)
       if (alliedPicks.length >= 2) {
         const alliedComp = analyzeComposition(alliedPicks);
         const myTeamTactic = alliedComp.primaryTacticRole;
         const role = champData.tacticRole || champData.tactic_role || 'teamfight';
-        
+
         if (myTeamTactic === 'engage' && (role === 'peel' || name === 'Poppy' || name === 'Janna')) {
           banScore += 3.0;
           reasons.push(`Deshace nuestra iniciación (peel/anti-dash)`);
@@ -325,6 +456,13 @@ export function getBanRecommendations(
     .filter(r => r.id > 0 && r.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 15);
+
+  // Registro en consola de depuración del top 5
+  const top5 = results.slice(0, 5);
+  console.log("📊 [BAN RECOMMENDATIONS] Top 5 Candidates:");
+  top5.forEach((r, idx) => {
+    console.log(`  #${idx + 1}: ${r.name} - Score: ${r.score} - Criterios: ${r.reasons.join(', ') || 'Ninguno'}`);
+  });
 
   return results;
 }

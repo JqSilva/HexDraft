@@ -17,6 +17,8 @@ interface ItemBuildProps {
     onReImport: (activeBuildData?: any) => void;
     inDraft?: boolean;
     everyonePicked?: boolean;
+    activePlaystyleIndex: number;
+    setActivePlaystyleIndex: (index: number) => void;
 }
 
 const COMMON_SITUATIONAL_ITEMS = [
@@ -108,33 +110,15 @@ const ClusterTab = ({
     );
 };
 
-export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePicked }: ItemBuildProps) => {
+export const ItemBuild = memo(({ 
+    currentBuild, 
+    onReImport, 
+    inDraft, 
+    everyonePicked,
+    activePlaystyleIndex,
+    setActivePlaystyleIndex
+}: ItemBuildProps) => {
     const scoredClusters: ScoredCluster[] = currentBuild?.scoredClusters || [];
-
-    // FIX: usar índice en vez de título como clave de tab activa
-    // El título puede cambiar si el engine regenera los clusters con nuevos sufijos
-    const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
-    const [isManualSelection, setIsManualSelection] = useState(false);
-
-    // Guardar el nombre del campeón anterior para detectar cambio real de campeón
-    const prevChampName = useRef<string | null>(null);
-
-    // Solo resetear cuando cambia el campeón, NO cuando cambia scoredClusters
-    useEffect(() => {
-        if (currentBuild?.name !== prevChampName.current) {
-            prevChampName.current = currentBuild?.name ?? null;
-            setActiveTabIndex(0);
-            setIsManualSelection(false);
-        }
-    }, [currentBuild?.name]);
-
-    // Si el engine actualizó los clusters (cambio de draft) y el usuario
-    // no hizo selección manual, volver al ganador (índice 0)
-    useEffect(() => {
-        if (!isManualSelection) {
-            setActiveTabIndex(0);
-        }
-    }, [currentBuild?.name, isManualSelection]);
 
     if (inDraft && !everyonePicked) {
         return (
@@ -147,7 +131,7 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
     if (!currentBuild) return null;
 
     // FIX: usar índice directamente, sin búsqueda por título
-    const clampedIndex = Math.min(activeTabIndex, scoredClusters.length - 1);
+    const clampedIndex = Math.min(activePlaystyleIndex, scoredClusters.length - 1);
     const activeCluster = scoredClusters[clampedIndex] ?? scoredClusters[0];
     const build = activeCluster ? activeCluster.build : currentBuild.build;
     const coreItemSwaps = activeCluster ? activeCluster.coreItemSwaps : currentBuild.coreItemSwaps;
@@ -189,8 +173,7 @@ export const ItemBuild = memo(({ currentBuild, onReImport, inDraft, everyonePick
                                 cluster={cluster}
                                 isActive={idx === clampedIndex}
                                 onClick={() => {
-                                    setActiveTabIndex(idx);
-                                    setIsManualSelection(true);
+                                    setActivePlaystyleIndex(idx);
                                 }}
                             />
                         ))}

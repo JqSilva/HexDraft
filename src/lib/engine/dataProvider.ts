@@ -81,6 +81,8 @@ export interface EnrichedChampion extends ChampionData {
   is_hypercarry?: number;
   has_hard_cc?: number;
   has_sustain?: number;
+  lanesPickrate?: Record<string, number | string>;
+  lanesStats?: Record<string, { winRate: number; tier: number }>;
 }
 
 const CHAMPION_ALIAS: Record<string, string> = {
