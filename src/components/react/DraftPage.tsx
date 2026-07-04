@@ -18,6 +18,37 @@ import { ChampionPreviewModal } from './ChampionPreviewModal';
 import { SkillTimeline } from './SkillTimeline';
 import { ItemBuild } from './ItemBuild';
 
+const ROLE_TRANSLATIONS: Record<string, string> = {
+    "mage": "Mago",
+    "mago": "Mago",
+    "assassin": "Asesino",
+    "asesino": "Asesino",
+    "fighter": "Luchador",
+    "luchador": "Luchador",
+    "tank": "Tanque",
+    "tanque": "Tanque",
+    "marksman": "Tirador",
+    "tirador": "Tirador",
+    "support": "Soporte",
+    "soporte": "Soporte",
+    "zonecontrol": "Mago de Control",
+    "zone_control": "Mago de Control",
+    "diver": "Luchador",
+    "juggernaut": "Coloso",
+    "skirmisher": "Duelista",
+    "slayer": "Asesino",
+    "warden": "Protector",
+    "vanguard": "Iniciador",
+    "enchanter": "Encantador",
+    "catcher": "Capturador"
+};
+
+const getFriendlyRoleName = (tag: string): string => {
+    if (!tag) return "Campeón";
+    const norm = tag.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return ROLE_TRANSLATIONS[norm] || tag;
+};
+
 // =========================================================
 // HELPERS
 // =========================================================
@@ -129,6 +160,37 @@ const WIN_COND_TRANSLATIONS: Record<string, string> = {
     'poke_siege': 'Desgaste y Asedio (Poke/Siege)',
     'dive_backline': 'Foco a la Retaguardia (Dive)',
     'scaling': 'Escalado Tardío'
+};
+
+// Mapeos de imágenes de posición de League of Legends
+const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
+const posMapping: Record<string, string> = {
+  "TOP": "icon-position-top.png",
+  "JUNGLE": "icon-position-jungle.png",
+  "JNG": "icon-position-jungle.png",
+  "MIDDLE": "icon-position-middle.png",
+  "MID": "icon-position-middle.png",
+  "BOTTOM": "icon-position-bottom.png",
+  "BOT": "icon-position-bottom.png",
+  "ADC": "icon-position-bottom.png",
+  "UTILITY": "icon-position-utility.png",
+  "SUP": "icon-position-utility.png",
+  "SUPPORT": "icon-position-utility.png"
+};
+
+// Traducciones legibles de posiciones
+const posLabels: Record<string, string> = {
+  "TOP": "Top",
+  "JUNGLE": "Jungla",
+  "JNG": "Jungla",
+  "MIDDLE": "Mid",
+  "MID": "Mid",
+  "BOTTOM": "ADC",
+  "BOT": "ADC",
+  "ADC": "ADC",
+  "UTILITY": "Soporte",
+  "SUP": "Soporte",
+  "SUPPORT": "Soporte"
 };
 
 export const DraftPage = () => {
@@ -720,17 +782,10 @@ export const DraftPage = () => {
                         {/* CABECERA DINÁMICA */}
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
                             <div className="flex items-center gap-3">
-                                {isBuildOrReasonsView && currentBuild && (
-                                    <img 
-                                        src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(currentBuild.name)}.png`}
-                                        className="w-12 h-12 rounded-sm border border-border-warm shrink-0 select-none pointer-events-none"
-                                        alt={currentBuild.name}
-                                    />
-                                )}
                                 <div>
                                     <h2 className="text-lg md:text-xl font-black uppercase tracking-[0.3em] text-white italic leading-tight">
                                         {isBuildOrReasonsView && currentBuild ? (
-                                            <>Análisis Táctico: <span className="text-[#9055ff]">{currentBuild.name}</span></>
+                                            <>Análisis <span className="text-[#9055ff]">Táctico:</span></>
                                         ) : (
                                             view === 'bans' ? (
                                                 <><span className="text-[#9055ff]">Bans</span> Recomendados</>
@@ -762,46 +817,19 @@ export const DraftPage = () => {
 
                             {/* 2. VISTA DE PARTIDA / BUILD */}
                             {isBuildOrReasonsView && (currentBuild || myId > 0) && tacticalDirectives ? (
-                                <div className="flex flex-col gap-2 h-full min-h-0">
-                                    {/* Banner de Composición (fila compacta) */}
-                                    {myTeamAnalysis && allyNames.length > 0 && (
-                                        <div className="flex items-center justify-between gap-6 py-2 border-b border-border-warm/20 shrink-0">
-                                            <div className="flex items-center gap-2.5">
-                                                
-                                                <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">
-                                                    Estrategia: <span className="text-[#a855f7]">{WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}</span>
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 flex-1 max-w-[280px]">
-                                                <span className="text-[8px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile.physicalPct}%</span>
-                                                <div className="h-1 flex-1 bg-slate-950 rounded-full overflow-hidden flex border border-border-warm/15">
-                                                    <div style={{ width: `${myTeamAnalysis.damageProfile.physicalPct}%` }} className="bg-gradient-to-r from-red-600 to-orange-500 h-full" />
-                                                    <div style={{ width: `${myTeamAnalysis.damageProfile.magicPct}%` }} className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full" />
-                                                </div>
-                                                <span className="text-[8px] font-bold text-cyan-400/80 shrink-0">AP {myTeamAnalysis.damageProfile.magicPct}%</span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Evolución de Habilidades */}
-                                    <div className="shrink-0">
-                                        <SkillTimeline
-                        skillOrder={currentBuild?.build?.skillOrder}
-                                            tacticalData={tacticalData}
-                                        />
-                                    </div>
-
+                                <div className="flex flex-col gap-2 h-full min-h-0 pt-4">
+            
                                     {/* Módulos de Análisis — 3 columnas */}
                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
                                         {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
                                         {currentBuild && (
-                                            <div className="w-[200px] shrink-0 bg-bg-warm/30 border border-border-warm/50 rounded-sm p-4 flex flex-col gap-3.5 select-none text-left">
+                                            <div className="w-[200px] shrink-0 flex flex-col gap-3.5 select-none text-left">
                                                 {/* Imagen Vertical del Campeón */}
-                                                <div className="w-full aspect-[2/3] border border-border-warm/40 rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                <div className="w-full h-72 border border-border-warm rounded-sm overflow-hidden bg-black shrink-0 relative">
                                                     <img 
                                                         src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`} 
                                                         alt={currentBuild.name}
-                                                        className="w-full h-full object-cover scale-105"
+                                                        className="w-full h-full object-cover scale-110"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).src = "/favicon.svg";
                                                         }}
@@ -809,40 +837,40 @@ export const DraftPage = () => {
                                                 </div>
                                                 
                                                 {/* Badges de Clase y Daño */}
-                                                <div className="flex flex-wrap gap-1.5 shrink-0">
-                                                    <span className="bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
-                                                        {champData?.tags?.[0]?.toUpperCase() || "CAMPEÓN"}
+                                                
+                                                <div className="text-center md:text-center">
+                                                <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
+                                                    <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
+                                                    {getFriendlyRoleName(champData?.tags?.[0] || champData?.tacticRole || "CAMPEÓN").toUpperCase()}
                                                     </span>
-                                                    <span className="bg-[#0f0f13] border border-border-warm text-slate-350 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
-                                                        DAÑO: {champData?.damageType || "AP"}
+                                                    <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
+                                                    DAÑO: {champData?.damageType || "Adaptive"}
                                                     </span>
                                                 </div>
-
-                                                {/* Nombre, Rol y Score */}
-                                                <div className="shrink-0">
-                                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none mb-1 truncate">
-                                                        {currentBuild.name}
-                                                    </h3>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-slate-900 border border-border-warm/30 px-1 rounded-sm">
-                                                            {myRole.toUpperCase()}
+                                                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
+                                                    {champData.name}
+                                                </h2>
+                                                <div className="flex flex-wrap items-center justify-center  gap-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <img 
+                                                        src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`} 
+                                                        className="w-4.5 h-4.5" 
+                                                        style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                                        alt="lane"
+                                                        />
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                                                        {myRole.toLocaleUpperCase()}
                                                         </span>
-                                                        <span className="text-slate-650 font-bold">|</span>
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">SCORE:</span>
+                                                    </div>
+                                                    
+                                                    <span className="text-slate-700 font-bold">|</span>
+                                                    <div className="flex items-center gap-1.5">
+                                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">SCORE:</span>
                                                             <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-[10px] font-mono font-black text-purple-accent rounded-sm">
                                                                 {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
                                                             </span>
-                                                        </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Estrategia Corta */}
-                                                <div className="border-t border-border-warm/25 pt-2.5 mt-auto shrink-0">
-                                                    <span className="text-[8px] text-slate-500 font-extrabold uppercase tracking-widest block mb-0.5">Estrategia</span>
-                                                    <span className="text-[10px] font-black text-[#a855f7] uppercase tracking-wider leading-tight block truncate">
-                                                        {WIN_COND_TRANSLATIONS[myTeamAnalysis?.winCondition] || myTeamAnalysis?.winCondition || 'Peleas de Equipo'}
-                                                    </span>
                                                 </div>
                                             </div>
                                         )}
@@ -867,8 +895,17 @@ export const DraftPage = () => {
                                                 winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
                                                 generalDirectives={tacticalDirectives.generalDirectives}
                                                 enemyNames={enemyNames}
+                                                myTeamAnalysis={myTeamAnalysis}
                                             />
                                         </div>
+                                    </div>
+                                    {/* Evolución de Habilidades */}
+                                    
+                                    <div className="shrink-0">
+                                        <SkillTimeline
+                                            skillOrder={currentBuild?.build?.skillOrder}
+                                            tacticalData={tacticalData}
+                                        />
                                     </div>
                                 </div>
                             ) : (
