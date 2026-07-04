@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { LcuPlayer } from './PlayerSlot';
 import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
 import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/engine';
-import { initializeEngineData, initializeItemsData } from '../../lib/engine/dataProvider';
+import { ENRICHED_DB, initializeEngineData, initializeItemsData } from '../../lib/engine/dataProvider';
 import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
@@ -192,6 +192,18 @@ export const DraftPage = () => {
     const enemyNames = useMemo(() => {
         return theirTeam.map(p => getNameFromId(p.championId || p.championPickIntent)).filter(Boolean) as string[];
     }, [theirTeam]);
+
+    const champData = useMemo(() => {
+        if (!currentBuild) return null;
+        return ENRICHED_DB[currentBuild.name] || null;
+    }, [currentBuild]);
+
+    const championScore = useMemo(() => {
+        if (!currentBuild) return undefined;
+        const rec = recommendations.find(r => r.championId === currentBuild.id);
+        if (rec) return rec.score;
+        return undefined;
+    }, [currentBuild, recommendations]);
 
     const tacticalDirectives = useMemo(() => {
         const champName = getNameFromId(myId) || (currentBuild ? currentBuild.name : null);
@@ -711,7 +723,7 @@ export const DraftPage = () => {
                                 {isBuildOrReasonsView && currentBuild && (
                                     <img 
                                         src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(currentBuild.name)}.png`}
-                                        className="w-12 h-12 rounded-sm border border-[#9055ff]/80 shadow-[0_0_10px_rgba(144,85,255,0.4)] shrink-0 select-none pointer-events-none"
+                                        className="w-12 h-12 rounded-sm border border-border-warm shrink-0 select-none pointer-events-none"
                                         alt={currentBuild.name}
                                     />
                                 )}
@@ -779,9 +791,64 @@ export const DraftPage = () => {
                                         />
                                     </div>
 
-                                    {/* Módulos de Análisis — 2 columnas */}
-                                    <div className="grid grid-cols-2 gap-4 md:gap-6 flex-1 min-h-0">
-                                        <div className="min-h-0 overflow-hidden">
+                                    {/* Módulos de Análisis — 3 columnas */}
+                                    <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
+                                        {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
+                                        {currentBuild && (
+                                            <div className="w-[200px] shrink-0 bg-bg-warm/30 border border-border-warm/50 rounded-sm p-4 flex flex-col gap-3.5 select-none text-left">
+                                                {/* Imagen Vertical del Campeón */}
+                                                <div className="w-full aspect-[2/3] border border-border-warm/40 rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                    <img 
+                                                        src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`} 
+                                                        alt={currentBuild.name}
+                                                        className="w-full h-full object-cover scale-105"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = "/favicon.svg";
+                                                        }}
+                                                    />
+                                                </div>
+                                                
+                                                {/* Badges de Clase y Daño */}
+                                                <div className="flex flex-wrap gap-1.5 shrink-0">
+                                                    <span className="bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
+                                                        {champData?.tags?.[0]?.toUpperCase() || "CAMPEÓN"}
+                                                    </span>
+                                                    <span className="bg-[#0f0f13] border border-border-warm text-slate-350 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
+                                                        DAÑO: {champData?.damageType || "AP"}
+                                                    </span>
+                                                </div>
+
+                                                {/* Nombre, Rol y Score */}
+                                                <div className="shrink-0">
+                                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none mb-1 truncate">
+                                                        {currentBuild.name}
+                                                    </h3>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-slate-900 border border-border-warm/30 px-1 rounded-sm">
+                                                            {myRole.toUpperCase()}
+                                                        </span>
+                                                        <span className="text-slate-650 font-bold">|</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">SCORE:</span>
+                                                            <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-[10px] font-mono font-black text-purple-accent rounded-sm">
+                                                                {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Estrategia Corta */}
+                                                <div className="border-t border-border-warm/25 pt-2.5 mt-auto shrink-0">
+                                                    <span className="text-[8px] text-slate-500 font-extrabold uppercase tracking-widest block mb-0.5">Estrategia</span>
+                                                    <span className="text-[10px] font-black text-[#a855f7] uppercase tracking-wider leading-tight block truncate">
+                                                        {WIN_COND_TRANSLATIONS[myTeamAnalysis?.winCondition] || myTeamAnalysis?.winCondition || 'Peleas de Equipo'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Columna 2: Build de Ítems (Centro) */}
+                                        <div className="flex-1 min-h-0 overflow-hidden">
                                             <ItemBuild
                                                 currentBuild={currentBuild}
                                                 onReImport={handleReImport}
@@ -791,7 +858,9 @@ export const DraftPage = () => {
                                                 setActivePlaystyleIndex={setActivePlaystyleIndex}
                                             />
                                         </div>
-                                        <div className="min-h-0 overflow-hidden">
+
+                                        {/* Columna 3: Directivas Tácticas (Derecha) */}
+                                        <div className="flex-1 min-h-0 overflow-hidden">
                                             <CombatDirectivesPanel
                                                 scalingType={tacticalDirectives.scalingType}
                                                 combatStyle={tacticalDirectives.combatStyle}
