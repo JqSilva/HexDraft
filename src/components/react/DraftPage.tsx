@@ -915,6 +915,8 @@ export const DraftPage = () => {
                                                     enemyNames={enemyNames}
                                                     myTeamAnalysis={myTeamAnalysis}
                                                     hideTitle={true}
+                                                    threats={tacticalDirectives.matchups.threats}
+                                                    synergies={tacticalDirectives.synergies}
                                                 />
                                             </div>
                                         </div>

@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
+import { getChampionCdnName } from '../../lib/championMapper';
 
 // =========================================================
 // PANEL 1: DIRECTIVAS DE COMBATE (Estrategia, Timing, Daño)
@@ -38,6 +39,15 @@ const ENEMY_WIN_COND_DETAILS: Record<string, { label: string; advice: string; co
     }
 };
 
+const COMP_STYLE_LABELS: Record<string, string> = {
+    'teamfight': 'tf (Peleas de Equipo)',
+    'splitpush': 'split (Presión Lateral)',
+    'poke_siege': 'poke / asedio (Desgaste)',
+    'early_pressure': 'presión temprana (Early)',
+    'dive_backline': 'cazar en la jg (Foco)',
+    'scaling': 'escalar (Late Game)'
+};
+
 interface CombatDirectivesPanelProps {
     scalingType: 'Early' | 'Mid' | 'Late';
     combatStyle: {
@@ -60,6 +70,8 @@ interface CombatDirectivesPanelProps {
     enemyNames?: string[];
     myTeamAnalysis?: any;
     hideTitle?: boolean;
+    threats?: any[];
+    synergies?: any[];
 }
 
 export const CombatDirectivesPanel = memo(({
@@ -69,7 +81,9 @@ export const CombatDirectivesPanel = memo(({
     generalDirectives,
     enemyNames = [],
     myTeamAnalysis,
-    hideTitle = false
+    hideTitle = false,
+    threats = [],
+    synergies = []
 }: CombatDirectivesPanelProps) => {
     const scalingColors = {
         Early: {
@@ -102,56 +116,106 @@ export const CombatDirectivesPanel = memo(({
                     </div>
                 </div>
             )}
-
-            <div className="space-y-5 flex-1 min-h-0 overflow-y-auto pr-1">
-                {/* ESTRATEGIA */}
-                <div className="flex flex-col gap-1 border-l-2 border-hextech-blue/50 pl-3">
-                    <span className="text-hextech-blue font-black tracking-widest uppercase text-[10px] md:text-[11px]">
-                        Estrategia de Combate
-                    </span>
-                    <p className="text-[13px] md:text-[14px] text-slate-100 leading-relaxed font-semibold">
-                        {generalDirectives.strategy}
-                    </p>
-                </div>
-
-                {/* TIMING */}
-                <div className="flex flex-col gap-1 border-l-2 border-purple-accent/50 pl-3">
-                    <span className="text-purple-accent font-black tracking-widest uppercase text-[10px] md:text-[11px]">
-                        Ventana de Poder
-                    </span>
-                    <p className="text-[13px] md:text-[14px] text-slate-100 leading-relaxed font-semibold">
-                        {generalDirectives.timing}
-                    </p>
-                </div>
-
-                {/* AMENAZA ESTRATÉGICA ENEMIGA */}
-                {enemyNames && enemyNames.length > 0 ? (() => {
-                    const enemyComp = analyzeComposition(enemyNames);
-                    const wincon = ENEMY_WIN_COND_DETAILS[enemyComp.winCondition] || ENEMY_WIN_COND_DETAILS.teamfight;
-                    return (
-                        <div className="border-l-2 border-red-500/30 pl-3 space-y-1">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                                    Amenaza Enemiga
-                                </span>
-                                <span className="text-[10px] font-black uppercase text-red-400 tracking-wider">
-                                    {wincon.label}
-                                </span>
-                            </div>
-                            <p className="text-[13px] md:text-[14px] leading-relaxed text-slate-100 font-semibold">
-                                {wincon.advice}
-                            </p>
+            <div className="space-y-4.5 flex-1 min-h-0 overflow-y-auto pr-1">
+                {/* 1. ESTILO DE COMPOSICIÓN Y BALANCE DE DAÑO */}
+                {myTeamAnalysis && (
+                    <div className="flex flex-col gap-2.5 border-l-2 border-[#a855f7]/50 pl-3">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-3.5 h-3.5 text-[#a855f7]/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span className="text-[#a855f7] font-black tracking-widest uppercase text-[10px] md:text-[11px]">
+                                Estilo Comp
+                            </span>
                         </div>
-                    );
-                })() : (
-                    <div className="border-l-2 border-dashed border-border-warm/30 pl-3 py-1">
-                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                            Esperando picks enemigos...
-                        </span>
+                        <div className="space-y-2">
+                            <span className="text-[12px] font-black text-slate-100 uppercase tracking-wide block">
+                                {COMP_STYLE_LABELS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}
+                            </span>
+                            
+                            {/* Barra de Daño Aliado */}
+                            <div className="flex items-center gap-2.5 max-w-[280px]">
+                                <span className="text-[9px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile?.physicalPct ?? 50}%</span>
+                                <div className="h-1.5 flex-1 bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/15">
+                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.physicalPct ?? 50}%` }} className="bg-gradient-to-r from-red-600 to-orange-500 h-full" />
+                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.magicPct ?? 50}%` }} className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full" />
+                                </div>
+                                <span className="text-[9px] font-bold text-cyan-400/80 shrink-0">AP {myTeamAnalysis.damageProfile?.magicPct ?? 50}%</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
+                {/* 2. PELIGRO (AMENAZAS / COUNTERS) */}
+                {threats && threats.length > 0 && (
+                    <div className="flex flex-col gap-2 border-l-2 border-red-500/50 pl-3">
+                        <div className="flex items-center gap-2 text-red-400">
+                            <svg className="w-3.5 h-3.5 text-red-500/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest">
+                                Peligro
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                            {threats.map((t: any, idx: number) => (
+                                <div key={`threat-${idx}`} className="relative group select-none cursor-help" title={`${t.name} (Amenaza)`}>
+                                    <img 
+                                        src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(t.name)}.png`}
+                                        className="w-[34px] h-[34px] rounded-sm border border-red-950/70 hover:border-red-500 transition-all duration-150 cursor-pointer"
+                                        alt={t.name}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = "/favicon.svg";
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
+                {/* 3. SINERGIAS FUERTES */}
+                {synergies && synergies.length > 0 && (
+                    <div className="flex flex-col gap-2 border-l-2 border-cyan-500/50 pl-3">
+                        <div className="flex items-center gap-2 text-cyan-400">
+                            <svg className="w-3.5 h-3.5 text-cyan-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest">
+                                Sinergias Fuertes
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                            {synergies.map((s: any, idx: number) => (
+                                <div key={`synergy-${idx}`} className="relative group select-none cursor-help" title={`${s.name} (Sinergia)`}>
+                                    <img 
+                                        src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(s.name)}.png`}
+                                        className="w-[34px] h-[34px] rounded-sm border border-cyan-950/70 hover:border-cyan-400 transition-all duration-150 cursor-pointer"
+                                        alt={s.name}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = "/favicon.svg";
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 4. VENTANA DE PODER */}
+                <div className="flex flex-col gap-2.5 border-l-2 border-purple-accent/50 pl-3">
+                    <div className="flex items-center gap-2 text-purple-accent">
+                        <svg className="w-3.5 h-3.5 text-purple-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-purple-accent font-black tracking-widest uppercase text-[10px] md:text-[11px]">
+                            Ventana de Poder
+                        </span>
+                    </div>
+                    <p className="text-[12.5px] md:text-[13px] text-slate-200 leading-relaxed font-semibold">
+                        {generalDirectives.timing}
+                    </p>
+                </div>
             </div>
         </div>
     );
