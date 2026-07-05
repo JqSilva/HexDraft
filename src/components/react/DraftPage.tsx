@@ -819,73 +819,77 @@ export const DraftPage = () => {
                             {isBuildOrReasonsView && (currentBuild || myId > 0) && tacticalDirectives ? (
                                 <div className="flex flex-col gap-2 h-full min-h-0 pt-4">
             
-                                    {/* Módulos de Análisis — 3 columnas */}
+                                    {/* Módulos de Análisis — Diseño Unificado */}
                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
-                                        {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
+                                        {/* Bloque Izquierdo: Fusión de Tarjeta de Campeón + Build de Items */}
                                         {currentBuild && (
-                                            <div className="w-[200px] shrink-0 flex flex-col gap-3.5 select-none text-left">
-                                                {/* Imagen Vertical del Campeón */}
-                                                <div className="w-full h-72 border border-border-warm rounded-sm overflow-hidden bg-black shrink-0 relative">
-                                                    <img 
-                                                        src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`} 
-                                                        alt={currentBuild.name}
-                                                        className="w-full h-full object-cover scale-110"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).src = "/favicon.svg";
-                                                        }}
-                                                    />
-                                                </div>
-                                                
-                                                {/* Badges de Clase y Daño */}
-                                                
-                                                <div className="text-center md:text-center">
-                                                <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
-                                                    <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
-                                                    {getFriendlyRoleName(champData?.tags?.[0] || champData?.tacticRole || "CAMPEÓN").toUpperCase()}
-                                                    </span>
-                                                    <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
-                                                    DAÑO: {champData?.damageType || "Adaptive"}
-                                                    </span>
-                                                </div>
-                                                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
-                                                    {champData.name}
-                                                </h2>
-                                                <div className="flex flex-wrap items-center justify-center  gap-3">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <img 
-                                                        src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`} 
-                                                        className="w-4.5 h-4.5" 
-                                                        style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
-                                                        alt="lane"
-                                                        />
-                                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                                                        {myRole.toLocaleUpperCase()}
-                                                        </span>
+                                            <div className="flex flex-row flex-[1.8] bg-bg-warm/30 border border-border-warm/50 rounded-sm overflow-hidden min-h-0">
+                                                {/* Tarjeta de Campeón (Subcolumna Izquierda) */}
+                                                <div className="w-[240px] shrink-0 flex flex-col gap-4 select-none text-left pt-3 pr-4 pl-4 border-r border-border-warm/30 relative">
+                                                    {/* Badges de Clase y Daño */}
+                                                    <div className="text-center md:text-center">
+                                                        <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
+                                                            {champData.name}
+                                                        </h2>
+                                                        <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
+                                                            <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
+                                                                {getFriendlyRoleName(champData?.class || champData?.tags?.[0] || "CAMPEÓN").toUpperCase()}
+                                                            </span>
+                                                            <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
+                                                                {champData?.damageType || "Adaptive"}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     
-                                                    <span className="text-slate-700 font-bold">|</span>
-                                                    <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">SCORE:</span>
-                                                            <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-[10px] font-mono font-black text-purple-accent rounded-sm">
+                                                    {/* Imagen Vertical del Campeón */}
+                                                    <div className="w-full h-82 rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                        <img 
+                                                            src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`} 
+                                                            alt={currentBuild.name}
+                                                            className="w-full h-full object-cover scale-110"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = "/favicon.svg";
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    
+                                                    {/* Info de Rol / Posición y Score */}
+                                                    <div className="flex items-center justify-center gap-3 p-1">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <img 
+                                                                src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`} 
+                                                                className="w-5.5 h-5.5" 
+                                                                style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                                                alt="lane"
+                                                            />
+                                                            <span className="text-sm font-bold uppercase tracking-wider text-slate-350">
+                                                                {myRole.toLocaleUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <span className="text-slate-700 font-bold">|</span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-sm font-mono font-black text-purple-accent rounded-sm">
                                                                 {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
                                                             </span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                
+                                                {/* Build de Items (Subcolumna Derecha) */}
+                                                <div className="flex-grow flex-1 min-h-0 overflow-hidden pt-4 px-1">
+                                                    <ItemBuild
+                                                        currentBuild={currentBuild}
+                                                        onReImport={handleReImport}
+                                                        inDraft={inDraft}
+                                                        everyonePicked={everyonePicked}
+                                                        activePlaystyleIndex={activePlaystyleIndex}
+                                                        setActivePlaystyleIndex={setActivePlaystyleIndex}
+                                                        flat={true}
+                                                    />
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Columna 2: Build de Ítems (Centro) */}
-                                        <div className="flex-1 min-h-0 overflow-hidden">
-                                            <ItemBuild
-                                                currentBuild={currentBuild}
-                                                onReImport={handleReImport}
-                                                inDraft={inDraft}
-                                                everyonePicked={everyonePicked}
-                                                activePlaystyleIndex={activePlaystyleIndex}
-                                                setActivePlaystyleIndex={setActivePlaystyleIndex}
-                                            />
-                                        </div>
 
                                         {/* Columna 3: Directivas Tácticas (Derecha) */}
                                         <div className="flex-1 min-h-0 overflow-hidden">
