@@ -117,10 +117,10 @@ const importToClient = async (buildData: any) => {
                     criticalSwaps: coreItemSwaps
                 })
             }),
-            fetch('/api/set-spells', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ spell1Id, spell2Id }) 
+            fetch('/api/set-spells', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ spell1Id, spell2Id })
             })
         ]);
         console.log("✅ Configuración enviada al LCU");
@@ -165,32 +165,32 @@ const WIN_COND_TRANSLATIONS: Record<string, string> = {
 // Mapeos de imágenes de posición de League of Legends
 const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
 const posMapping: Record<string, string> = {
-  "TOP": "icon-position-top.png",
-  "JUNGLE": "icon-position-jungle.png",
-  "JNG": "icon-position-jungle.png",
-  "MIDDLE": "icon-position-middle.png",
-  "MID": "icon-position-middle.png",
-  "BOTTOM": "icon-position-bottom.png",
-  "BOT": "icon-position-bottom.png",
-  "ADC": "icon-position-bottom.png",
-  "UTILITY": "icon-position-utility.png",
-  "SUP": "icon-position-utility.png",
-  "SUPPORT": "icon-position-utility.png"
+    "TOP": "icon-position-top.png",
+    "JUNGLE": "icon-position-jungle.png",
+    "JNG": "icon-position-jungle.png",
+    "MIDDLE": "icon-position-middle.png",
+    "MID": "icon-position-middle.png",
+    "BOTTOM": "icon-position-bottom.png",
+    "BOT": "icon-position-bottom.png",
+    "ADC": "icon-position-bottom.png",
+    "UTILITY": "icon-position-utility.png",
+    "SUP": "icon-position-utility.png",
+    "SUPPORT": "icon-position-utility.png"
 };
 
 // Traducciones legibles de posiciones
 const posLabels: Record<string, string> = {
-  "TOP": "Top",
-  "JUNGLE": "Jungla",
-  "JNG": "Jungla",
-  "MIDDLE": "Mid",
-  "MID": "Mid",
-  "BOTTOM": "ADC",
-  "BOT": "ADC",
-  "ADC": "ADC",
-  "UTILITY": "Soporte",
-  "SUP": "Soporte",
-  "SUPPORT": "Soporte"
+    "TOP": "Top",
+    "JUNGLE": "Jungla",
+    "JNG": "Jungla",
+    "MIDDLE": "Mid",
+    "MID": "Mid",
+    "BOTTOM": "ADC",
+    "BOT": "ADC",
+    "ADC": "ADC",
+    "UTILITY": "Soporte",
+    "SUP": "Soporte",
+    "SUPPORT": "Soporte"
 };
 
 export const DraftPage = () => {
@@ -545,7 +545,7 @@ export const DraftPage = () => {
                                 const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
                                 const scoresStr = (buildData.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
                                 const currentSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}-${scoresStr}`;
-                                
+
                                 const oldCoreIds = (currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
                                 const oldRunesIds = (currentBuild?.build?.runes?.selections || []).map((r: any) => r.id || r).join(',');
                                 const oldScoresStr = (currentBuild?.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
@@ -582,7 +582,7 @@ export const DraftPage = () => {
                                 const selectedCluster = buildData.scoredClusters?.[activePlaystyleIndex];
                                 const activeBuild = selectedCluster ? selectedCluster.build : buildData.build;
                                 const activeSwaps = selectedCluster ? selectedCluster.coreItemSwaps : buildData.coreItemSwaps;
-                                const activeName = selectedCluster?.title 
+                                const activeName = selectedCluster?.title
                                     ? `${buildData.name} (${selectedCluster.title})`
                                     : buildData.name;
 
@@ -746,8 +746,8 @@ export const DraftPage = () => {
             {/* TOAST DE CONEXIÓN */}
             {toast && (
                 <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 duration-350 select-none
-                    ${toast.type === 'success' 
-                        ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40' 
+                    ${toast.type === 'success'
+                        ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40'
                         : 'bg-red-950/85 border-red-500/40 text-red-200 shadow-red-950/40'
                     }`}
                 >
@@ -756,9 +756,8 @@ export const DraftPage = () => {
                 </div>
             )}
 
-            <div className={`flex flex-row w-full items-center h-full min-h-0 relative z-10 px-2 md:px-4 transition-all duration-700 ${
-                isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
-            }`}>
+            <div className={`flex flex-row w-full items-center h-full min-h-0 relative z-10 px-2 md:px-4 transition-all duration-700 ${isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
+                }`}>
                 {/* LISTADO DE ALIADOS */}
                 <TeamSidebar
                     team={myTeam}
@@ -768,17 +767,15 @@ export const DraftPage = () => {
                 />
 
                 {/* AREA CENTRAL */}
-                <div className={`transition-all duration-700 ease-in-out h-full ${
-                    (hasPicked || isPlaying)
-                        ? 'max-h-[780px] min-h-[600px]' 
+                <div className={`transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
+                        ? 'max-h-[780px] min-h-[600px]'
                         : 'max-h-[650px] min-h-[400px]'
-                } ${
-                    isPlaying 
-                        ? 'flex-[10] w-full max-w-[1400px] mx-auto' 
+                    } ${isPlaying
+                        ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
-                }`}>
+                    }`}>
                     <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners">
-                        
+
                         {/* CABECERA DINÁMICA */}
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
                             <div className="flex items-center gap-3">
@@ -799,11 +796,10 @@ export const DraftPage = () => {
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
-                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 border rounded-sm select-none ${
-                                    isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
-                                }`}>
+                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 border rounded-sm select-none ${isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
+                                    }`}>
                                     Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
                                 </div>
                             </div>
@@ -818,93 +814,113 @@ export const DraftPage = () => {
                             {/* 2. VISTA DE PARTIDA / BUILD */}
                             {isBuildOrReasonsView && (currentBuild || myId > 0) && tacticalDirectives ? (
                                 <div className="flex flex-col gap-2 h-full min-h-0 pt-4">
-            
-                                    {/* Módulos de Análisis — Diseño Unificado */}
-                                    <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
-                                        {/* Bloque Izquierdo: Fusión de Tarjeta de Campeón + Build de Items */}
+
+                                    {/* Módulos de Análisis — 3 columnas */}
+                                    <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 ">
+                                        {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
                                         {currentBuild && (
-                                            <div className="flex flex-row flex-[1.8] bg-bg-warm/30 border border-border-warm/50 rounded-sm overflow-hidden min-h-0">
-                                                {/* Tarjeta de Campeón (Subcolumna Izquierda) */}
-                                                <div className="w-[240px] shrink-0 flex flex-col gap-4 select-none text-left pt-3 pr-4 pl-4 border-r border-border-warm/30 relative">
-                                                    {/* Badges de Clase y Daño */}
-                                                    <div className="text-center md:text-center">
-                                                        <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
-                                                            {champData.name}
-                                                        </h2>
-                                                        <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
-                                                            <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
-                                                                {getFriendlyRoleName(champData?.class || champData?.tags?.[0] || "CAMPEÓN").toUpperCase()}
-                                                            </span>
-                                                            <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
-                                                                {champData?.damageType || "Adaptive"}
-                                                            </span>
-                                                        </div>
+                                            <div className="w-[250px] shrink-0 flex flex-col gap-4 select-none text-left  rounded-tl-none pt-3 pr-4.5 pl-4.5 relative">
+
+                                                {/* Badges de Clase y Daño */}
+
+                                                <div className="text-center md:text-center">
+                                                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
+                                                        {champData.name}
+                                                    </h2>
+                                                    <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
+                                                        <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
+                                                            {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
+                                                        </span>
+                                                        <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
+                                                            {champData?.damageType || "Adaptive"}
+                                                        </span>
                                                     </div>
-                                                    
-                                                    {/* Imagen Vertical del Campeón */}
-                                                    <div className="w-full h-82 rounded-sm overflow-hidden bg-black shrink-0 relative">
-                                                        <img 
-                                                            src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`} 
-                                                            alt={currentBuild.name}
-                                                            className="w-full h-full object-cover scale-110"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).src = "/favicon.svg";
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    
-                                                    {/* Info de Rol / Posición y Score */}
-                                                    <div className="flex items-center justify-center gap-3 p-1">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <img 
-                                                                src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`} 
-                                                                className="w-5.5 h-5.5" 
-                                                                style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
-                                                                alt="lane"
-                                                            />
-                                                            <span className="text-sm font-bold uppercase tracking-wider text-slate-350">
-                                                                {myRole.toLocaleUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                        
-                                                        <span className="text-slate-700 font-bold">|</span>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-sm font-mono font-black text-purple-accent rounded-sm">
-                                                                {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
+
+
                                                 </div>
-                                                
-                                                {/* Build de Items (Subcolumna Derecha) */}
-                                                <div className="flex-grow flex-1 min-h-0 overflow-hidden pt-4 px-1">
-                                                    <ItemBuild
-                                                        currentBuild={currentBuild}
-                                                        onReImport={handleReImport}
-                                                        inDraft={inDraft}
-                                                        everyonePicked={everyonePicked}
-                                                        activePlaystyleIndex={activePlaystyleIndex}
-                                                        setActivePlaystyleIndex={setActivePlaystyleIndex}
-                                                        flat={true}
+                                                {/* Imagen Vertical del Campeón */}
+                                                <div className="w-full h-82 rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                    <img
+                                                        src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`}
+                                                        alt={currentBuild.name}
+                                                        className="w-full h-full object-cover scale-110"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = "/favicon.svg";
+                                                        }}
                                                     />
+                                                </div>
+                                                <div className="flex items-center justify-center gap-3 p-1">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <img
+                                                            src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
+                                                            className="w-5.5 h-5.5"
+                                                            style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                                            alt="lane"
+                                                        />
+                                                        <span className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                                                            {myRole.toLocaleUpperCase()}
+                                                        </span>
+                                                    </div>
+
+                                                    <span className="text-slate-700 font-bold">|</span>
+                                                    <div className="flex items-center gap-1.5">
+
+                                                        <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-sm font-mono font-black text-purple-accent rounded-sm">
+                                                            {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {/* Columna 3: Directivas Tácticas (Derecha) */}
+                                        {/* Columna 2: Build de Ítems (Centro) */}
                                         <div className="flex-1 min-h-0 overflow-hidden">
-                                            <CombatDirectivesPanel
-                                                scalingType={tacticalDirectives.scalingType}
-                                                combatStyle={tacticalDirectives.combatStyle}
-                                                winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
-                                                generalDirectives={tacticalDirectives.generalDirectives}
-                                                enemyNames={enemyNames}
-                                                myTeamAnalysis={myTeamAnalysis}
+                                            <ItemBuild
+                                                currentBuild={currentBuild}
+                                                onReImport={handleReImport}
+                                                inDraft={inDraft}
+                                                everyonePicked={everyonePicked}
+                                                activePlaystyleIndex={activePlaystyleIndex}
+                                                setActivePlaystyleIndex={setActivePlaystyleIndex}
                                             />
+                                        </div>
+
+                                        {/* Columna 3: Directivas Tácticas (Derecha) */}
+                                        <div className="flex-1 min-h-0 flex flex-col gap-0 overflow-hidden">
+                                            {/* Cabecera / Pestaña Simulada para Alineación Estética */}
+                                            <div className="flex justify-between items-end gap-3 shrink-0 h-[38px] md:h-[45px]">
+                                                <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
+                                                    <span className="bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners rounded-t-sm z-20 font-extrabold text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-purple-accent px-4 py-2 select-none h-[34px] flex items-center justify-center">
+                                                        Directivas Tácticas
+                                                    </span>
+                                                </div>
+                                                {/* Badge de Escalado Táctico alineado en la fila superior */}
+                                                <div className={`px-2.5 py-1 text-[8px] md:text-[9px] font-black uppercase tracking-widest border rounded-t-sm border-b-transparent select-none -mb-px z-20 h-[30px] flex items-center justify-center ${
+                                                    tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                                    tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
+                                                    'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
+                                                }`}>
+                                                    {tacticalDirectives.scalingType === 'Early' ? 'Early Game Bully' :
+                                                     tacticalDirectives.scalingType === 'Late' ? 'Late Game Wincon' :
+                                                     'Mid Game Spike'}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-grow min-h-0 overflow-hidden">
+                                                <CombatDirectivesPanel
+                                                    scalingType={tacticalDirectives.scalingType}
+                                                    combatStyle={tacticalDirectives.combatStyle}
+                                                    winrateCurveAnalysis={tacticalDirectives.winrateCurveAnalysis}
+                                                    generalDirectives={tacticalDirectives.generalDirectives}
+                                                    enemyNames={enemyNames}
+                                                    myTeamAnalysis={myTeamAnalysis}
+                                                    hideTitle={true}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     {/* Evolución de Habilidades */}
-                                    
+
                                     <div className="shrink-0">
                                         <SkillTimeline
                                             skillOrder={currentBuild?.build?.skillOrder}
@@ -917,36 +933,36 @@ export const DraftPage = () => {
                                 inDraft && (
                                     <div className="space-y-6">
                                         {myTeamAnalysis && (
-                                             <div className="p-4 border-b border-border-warm/20 mb-4 bg-slate-950/20 rounded-sm">
-                                                  {/* Fila de balance de Daño */}
-                                                  <div className="space-y-1.5">
-                                                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                          <span>Daño Físico (AD): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%</span>
-                                                          <span>Daño Mágico (AP): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%</span>
-                                                      </div>
-                                                      <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
-                                                          <div 
-                                                              style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%` }}
-                                                              className={`bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
-                                                          />
-                                                          <div 
-                                                              style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%` }}
-                                                              className={`bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
-                                                          />
-                                                      </div>
-                                                      {allyNames.length > 0 && !myTeamAnalysis.damageProfile.isBalanced && (
-                                                          <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
-                                                              ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
-                                                          </span>
-                                                      )}
-                                                      {allyNames.length === 0 && (
-                                                          <span className="text-[9px] text-slate-500 font-medium block italic">
-                                                              Esperando selecciones de campeones...
-                                                          </span>
-                                                      )}
-                                                  </div>
-                                             </div>
-                                         )}
+                                            <div className="p-4 border-b border-border-warm/20 mb-4 bg-slate-950/20 rounded-sm">
+                                                {/* Fila de balance de Daño */}
+                                                <div className="space-y-1.5">
+                                                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                        <span>Daño Físico (AD): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%</span>
+                                                        <span>Daño Mágico (AP): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
+                                                        <div
+                                                            style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%` }}
+                                                            className={`bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
+                                                        />
+                                                        <div
+                                                            style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%` }}
+                                                            className={`bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
+                                                        />
+                                                    </div>
+                                                    {allyNames.length > 0 && !myTeamAnalysis.damageProfile.isBalanced && (
+                                                        <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
+                                                            ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
+                                                        </span>
+                                                    )}
+                                                    {allyNames.length === 0 && (
+                                                        <span className="text-[9px] text-slate-500 font-medium block italic">
+                                                            Esperando selecciones de campeones...
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <DraftGrid
                                             recommendations={view === 'bans' ? banRecommendations : recommendations}

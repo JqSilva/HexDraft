@@ -2,15 +2,6 @@ import React, { memo, useMemo } from 'react';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
 
-const WIN_COND_TRANSLATIONS: Record<string, string> = {
-    'early_pressure': 'Presión en Juego Temprano',
-    'teamfight': 'Peleas de Equipo (Teamfight)',
-    'splitpush': 'Presión en Paralelo (Splitpush)',
-    'poke_siege': 'Desgaste y Asedio (Poke/Siege)',
-    'dive_backline': 'Foco a la Retaguardia (Dive)',
-    'scaling': 'Escalado Tardío'
-};
-
 // =========================================================
 // PANEL 1: DIRECTIVAS DE COMBATE (Estrategia, Timing, Daño)
 // =========================================================
@@ -68,6 +59,7 @@ interface CombatDirectivesPanelProps {
     };
     enemyNames?: string[];
     myTeamAnalysis?: any;
+    hideTitle?: boolean;
 }
 
 export const CombatDirectivesPanel = memo(({
@@ -76,7 +68,8 @@ export const CombatDirectivesPanel = memo(({
     winrateCurveAnalysis,
     generalDirectives,
     enemyNames = [],
-    myTeamAnalysis
+    myTeamAnalysis,
+    hideTitle = false
 }: CombatDirectivesPanelProps) => {
     const scalingColors = {
         Early: {
@@ -96,43 +89,21 @@ export const CombatDirectivesPanel = memo(({
     const scalingStyle = scalingColors[scalingType] || scalingColors.Mid;
 
     return (
-        <div className="p-5 md:p-6 bg-bg-warm/30 border border-border-warm/50 rounded-sm h-full tech-corners flex flex-col gap-4">
-            <div className="flex justify-between items-center shrink-0 border-b border-border-warm/25 pb-2.5">
-                <h4 className="text-xs md:text-sm text-slate-150 font-black uppercase tracking-[0.2em] italic">
-                    Directivas Tácticas
-                </h4>
-                <div className={`px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border rounded-sm ${scalingStyle.bg}`}>
-                    {scalingStyle.label}
+        <div className={`p-5 md:p-6 bg-bg-warm/30 border border-border-warm/50 rounded-sm h-full tech-corners flex flex-col gap-4 ${
+            hideTitle ? 'rounded-tl-none' : ''
+        }`}>
+            {!hideTitle && (
+                <div className="flex justify-between items-center shrink-0 border-b border-border-warm/25 pb-2.5">
+                    <h4 className="text-xs md:text-sm text-slate-150 font-black uppercase tracking-[0.2em] italic">
+                        Directivas Tácticas
+                    </h4>
+                    <div className={`px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border rounded-sm ${scalingStyle.bg}`}>
+                        {scalingStyle.label}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="space-y-5 flex-1 min-h-0 overflow-y-auto pr-1">
-                {/* ESTRATEGIA DE EQUIPO Y BALANCE DE DAÑO */}
-                {myTeamAnalysis && (
-                    <div className="flex flex-col gap-3.5 border-b border-border-warm/20 pb-4 mb-1 shrink-0">
-                        <div className="flex flex-col gap-1 border-l-2 border-[#a855f7]/60 pl-3">
-                            <span className="text-[#a855f7] font-black tracking-widest uppercase text-[10px] md:text-[11px]">
-                                Estrategia de Composición
-                            </span>
-                            <span className="text-[13px] md:text-[14px] font-black text-slate-100 uppercase tracking-wide">
-                                {WIN_COND_TRANSLATIONS[myTeamAnalysis.winCondition] || myTeamAnalysis.winCondition}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1 border-l-2 border-slate-500/50 pl-3">
-                            <span className="text-slate-400 font-black tracking-widest uppercase text-[10px] md:text-[11px]">
-                                Perfil de Daño Aliado
-                            </span>
-                            <div className="flex items-center gap-2.5 mt-1 max-w-[280px]">
-                                <span className="text-[10px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile.physicalPct}%</span>
-                                <div className="h-2 flex-1 bg-slate-950 rounded-full overflow-hidden flex border border-border-warm/15">
-                                    <div style={{ width: `${myTeamAnalysis.damageProfile.physicalPct}%` }} className="bg-gradient-to-r from-red-600 to-orange-500 h-full" />
-                                    <div style={{ width: `${myTeamAnalysis.damageProfile.magicPct}%` }} className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full" />
-                                </div>
-                                <span className="text-[10px] font-bold text-cyan-400/80 shrink-0">AP {myTeamAnalysis.damageProfile.magicPct}%</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 {/* ESTRATEGIA */}
                 <div className="flex flex-col gap-1 border-l-2 border-hextech-blue/50 pl-3">
                     <span className="text-hextech-blue font-black tracking-widest uppercase text-[10px] md:text-[11px]">
@@ -183,7 +154,7 @@ export const CombatDirectivesPanel = memo(({
                     </div>
                 )}
 
-                
+
             </div>
         </div>
     );
