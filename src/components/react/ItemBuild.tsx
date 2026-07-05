@@ -324,7 +324,7 @@ export const ItemBuild = memo(({
                 </div>
 
                 {/* Botón Re-Importar */}
-                <div className="flex justify-center items-center w-full shrink-0 mt-auto pt-3 pb-1">
+                <div className="flex justify-center items-center w-full shrink-0 mt-auto pt-3 mb-3">
                     <button
                         onClick={() => onReImport({
                             name: activeCluster?.title
@@ -334,7 +334,7 @@ export const ItemBuild = memo(({
                             build: build,
                             coreItemSwaps: coreItemSwaps
                         })}
-                        className="px-6 py-1.5 bg-panel-warm tech-corners rounded-sm border-border-warm/60 hover:bg-[#9055ff] text-white font-black uppercase text-[10px] tracking-widest transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
+                        className="px-6 py-1.5 bg-panel-warm tech-corners rounded-sm border-border-warm/60 hover:bg-[#9055ff]/10 hover:border-[#9055ff]/80 hover:text-[#d3c0ff] text-slate-200 font-extrabold uppercase text-[10px] tracking-widest transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
                     >
                         Re-Importar
                     </button>
