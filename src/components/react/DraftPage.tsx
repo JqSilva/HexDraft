@@ -888,14 +888,14 @@ export const DraftPage = () => {
                                         {/* Columna 3: Directivas Tácticas (Derecha) */}
                                         <div className="flex-1 min-h-0 flex flex-col gap-0 overflow-hidden">
                                             {/* Cabecera / Pestaña Simulada para Alineación Estética */}
-                                            <div className="flex justify-between items-end gap-3 shrink-0 h-[38px] md:h-[45px]">
+                                            <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
                                                 <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
-                                                    <span className="bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners rounded-t-sm z-20 font-extrabold text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-purple-accent px-4 py-2 select-none h-[34px] flex items-center justify-center">
+                                                    <span className="bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-purple-accent px-5 select-none h-[52px] flex items-center justify-center">
                                                         Directivas Tácticas
                                                     </span>
                                                 </div>
                                                 {/* Badge de Escalado Táctico alineado en la fila superior */}
-                                                <div className={`px-2.5 py-1 text-[8px] md:text-[9px] font-black uppercase tracking-widest border rounded-t-sm border-b-transparent select-none -mb-px z-20 h-[30px] flex items-center justify-center ${
+                                                <div className={`px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 h-[32px] flex items-center justify-center ${
                                                     tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                                                     tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
                                                     'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'

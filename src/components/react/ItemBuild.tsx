@@ -63,7 +63,7 @@ const ClusterTab = ({
     const colors = DAMAGE_COLORS[typeKey] || DAMAGE_COLORS.Hybrid;
 
     const tabStyle = isActive
-        ? 'border rounded-sm border-border-warm/50 border-b-transparent tech-corners rounded-t-sm z-20 font-bold'
+        ? 'border rounded-sm border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-bold'
         : 'bg-panel-warm border border-border-warm rounded-t-sm opacity-65 hover:opacity-100';
 
     const keystone = cluster.build?.runes?.keystone;

@@ -117,6 +117,28 @@
   pointer-events: none;
 }
 
+.tech-corners-sup {
+  position: relative;
+}
+.tech-corners-sup::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 6px; height: 6px;
+  border-top: 2px solid #9055ff;
+  border-left: 2px solid #9055ff;
+  pointer-events: none;
+}
+.tech-corners-sup::after {
+  content: '';
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 6px; height: 6px;
+  border-top: 2px solid #9055ff;
+  border-right: 2px solid #9055ff;
+  pointer-events: none;
+}
+
 /* Asignación global de tipografía para encabezados */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display), sans-serif;
