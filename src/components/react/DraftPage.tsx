@@ -768,8 +768,8 @@ export const DraftPage = () => {
 
                 {/* AREA CENTRAL */}
                 <div className={`transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
-                        ? 'max-h-[780px] min-h-[600px]'
-                        : 'max-h-[650px] min-h-[400px]'
+                    ? 'max-h-[780px] min-h-[600px]'
+                    : 'max-h-[650px] min-h-[400px]'
                     } ${isPlaying
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
@@ -819,7 +819,7 @@ export const DraftPage = () => {
                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 ">
                                         {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
                                         {currentBuild && (
-                                            <div className="w-[250px] shrink-0 flex flex-col gap-4 select-none text-left  rounded-tl-none pt-3 pr-4.5 pl-4.5 relative">
+                                            <div className="w-[250px] shrink-0 flex flex-col gap-4 select-none text-left rounded-tl-none pt-3 pr-4.5 pl-4.5 relative h-full min-h-0">
 
                                                 {/* Badges de Clase y Daño */}
 
@@ -839,11 +839,11 @@ export const DraftPage = () => {
 
                                                 </div>
                                                 {/* Imagen Vertical del Campeón */}
-                                                <div className="w-full h-82 rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                <div className="flex-1 min-h-0 w-full  rounded-sm overflow-hidden bg-black shrink-0 relative">
                                                     <img
                                                         src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`}
                                                         alt={currentBuild.name}
-                                                        className="w-full h-full object-cover scale-110"
+                                                        className="w-full h-full object-cover scale-110 object-top "
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).src = "/favicon.svg";
                                                         }}
@@ -895,14 +895,13 @@ export const DraftPage = () => {
                                                     </span>
                                                 </div>
                                                 {/* Badge de Escalado Táctico alineado en la fila superior */}
-                                                <div className={`px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 h-[32px] flex items-center justify-center ${
-                                                    tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                                                    tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
-                                                    'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
-                                                }`}>
+                                                <div className={`px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 h-[32px] flex items-center justify-center ${tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                                        tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
+                                                            'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
+                                                    }`}>
                                                     {tacticalDirectives.scalingType === 'Early' ? 'Early Game Bully' :
-                                                     tacticalDirectives.scalingType === 'Late' ? 'Late Game Wincon' :
-                                                     'Mid Game Spike'}
+                                                        tacticalDirectives.scalingType === 'Late' ? 'Late Game Wincon' :
+                                                            'Mid Game Spike'}
                                                 </div>
                                             </div>
 

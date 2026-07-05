@@ -63,7 +63,7 @@ const ClusterTab = ({
     const colors = DAMAGE_COLORS[typeKey] || DAMAGE_COLORS.Hybrid;
 
     const tabStyle = isActive
-        ? 'border rounded-sm border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-bold'
+        ? 'border rounded-sm border-border-warm/50 border-b-transparent tech-corners rounded-t-sm z-20 font-bold'
         : 'bg-panel-warm border border-border-warm rounded-t-sm opacity-65 hover:opacity-100';
 
     const keystone = cluster.build?.runes?.keystone;
@@ -186,7 +186,7 @@ export const ItemBuild = memo(({
             </div>
 
             {/* Panel de Contenido de la Build Activa */}
-            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-hidden">
+            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-y-auto scrollbar-tactical pr-2">
                 {/* 1. RUNAS */}
                 {build?.runes && (
                     <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">

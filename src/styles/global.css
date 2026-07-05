@@ -71,6 +71,32 @@
   background: var(--purple-heart-500);
 }
 
+/* Utilidad de scrollbar minimalista para paneles tácticos */
+.scrollbar-tactical {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(144, 85, 255, 0.3) rgba(13, 14, 18, 0.2);
+}
+
+.scrollbar-tactical::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-tactical::-webkit-scrollbar-track {
+  background: rgba(13, 14, 18, 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-tactical::-webkit-scrollbar-thumb {
+  background: rgba(144, 85, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(144, 85, 255, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-tactical::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 85, 255, 0.55);
+}
+
 /* Transición base para las columnas */
 .column-transition {
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
