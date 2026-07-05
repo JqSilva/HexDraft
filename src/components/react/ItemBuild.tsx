@@ -186,8 +186,9 @@ export const ItemBuild = memo(({
             </div>
 
             {/* Panel de Contenido de la Build Activa */}
-            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-6 overflow-y-auto scrollbar-tactical pr-2">
-                {/* 1. RUNAS */}
+            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-5 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2 flex flex-col gap-6">
+                    {/* 1. RUNAS */}
                 {build?.runes && (
                     <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">
                         <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block text-center w-full">
@@ -322,9 +323,10 @@ export const ItemBuild = memo(({
                         ))}
                     </div>
                 </div>
+                </div>
 
                 {/* Botón Re-Importar */}
-                <div className="flex justify-center items-center w-full shrink-0 mt-auto pt-3 mb-3">
+                <div className="flex justify-center items-center w-full shrink-0 mt-auto pt-4 border-t border-border-warm/20">
                     <button
                         onClick={() => onReImport({
                             name: activeCluster?.title

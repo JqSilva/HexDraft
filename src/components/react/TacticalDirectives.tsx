@@ -128,7 +128,7 @@ export const CombatDirectivesPanel = memo(({
                     </div>
                 </div>
             )}
-            <div className="space-y-4.5 flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2">
+            <div className="space-y-4.5 flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2.5 pb-4">
                 {/* 1. ESTILO DE COMPOSICIÓN Y BALANCE DE DAÑO */}
                 {myTeamAnalysis && (
                     <div className="flex flex-col gap-2.5 border-l-2 border-[#a855f7]/50 pl-3">
