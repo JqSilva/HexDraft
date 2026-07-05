@@ -48,6 +48,18 @@ const COMP_STYLE_LABELS: Record<string, string> = {
     'scaling': 'escalar (Late Game)'
 };
 
+const getCompositionAdvice = (winCondition: string): string => {
+    const advices: Record<string, string> = {
+        'teamfight': 'Tu composición brilla en peleas agrupadas de 5v5. Aprovecha los enfrentamientos en lugares estrechos como el río o el foso de dragón. Mantén el control de visión para iniciar con ventaja.',
+        'splitpush': 'Evita peleas frontales directas de 5v5. Presiona las líneas laterales (split) para forzar al enemigo a dividirse, y mantén visión profunda en su jungla para retirarte a tiempo.',
+        'poke_siege': 'Tu composición es de desgaste (poke). No inicies peleas frontales antes de desgastar al enemigo a distancia. Presiona bajo torre y defiende los flancos de iniciaciones enemigas.',
+        'dive_backline': 'Prioriza realizar picks y emboscadas rápidas en la jungla. Limpia los arbustos de visión enemiga y busca flanquear directamente a su backline (tirador/mago).',
+        'early_pressure': 'Tienes ventaja en el juego temprano. Invade la jungla enemiga, busca escaramuzas en el río y asegura objetivos iniciales (larvas/dragones) para cerrar la partida rápido.',
+        'scaling': 'Juega defensivo en fase de líneas y minimiza muertes tempranas. Prioriza el farm de súbditos y defiende las torres hasta que tu composición alcance el pico de poder en el juego tardío.'
+    };
+    return advices[winCondition] || 'Adapta tu estilo de juego a los objetivos del mapa. Mantén control de visión en el río y arbustos clave, y coordina las peleas grupales con tu equipo.';
+};
+
 interface CombatDirectivesPanelProps {
     scalingType: 'Early' | 'Mid' | 'Late';
     combatStyle: {
@@ -216,6 +228,23 @@ export const CombatDirectivesPanel = memo(({
                         {generalDirectives.timing}
                     </p>
                 </div>
+
+                {/* 5. CONSEJO */}
+                {myTeamAnalysis && (
+                    <div className="flex flex-col gap-2.5 border-l-2 border-amber-500/50 pl-3">
+                        <div className="flex items-center gap-2 text-amber-500/90">
+                            <svg className="w-3.5 h-3.5 text-amber-500/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 .364l-.707 .707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            <span className="text-amber-500/90 font-black tracking-widest uppercase text-[10px] md:text-[11px]">
+                                Consejo Táctico
+                            </span>
+                        </div>
+                        <p className="text-[12.5px] md:text-[13px] text-slate-200 leading-relaxed font-semibold">
+                            {getCompositionAdvice(myTeamAnalysis.winCondition)}
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
