@@ -243,21 +243,21 @@ export function getTacticalDirectives(
     });
 
     // 5. DIRECTIVAS GENERALES DE COMBATE (ESTRATEGIA & TIMING DINÁMICOS)
-    let dynamicStrategy = `Como ${championName} en la posición de ${myRole.toUpperCase()}, tu perfil es de tipo ${champ.scalingType}. `;
+    let dynamicStrategy = `Estilo: ${champ.scalingType === 'Early' ? 'Juego Temprano' : champ.scalingType === 'Late' ? 'Juego Tardío' : 'Juego Medio'}. `;
     if (threats.length > 0) {
-        dynamicStrategy += `Ten precaución extrema contra ${threats.map(t => t.name).join(', ')} en peleas de equipo. `;
+        dynamicStrategy += `Cuidado con: ${threats.map(t => t.name).join(', ')}. `;
     }
     if (advantages.length > 0) {
-        dynamicStrategy += `Busca explotar tus ventajas de tradeo directamente sobre ${advantages.map(a => a.name).join(', ')}. `;
+        dynamicStrategy += `Pelea con: ${advantages.map(a => a.name).join(', ')}. `;
     }
     if (activeSynergies.length > 0) {
-        dynamicStrategy += `Apóyate en combos coordinados con ${activeSynergies.map(s => s.name).join(', ')} para forzar iniciaciones limpias.`;
+        dynamicStrategy += `Sinergia con: ${activeSynergies.map(s => s.name).join(', ')}.`;
     } else {
-        dynamicStrategy += `Juega con paciencia y prioriza el control del mapa con tu equipo.`;
+        dynamicStrategy += `Prioriza el mapa con tu equipo.`;
     }
 
-    const timingRange = champ.scalingType === 'Early' ? '05:00 a 15:00' : (champ.scalingType === 'Late' ? '25:00+' : '15:00 a 25:00');
-    const dynamicTiming = `Tu ventana ideal está entre ${timingRange} debido a tu pico de poder máximo ubicado en el minuto ${peakTime} (con ${peakWinrate}% de winrate).`;
+    const timingRange = champ.scalingType === 'Early' ? '5-15 min' : (champ.scalingType === 'Late' ? '25+ min' : '15-25 min');
+    const dynamicTiming = `Pico en min. ${peakTime.split(':')[0]} (${peakWinrate}% WR). Ventana ideal: ${timingRange}.`;
 
     return {
         championName,

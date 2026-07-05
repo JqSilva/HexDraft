@@ -122,9 +122,6 @@ export const CombatDirectivesPanel = memo(({
                     <p className="text-[13px] md:text-[14px] text-slate-100 leading-relaxed font-semibold">
                         {generalDirectives.timing}
                     </p>
-                    <p className="text-[11px] text-slate-400 font-medium italic mt-0.5">
-                        {winrateCurveAnalysis.trendDescription}
-                    </p>
                 </div>
 
                 {/* AMENAZA ESTRATÉGICA ENEMIGA */}
