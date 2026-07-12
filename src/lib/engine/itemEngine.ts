@@ -1862,10 +1862,10 @@ function getPivotItemName(pivotId: number): string | null {
 function getClusterTitle(coreItems: number[], damageType: string): string {
   if (damageType === 'AP') {
     const hasBurn = coreItems.some(id => [6653, 2503].includes(id));
-    if (hasBurn) return 'AP Quemado';
+    if (hasBurn) return 'AP Burn';
     const hasBurst = coreItems.some(id => [3089, 3100, 3139, 3152, 6657].includes(id));
-    if (hasBurst) return 'AP Ráfaga';
-    return 'AP Mágico';
+    if (hasBurst) return 'AP Burst';
+    return 'AP Magic';
   } else if (damageType === 'AD') {
     const lethalityItems = [6697, 6699, 6696, 3179, 3142, 6695, 6698];
     const critItems = [3031, 6676, 3036, 3508, 3094, 3085];
@@ -1882,12 +1882,12 @@ function getClusterTitle(coreItems: number[], damageType: string): string {
       if (bruiserItems.includes(numId)) bruiserCount++;
     });
     
-    if (lethalityCount > critCount && lethalityCount > bruiserCount) return 'AD Letalidad';
-    if (critCount > lethalityCount && critCount > bruiserCount) return 'AD Crítico';
-    if (bruiserCount > lethalityCount && bruiserCount > critCount) return 'AD Combatiente';
-    return 'AD Físico';
+    if (lethalityCount > critCount && lethalityCount > bruiserCount) return 'AD Lethality';
+    if (critCount > lethalityCount && critCount > bruiserCount) return 'AD Critical';
+    if (bruiserCount > lethalityCount && bruiserCount > critCount) return 'AD Bruiser';
+    return 'AD Physical';
   }
-  return 'Híbrido';
+  return 'Hybrid';
 }
 
 function buildOutputForCluster(

@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         // 2. Construir los bloques reorganizados
         const payload = {
-            title: `HexDraft: ${championName} Build`,
+            title: `HexDraft: ${championName}`,
             associatedMaps: [],
             associatedChampions: [Number(championId)], // Vincula el set al campeón
             blocks: [

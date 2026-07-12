@@ -226,7 +226,7 @@ def copiar_recursos_release(release_dir):
         shutil.rmtree(target_public)
     os.makedirs(target_public, exist_ok=True)
     
-    archivos_public = ["app-icon.ico", "app-icon.svg", "favicon.svg"]
+    archivos_public = ["app-icon.ico", "app-icon.svg", "favicon.svg", "app-icon.png"]
     for archivo in archivos_public:
         src_path = os.path.join("public", archivo)
         dest_path = os.path.join(target_public, archivo)

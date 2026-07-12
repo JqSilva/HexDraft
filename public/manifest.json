@@ -1,0 +1,16 @@
+{
+  "name": "Prueba de Icono",
+  "short_name": "Test",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/test.ico?v=2",
+      "sizes": "16x16 32x32 48x48 64x64",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}

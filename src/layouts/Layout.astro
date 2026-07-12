@@ -14,8 +14,10 @@ const { title = "HexDraft" } = Astro.props;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" sizes="any" />
-		<link rel="icon" href="/app-icon.ico" />
+		
+		<link rel="manifest" href="/manifest.json" />
+		<link rel="icon" type="image/x-icon" href="/app-icon.ico?v=999" />
+		
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<ClientRouter />

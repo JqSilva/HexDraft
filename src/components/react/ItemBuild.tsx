@@ -19,6 +19,7 @@ interface ItemBuildProps {
     everyonePicked?: boolean;
     activePlaystyleIndex: number;
     setActivePlaystyleIndex: (index: number) => void;
+    isCompact?: boolean;
 }
 
 const COMMON_SITUATIONAL_ITEMS = [
@@ -51,10 +52,12 @@ const DAMAGE_COLORS: Record<string, { accent: string; title: string }> = {
 const ClusterTab = ({
     cluster,
     isActive,
+    isCompact,
     onClick
 }: {
     cluster: ScoredCluster;
     isActive: boolean;
+    isCompact: boolean;
     onClick: () => void;
 }) => {
     const isAp = cluster.damageType === 'AP';
@@ -69,6 +72,43 @@ const ClusterTab = ({
     const keystone = cluster.build?.runes?.keystone;
     const coreItems = cluster.build?.items?.core || [];
 
+    if (isCompact) {
+        // Formato Ultra-Compacto Horizontal sin Nombre
+        return (
+            <button
+                onClick={onClick}
+                className={`flex items-center gap-2 p-1.5 px-3 transition-all duration-200 cursor-pointer shrink-0 ${tabStyle}`}
+            >
+                <div className="flex items-center gap-1">
+                    {keystone?.icon && (
+                        <img
+                            src={keystone.icon}
+                            className="w-[20px] h-[20px] rounded-full bg-slate-950 border border-purple-accent/30"
+                            alt="keystone"
+                            title={keystone.name}
+                        />
+                    )}
+                    {keystone?.icon && coreItems.length > 0 && (
+                        <div className="h-4 w-px bg-border-warm/30 mx-0.5"></div>
+                    )}
+                    {coreItems.slice(0, 2).map((item: any, idx: number) => (
+                        <img
+                            key={idx}
+                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                            className="w-[20px] h-[20px] rounded-sm border border-border-warm/60"
+                            alt="core item"
+                            title={item.name}
+                        />
+                    ))}
+                </div>
+                <span className="text-[10px] font-mono font-black text-slate-300 tabular-nums border-l border-border-warm/30 pl-2">
+                    {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(1)}
+                </span>
+            </button>
+        );
+    }
+
+    // Formato Detallado Vertical Completo
     return (
         <button
             onClick={onClick}
@@ -116,7 +156,8 @@ export const ItemBuild = memo(({
     inDraft,
     everyonePicked,
     activePlaystyleIndex,
-    setActivePlaystyleIndex
+    setActivePlaystyleIndex,
+    isCompact = false
 }: ItemBuildProps) => {
     const scoredClusters: ScoredCluster[] = currentBuild?.scoredClusters || [];
 
@@ -130,13 +171,11 @@ export const ItemBuild = memo(({
 
     if (!currentBuild) return null;
 
-    // FIX: usar índice directamente, sin búsqueda por título
     const clampedIndex = Math.min(activePlaystyleIndex, scoredClusters.length - 1);
     const activeCluster = scoredClusters[clampedIndex] ?? scoredClusters[0];
     const build = activeCluster ? activeCluster.build : currentBuild.build;
     const coreItemSwaps = activeCluster ? activeCluster.coreItemSwaps : currentBuild.coreItemSwaps;
 
-    // Compile flat situational items list
     const situationalItemsList: any[] = [];
     const seen = new Set();
     if (build?.items?.paths) {
@@ -162,7 +201,7 @@ export const ItemBuild = memo(({
         }));
 
     return (
-        <div className="h-full flex flex-col gap-0">
+        <div className="flex-1 min-h-0 flex flex-col gap-0">
             {/* Cabecera / Tabs */}
             <div className="flex justify-between items-end gap-3 shrink-0">
                 {scoredClusters.length >= 1 ? (
@@ -172,6 +211,7 @@ export const ItemBuild = memo(({
                                 key={`cluster-tab-${cluster.pivotItem}-${idx}`}
                                 cluster={cluster}
                                 isActive={idx === clampedIndex}
+                                isCompact={isCompact}
                                 onClick={() => {
                                     setActivePlaystyleIndex(idx);
                                 }}
@@ -186,160 +226,162 @@ export const ItemBuild = memo(({
             </div>
 
             {/* Panel de Contenido de la Build Activa */}
-            <div className="flex-grow p-4 md:p-5 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-5 overflow-hidden">
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2 flex flex-col gap-6">
-                    {/* 1. RUNAS */}
-                {build?.runes && (
-                    <div className="py-0.5 px-2 flex flex-col mt-2 gap-1.5 shrink-0">
-                        <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block text-center w-full">
-                            Runas
-                        </span>
-                        <div className="flex items-center justify-center gap-2 flex-wrap w-full">
-                            {build.runes.keystone && (
-                                <div className="relative group shrink-0" title={build.runes.keystone.name}>
-                                    <img
-                                        src={build.runes.keystone.icon}
-                                        className="w-12 h-12 rounded-full border border-purple-accent bg-slate-950 p-0.5 hover:scale-105 transition-transform duration-250"
-                                        alt="keystone"
-                                    />
-                                </div>
-                            )}
+            <div className={`flex-grow p-3 md:p-4 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-4 overflow-hidden`}>
+                <div className={`flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2 flex flex-col  gap-5 pb-4 ${isCompact ? '' : "justify-center"}`}>
 
-                            <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
+                    {/* Grid 2x2 Responsivo */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
-                            <div className="flex gap-1.5 justify-center shrink-0">
-                                {build.runes.selections?.slice(1, 4).map((rune: any, idx: number) => rune && (
-                                    <div key={`prim-${idx}`} className="relative group w-[38px] h-[38px]" title={rune.name}>
-                                        <img
-                                            src={rune.icon}
-                                            className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
-                                            alt="primary rune"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
-
-                            <div className="flex gap-1.5 justify-center shrink-0">
-                                {build.runes.selections?.slice(4, 6).map((rune: any, idx: number) => rune && (
-                                    <div key={`sec-${idx}`} className="relative group w-[38px] h-[38px]" title={rune.name}>
-                                        <img
-                                            src={rune.icon}
-                                            className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
-                                            alt="secondary rune"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="h-8 w-px bg-border-warm/30 shrink-0"></div>
-
-                            <div className="flex gap-1 justify-center shrink-0">
-                                {build.runes.shards?.map((shard: any, idx: number) => shard && (
-                                    <div key={`shard-${idx}`} className="relative group w-[34px] h-[34px]" title={shard.name}>
-                                        <img
-                                            src={shard.icon}
-                                            className="w-full h-full rounded-full border border-border-warm/30 bg-slate-950/80 p-0.5 hover:border-purple-accent transition-colors"
-                                            alt="shard"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 2. BUILD COMPLETA */}
-                <div className="py-0.5 px-2 flex flex-col gap-2.5 shrink-0">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block text-center w-full">
-                        Objetos de Inicio y Core Build
-                    </span>
-                    <div className="flex flex-wrap gap-1 items-center justify-center w-full">
-                        {build?.items?.starter && build.items.starter.length > 0 && (
-                            <>
-                                <div className="flex gap-1.5 justify-center">
-                                    {build.items.starter.map((item: any, idx: number) => (
-                                        <div key={`starter-${idx}`} className="relative group w-[45px] h-[45px]" title={item.name}>
+                        {/* Bloque [0,0]: Runas */}
+                        {build?.runes && (
+                            <div className="flex flex-col gap-2 min-w-0">
+                                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                                    Runas
+                                </span>
+                                <div className="flex flex-wrap justify-center items-center gap-1.5 max-w-[225px] mx-auto w-full">
+                                    {build.runes.keystone && (
+                                        <div className="relative group shrink-0" title={build.runes.keystone.name}>
                                             <img
-                                                src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
-                                                className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                                alt="starter item"
+                                                src={build.runes.keystone.icon}
+                                                className="w-10 h-10 rounded-full border border-purple-accent bg-slate-950 p-0.5 hover:scale-105 transition-transform duration-250"
+                                                alt="keystone"
                                             />
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="h-9 w-px bg-border-warm/30 mx-1 shrink-0"></div>
-                            </>
-                        )}
+                                    )}
 
-                        {build?.items?.boots && (
-                            <>
-                                <div className="relative w-12 h-12 shrink-0" title={build.items.boots.name}>
-                                    <img
-                                        src={build.items.boots.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${build.items.boots.id}.png`}
-                                        className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                        alt="boots"
-                                    />
-                                    <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
-                                        B
+                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+
+                                    <div className="flex gap-1 justify-center shrink-0">
+                                        {build.runes.selections?.slice(1, 4).map((rune: any, idx: number) => rune && (
+                                            <div key={`prim-${idx}`} className="relative group w-[30px] h-[30px]" title={rune.name}>
+                                                <img
+                                                    src={rune.icon}
+                                                    className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
+                                                    alt="primary rune"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+
+                                    <div className="flex gap-1 justify-center shrink-0">
+                                        {build.runes.selections?.slice(4, 6).map((rune: any, idx: number) => rune && (
+                                            <div key={`sec-${idx}`} className="relative group w-[30px] h-[30px]" title={rune.name}>
+                                                <img
+                                                    src={rune.icon}
+                                                    className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
+                                                    alt="secondary rune"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+
+                                    <div className="flex gap-0.5 justify-center shrink-0">
+                                        {build.runes.shards?.map((shard: any, idx: number) => shard && (
+                                            <div key={`shard-${idx}`} className="relative group w-[24px] h-[24px]" title={shard.name}>
+                                                <img
+                                                    src={shard.icon}
+                                                    className="w-full h-full rounded-full border border-border-warm/30 bg-slate-950/80 p-0.5 hover:border-purple-accent transition-colors"
+                                                    alt="shard"
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                                <div className="h-9 w-px bg-border-warm/30 mx-1 shrink-0"></div>
-                            </>
-                        )}
-
-                        <div className="flex gap-1.5 justify-center">
-                            {build?.items?.core?.map((item: any, idx: number) => (
-                                <div key={`core-${idx}`} className="relative w-12 h-12 group" title={item.name}>
-                                    <img
-                                        src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
-                                        className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                        alt="core item"
-                                    />
-                                    <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
-                                        0{idx + 1}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. OBJETOS SITUACIONALES */}
-                <div className="py-0.5 px-2 flex flex-col gap-2.5 shrink-0">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block text-center w-full">
-                        Objetos Situacionales
-                    </span>
-                    <div className="flex flex-wrap gap-1.5 items-center justify-center w-full">
-                        {finalSituational.map((item: any, idx: number) => (
-                            <div key={`situational-${idx}`} className="relative w-[42px] h-[42px] group" title={item.name}>
-                                <img
-                                    src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
-                                    className="w-full h-full border border-border-warm/40 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                    alt={item.name}
-                                />
                             </div>
-                        ))}
-                    </div>
-                </div>
-                </div>
+                        )}
 
-                {/* Botón Re-Importar */}
-                <div className="flex justify-center items-center w-full shrink-0 mt-auto pt-4 border-t border-border-warm/20">
-                    <button
-                        onClick={() => onReImport({
-                            name: activeCluster?.title
-                                ? `${currentBuild.name} (${activeCluster.title})`
-                                : currentBuild.name,
-                            id: currentBuild.id,
-                            build: build,
-                            coreItemSwaps: coreItemSwaps
-                        })}
-                        className="px-6 py-1.5 bg-panel-warm tech-corners rounded-sm border-border-warm/60 hover:bg-[#9055ff]/10 hover:border-[#9055ff]/80 hover:text-[#d3c0ff] text-slate-200 font-extrabold uppercase text-[10px] tracking-widest transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
-                    >
-                        Re-Importar
-                    </button>
+                        {/* Bloque [0,1]: Objetos de Inicio y Botas */}
+                        <div className="flex flex-col gap-2 min-w-0">
+                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                                Objetos de Inicio y Botas
+                            </span>
+                            <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
+                                {build?.items?.starter?.map((item: any, idx: number) => (
+                                    <div key={`starter-${idx}`} className="relative group w-[40px] h-[40px]" title={item.name}>
+                                        <img
+                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            alt="starter item"
+                                        />
+                                    </div>
+                                ))}
+                                {build?.items?.boots && (
+                                    <div className="relative w-[40px] h-[40px]" title={build.items.boots.name}>
+                                        <img
+                                            src={build.items.boots.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${build.items.boots.id}.png`}
+                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            alt="boots"
+                                        />
+                                        <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
+                                            B
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bloque [1,0]: Core Build */}
+                        <div className="flex flex-col gap-2 min-w-0">
+                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                                Core Build
+                            </span>
+                            <div className="flex flex-wrap justify-center items-center gap-2.5 max-w-[190px] mx-auto w-full">
+                                {build?.items?.core?.map((item: any, idx: number) => (
+                                    <div key={`core-${idx}`} className="relative w-[40px] h-[40px] group" title={item.name}>
+                                        <img
+                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            alt="core item"
+                                        />
+                                        <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
+                                            0{idx + 1}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Bloque [1,1]: Objetos Situacionales */}
+                        <div className="flex flex-col gap-2 min-w-0">
+                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                                Objetos Situacionales
+                            </span>
+                            <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
+                                {finalSituational.slice(0, 10).map((item: any, idx: number) => (
+                                    <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={item.name}>
+                                        <img
+                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                                            className="w-full h-full border border-border-warm/40 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            alt={item.name}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Botón Re-Importar como fila del Grid (col-span-2) */}
+                        <div className="col-span-1 md:col-span-2 flex justify-center items-center w-full mt-3 pt-3  shrink-0">
+                            <button
+                                onClick={() => onReImport({
+                                    name: activeCluster?.title
+                                        ? `${currentBuild.name} ${activeCluster.title.replace(/[()]/g, '').trim().toLowerCase()}`
+                                        : currentBuild.name,
+                                    id: currentBuild.id,
+                                    build: build,
+                                    coreItemSwaps: coreItemSwaps
+                                })}
+                                className="px-6 py-2 bg-panel-warm tech-corners rounded-sm border border-border-warm/60 hover:bg-[#9055ff]/10 hover:border-[#9055ff]/80 hover:text-[#d3c0ff] text-slate-200 font-extrabold uppercase text-[10px] tracking-widest transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
+                            >
+                                Re-Importar
+                            </button>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
         </div>

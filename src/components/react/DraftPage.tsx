@@ -261,11 +261,11 @@ export const DraftPage = () => {
     }, [currentBuild]);
 
     const championScore = useMemo(() => {
-        if (!currentBuild) return undefined;
-        const rec = recommendations.find(r => r.championId === currentBuild.id);
+        if (myId === 0) return undefined;
+        const rec = recommendations.find(r => r.id === myId);
         if (rec) return rec.score;
         return undefined;
-    }, [currentBuild, recommendations]);
+    }, [myId, recommendations]);
 
     const tacticalDirectives = useMemo(() => {
         const champName = getNameFromId(myId) || (currentBuild ? currentBuild.name : null);
@@ -326,7 +326,7 @@ export const DraftPage = () => {
     // Hook para detectar responsividad en el lado del cliente
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const media = window.matchMedia("(max-width: 1200px)");
+        const media = window.matchMedia("(max-width: 1400px)");
         const listener = (e: MediaQueryListEvent) => setIsCompact(e.matches);
         setIsCompact(media.matches);
         media.addEventListener("change", listener);
@@ -524,9 +524,15 @@ export const DraftPage = () => {
                     const lockedTheirTeam = data.theirTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
                     const lockedAndBannedIds = [...new Set([...bannedIds, ...lockedMyTeam, ...lockedTheirTeam])];
 
-                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine);
+                    let picks: Recommendation[] = [];
+                    if (myId > 0) {
+                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, [], currentRole, undefined, myId);
+                    } else {
+                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine);
+                    }
 
                     if (myId > 0) {
+                        setRecommendations(picks);
                         // Cambiar la vista a 'build' si no lo está ya, para mostrar el panel de análisis
                         if (view !== 'reasons' && view !== 'build') {
                             setView('build');
@@ -582,8 +588,11 @@ export const DraftPage = () => {
                                 const selectedCluster = buildData.scoredClusters?.[activePlaystyleIndex];
                                 const activeBuild = selectedCluster ? selectedCluster.build : buildData.build;
                                 const activeSwaps = selectedCluster ? selectedCluster.coreItemSwaps : buildData.coreItemSwaps;
-                                const activeName = selectedCluster?.title
-                                    ? `${buildData.name} (${selectedCluster.title})`
+                                const cleanClusterTitle = selectedCluster?.title
+                                    ? selectedCluster.title.replace(/[()]/g, '').trim().toLowerCase()
+                                    : '';
+                                const activeName = cleanClusterTitle
+                                    ? `${buildData.name} ${cleanClusterTitle}`
                                     : buildData.name;
 
                                 const coreIds = (activeBuild.items.core || []).map((i: any) => i.id || i).join(',');
@@ -742,7 +751,7 @@ export const DraftPage = () => {
     }, [inDraft, view, currentBuild]);
 
     return (
-        <div className="h-full w-full max-w-[1550px] mx-auto px-4 py-3 flex flex-col justify-center overflow-hidden relative min-h-0">
+        <div className={`h-full w-full max-w-[1550px] mx-auto px-4 flex flex-col justify-center overflow-hidden relative min-h-0 ${isCompact ? 'py-1.5' : 'py-3'}`}>
             {/* TOAST DE CONEXIÓN */}
             {toast && (
                 <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 duration-350 select-none
@@ -768,13 +777,14 @@ export const DraftPage = () => {
 
                 {/* AREA CENTRAL */}
                 <div className={`transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
-                    ? 'max-h-[780px] min-h-[600px]'
-                    : 'max-h-[650px] min-h-[400px]'
+                    ? (isCompact ? 'max-h-[580px] min-h-[450px]' : 'max-h-[780px] min-h-[600px]')
+                    : (isCompact ? 'max-h-[500px] min-h-[350px]' : 'max-h-[650px] min-h-[400px]')
                     } ${isPlaying
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
                     }`}>
-                    <div className="bg-panel-warm border border-border-warm p-6 md:p-8 rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners">
+                    <div className={`bg-panel-warm border border-border-warm rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
+                        }`}>
 
                         {/* CABECERA DINÁMICA */}
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
@@ -813,16 +823,14 @@ export const DraftPage = () => {
 
                             {/* 2. VISTA DE PARTIDA / BUILD */}
                             {isBuildOrReasonsView && (currentBuild || myId > 0) && tacticalDirectives ? (
-                                <div className="flex flex-col gap-2 h-full min-h-0 pt-4">
+                                <div className="flex flex-col gap-6 h-full min-h-0 pt-4">
 
                                     {/* Módulos de Análisis — 3 columnas */}
                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 ">
                                         {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
-                                        {currentBuild && (
+                                        {currentBuild && !isCompact && (
                                             <div className="w-[250px] shrink-0 flex flex-col gap-4 select-none text-left rounded-tl-none pt-3 pr-4.5 pl-4.5 relative h-full min-h-0">
-
                                                 {/* Badges de Clase y Daño */}
-
                                                 <div className="text-center md:text-center">
                                                     <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
                                                         {champData.name}
@@ -835,46 +843,113 @@ export const DraftPage = () => {
                                                             {champData?.damageType || "Adaptive"}
                                                         </span>
                                                     </div>
-
-
                                                 </div>
                                                 {/* Imagen Vertical del Campeón */}
-                                                <div className="flex-1 min-h-0 w-full  rounded-sm overflow-hidden bg-black shrink-0 relative">
+                                                <div className="flex-1 min-h-0 w-full rounded-sm overflow-hidden bg-black shrink-0 relative">
                                                     <img
                                                         src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`}
                                                         alt={currentBuild.name}
-                                                        className="w-full h-full object-cover scale-110 object-top "
+                                                        className="w-full h-full object-cover scale-110 object-top"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).src = "/favicon.svg";
                                                         }}
                                                     />
-                                                </div>
-                                                <div className="flex items-center justify-center gap-3 p-1">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <img
-                                                            src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
-                                                            className="w-5.5 h-5.5"
-                                                            style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
-                                                            alt="lane"
-                                                        />
-                                                        <span className="text-sm font-bold uppercase tracking-wider text-slate-300">
-                                                            {myRole.toLocaleUpperCase()}
-                                                        </span>
-                                                    </div>
+                                                    {/* Gradient Overlay y Rol/Score en la zona inferior */}
+                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-3 px-3 flex items-center justify-center gap-3 z-10 select-none">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <img
+                                                                src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
+                                                                className="w-5 h-5"
+                                                                style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                                                alt="lane"
+                                                            />
+                                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                                                                {myRole.toLocaleUpperCase()}
+                                                            </span>
+                                                        </div>
 
-                                                    <span className="text-slate-700 font-bold">|</span>
-                                                    <div className="flex items-center gap-1.5">
-
-                                                        <span className="px-1.5 py-0.5 border border-purple-accent/30 bg-purple-accent/5 text-sm font-mono font-black text-purple-accent rounded-sm">
-                                                            {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
-                                                        </span>
+                                                        <span className="text-slate-500 font-bold">|</span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="px-1.5 py-0.5 border border-purple-accent/40 bg-black/60 text-xs font-mono font-black text-purple-accent rounded-sm">
+                                                                {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* Columna 2: Build de Ítems (Centro) */}
-                                        <div className="flex-1 min-h-0 overflow-hidden">
+                                        <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+                                            {currentBuild && isCompact && (
+                                                <div className="flex h-24 shrink-0 rounded-sm overflow-hidden bg-[#070709] border border-border-warm relative select-none">
+                                                    {/* Imagen de Splash horizontal de fondo */}
+                                                    <div className="absolute inset-0 z-0">
+                                                        <img
+                                                            src={`https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${getChampionCdnName(currentBuild.name)}_0.jpg`}
+                                                            alt={currentBuild.name}
+                                                            className="w-full h-full object-cover object-[right_25%] opacity-[0.2]"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = "/favicon.svg";
+                                                            }}
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-r from-[#070709] via-[#070709]/95 to-transparent" />
+                                                    </div>
+
+                                                    {/* Contenido del banner */}
+                                                    <div className="relative z-10 flex w-full items-center justify-between px-6 py-2">
+                                                        <div className="flex items-center gap-4">
+                                                            {/* Retrato circular del campeón */}
+                                                            <div className="w-14 h-14 rounded-full overflow-hidden border border-purple-accent/30 bg-slate-950 shrink-0">
+                                                                <img
+                                                                    src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${myId}.png`}
+                                                                    alt={currentBuild.name}
+                                                                    className="w-full h-full object-cover scale-115"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).src = "/favicon.svg";
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <h2 className="text-base md:text-xl lg:text-xl font-black text-white uppercase tracking-wider leading-none mb-1.5 truncate max-w-[140px] md:max-w-[240px] lg:max-w-none">
+                                                                    {currentBuild.name}
+                                                                </h2>
+                                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                                    <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
+                                                                        {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
+                                                                    </span>
+                                                                    <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
+                                                                        {champData?.damageType || "Adaptive"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
+                                                                <img
+                                                                    src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
+                                                                    className="w-4.5 h-4.5"
+                                                                    style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
+                                                                    alt="lane"
+                                                                />
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                                                                    {myRole.toUpperCase()}
+                                                                </span>
+                                                            </div>
+
+                                                            <span className="text-slate-700 font-bold">|</span>
+
+                                                            <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
+                                                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SCORE:</span>
+                                                                <span className="text-xs font-mono font-black text-[#9055ff]">
+                                                                    {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <ItemBuild
                                                 currentBuild={currentBuild}
                                                 onReImport={handleReImport}
@@ -882,6 +957,7 @@ export const DraftPage = () => {
                                                 everyonePicked={everyonePicked}
                                                 activePlaystyleIndex={activePlaystyleIndex}
                                                 setActivePlaystyleIndex={setActivePlaystyleIndex}
+                                                isCompact={isCompact}
                                             />
                                         </div>
 
@@ -890,12 +966,21 @@ export const DraftPage = () => {
                                             {/* Cabecera / Pestaña Simulada para Alineación Estética */}
                                             <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
                                                 <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
-                                                    <span className="bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-purple-accent px-5 select-none h-[52px] flex items-center justify-center">
-                                                        Directivas Tácticas
+                                                    <span className={`bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold uppercase text-purple-accent select-none h-[52px] flex items-center justify-center
+                                                        ${isCompact
+                                                            ? 'px-3 tracking-[0.1em] text-[9.5px]'
+                                                            : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
+                                                        }`}>
+                                                        {isCompact ? 'Directivas' : 'Directivas Tácticas'}
                                                     </span>
                                                 </div>
                                                 {/* Badge de Escalado Táctico alineado en la fila superior */}
-                                                <div className={`px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 h-[32px] flex items-center justify-center ${tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                                <div className={`border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center
+                                                    ${isCompact
+                                                        ? 'px-2 py-1.5 text-[12px] tracking-[0.1em] font-bold h-[30px] uppercase '
+                                                        : 'px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest h-[32px]'
+                                                    }
+                                                    ${tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                                                         tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
                                                             'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
                                                     }`}>
@@ -953,7 +1038,7 @@ export const DraftPage = () => {
                                                     </div>
                                                     {allyNames.length > 0 && !myTeamAnalysis.damageProfile.isBalanced && (
                                                         <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
-                                                            ⚠️ Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
+                                                            Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
                                                         </span>
                                                     )}
                                                     {allyNames.length === 0 && (
@@ -976,7 +1061,7 @@ export const DraftPage = () => {
                         </div>
 
                         {/* CONFIGURACIÓN Y SWITCHES */}
-                        {!isPlaying && (
+                        {!isPlaying && !hasPicked && (
                             <DraftSettings
                                 autoPick={autoPick}
                                 setAutoPick={setAutoPick}

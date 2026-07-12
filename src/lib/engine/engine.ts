@@ -84,9 +84,10 @@ export function getProcessedRecommendations(
     theirTeamIds: number[],
     bannedIds: number[],
     myRole: string,
-    myPickId?: number
+    myPickId?: number,
+    singleChampId?: number
 ): Recommendation[] {
-    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole , pickId: myPickId});
+    console.log("🔍 [ENGINE] Datos recibidos:", { allies: myTeamIds, enemies: theirTeamIds, bans: bannedIds, role: myRole , pickId: myPickId, singleChampId });
 
     const cleanMyTeamIds = myPickId 
         ? myTeamIds.filter(id => id !== myPickId) 
@@ -115,10 +116,14 @@ export function getProcessedRecommendations(
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
     // Iteramos únicamente sobre el pool del carril seleccionado para optimizar búsquedas
-    const pool = DATA_BY_LANE[targetLane] || [];
+    let pool = DATA_BY_LANE[targetLane] || [];
+    if (singleChampId) {
+        const targetChamp = pool.find(c => c.id === singleChampId) || Object.values(ENRICHED_DB).find(c => c.id === singleChampId);
+        pool = targetChamp ? [targetChamp] : [];
+    }
 
     for (const c of pool) {
-        if (unavailableIds.includes(c.id)) continue;
+        if (!singleChampId && unavailableIds.includes(c.id)) continue;
         const { score, reasons } = calculateScore(c, allies, enemies, unavailableIds);
         const rawBuild = c.buildData;
 

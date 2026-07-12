@@ -15,7 +15,7 @@ export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelinePr
                 
                 {/* ORDEN DE MAXEO GLOBAL */}
                 {skillOrder && (
-                    <div className="flex items-center gap-2 px-3 py-1 bg-cyan-400/10 border border-cyan-400/20 rounded-sm">
+                    <div className="flex items-center gap-2 px-3 py-1">
                         <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">Maxeo:</span>
                         <span className="text-[10px] text-white font-black tracking-widest uppercase">
                             {skillOrder}

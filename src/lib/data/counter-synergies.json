@@ -198398,7 +198398,7 @@
     }
   },
   "Karthus": {
-    "lane": "BOTTOM",
+    "lane": "JUNGLE",
     "tags": [
       "Mage"
     ],
@@ -270719,7 +270719,7 @@
     }
   },
   "Mel": {
-    "lane": "MIDDLE",
+    "lane": "BOTTOM",
     "tags": [],
     "scalingType": "Mid",
     "combat": {
@@ -445523,7 +445523,7 @@
     }
   },
   "Sylas": {
-    "lane": "MIDDLE",
+    "lane": "JUNGLE",
     "tags": [
       "Mage",
       "Assassin"
