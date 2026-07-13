@@ -223,11 +223,14 @@ export function getNameFromId(id: number): string | undefined {
 }
 
 /**
- * Determina si un item es coherente con el damageType del cluster activo.
- * Usa ITEMS_DB para leer las categorías del item.
- * @param itemId - ID del item.
- * @param clusterDamageType - Tipo de daño del cluster.
- * @returns Coherente o no.
+ * Valida si un ítem en particular es coherente con el tipo de daño del cluster activo (AD o AP).
+ * Evita configuraciones incoherentes (ej. ítems AP en builds puramente AD).
+ * 
+ * @param itemId - ID del ítem a comprobar.
+ * @param clusterDamageType - Tipo de daño del cluster activo ('AD' | 'AP' | 'Hybrid').
+ * @returns true si el ítem es coherente con el daño del cluster, o false si está en blacklist o tiene tags incompatibles.
+ * 
+ * @modifica Para ajustar qué ítems se bloquean de forma estática en cada cluster, modificar `CLUSTER_ITEM_BLACKLIST` en {@link file:///d:/Documentos/HexDraft/src/lib/engine/itemEngine.ts#L97-L131}.
  */
 export function isItemCoherentWithCluster(
   itemId: number,
@@ -263,7 +266,14 @@ export function isItemCoherentWithCluster(
   return true;
 }
 
-// Clasificador de un item individual
+/**
+ * Clasifica un ítem específico según sus categorías estadísticas en una rama ofensiva, balanceada o defensiva.
+ * 
+ * @param itemId - ID del ítem a clasificar.
+ * @returns Categoría del ítem: 'offensive', 'balanced' o 'defensive'.
+ * 
+ * @modifica La clasificación depende de las categorías que expone `ITEMS_DB` para cada ítem, así como de un mapeo estático de fallbacks y excepciones dentro de la misma función.
+ */
 export function classifyItem(itemId: number): 'offensive' | 'balanced' | 'defensive' {
   const baseId = itemId > 220000 ? itemId % 220000 : itemId;
 
@@ -515,6 +525,18 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
 }
 
 
+/**
+ * Genera ramas de compra estáticas para tres condiciones de partida (snowball, neutral, behind) para campeones sin datos DPM completos.
+ * 
+ * @param slotItems - Opciones de ítems del campeón.
+ * @param coreItemIds - IDs de los ítems del core.
+ * @param damageType - Tipo de daño del cluster.
+ * @param adaptedBootId - ID de las botas adaptadas seleccionadas.
+ * @param isAssassin - true si el campeón es asesino para aplicar fallbacks correctos.
+ * @returns Objeto con las tres ramas conteniendo IDs de ítems.
+ * 
+ * @modifica En caso de no tener ítems suficientes en el pool, se usan los arreglos de fallback estáticos (`AD_ASSASSIN_FALLBACKS`, `AD_FIGHTER_FALLBACKS`, `AP_FALLBACKS`).
+ */
 export function getPathsForBuild(
   slotItems: any,
   coreItemIds: number[],
@@ -592,6 +614,20 @@ export function getPathsForBuild(
   };
 }
 
+/**
+ * Genera de forma dinámica las rutas de continuación de la build (item 4 y item 5) adaptadas a la composición y contexto del equipo enemigo.
+ * Califica ítems del pool según sus efectos defensivos, heridas graves o penetración necesarios en la partida.
+ * 
+ * @param slotItems - Todos los ítems mapeados en ranuras históricas para este campeón.
+ * @param coreItemIds - Los ítems que conforman el núcleo de la build (core).
+ * @param damageType - Tipo de daño del cluster activo.
+ * @param adaptedBootId - ID de las botas ya adaptadas.
+ * @param enemyContext - Métricas de contexto de la composición enemiga (conteos de AD, AP, tanques, CC, curadores).
+ * @param isAssassin - Si el campeón se clasifica como asesino para fallbacks tácticos.
+ * @returns Objeto con las tres ramas de compra (`snowball`, `neutral`, `behind`) con dos ítems recomendados por rama.
+ * 
+ * @modifica Para ajustar el umbral de filtrado inicial de pickrate de ítems, editar `minPr` en esta función.
+ */
 export function getDynamicPaths(
   slotItems: any,
   coreItemIds: number[],
@@ -799,6 +835,15 @@ export function getItemsByCategory(category: string): number[] {
   return [];
 }
 
+/**
+ * Determina si un ítem calificado como contramedida táctica (heridas graves, penetración, etc.) es viable e históricamente usado por el campeón.
+ * 
+ * @param itemId - ID del ítem.
+ * @param champName - Nombre del campeón.
+ * @returns true si el ítem supera los umbrales de pickrate mínimos para ese campeón y es coherente con su tipo de daño.
+ * 
+ * @modifica Para configurar los umbrales mínimos de pickrate de ítems tácticos por tipo, ajustar `ADAPTATION_THRESHOLDS` en {@link file:///d:/Documentos/HexDraft/src/lib/engine/itemEngine.ts#L761-L775}.
+ */
 export function isItemViableForChamp(itemId: number, champName: string): boolean {
   const champData = ENRICHED_DB[champName];
   if (!champData) return false;
@@ -842,6 +887,16 @@ export interface CoreItemSwap {
   priority: 'critical' | 'recommended' | 'optional';
 }
 
+/**
+ * Propone reemplazos en los core items recomendados adaptándolos al draft enemigo (ej. comprar penetración vs tanques, heridas graves vs curadores).
+ * 
+ * @param coreItems - Arreglo de los ítems del core original del cluster ganador.
+ * @param enemyContext - Datos contextuales y conteos del draft del equipo enemigo.
+ * @param champProfile - Datos de perfil enriquecido del campeón.
+ * @returns Lista de objetos descriptivos de los swaps propuestos (`CoreItemSwap`).
+ * 
+ * @modifica El número máximo de reemplazos permitidos en el core se rige por `ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption`.
+ */
 export function getCoreItemSwaps(
   coreItems: number[],
   enemyContext: {
@@ -1000,10 +1055,13 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
 }
 
 /**
- * Calculates a combined viability score weighting winrate by pickrate confidence.
- * @param winrate - Win rate percentage.
- * @param pickrate - Pick rate percentage.
- * @returns Viability score.
+ * Calcula un score de viabilidad ponderando el winrate de un elemento por su pickrate histórico (para dar confianza estadística).
+ * 
+ * @param winrate - Win rate base (porcentaje).
+ * @param pickrate - Pick rate base (porcentaje).
+ * @returns Score numérico de viabilidad.
+ * 
+ * @modifica Para ajustar la curva de confianza estadística según el pickrate, editar la lógica del cálculo de `confidence`.
  */
 export function viabilityScore(winrate: number, pickrate: number): number {
   const confidence = pickrate < 2 ? pickrate / 2 : Math.min(pickrate / 10, 1.0);
@@ -1011,9 +1069,12 @@ export function viabilityScore(winrate: number, pickrate: number): number {
 }
 
 /**
- * Classifies a list of item IDs to determine their overall damage type.
- * @param itemIds - Array of item IDs.
- * @returns 'AD' | 'AP' | 'Hybrid'
+ * Clasifica un grupo de ítems (como el representativeCore) para determinar si la build es de daño físico (AD), mágico (AP) o híbrido (Hybrid).
+ * 
+ * @param itemIds - Lista de IDs de ítems en el core.
+ * @returns Tipo de daño determinado ('AD' | 'AP' | 'Hybrid').
+ * 
+ * @modifica Para forzar que ciertos ítems se consideren AP o AD de forma directa, editar las listas estáticas `apItems` y `adItems` definidas en esta función.
  */
 export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybrid' {
   const apItems = [3089, 3152, 3115, 3102, 3157, 3165, 6653, 3001, 3003, 3007, 3092, 3100, 3118, 3185, 4629, 3135, 3137, 4633, 2510, 4645, 3124];
@@ -1054,9 +1115,12 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
 }
 
 /**
- * Detects distinct build clusters for a champion using coreItem2 fingerprint.
- * @param dpmData - Raw DPM data for the champion.
- * @returns Ordered array of detected clusters.
+ * Analiza el DPM del campeón y detecta clusters de builds distintas basándose en la coincidencia del segundo ítem terminado (`coreItem2`).
+ * 
+ * @param dpmData - Datos de DPM del scraper/base de datos para el campeón.
+ * @returns Lista de clusters de builds encontrados, ordenados por pickrate general.
+ * 
+ * @modifica Para ajustar el filtro de pares de ítems irrelevantes, editar el umbral de pickrate mínimo (actualmente `3.0`).
  */
 export function detectBuildClusters(dpmData: any): BuildCluster[] {
   const coreItem2 = dpmData?.coreBuilds?.coreItem2;
@@ -1126,12 +1190,15 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
 }
 
 /**
- * Scores a build cluster in the context of the draft.
- * @param cluster - Cluster object.
- * @param allies - Array of ally champion names.
- * @param enemies - Array of enemy champion names.
- * @param champData - Champion profile data.
- * @returns Score.
+ * Evalúa y califica un cluster de build en el contexto de la partida actual. Aplica bonos por sinergia y penalizaciones tácticas.
+ * 
+ * @param cluster - El cluster de build a evaluar.
+ * @param allies - Nombres de los campeones aliados.
+ * @param enemies - Nombres de los campeones enemigos.
+ * @param champData - Datos enriquecidos del campeón evaluado.
+ * @returns Score total calculado.
+ * 
+ * @modifica Los bonos de curadores (`healersCount`), penalización de RM (`highMrCount`) y armadura (`highArmorCount`) están cableados directamente. Ajustar coeficientes aquí.
  */
 export function scoreClusterInContext(
   cluster: BuildCluster,
@@ -1241,12 +1308,15 @@ export function scoreClusterInContext(
 }
 
 /**
- * Calcula el bonus contextual de botas según enemigos, cluster y rol.
- * @param bootId - ID de botas.
- * @param cluster - Cluster activo.
- * @param enemies - Lista de nombres de enemigos.
+ * Calcula la puntuación adicional contextual para un par de botas frente al equipo enemigo.
+ * 
+ * @param bootId - ID de las botas a calificar.
+ * @param cluster - Cluster de build activo.
+ * @param enemies - Lista de nombres de los campeones enemigos.
  * @param champData - Datos enriquecidos del campeón.
- * @returns Score bonus.
+ * @returns El bono numérico calculado.
+ * 
+ * @modifica Para modificar cuándo se bonifican las botas Mercury (3111), Steelcaps (3047) o Sorcerer's (3020), ajustar los coeficientes dentro de esta función.
  */
 export function calcBootContextBonus(
   bootId: number,
@@ -1302,14 +1372,17 @@ export function calcBootContextBonus(
 }
 
 /**
- * Selects the most appropriate boots for the cluster.
- * @param boots - Array of boots options.
- * @param cluster - Cluster object.
- * @param enemies - Array of enemy champion names.
- * @param tacticRole - Champion tactic role.
- * @param champClass - Champion class.
- * @param champData - Champion profile data.
- * @returns Selected boot ID.
+ * Selecciona las mejores botas de entre las opciones históricas del campeón ponderando su viabilidad y adaptabilidad contra el enemigo.
+ * 
+ * @param boots - Lista de opciones de botas históricas.
+ * @param cluster - Cluster de build activo.
+ * @param enemies - Nombres de los campeones enemigos.
+ * @param tacticRole - Rol táctico del campeón.
+ * @param champClass - Clase del campeón.
+ * @param champData - Datos del perfil del campeón.
+ * @returns ID de la bota recomendada.
+ * 
+ * @modifica Para evitar botas específicas por rol de juego (ej. Berserker en asesinos), editar el objeto `BOOTS_BLACKLIST_BY_ROLE`.
  */
 export function selectBootsForCluster(
   boots: any[],
@@ -1487,13 +1560,17 @@ export function filterPrimaryTreeByKeystone(
 }
 
 /**
- * Selecciona el mejor árbol secundario coherente con el cluster y excluyendo incompatibles.
+ * Selecciona el mejor árbol de runas secundario y sus runas individuales sumando la viabilidad de sus dos mejores runas, aplicando exclusiones de tipo de daño.
+ * 
  * @param secondaryRunes - Opciones de runas secundarias.
- * @param primaryStyleId - Estilo del árbol primario.
- * @param clusterDamageType - Daño del cluster.
- * @param runeToStyle - Mapa de runa a estilo.
+ * @param primaryStyleId - ID del estilo de runas primario elegido.
+ * @param clusterDamageType - Tipo de daño del cluster.
+ * @param runeToStyle - Mapa que asocia IDs de runas a su correspondiente ID de estilo.
  * @param champData - Datos enriquecidos del campeón.
- * @returns Estilo secundario y runas elegidas.
+ * @param playstyle - Estilo de juego deducido del cluster.
+ * @returns Objeto con el estilo del árbol secundario (`styleId`) y la lista de runas seleccionadas (`runes`).
+ * 
+ * @modifica Para cambiar qué árboles están prohibidos según el tipo de daño del cluster, editar la constante `EXCLUDED_SECONDARY_TREES`.
  */
 export function getBestSecondaryRunesForCluster(
   secondaryRunes: RuneOption[],
@@ -1707,11 +1784,14 @@ export function selectShardsForCluster(
 }
 
 /**
- * Selecciona runes para un cluster aplicando coherencia.
- * @param runesData - Datos crudos de runas.
- * @param cluster - Cluster de build.
- * @param champData - Datos enriquecidos del campeón.
- * @returns Estructura de runas adaptadas.
+ * Selecciona el conjunto de runas (primarias, secundarias y shards) adaptadas a la coherencia de daño y playstyle del cluster.
+ * 
+ * @param runesData - Estructura cruda de runas históricas del campeón.
+ * @param cluster - El cluster de build activo.
+ * @param champData - Datos de perfil enriquecido del campeón.
+ * @returns Estructura hidratada con la página de runas adaptadas.
+ * 
+ * @modifica La deducción del estilo de juego (playstyle) utiliza el helper `getClusterTitle`.
  */
 export function selectRunesForCluster(
   runesData: RunesData,
@@ -1985,12 +2065,24 @@ function buildOutputForCluster(
 }
 
 /**
- * Orquestra el motor de builds adaptativas basadas en clusters y draft.
- * @param championId - ID de campeón.
- * @param myTeamIds - IDs de aliados.
- * @param theirTeamIds - IDs de enemigos.
- * @param myRole - Rol.
- * @returns Build adaptada final.
+ * Orquesta y calcula la build adaptada para un campeón en el contexto de su rol y composición de ambos equipos en el draft.
+ * Esta función es un **entrypoint principal** del motor de items invocado a través de `getSingleChampionBuild` desde `DraftPage.tsx`.
+ * 
+ * El flujo del algoritmo consiste en:
+ * 1. Resolver el perfil y DPM del campeón. Si no existen, invoca a `getFallbackStaticBuild`.
+ * 2. Detectar los clusters de builds distintas con `detectBuildClusters`.
+ * 3. Evaluar y puntuar cada cluster contra el draft enemigo y aliado con `scoreClusterInContext`.
+ * 4. Filtrar clusters redundantes y seleccionar el cluster ganador.
+ * 5. Adaptar botas, runas, iniciales y proponer swaps en el core.
+ * 6. Generar las ramas dinámicas y retornar el resultado completo.
+ * 
+ * @param championId - ID del campeón a buildear.
+ * @param myTeamIds - IDs de los aliados pickeados.
+ * @param theirTeamIds - IDs de los enemigos pickeados.
+ * @param myRole - Rol en el que jugará el campeón.
+ * @returns La build adaptada final con el cluster ganador, botas, runas, iniciales, swaps propuestos y alternativas.
+ * 
+ * @modifica La lógica de fallback y resolución de DPM de builds por base de datos se maneja al inicio de esta función.
  */
 export function getAdaptedBuild(
   championId: number,

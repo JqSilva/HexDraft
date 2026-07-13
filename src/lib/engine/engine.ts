@@ -77,7 +77,18 @@ export interface BansRecommendation {
 initializeEngineData();
 
 /**
- * Procesa y retorna las recomendaciones de campeones ordenadas según sinergias, counters y el carril asignado.
+ * Procesa y retorna las recomendaciones de campeones para el draft ordenadas por score de mayor a menor.
+ * Esta función es un **entrypoint principal** invocado desde la UI (a través de `/api/draft-recommendations` y `DraftPage.tsx`).
+ * 
+ * @param myTeamIds - IDs de los campeones aliados actualmente seleccionados.
+ * @param theirTeamIds - IDs de los campeones enemigos actualmente seleccionados.
+ * @param bannedIds - IDs de los campeones que están baneados en el draft.
+ * @param myRole - El carril/rol para el cual se solicita la recomendación (ej: "top", "jungle", "mid", "adc", "support").
+ * @param myPickId - ID opcional del pick del usuario si ya está seleccionado, para filtrarlo del equipo.
+ * @param singleChampId - ID opcional de un campeón en específico para evaluar individualmente (para previsualizaciones o comparaciones).
+ * @returns Lista de hasta 30 recomendaciones ordenadas por puntuación descendente, conteniendo id, nombre, score, razones estructuradas y build predeterminada.
+ * 
+ * @modifica Para ajustar los pesos aplicados a este scoring, modificar el objeto `engineWeights` en {@link file:///d:/Documentos/HexDraft/src/lib/engine/engine.ts#L7-L19}.
  */
 export function getProcessedRecommendations(
     myTeamIds: number[],
@@ -152,6 +163,23 @@ export function getProcessedRecommendations(
 }
 
 
+/**
+ * Genera recomendaciones de campeones a banear en el draft de manera contextual o global.
+ * Si hay picks aliados o enemigos activos, delega en `getBanRecommendations` para un cálculo contextual.
+ * Si no, analiza los counters de los campeones sugeridos en el top 10 de recomendaciones y los pondera.
+ * Esta función es un **entrypoint principal** llamado por `/api/draft-recommendations` y `DraftPage.tsx`.
+ * 
+ * @param topRecommendations - Las recomendaciones actuales de picks generadas para el usuario.
+ * @param myChampion - Nombre del campeón elegido o preseleccionado por el usuario.
+ * @param myRole - Rol asignado al usuario.
+ * @param alliedPicks - Nombres de los campeones aliados pickeados.
+ * @param enemyPicks - Nombres de los campeones enemigos pickeados.
+ * @param bannedChamps - Nombres de los campeones actualmente baneados.
+ * @param allAvailableChamps - Nombres de todos los campeones disponibles en el pool de HexDraft.
+ * @returns Lista ordenada de hasta 30 recomendaciones de bans con su id, nombre y score de prioridad.
+ * 
+ * @modifica Para ajustar cómo influye la Tierlist y el Win Rate global en los bans globales de fallback, editar las constantes `tierFactor` y `winrateFactor` en este archivo.
+ */
 export function getProcessedBans(
     topRecommendations: Recommendation[],
     myChampion: string | null = null,
@@ -260,7 +288,16 @@ export function getProcessedBans(
     return results.slice(0, 30);
 }
 
-// Función auxiliar para determinar si un campeón candidato coincide con el arquetipo del enemigo
+/**
+ * Función interna de utilidad que determina si un campeón candidato coincide o refuerza un arquetipo enemigo determinado.
+ * Se utiliza para calcular penalizaciones o bonos en las recomendaciones de picks y bans.
+ * 
+ * @param c - Datos enriquecidos del campeón candidato.
+ * @param archetype - El arquetipo enemigo que se está comparando (ej. "siege", "engage_heavy", "scaling", "poke", "pick_comp", "split_push", "teamfight").
+ * @returns Un valor booleano indicando si el campeón encaja dentro de las condiciones tácticas o tags del arquetipo.
+ * 
+ * @modifica Para cambiar los mapeos de roles tácticos y tags que definen cada arquetipo, editar la lógica interna de esta función.
+ */
 function championMatchesArchetype(c: EnrichedChampion, archetype: EnemyArchetype): boolean {
   const tactic = c.tacticRole || c.tactic_role || 'teamfight';
   if (archetype === 'siege') {
@@ -287,6 +324,20 @@ function championMatchesArchetype(c: EnrichedChampion, archetype: EnemyArchetype
   return false;
 }
 
+/**
+ * Calcula y califica los candidatos a ban de forma altamente contextual basados en el estado actual de picks del Draft.
+ * Esta función evalúa counters de tu campeón, refuerzos del arquetipo enemigo, counters de aliados, tiers meta y contramedidas tácticas.
+ * 
+ * @param myChampion - El campeón preseleccionado o seleccionado por el usuario.
+ * @param myRole - El carril o rol del usuario.
+ * @param alliedPicks - Lista de campeones aliados.
+ * @param enemyPicks - Lista de campeones enemigos.
+ * @param bannedChamps - Lista de campeones baneados.
+ * @param allAvailableChamps - Lista de todos los campeones del juego.
+ * @returns Lista de hasta 15 candidatos calificados y ordenados para banear.
+ * 
+ * @modifica Los valores de incremento de banScore por criterio están cableados directamente en esta función (Criterios A a E). Editar para alterar prioridades de ban.
+ */
 export function getBanRecommendations(
   myChampion: string | null,
   myRole: string,
@@ -488,6 +539,18 @@ const COUNTER_MAP: Record<Exclude<EnemyArchetype, 'mixed'>, {
   teamfight:   { roles: ['poke','burst'], tags: ['Poke','Burst','Disengage','Kite'], bonus: 1.1 }
 };
 
+/**
+ * Capa de Scoring 2.5: Calcula la bonificación o penalización estructural del campeón candidato vs el arquetipo del equipo enemigo y aliado.
+ * Se ejecuta en la Capa 2.5 de `calculateScore`.
+ * 
+ * @param candidate - Datos enriquecidos del campeón candidato a evaluar.
+ * @param reading - Estructura de lectura de arquetipos detectados en ambos equipos y el nivel de confianza.
+ * @param weights - Pesos de configuración actuales del motor de recomendación.
+ * @param phaseMultiplier - Multiplicador de fase de composición (depende de cuántos picks aliados se han realizado).
+ * @returns Estructura con el score calculado (`bonus`) y una lista de razones explicativas (`details`).
+ * 
+ * @modifica Para ajustar la tabla de efectividad de roles y tags contra cada arquetipo, editar la constante `COUNTER_MAP` en {@link file:///d:/Documentos/HexDraft/src/lib/engine/engine.ts#L477-L489}.
+ */
 function calcArchetypeCounterBonus(
   candidate: EnrichedChampion,
   reading: ArchetypeReading,
@@ -575,7 +638,33 @@ function calcArchetypeCounterBonus(
 }
 
 /**
- * CALCULAR PUNTAJE
+ * Capa de Scoring Principal: Evalúa de forma exhaustiva a un campeón candidato asignándole una puntuación del 0.1 al 10.0.
+ * Esta función corre un algoritmo de evaluación multi-capa en el siguiente orden de ejecución:
+ * 
+ * - **Capa 0.5: Flex Pick Bonus** - Bonifica en fase 1 de picks a campeones flexibles para ocultar composición.
+ * - **Capa 0.7: Maestría Personal** - Bonifica o penaliza basado en el rendimiento histórico personal del usuario (`PERSONAL_STATS`).
+ * - **Capa 0.9: Rol Táctico faltante / Saturación** - Bonifica si cubre un rol que el equipo aliado no tiene.
+ * - **Capa 1: Fortaleza Individual & Win Rate** - Otorga base según meta tier global y win rate. Penaliza 50% si el arquetipo enemigo no es 'mixed' y el candidato no tiene tags de contramedida.
+ * - **Capa 2: Sinergias (Estadísticas e Intersección de Clases)** - Suma sinergias cruzadas con campeones aliados. Multiplicador de proximidad física (ej: BOTTOM + UTILITY) y de combo de clase (engage + follow up, adc + peel).
+ * - **Capa 2.5: Respuesta de Arquetipo** - Evalúa efectividad contra el arquetipo enemigo vía `calcArchetypeCounterBonus`.
+ * - **Capa 3: God Matchups** - Bonifica si el candidato tiene matchups muy favorables conocidos contra campeones enemigos seleccionados.
+ * - **Capa 3.5: Negación de Win Condition Enemiga** - Evalúa si el candidato rompe o anula la sinergia de victoria enemiga (ej. ZoneControl vs Hypercarry de escalado tardío).
+ * - **Capa 4: Counters** - Penaliza según la dominancia histórica de los campeones enemigos contra el candidato. Aplica multiplicador 1.4 si es fase de líneas crítica ("Bad Lane").
+ * - **Capa 5: Balance de Equipo (Utilidad, Frontline, CC, Sustain)** - Bonifica si el equipo carece de control de masas, curación, iniciación o tanque.
+ * - **Capa 5.5: Saturación de Rol Táctico Dedicada** - Aplica penalizaciones graduales si hay exceso de campeones aliados con el mismo rol táctico.
+ * - **Capa 6: Balance de Daño** - Incentiva que el equipo tenga daño mixto AP/AD y castiga sobrecargas de un solo tipo de daño.
+ * - **Capa 7: Escalado Ponderado por Rol** - Evalúa la superioridad o debilidad del escalado tardío comparado con los enemigos, ponderando el peso de los hypercarries enemigos.
+ * - **Capa 8: Variabilidad** - Introduce un factor de entropía aleatoria pequeña para evitar recomendaciones tunelizadas idénticas.
+ * - **Capa 9: Flexibilidad Post-Pick** - Evalúa cuántos campeones del pool que satisfacen los requerimientos del candidato quedan libres para el resto del draft.
+ * - **Ajuste Final**: Aplica un soft-cap para suavizar puntuaciones mayores a 8.0.
+ * 
+ * @param target - Datos enriquecidos del campeón candidato.
+ * @param allies - Nombres de los campeones aliados ya pickeados.
+ * @param enemies - Nombres de los campeones enemigos ya pickeados.
+ * @param unavailableIds - IDs de campeones bloqueados o baneados para evitar repetirlos.
+ * @returns Objeto con la puntuación final redondeada a dos decimales y las razones textuales de la puntuación.
+ * 
+ * @modifica Para reequilibrar la importancia de las capas según la fase del draft (pick 1, pick 3, pick 5), ajustar el objeto interno `PHASE_WEIGHTS`.
  */
 function calculateScore(target: EnrichedChampion, allies: string[], enemies: string[], unavailableIds: number[] = []): { score: number; reasons: string[] } {
     // 1. CONSTANTES DE PESO REEQUILIBRADAS POR FASE
