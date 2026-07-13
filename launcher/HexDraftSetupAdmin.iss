@@ -4,9 +4,9 @@
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft Admin
-AppVersion=1.4
-AppVerName=HexDraft 1.4.0 (Admin)
-VersionInfoVersion=1.4.0.0
+AppVersion=2.0
+AppVerName=HexDraft 2.0.0 (Admin)
+VersionInfoVersion=2.0.0.0
 AppPublisher=HexDraft
 AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
 AppSupportURL=https://github.com/JqSilva/HexDraft-Launcher

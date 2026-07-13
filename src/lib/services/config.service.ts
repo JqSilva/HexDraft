@@ -48,7 +48,7 @@ let configData: AppConfig;
 if (!fs.existsSync(configPath)) {
   configData = {
     mode: 'user',
-    github_repo: 'JqSilva/HexDraft'
+    github_repo: 'JqSilva/HexDraft-Releases'
   };
   try {
     fs.writeFileSync(configPath, JSON.stringify(configData, null, 2), 'utf-8');
@@ -62,7 +62,7 @@ if (!fs.existsSync(configPath)) {
     console.error('❌ Error parseando config.json, usando valores por defecto user:', e);
     configData = {
       mode: 'user',
-      github_repo: 'JqSilva/HexDraft'
+      github_repo: 'JqSilva/HexDraft-Releases'
     };
   }
 }

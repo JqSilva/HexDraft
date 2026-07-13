@@ -8,9 +8,10 @@ import { configRepo } from '../../../lib/db/config.repo.js';
 
 export const POST: APIRoute = async () => {
   try {
-    if (!appConfig.github_token) {
+    const githubToken = appConfig.github_token || process.env.GITHUB_LAUNCHER_TOKEN || process.env.GITHUB_TOKEN;
+    if (!githubToken) {
       return new Response(
-        JSON.stringify({ error: 'Token de GitHub no configurado en config.json. No se puede publicar.' }),
+        JSON.stringify({ error: 'Token de GitHub no configurado en config.json ni en el entorno (.env). No se puede publicar.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -52,7 +53,7 @@ export const POST: APIRoute = async () => {
 
     // 3. Consultar la última release en GitHub para saber la última versión numérica
     const gitHeaders: Record<string, string> = {
-      'Authorization': `token ${appConfig.github_token}`,
+      'Authorization': `token ${githubToken}`,
       'Accept': 'application/vnd.github.v3+json',
       'User-Agent': 'HexDraft-App'
     };
@@ -109,7 +110,7 @@ export const POST: APIRoute = async () => {
         },
         body: JSON.stringify({
           tag_name: `db-v${newVersion}`,
-          name: `Base de datos v${newVersion} - Parche ${patch}`,
+          name: `v${newVersion} - Parche ${patch}`,
           body: JSON.stringify(manifest, null, 2),
           draft: false,
           prerelease: false
@@ -131,7 +132,7 @@ export const POST: APIRoute = async () => {
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `token ${appConfig.github_token}`,
+        'Authorization': `token ${githubToken}`,
         'Content-Type': 'application/octet-stream',
         'Content-Length': String(size),
         'User-Agent': 'HexDraft-App'
