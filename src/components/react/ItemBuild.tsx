@@ -388,4 +388,6 @@ export const ItemBuild = memo(({
     );
 });
 
+ItemBuild.displayName = 'ItemBuild';
+
 export default ItemBuild;

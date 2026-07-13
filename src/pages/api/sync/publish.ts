@@ -37,13 +37,17 @@ export const POST: APIRoute = async () => {
         const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
         patch = meta.version || '-';
       }
-    } catch {}
+    } catch {
+      // Ignorado, se mantendrá el valor por defecto
+    }
 
     if (patch === '-') {
       try {
         const configs = configRepo.getAllConfigs();
         patch = configs.last_sync_version || '-';
-      } catch {}
+      } catch {
+        // Ignorado si falla al recuperar la versión guardada en configs
+      }
     }
 
     // 3. Consultar la última release en GitHub para saber la última versión numérica
@@ -68,7 +72,9 @@ export const POST: APIRoute = async () => {
         } catch {
           const match = bodyText.match(/\{[\s\S]*?\}/);
           if (match) {
-            try { remoteManifest = JSON.parse(match[0]); } catch {}
+            try { remoteManifest = JSON.parse(match[0]); } catch {
+              // Ignorado si falla lectura alternativa de manifest JSON
+            }
           }
         }
         if (remoteManifest && typeof remoteManifest.version === 'number') {

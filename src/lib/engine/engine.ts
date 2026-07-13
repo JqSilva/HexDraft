@@ -202,7 +202,7 @@ export function getProcessedBans(
         });
     });
 
-    let results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
+    const results: BansRecommendation[] = Object.entries(banScores).map(([name, data]) => ({
         id: data.id,
         name: name,
         score: parseFloat(Math.min(Math.max(data.score + (data.count * 0.5), 0.1), 10.0).toFixed(2))
@@ -368,7 +368,7 @@ export function getBanRecommendations(
   });
 
   // 3. Fallback: si hay menos de 5 relevantes, incluir Tier 1-2 globales
-  let selectedCandidates = [...relevantCandidates];
+  const selectedCandidates = [...relevantCandidates];
   if (selectedCandidates.length < 5) {
     const fallbackCandidates = nonRelevantCandidates.filter(name => {
       const champData = ENRICHED_DB[name] as EnrichedChampion | undefined;

@@ -197,7 +197,9 @@ export async function syncChampionsSemanticData() {
   } catch (error) {
     try {
       db.exec('ROLLBACK;');
-    } catch (_) {}
+    } catch (_) {
+      // Ignorado si falla rollback (por ejemplo si la transacción ya no está activa)
+    }
     console.error("Error en sincronizacion semantica de campeones:", error);
     throw error;
   }

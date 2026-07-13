@@ -25,9 +25,9 @@ export const UpdatePopup = () => {
   useEffect(() => {
     // Si ya cargó el modo, necesita actualizar, no está buscando y no fue omitido
     if (loaded && needsUpdate && !checking && !isDismissed) {
-      setVisible(true);
+      queueMicrotask(() => setVisible(true));
     } else {
-      setVisible(false);
+      queueMicrotask(() => setVisible(false));
     }
   }, [isAdmin, needsUpdate, checking, loaded, isDismissed]);
 

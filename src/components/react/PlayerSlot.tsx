@@ -164,3 +164,5 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
     </div>
   );
 });
+
+PlayerSlot.displayName = 'PlayerSlot';

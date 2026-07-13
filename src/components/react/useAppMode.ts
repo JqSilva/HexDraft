@@ -17,7 +17,7 @@ export const useAppMode = () => {
     if (state.loaded) return;
 
     if (cachedMode) {
-      setState(cachedMode);
+      queueMicrotask(() => setState(cachedMode!));
       return;
     }
 

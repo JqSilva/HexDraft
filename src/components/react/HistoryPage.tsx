@@ -1,5 +1,5 @@
 // src/components/react/HistoryPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getNameFromId } from '../../lib/engine/engine';
 import assetsMap from '../../lib/data/assets-map.json';
 import { getChampionCdnName } from '../../lib/championMapper';
@@ -92,6 +92,8 @@ const getRankString = (score: number) => {
   return "7th";
 };
 
+const now = Date.now();
+
 export const HistoryPage = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [gameVersion, setGameVersion] = useState<string>("14.9.1");
@@ -131,8 +133,8 @@ export const HistoryPage = () => {
     return `https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/spell/${spellName}.png`;
   };
 
-  const formatCreationDate = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
+  const formatCreationDate = (timestamp: number, nowVal: number) => {
+    const diff = nowVal - timestamp;
     const minutes = Math.floor(diff / 60000);
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -334,7 +336,7 @@ export const HistoryPage = () => {
                           {formatDuration(match.gameDuration)}
                         </span>
                         <span className="text-[10px] font-semibold text-slate-400">
-                          {formatCreationDate(match.gameCreation)}
+                          {formatCreationDate(match.gameCreation, now)}
                         </span>
                         <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-300">
                           {getQueueLabel(match.queueId, match.gameMode)}

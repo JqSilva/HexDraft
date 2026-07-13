@@ -55,4 +55,6 @@ export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelinePr
     );
 });
 
+SkillTimeline.displayName = 'SkillTimeline';
+
 export default SkillTimeline;

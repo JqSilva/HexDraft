@@ -94,7 +94,9 @@ export async function syncItemsFromCommunityDragon(): Promise<number> {
   } catch (error) {
     try {
       db.exec('ROLLBACK;');
-    } catch (_) {}
+    } catch (_) {
+      // Ignorado si falla rollback
+    }
     console.error("Error al sincronizar items:", error);
     throw error;
   }

@@ -102,7 +102,9 @@ export async function SyncEstructuraLanes(
         try {
             const { configRepo } = await import('../db/config.repo.js');
             configRepo.setConfig('last_lane_sync_timestamp', new Date().toISOString());
-        } catch (e) {}
+        } catch (e) {
+            // Ignorado de forma segura si falla al persistir el timestamp de actualización
+        }
         onProgress?.(10, 10, 'done');
     } catch (err: any) {
         writeLog(`❌ Error en SyncEstructuraLanes: ${err.message || err}`);

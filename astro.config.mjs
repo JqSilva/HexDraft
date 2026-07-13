@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
-import alpinejs from '@astrojs/alpinejs';
 
 import react from '@astrojs/react';
 
@@ -18,7 +17,6 @@ export default defineConfig({
           '**/hexdraft.db-journal',
           '**/hexdraft.db-wal',
           '**/hexdraft.db-shm',
-          '**/.puppeteer_profiles/**',
           '**/.astro/**'
         ],
       }
@@ -31,5 +29,5 @@ export default defineConfig({
   adapter:node({
     mode: 'standalone'
   }),
-  integrations: [alpinejs(), react()]
+  integrations: [react()]
 });

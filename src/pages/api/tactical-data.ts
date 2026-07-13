@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ url }) => {
                 const list = championsRepo.getAllEnrichedChampions();
                 const champData = list.find(c => c.id === champId);
                 if (champData && champData.lane) {
-                    let dbLane = champData.lane.toLowerCase();
+                    const dbLane = champData.lane.toLowerCase();
                     if (dbLane === 'jungle') pos = 'jungle';
                     else if (dbLane === 'middle') pos = 'mid';
                     else if (dbLane === 'top') pos = 'top';

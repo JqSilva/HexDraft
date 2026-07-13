@@ -44,4 +44,6 @@ export const DraftLobby = memo(() => {
     );
 });
 
+DraftLobby.displayName = 'DraftLobby';
+
 export default DraftLobby;

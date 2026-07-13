@@ -76,7 +76,9 @@ export const GET: APIRoute = async () => {
       if (match) {
         try {
           remoteManifest = JSON.parse(match[0]);
-        } catch {}
+        } catch {
+          // Ignorado si falla parseo alternativo del match JSON
+        }
       }
     }
 

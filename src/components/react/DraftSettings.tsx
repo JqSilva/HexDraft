@@ -42,4 +42,6 @@ export const DraftSettings = memo(({ autoPick, setAutoPick, autoBan, setAutoBan 
     );
 });
 
+DraftSettings.displayName = 'DraftSettings';
+
 export default DraftSettings;

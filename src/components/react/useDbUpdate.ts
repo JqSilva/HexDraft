@@ -135,7 +135,9 @@ export const useDbUpdate = () => {
   }, [downloadUrl, remoteChecksum, remoteManifest, remoteVersion, remotePatch]);
 
   useEffect(() => {
-    checkForUpdate();
+    queueMicrotask(() => {
+      checkForUpdate();
+    });
   }, [checkForUpdate]);
 
   return {

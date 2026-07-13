@@ -19,4 +19,6 @@ export const DraftGrid = memo(({ recommendations, onSelectChampion, isBan = fals
     );
 });
 
+DraftGrid.displayName = 'DraftGrid';
+
 export default DraftGrid;

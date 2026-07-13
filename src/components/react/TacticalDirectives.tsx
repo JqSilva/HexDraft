@@ -409,4 +409,8 @@ export const TacticalDirectives = memo(({ championName, myRole, allies, enemies 
     );
 });
 
+CombatDirectivesPanel.displayName = 'CombatDirectivesPanel';
+MatchupAnalysisPanel.displayName = 'MatchupAnalysisPanel';
+TacticalDirectives.displayName = 'TacticalDirectives';
+
 export default TacticalDirectives;

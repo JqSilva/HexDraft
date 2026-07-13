@@ -38,7 +38,9 @@ export const POST: APIRoute = async ({ request }) => {
           if (fs.existsSync(tempDbPath)) {
             try {
               fs.unlinkSync(tempDbPath);
-            } catch {}
+            } catch {
+              // Ignorado de forma segura si el archivo temporal no existe o está bloqueado
+            }
           }
 
           // Descargar usando Axios
@@ -108,7 +110,9 @@ export const POST: APIRoute = async ({ request }) => {
               // Si falla eliminar por bloqueo en Windows, intentaremos renombrar el original
               const backupPath = `${dbPath}.bak`;
               if (fs.existsSync(backupPath)) {
-                try { fs.unlinkSync(backupPath); } catch {}
+                try { fs.unlinkSync(backupPath); } catch {
+                  // Ignorado de forma segura si el backup está bloqueado
+                }
               }
               fs.renameSync(dbPath, backupPath);
             }
@@ -129,10 +133,14 @@ export const POST: APIRoute = async ({ request }) => {
           
           // Limpiar archivo temporal en caso de error
           if (writer) {
-            try { writer.close(); } catch {}
+            try { writer.close(); } catch {
+              // Ignorado si el flujo ya está cerrado
+            }
           }
           if (fs.existsSync(tempDbPath)) {
-            try { fs.unlinkSync(tempDbPath); } catch {}
+            try { fs.unlinkSync(tempDbPath); } catch {
+              // Ignorado si falla la eliminación del temporal
+            }
           }
 
           sendEvent({ status: 'error', message: error.message || 'Error desconocido durante la actualización.' });

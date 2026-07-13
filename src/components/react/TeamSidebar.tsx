@@ -41,4 +41,6 @@ export const TeamSidebar = memo(({ team, isEnemy = false, isPlaying, isCompact }
     );
 });
 
+TeamSidebar.displayName = 'TeamSidebar';
+
 export default TeamSidebar;

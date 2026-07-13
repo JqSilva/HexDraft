@@ -1126,7 +1126,9 @@ export async function syncMetaAndBuilds(
   try {
     configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
     configRepo.setConfig('last_sync_version', version);
-  } catch (err) {}
+  } catch (err) {
+    // Ignorado si falla persistir el timestamp de actualización de config
+  }
   
   // --- PARTE 3: Sincronizar datos semánticos de campeones ---
   try {

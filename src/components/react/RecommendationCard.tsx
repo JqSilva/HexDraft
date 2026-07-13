@@ -39,3 +39,5 @@ export const RecommendationCard = memo(({ name, score, id, reasons = [], isBan =
         </div>
     );
 });
+
+RecommendationCard.displayName = 'RecommendationCard';

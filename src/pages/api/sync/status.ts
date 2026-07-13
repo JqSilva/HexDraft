@@ -14,13 +14,17 @@ export const GET: APIRoute = async () => {
         const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
         patch = meta.version || '-';
       }
-    } catch {}
+    } catch {
+      // Ignorado, se mantendrá el valor por defecto
+    }
 
     if (patch === '-') {
       try {
         const configs = configRepo.getAllConfigs();
         patch = configs.last_sync_version || '-';
-      } catch {}
+      } catch {
+        // Ignorado si falla lectura de config de sincronización
+      }
     }
 
     // 2. Obtener fecha del último sync de datos local
@@ -28,7 +32,9 @@ export const GET: APIRoute = async () => {
     try {
       const configs = configRepo.getAllConfigs();
       lastSyncTimestamp = configs.last_sync_timestamp || '-';
-    } catch {}
+    } catch {
+      // Ignorado si falla lectura del timestamp en configs
+    }
 
     // 3. Leer versión publicada de data/db-version.json
     let dbVersion = {
@@ -42,7 +48,9 @@ export const GET: APIRoute = async () => {
     if (fs.existsSync(appConfig.dbVersionPath)) {
       try {
         dbVersion = JSON.parse(fs.readFileSync(appConfig.dbVersionPath, 'utf-8'));
-      } catch {}
+      } catch {
+        // Ignorado si el archivo db-version.json está corrupto
+      }
     }
 
     // 4. Determinar si hay cambios pendientes por publicar

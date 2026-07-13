@@ -71,7 +71,9 @@ export function writeLcuCredentialsCache(data: LCUData) {
     if (fs.existsSync(CACHE_FILE_PATH)) {
       try {
         existing = JSON.parse(fs.readFileSync(CACHE_FILE_PATH, 'utf8'));
-      } catch (e) {}
+      } catch (e) {
+        // empty - inicializar existente como vacío si falla lectura
+      }
     }
     
     if (existing.port === data.port && 
@@ -99,7 +101,9 @@ export function readLcuCredentialsCache(): LCUData | null {
         return cachedInMemory;
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    // empty - falló lectura de caché corrupto
+  }
   return null;
 }
 
@@ -110,7 +114,9 @@ export function writeLcuProfileCache(profile: any) {
     if (fs.existsSync(CACHE_FILE_PATH)) {
       try {
         existing = JSON.parse(fs.readFileSync(CACHE_FILE_PATH, 'utf8'));
-      } catch (e) {}
+      } catch (e) {
+        // empty - falló lectura de caché existente
+      }
     }
     existing.summonerProfile = profile;
     fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(existing, null, 2));
@@ -127,7 +133,9 @@ export function readLcuProfileCache(): any | null {
         return data.summonerProfile;
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    // empty - caché corrupto
+  }
   return null;
 }
 

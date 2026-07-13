@@ -415,7 +415,9 @@ export const GET: APIRoute = async () => {
         const parts = fullVersion.split('.');
         gameVersion = `${parts[0]}.${parts[1]}.1`;
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignorado de forma segura, se usará la versión por defecto
+    }
 
     // 3. Obtener 15 partidas
     const historyRes = await fetch(
@@ -640,7 +642,9 @@ export const GET: APIRoute = async () => {
       db.exec('COMMIT;');
       console.log(`Guardadas ${parsedMatches.length} partidas en la tabla player_history de SQLite.`);
     } catch (saveHistoryErr) {
-      try { db.exec('ROLLBACK;'); } catch (_) {}
+      try { db.exec('ROLLBACK;'); } catch (_) {
+        // Ignorado si la transacción ya no está activa
+      }
       console.error("Error al guardar partidas en SQLite:", saveHistoryErr);
     }
 

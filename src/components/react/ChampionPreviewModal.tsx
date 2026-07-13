@@ -52,4 +52,6 @@ export const ChampionPreviewModal = memo(({ previewChamp, onClose }: ChampionPre
     );
 });
 
+ChampionPreviewModal.displayName = 'ChampionPreviewModal';
+
 export default ChampionPreviewModal;

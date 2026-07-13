@@ -15,4 +15,6 @@ export const ConnectionStatus = memo(({ isConnected }: ConnectionStatusProps) =>
     );
 });
 
+ConnectionStatus.displayName = 'ConnectionStatus';
+
 export default ConnectionStatus;

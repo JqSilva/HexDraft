@@ -18,180 +18,17 @@ import { ChampionPreviewModal } from './ChampionPreviewModal';
 import { SkillTimeline } from './SkillTimeline';
 import { ItemBuild } from './ItemBuild';
 
-const ROLE_TRANSLATIONS: Record<string, string> = {
-    "mage": "Mago",
-    "mago": "Mago",
-    "assassin": "Asesino",
-    "asesino": "Asesino",
-    "fighter": "Luchador",
-    "luchador": "Luchador",
-    "tank": "Tanque",
-    "tanque": "Tanque",
-    "marksman": "Tirador",
-    "tirador": "Tirador",
-    "support": "Soporte",
-    "soporte": "Soporte",
-    "zonecontrol": "Mago de Control",
-    "zone_control": "Mago de Control",
-    "diver": "Luchador",
-    "juggernaut": "Coloso",
-    "skirmisher": "Duelista",
-    "slayer": "Asesino",
-    "warden": "Protector",
-    "vanguard": "Iniciador",
-    "enchanter": "Encantador",
-    "catcher": "Capturador"
-};
-
-const getFriendlyRoleName = (tag: string): string => {
-    if (!tag) return "Campeón";
-    const norm = tag.toLowerCase().replace(/[^a-z0-9]/g, "");
-    return ROLE_TRANSLATIONS[norm] || tag;
-};
-
-// =========================================================
-// HELPERS
-// =========================================================
-const executeLcuAction = async (actionId: number, championId: number) => {
-    try {
-        await fetch('/api/execute-action', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ actionId, championId, completed: true })
-        });
-        console.log(`✅ Acción ejecutada: ${championId}`);
-    } catch (e) {
-        console.error("❌ Error en acción LCU:", e);
-    }
-};
-
-const importToClient = async (buildData: any) => {
-    if (!buildData) return;
-    try {
-        const { build, name, id, coreItemSwaps } = buildData;
-
-        // Determinar y ordenar los Summoner Spells (Flash a la izquierda / tecla D, Smite a la derecha / tecla F)
-        let s1 = build.summoners[0]?.id || build.summoners[0];
-        let s2 = build.summoners[1]?.id || build.summoners[1];
-
-        let spell1Id = Number(s1);
-        let spell2Id = Number(s2);
-
-        // 1. Si Destello (ID 4) está presente, forzarlo a la izquierda
-        if (spell1Id === 4 || spell2Id === 4) {
-            if (spell1Id !== 4) {
-                const temp = spell1Id;
-                spell1Id = 4;
-                spell2Id = temp;
-            }
-        }
-
-        // 2. Si Aplastar (ID 11) está presente, forzarlo a la derecha
-        if (spell1Id === 11 || spell2Id === 11) {
-            if (spell2Id !== 11) {
-                const temp = spell2Id;
-                spell2Id = 11;
-                spell1Id = temp;
-            }
-        }
-
-        const runePayload = {
-            name: `HexDraft: ${name}`,
-            primaryStyleId: build.runes.primaryStyle,
-            subStyleId: build.runes.secondaryStyle,
-            selectedPerkIds: [
-                ...build.runes.selections.map((r: any) => r.id || r),
-                ...build.runes.shards.map((s: any) => s.id || s)
-            ]
-        };
-        await Promise.all([
-            fetch('/api/set-runes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runePayload) }),
-            fetch('/api/set-items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    championId: id,
-                    championName: name,
-                    items: build.items,
-                    skillOrder: build.skillOrder,
-                    criticalSwaps: coreItemSwaps
-                })
-            }),
-            fetch('/api/set-spells', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ spell1Id, spell2Id })
-            })
-        ]);
-        console.log("✅ Configuración enviada al LCU");
-    } catch (e) {
-        console.error("❌ Error importando:", e);
-    }
-};
-
-const PHASE_TRANSLATIONS: Record<string, string> = {
-    'Offline': 'Desconectado',
-    'None': 'Fuera de Partida',
-    'Lobby': 'Lobby de Espera',
-    'Matchmaking': 'Buscando Partida',
-    'ReadyCheck': 'Aceptar Partida',
-    'ChampSelect': 'Selección de Campeón',
-    'InProgress': 'En Partida',
-    'Reconnect': 'Reconectando',
-    'WaitingForStats': 'Esperando Estadísticas',
-    'PreEndOfGame': 'Fin de Partida',
-    'EndOfGame': 'Partida Finalizada'
-};
-
-const GAP_TRANSLATIONS: Record<string, string> = {
-    'engage': 'Iniciación',
-    'peel': 'Protección (Peel)',
-    'frontline': 'Línea Frontal (Tanque)',
-    'hypercarry': 'Daño Continuo (Carry)',
-    'cc': 'Control de Masas (CC)',
-    'healing': 'Sustento/Curación',
-    'splitpush': 'Empuje Dividido (Splitpush)'
-};
-
-const WIN_COND_TRANSLATIONS: Record<string, string> = {
-    'early_pressure': 'Presión en Juego Temprano',
-    'teamfight': 'Peleas de Equipo (Teamfight)',
-    'splitpush': 'Presión en Paralelo (Splitpush)',
-    'poke_siege': 'Desgaste y Asedio (Poke/Siege)',
-    'dive_backline': 'Foco a la Retaguardia (Dive)',
-    'scaling': 'Escalado Tardío'
-};
-
-// Mapeos de imágenes de posición de League of Legends
-const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
-const posMapping: Record<string, string> = {
-    "TOP": "icon-position-top.png",
-    "JUNGLE": "icon-position-jungle.png",
-    "JNG": "icon-position-jungle.png",
-    "MIDDLE": "icon-position-middle.png",
-    "MID": "icon-position-middle.png",
-    "BOTTOM": "icon-position-bottom.png",
-    "BOT": "icon-position-bottom.png",
-    "ADC": "icon-position-bottom.png",
-    "UTILITY": "icon-position-utility.png",
-    "SUP": "icon-position-utility.png",
-    "SUPPORT": "icon-position-utility.png"
-};
-
-// Traducciones legibles de posiciones
-const posLabels: Record<string, string> = {
-    "TOP": "Top",
-    "JUNGLE": "Jungla",
-    "JNG": "Jungla",
-    "MIDDLE": "Mid",
-    "MID": "Mid",
-    "BOTTOM": "ADC",
-    "BOT": "ADC",
-    "ADC": "ADC",
-    "UTILITY": "Soporte",
-    "SUP": "Soporte",
-    "SUPPORT": "Soporte"
-};
+// Modular components & utils
+import { DraftDamageBalance } from './draft/DraftDamageBalance';
+import {
+    getFriendlyRoleName,
+    executeLcuAction,
+    importToClient,
+    PHASE_TRANSLATIONS,
+    POS_BASE,
+    posMapping,
+    posLabels
+} from './draft/utils';
 
 export const DraftPage = () => {
     // --- ESTADOS ---
@@ -213,10 +50,11 @@ export const DraftPage = () => {
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
     const [prevConnected, setPrevConnected] = useState<boolean | null>(null);
     const [activePlaystyleIndex, setActivePlaystyleIndex] = useState<number>(0);
+    const [localPlayerCellId, setLocalPlayerCellId] = useState<number>(0);
 
     // --- CONFIGURACIÓN ---
-    const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick') === 'true' : false));
-    const [autoBan, setAutoBan] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoBan') === 'true' : false));
+    const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick:v1') === 'true' : false));
+    const [autoBan, setAutoBan] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoBan:v1') === 'true' : false));
 
     // --- REFERENCIAS ---
     const activeActionRef = useRef<any>(null);
@@ -232,11 +70,11 @@ export const DraftPage = () => {
 
     const isPlaying = gamePhase === 'InProgress';
 
-    const myPlayer = myTeam.find(p => p.cellId === currentDataRef.current?.localPlayerCellId);
+    const myPlayer = myTeam.find(p => p.cellId === localPlayerCellId);
     const myId = myPlayer?.championId || 0;
 
     useEffect(() => {
-        setActivePlaystyleIndex(0);
+        queueMicrotask(() => setActivePlaystyleIndex(0));
     }, [myId]);
 
     const everyonePicked = useMemo(() => {
@@ -248,11 +86,17 @@ export const DraftPage = () => {
 
     // Nombres de campeones aliados y enemigos para el motor táctico
     const allyNames = useMemo(() => {
-        return myTeam.map(p => getNameFromId(p.championId || p.championPickIntent)).filter(Boolean) as string[];
+        return myTeam.flatMap(p => {
+            const name = getNameFromId(p.championId || p.championPickIntent);
+            return name ? [name] : [];
+        });
     }, [myTeam]);
 
     const enemyNames = useMemo(() => {
-        return theirTeam.map(p => getNameFromId(p.championId || p.championPickIntent)).filter(Boolean) as string[];
+        return theirTeam.flatMap(p => {
+            const name = getNameFromId(p.championId || p.championPickIntent);
+            return name ? [name] : [];
+        });
     }, [theirTeam]);
 
     const champData = useMemo(() => {
@@ -328,43 +172,19 @@ export const DraftPage = () => {
         if (typeof window === 'undefined') return;
         const media = window.matchMedia("(max-width: 1400px)");
         const listener = (e: MediaQueryListEvent) => setIsCompact(e.matches);
-        setIsCompact(media.matches);
+        queueMicrotask(() => setIsCompact(media.matches));
         media.addEventListener("change", listener);
         return () => media.removeEventListener("change", listener);
     }, []);
 
     // Guardar configuraciones en localStorage
     useEffect(() => {
-        localStorage.setItem('autoPick', String(autoPick));
+        localStorage.setItem('autoPick:v1', String(autoPick));
     }, [autoPick]);
 
     useEffect(() => {
-        localStorage.setItem('autoBan', String(autoBan));
+        localStorage.setItem('autoBan:v1', String(autoBan));
     }, [autoBan]);
-
-    // =========================================================
-    // RELOJ ÚNICO (Con baneo/pick automático)
-    // =========================================================
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (activeActionRef.current && timestampAtSyncRef.current > 0) {
-                const now = Date.now();
-                const elapsed = now - timestampAtSyncRef.current;
-                const remaining = Math.max(0, apiTimeAtSyncRef.current - elapsed);
-
-                setLocalTimeLeft(Math.floor(remaining));
-
-                // Lógica de ejecución automática (3.5s)
-                if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
-                    if ((activeActionRef.current.type === 'pick' && autoPick) ||
-                        (activeActionRef.current.type === 'ban' && autoBan)) {
-                        handleAutoExecution();
-                    }
-                }
-            }
-        }, 100);
-        return () => clearInterval(interval);
-    }, [autoPick, autoBan]);
 
     const handleAutoExecution = async () => {
         const data = currentDataRef.current;
@@ -418,6 +238,30 @@ export const DraftPage = () => {
         }
     };
 
+    // =========================================================
+    // RELOJ ÚNICO (Con baneo/pick automático)
+    // =========================================================
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (activeActionRef.current && timestampAtSyncRef.current > 0) {
+                const now = Date.now();
+                const elapsed = now - timestampAtSyncRef.current;
+                const remaining = Math.max(0, apiTimeAtSyncRef.current - elapsed);
+
+                setLocalTimeLeft(Math.floor(remaining));
+
+                // Lógica de ejecución automática (3.5s)
+                if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
+                    if ((activeActionRef.current.type === 'pick' && autoPick) ||
+                        (activeActionRef.current.type === 'ban' && autoBan)) {
+                        handleAutoExecution();
+                    }
+                }
+            }
+        }, 100);
+        return () => clearInterval(interval);
+    }, [autoPick, autoBan]);
+
     const handleTimerSync = (data: any) => {
         const myCellId = data.localPlayerCellId;
         const myAction = data.actions?.flat().find(
@@ -439,8 +283,8 @@ export const DraftPage = () => {
                 lastActionKeyRef.current = actionKey;
                 activeActionRef.current = myAction;
 
-                let apiTime = data.timer?.adjustedTimeLeftInPhase || 30000;
-                let adjusted = apiTime > 30000 ? apiTime - 5000 : apiTime;
+                const apiTime = data.timer?.adjustedTimeLeftInPhase || 30000;
+                const adjusted = apiTime > 30000 ? apiTime - 5000 : apiTime;
 
                 timestampAtSyncRef.current = Date.now();
                 apiTimeAtSyncRef.current = adjusted;
@@ -497,15 +341,16 @@ export const DraftPage = () => {
                     currentDataRef.current = data;
                     setMyTeam(data.myTeam);
                     setTheirTeam(data.theirTeam);
+                    setLocalPlayerCellId(data.localPlayerCellId || 0);
                     handleTimerSync(data);
 
                     const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
                     const myId = myPlayer?.championId || 0;
                     const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
                     setMyRole(currentRole);
-                    localStorage.setItem('last_my_team', JSON.stringify(data.myTeam));
-                    localStorage.setItem('last_their_team', JSON.stringify(data.theirTeam));
-                    localStorage.setItem('last_my_role', currentRole);
+                    localStorage.setItem('last_my_team:v1', JSON.stringify(data.myTeam));
+                    localStorage.setItem('last_their_team:v1', JSON.stringify(data.theirTeam));
+                    localStorage.setItem('last_my_role:v1', currentRole);
 
                     const myHoverIntent = myPlayer?.championPickIntent || 0;
                     const activeIdForEngine = myId > 0 ? myId : myHoverIntent;
@@ -559,7 +404,7 @@ export const DraftPage = () => {
 
                                 if (currentSig !== prevSig) {
                                     setCurrentBuild(buildData);
-                                    localStorage.setItem('last_build_data', JSON.stringify(buildData));
+                                    localStorage.setItem('last_build_data:v1', JSON.stringify(buildData));
                                 }
                             }
 
@@ -568,7 +413,7 @@ export const DraftPage = () => {
                             if (pickedRec && !selectedRecommendation) {
                                 console.log("✅ Razones capturadas con éxito");
                                 setSelectedRecommendation(pickedRec);
-                                localStorage.setItem('last_pick_analysis', JSON.stringify(pickedRec));
+                                localStorage.setItem('last_pick_analysis:v1', JSON.stringify(pickedRec));
                             }
 
                             // 3. Cargar datos tácticos adicionales (una sola vez)
@@ -646,7 +491,7 @@ export const DraftPage = () => {
                 let activeBuild = currentBuild;
                 if (!activeBuild) {
                     try {
-                        const savedBuild = localStorage.getItem('last_build_data');
+                        const savedBuild = localStorage.getItem('last_build_data:v1');
                         if (savedBuild) {
                             activeBuild = JSON.parse(savedBuild);
                             setCurrentBuild(activeBuild);
@@ -661,9 +506,9 @@ export const DraftPage = () => {
                 const teamsEmpty = myTeam.every(p => p.championId === 0 && p.championPickIntent === 0);
                 if (teamsEmpty) {
                     try {
-                        const savedMyTeam = localStorage.getItem('last_my_team');
-                        const savedTheirTeam = localStorage.getItem('last_their_team');
-                        const savedRole = localStorage.getItem('last_my_role');
+                        const savedMyTeam = localStorage.getItem('last_my_team:v1');
+                        const savedTheirTeam = localStorage.getItem('last_their_team:v1');
+                        const savedRole = localStorage.getItem('last_my_role:v1');
                         if (savedMyTeam) setMyTeam(JSON.parse(savedMyTeam));
                         if (savedTheirTeam) setTheirTeam(JSON.parse(savedTheirTeam));
                         if (savedRole) setMyRole(savedRole);
@@ -687,7 +532,7 @@ export const DraftPage = () => {
                 // 4. Restaurar recomendación seleccionada
                 let currentRec = selectedRecommendation;
                 if (!currentRec) {
-                    const saved = localStorage.getItem('last_pick_analysis');
+                    const saved = localStorage.getItem('last_pick_analysis:v1');
                     if (saved) {
                         currentRec = JSON.parse(saved);
                         setSelectedRecommendation(currentRec);
@@ -1018,37 +863,7 @@ export const DraftPage = () => {
                                 /* 3. DRAFT GRID (SELECCIÓN / BANEOS) */
                                 inDraft && (
                                     <div className="space-y-6">
-                                        {myTeamAnalysis && (
-                                            <div className="p-4 border-b border-border-warm/20 mb-4 bg-slate-950/20 rounded-sm">
-                                                {/* Fila de balance de Daño */}
-                                                <div className="space-y-1.5">
-                                                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        <span>Daño Físico (AD): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%</span>
-                                                        <span>Daño Mágico (AP): {allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%</span>
-                                                    </div>
-                                                    <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
-                                                        <div
-                                                            style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.physicalPct : 50}%` }}
-                                                            className={`bg-gradient-to-r from-red-600 to-orange-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
-                                                        />
-                                                        <div
-                                                            style={{ width: `${allyNames.length > 0 ? myTeamAnalysis.damageProfile.magicPct : 50}%` }}
-                                                            className={`bg-gradient-to-r from-cyan-600 to-blue-500 h-full transition-all duration-500 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
-                                                        />
-                                                    </div>
-                                                    {allyNames.length > 0 && !myTeamAnalysis.damageProfile.isBalanced && (
-                                                        <span className="text-[9px] text-amber-500 font-semibold block animate-pulse">
-                                                            Advertencia: Composición con daño desbalanceado. Se recomienda elegir un campeón de tipo {myTeamAnalysis.damageProfile.physicalPct > 65 ? 'AP' : 'AD'}.
-                                                        </span>
-                                                    )}
-                                                    {allyNames.length === 0 && (
-                                                        <span className="text-[9px] text-slate-500 font-medium block italic">
-                                                            Esperando selecciones de campeones...
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
+                                        <DraftDamageBalance allyNames={allyNames} myTeamAnalysis={myTeamAnalysis} />
 
                                         <DraftGrid
                                             recommendations={view === 'bans' ? banRecommendations : recommendations}

@@ -385,21 +385,21 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
   }
 
   // 3. Core Items: filtrar items incoherentes (AP en AD, Black Cleaver en asesino, etc.)
-  let cleanCoreIds = coreIds.filter((id: number) => isItemCoherentWithCluster(id, damageType as any));
+  const cleanCoreIds = coreIds.filter((id: number) => isItemCoherentWithCluster(id, damageType as any));
 
   // 4. Paths: filtrar y asegurar coherencia
-  let paths = b.items?.paths;
-  let finalSnowball = (paths?.snowball || []).map((i: any) => typeof i === 'object' ? i.id : i);
-  let finalNeutral = (paths?.neutral || []).map((i: any) => typeof i === 'object' ? i.id : i);
-  let finalBehind = (paths?.behind || []).map((i: any) => typeof i === 'object' ? i.id : i);
+  const paths = b.items?.paths;
+  const finalSnowball = (paths?.snowball || []).map((i: any) => typeof i === 'object' ? i.id : i);
+  const finalNeutral = (paths?.neutral || []).map((i: any) => typeof i === 'object' ? i.id : i);
+  const finalBehind = (paths?.behind || []).map((i: any) => typeof i === 'object' ? i.id : i);
 
-  let cleanSnowball = finalSnowball
+  const cleanSnowball = finalSnowball
     .map(Number)
     .filter((id: number) => isItemCoherentWithCluster(id, damageType as any) && !cleanCoreIds.includes(id) && id !== finalBootId);
-  let cleanNeutral = finalNeutral
+  const cleanNeutral = finalNeutral
     .map(Number)
     .filter((id: number) => isItemCoherentWithCluster(id, damageType as any) && !cleanCoreIds.includes(id) && id !== finalBootId);
-  let cleanBehind = finalBehind
+  const cleanBehind = finalBehind
     .map(Number)
     .filter((id: number) => isItemCoherentWithCluster(id, damageType as any) && !cleanCoreIds.includes(id) && id !== finalBootId);
 
@@ -928,7 +928,7 @@ export function getCoreItemSwaps(
     const isAP = champProfile.damageType === 'AP';
     if (isAP) {
       if (enemyContext.enemyTankCount >= ADAPTATION_THRESHOLDS.tankPen.minTankCount) {
-        let bestPen = 3135;
+        const bestPen = 3135;
         let viablePen: number | null = bestPen;
         if (!isItemViableForChamp(bestPen, champName)) {
           const alternatives = ITEM_CATEGORIES.MAGIC_PEN.filter(id => isItemViableForChamp(id, champName));
@@ -946,7 +946,7 @@ export function getCoreItemSwaps(
     } else {
       const realTanksCount = enemyContext.realTanks !== undefined ? enemyContext.realTanks : enemyContext.enemyTankCount;
       if (realTanksCount >= 2) {
-        let bestPen = 3036;
+        const bestPen = 3036;
         let viablePen: number | null = bestPen;
         if (!isItemViableForChamp(bestPen, champName)) {
           const alternatives = ITEM_CATEGORIES.ARMOR_PEN.filter(id => isItemViableForChamp(id, champName));

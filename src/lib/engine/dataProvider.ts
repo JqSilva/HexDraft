@@ -14,14 +14,18 @@ try {
   if (fs.existsSync(syncPath)) {
     defaultCounterSynergies = JSON.parse(fs.readFileSync(syncPath, 'utf8'));
   }
-} catch (e) {}
+} catch (e) {
+  // Ignorado de forma segura en entornos web/cliente
+}
 
 try {
   const metaPath = path.resolve(process.cwd(), 'src/lib/data/meta-cache.json');
   if (fs.existsSync(metaPath)) {
     defaultMetaCache = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
   }
-} catch (e) {}
+} catch (e) {
+  // Ignorado de forma segura en entornos web/cliente
+}
 
 let loadedMetaCache: any = defaultMetaCache;
 
