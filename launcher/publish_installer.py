@@ -26,29 +26,6 @@ def load_env(env_path):
                     env_vars[key.strip()] = val.strip()
     return env_vars
 
-def detect_version():
-    """Busca la versión configurada en launcher/HexDraftSetup.iss."""
-    iss_path = os.path.join(PROYECTO_DIR, "launcher", "HexDraftSetup.iss")
-    if os.path.exists(iss_path):
-        try:
-            with open(iss_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.startswith("AppVerName="):
-                        parts = line.split("=")
-                        if len(parts) > 1:
-                            match = re.search(r"(\d+\.\d+\.\d+)", parts[1])
-                            if match:
-                                return match.group(1)
-                    elif line.startswith("VersionInfoVersion="):
-                        parts = line.split("=")
-                        if len(parts) > 1:
-                            match = re.search(r"(\d+\.\d+\.\d+)", parts[1])
-                            if match:
-                                return match.group(1)
-        except Exception as e:
-            print(f"⚠️ Advertencia al leer HexDraftSetup.iss: {e}")
-    return "1.3.0"  # fallback por defecto
-
 def parse_version(v_str):
     """Parsea una cadena de versión a una tupla de enteros para su comparación lógica."""
     clean = re.sub(r"[^\d.]", "", v_str)
@@ -56,6 +33,52 @@ def parse_version(v_str):
         return tuple(int(x) for x in clean.split(".") if x.isdigit())
     except Exception:
         return (0, 0, 0)
+
+def detect_version():
+    """Busca la versión configurada en los archivos Inno Setup y en los instaladores locales."""
+    versions = []
+
+    # 1. Comprobar HexDraftSetup.iss y HexDraftSetupAdmin.iss
+    for filename in ["HexDraftSetup.iss", "HexDraftSetupAdmin.iss"]:
+        iss_path = os.path.join(PROYECTO_DIR, "launcher", filename)
+        if os.path.exists(iss_path):
+            try:
+                with open(iss_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.startswith("AppVerName=") or line.startswith("VersionInfoVersion="):
+                            parts = line.split("=")
+                            if len(parts) > 1:
+                                match = re.search(r"(\d+\.\d+\.\d+)", parts[1])
+                                if match:
+                                    versions.append(match.group(1))
+            except Exception as e:
+                print(f"⚠️ Advertencia al leer {filename}: {e}")
+
+    # 2. Comprobar instaladores en dist-installer/
+    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+    if os.path.exists(dist_installer_dir):
+        try:
+            for file in os.listdir(dist_installer_dir):
+                if file.endswith(".exe") and "Setup" in file:
+                    match = re.search(r"(\d+\.\d+\.\d+)", file)
+                    if match:
+                        versions.append(match.group(1))
+        except Exception:
+            pass
+
+    if not versions:
+        return "1.3.0"
+
+    # Comparar lógicamente y obtener la versión más alta
+    max_ver_str = "1.3.0"
+    max_ver_tuple = (0, 0, 0)
+    for v in versions:
+        v_tuple = parse_version(v)
+        if v_tuple > max_ver_tuple:
+            max_ver_tuple = v_tuple
+            max_ver_str = v
+
+    return max_ver_str
 
 def get_outdated_local_installers(dist_installer_dir):
     """Filtra y retorna la lista de instaladores locales desactualizados (menores a las versiones locales más recientes)."""
