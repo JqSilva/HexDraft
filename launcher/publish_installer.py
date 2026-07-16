@@ -57,6 +57,39 @@ def parse_version(v_str):
     except Exception:
         return (0, 0, 0)
 
+def get_outdated_local_installers(dist_installer_dir):
+    """Filtra y retorna la lista de instaladores locales desactualizados (menores a las versiones locales más recientes)."""
+    local_files = list_local_installers(dist_installer_dir)
+    max_normal_ver = (0, 0, 0)
+    max_admin_ver = (0, 0, 0)
+    
+    for filename in local_files:
+        match = re.search(r"(\d+\.\d+\.\d+)", filename)
+        if not match:
+            continue
+        ver_tuple = parse_version(match.group(1))
+        if "Admin" in filename:
+            if ver_tuple > max_admin_ver:
+                max_admin_ver = ver_tuple
+        else:
+            if ver_tuple > max_normal_ver:
+                max_normal_ver = ver_tuple
+                
+    outdated = []
+    for filename in local_files:
+        match = re.search(r"(\d+\.\d+\.\d+)", filename)
+        if not match:
+            continue
+        ver_tuple = parse_version(match.group(1))
+        
+        if "Admin" in filename:
+            if ver_tuple < max_admin_ver:
+                outdated.append(filename)
+        else:
+            if ver_tuple < max_normal_ver:
+                outdated.append(filename)
+    return outdated, max_normal_ver, max_admin_ver
+
 def list_local_installers(dist_installer_dir):
     """Retorna una lista ordenada de instaladores ejecutables encontrados localmente."""
     if not os.path.exists(dist_installer_dir):
@@ -141,15 +174,19 @@ def main():
     while True:
         print("\nElige una acción:")
         print("1) Subir instalador(es) a GitHub")
-        print("2) Eliminar versiones (releases) antiguas de GitHub")
-        print("3) Salir")
+        print("2) Eliminar versiones (releases) antiguas")
+        print("3) Eliminar Instaladores antiguos")
+        print("4) Salir")
         
-        opcion_menu = input("Elige una opción (1/2/3 - Por defecto [1]): ").strip()
+        opcion_menu = input("Elige una opción (1/2/3/4 - Por defecto [1]): ").strip()
         if not opcion_menu:
             opcion_menu = "1"
             
         if opcion_menu == "1":
             # --- SUBIR INSTALADORES ---
+            current_ver = detect_version()
+            print(f"\nVersion mas reciente detectada: {current_ver}")
+            
             dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
             local_files = list_local_installers(dist_installer_dir)
             
@@ -158,12 +195,12 @@ def main():
                 print("Por favor, genera primero el instalador correspondiente con Inno Setup.")
                 continue
                 
-            print(f"\nInstaladores encontrados en '{dist_installer_dir}':")
+            print("Instaladores disponibles:")
             for i, filename in enumerate(local_files, 1):
                 filepath = os.path.join(dist_installer_dir, filename)
                 size_mb = os.path.getsize(filepath) / 1024 / 1024
                 print(f" {i}) {filename} ({size_mb:.2f} MB)")
-            print(f" {len(local_files) + 1}) Subir TODOS los instaladores listados")
+            print(f" {len(local_files) + 1}) Todos")
             print(f" {len(local_files) + 2}) Volver")
             
             seleccion = input(f"Elige el instalador que deseas subir (1-{len(local_files) + 2} - Por defecto [1]): ").strip()
@@ -193,7 +230,7 @@ def main():
                 continue
                 
             # Extraer versión del primer archivo
-            version = detect_version()  # fallback
+            version = current_ver
             first_filename = files_to_upload[0][0]
             match = re.search(r"(\d+\.\d+\.\d+)", first_filename)
             if match:
@@ -309,12 +346,15 @@ def main():
             
         elif opcion_menu == "2":
             # --- ELIMINAR RELEASES ANTIGUAS ---
+            current_ver = detect_version()
+            print(f"\nVersion mas reciente detectada: {current_ver}")
+            
             releases = get_releases(github_repo, github_token)
             if not releases:
                 print("\n[INFO] No se encontraron releases en GitHub.")
                 continue
                 
-            print("\nReleases encontradas en GitHub:")
+            print("Releases encontradas en GitHub:")
             for i, rel in enumerate(releases, 1):
                 tag = rel.get("tag_name", "Desconocido")
                 name = rel.get("name", "Sin nombre")
@@ -366,69 +406,81 @@ def main():
                 print(f"\n[INFO] Versión más reciente de Instalador Normal en GitHub: {max_normal_tag or 'Ninguna'}")
                 print(f"[INFO] Versión más reciente de Instalador Admin en GitHub: {max_admin_tag or 'Ninguna'}")
                 
-                confirm = input("⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub y archivos locales anteriores, exceptuando las más recientes de cada tipo? (s/n): ").strip().lower()
+                confirm = input("⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub anteriores (exceptuando las más recientes de cada tipo)? (s/n): ").strip().lower()
                 if confirm == "s":
-                    # 1. Eliminar de GitHub
+                    # Eliminar de GitHub
                     for rel in releases:
                         tag = rel.get("tag_name", "")
                         if tag == max_normal_tag or tag == max_admin_tag:
                             print(f"[CONSERVAR] Conservando release '{tag}' por ser la más reciente de su tipo.")
                             continue
                         delete_release(github_repo, github_token, rel["id"], tag)
-                    
-                    # 2. Eliminar de la carpeta local dist-installer
-                    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
-                    local_files = list_local_installers(dist_installer_dir)
-                    print("\n[LOCAL] Limpiando instaladores locales antiguos...")
-                    for filename in local_files:
-                        match = re.search(r"(\d+\.\d+\.\d+)", filename)
-                        if not match:
-                            continue
-                        ver_tuple = parse_version(match.group(1))
-                        
-                        should_delete = False
-                        if "Admin" in filename:
-                            if ver_tuple < max_admin_ver:
-                                should_delete = True
-                        else:
-                            if ver_tuple < max_normal_ver:
-                                should_delete = True
-                                
-                        if should_delete:
-                            filepath = os.path.join(dist_installer_dir, filename)
-                            try:
-                                os.remove(filepath)
-                                print(f"  [DELETE LOCAL] Archivo '{filename}' eliminado.")
-                            except Exception as e:
-                                print(f"  [WARN] No se pudo eliminar archivo local '{filename}': {e}")
                 continue
                 
             if 1 <= idx_del <= len(releases):
                 target_rel = releases[idx_del - 1]
                 tag = target_rel.get("tag_name", "")
-                confirm = input(f"⚠️ ¿Estás 100% seguro de que deseas eliminar permanentemente la release '{tag}', su tag en Git de GitHub y sus archivos locales correspondientes? (s/n): ").strip().lower()
+                confirm = input(f"⚠️ ¿Estás 100% seguro de que deseas eliminar permanentemente la release '{tag}' y su tag en Git de GitHub? (s/n): ").strip().lower()
                 if confirm == "s":
-                    # 1. Eliminar de GitHub
+                    # Eliminar de GitHub
                     delete_release(github_repo, github_token, target_rel["id"], tag)
-                    
-                    # 2. Eliminar de la carpeta local dist-installer
-                    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
-                    local_files = list_local_installers(dist_installer_dir)
-                    version_str = tag.replace("v", "")
-                    
-                    print(f"\n[LOCAL] Buscando archivos locales correspondientes a la versión '{version_str}'...")
-                    for filename in local_files:
-                        if f"-{version_str}.exe" in filename:
-                            filepath = os.path.join(dist_installer_dir, filename)
-                            try:
-                                os.remove(filepath)
-                                print(f"  [DELETE LOCAL] Archivo '{filename}' eliminado.")
-                            except Exception as e:
-                                print(f"  [WARN] No se pudo eliminar archivo local '{filename}': {e}")
             else:
                 print("[ERROR] Opción inválida.")
                 
         elif opcion_menu == "3":
+            # --- ELIMINAR INSTALADORES LOCALES ANTIGUOS ---
+            current_ver = detect_version()
+            print(f"\nVersion mas reciente detectada: {current_ver}")
+            
+            dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+            outdated_files, max_local_normal, max_local_admin = get_outdated_local_installers(dist_installer_dir)
+            
+            if not outdated_files:
+                print("\n[INFO] No se detectaron instaladores desactualizados en dist-installer.")
+                print(f"  (Las versiones locales más recientes son Normal: {'.'.join(map(str, max_local_normal))} y Admin: {'.'.join(map(str, max_local_admin))})")
+                continue
+                
+            print(f"\nInstaladores desactualizados detectados en \\dist-installer:")
+            for i, filename in enumerate(outdated_files, 1):
+                filepath = os.path.join(dist_installer_dir, filename)
+                size_mb = os.path.getsize(filepath) / 1024 / 1024
+                print(f" {i}) {filename} ({size_mb:.2f} MB)")
+            print(f" {len(outdated_files) + 1}) Todos")
+            print(f" {len(outdated_files) + 2}) Volver")
+            
+            seleccion = input(f"Elige el instalador local que deseas eliminar (1-{len(outdated_files) + 2} - Por defecto [1]): ").strip()
+            if not seleccion:
+                seleccion = "1"
+                
+            if not seleccion.isdigit():
+                print("[ERROR] Selección inválida.")
+                continue
+                
+            idx = int(seleccion)
+            if idx == len(outdated_files) + 2:
+                continue  # Volver
+                
+            files_to_delete = []
+            if idx == len(outdated_files) + 1:
+                # Todos
+                files_to_delete = outdated_files
+            elif 1 <= idx <= len(outdated_files):
+                files_to_delete = [outdated_files[idx - 1]]
+            else:
+                print("[ERROR] Selección fuera de rango.")
+                continue
+                
+            confirm = input(f"⚠️ ¿Estás seguro de eliminar permanentemente los {len(files_to_delete)} instalador(es) local(es) seleccionado(s)? (s/n): ").strip().lower()
+            if confirm == "s":
+                for filename in files_to_delete:
+                    filepath = os.path.join(dist_installer_dir, filename)
+                    try:
+                        os.remove(filepath)
+                        print(f"  [DELETE LOCAL] Archivo '{filename}' eliminado.")
+                    except Exception as e:
+                        print(f"  [WARN] No se pudo eliminar archivo local '{filename}': {e}")
+            
+        elif opcion_menu == "4":
             print("\n¡Proceso finalizado!")
             break
         else:
