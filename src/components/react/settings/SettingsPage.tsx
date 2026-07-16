@@ -9,10 +9,17 @@ export const SettingsPage = () => {
     const [autoPick, setAutoPick] = useState<boolean>(false);
     const [autoBan, setAutoBan] = useState<boolean>(false);
     const [autoExecuteSeconds, setAutoExecuteSeconds] = useState<number>(3.5);
+    const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(false);
+    const [autoAcceptDelayPct, setAutoAcceptDelayPct] = useState<number>(80);
     const [puppeteerConcurrency, setPuppeteerConcurrency] = useState<number>(3);
     const [syncPeriodDays, setSyncPeriodDays] = useState<number>(3);
     const [laneSyncPeriodDays, setLaneSyncPeriodDays] = useState<number>(21);
     const [metaSyncFrequency, setMetaSyncFrequency] = useState<number>(2);
+    const [telegramNotificationsEnabled, setTelegramNotificationsEnabled] = useState<boolean>(false);
+    const [telegramBotToken, setTelegramBotToken] = useState<string>('');
+    const [telegramChatId, setTelegramChatId] = useState<string>('');
+    const [testSending, setTestSending] = useState<boolean>(false);
+    const [testSuccess, setTestSuccess] = useState<boolean | null>(null);
     const [engineWeights, setEngineWeights] = useState<any>({
         meta_base: 0.4,
         synergy: 2.2,
@@ -36,13 +43,18 @@ export const SettingsPage = () => {
                 if (res.ok) {
                     const data = await res.json();
                     setLolPath(data.lol_path);
-                    setAutoPick(data.auto_pick);
+                     setAutoPick(data.auto_pick);
                     setAutoBan(data.auto_ban);
                     setAutoExecuteSeconds(data.auto_execute_seconds);
-                    setPuppeteerConcurrency(data.puppeteer_concurrency);
+                    setAutoAcceptEnabled(data.auto_accept_enabled);
+                    setAutoAcceptDelayPct(data.auto_accept_delay_pct || 80);
+                     setPuppeteerConcurrency(data.puppeteer_concurrency);
                     setSyncPeriodDays(data.sync_period_days || 3);
                     setLaneSyncPeriodDays(data.lane_sync_period_days || 21);
                     setMetaSyncFrequency(data.meta_sync_frequency !== undefined ? data.meta_sync_frequency : 2);
+                    setTelegramNotificationsEnabled(data.telegram_notifications_enabled);
+                    setTelegramBotToken(data.telegram_bot_token || '');
+                    setTelegramChatId(data.telegram_chat_id || '');
                     if (data.engine_weights && Object.keys(data.engine_weights).length > 0) {
                         setEngineWeights(data.engine_weights);
                     }
@@ -78,9 +90,14 @@ export const SettingsPage = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     lol_path: lolPathVal,
-                    auto_pick: autoPick,
+                     auto_pick: autoPick,
                     auto_ban: autoBan,
                     auto_execute_seconds: autoExecuteSeconds,
+                     auto_accept_enabled: autoAcceptEnabled,
+                    auto_accept_delay_pct: autoAcceptDelayPct,
+                    telegram_notifications_enabled: telegramNotificationsEnabled,
+                    telegram_bot_token: telegramBotToken,
+                    telegram_chat_id: telegramChatId,
                     puppeteer_concurrency: puppeteerConcurrency,
                     sync_period_days: syncPeriodDays,
                     lane_sync_period_days: laneSyncPeriodDays,
@@ -102,6 +119,32 @@ export const SettingsPage = () => {
             alert("Error al conectar con la API de configuración.");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleTestTelegram = async () => {
+        setTestSending(true);
+        setTestSuccess(null);
+        try {
+            const res = await fetch('/api/telegram-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: '¡Conexión de prueba con HexDraft establecida con éxito! ⚡' })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setTestSuccess(true);
+                setTimeout(() => setTestSuccess(null), 3000);
+            } else {
+                setTestSuccess(false);
+                alert(`Error al enviar mensaje: ${data.error || 'Respuesta no satisfactoria'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            setTestSuccess(false);
+            alert("Error al conectar con la API de notificaciones.");
+        } finally {
+            setTestSending(false);
         }
     };
 
@@ -215,6 +258,115 @@ export const SettingsPage = () => {
                                             <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-md ${autoBan ? 'translate-x-4' : 'translate-x-0'}`} />
                                         </div>
                                     </label>
+                                </div>
+
+                                {/* Auto-Aceptar Partida */}
+                                <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99] w-full sm:w-1/2
+                                        ${autoAcceptEnabled 
+                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]' 
+                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Aceptar Partida</span>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Acepta la partida automáticamente al encontrarla</span>
+                                        </div>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={autoAcceptEnabled} 
+                                            onChange={(e) => setAutoAcceptEnabled(e.target.checked)}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${autoAcceptEnabled ? 'bg-purple-accent' : 'bg-slate-800'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-md ${autoAcceptEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                    </label>
+
+                                    {autoAcceptEnabled && (
+                                        <div className="w-full sm:w-1/2 space-y-3 px-2">
+                                            <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
+                                                <label className="text-purple-accent tracking-widest font-black">Delay de aceptación</label>
+                                                <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoAcceptDelayPct}%</span>
+                                            </div>
+                                            <input 
+                                                type="range" 
+                                                min="10" 
+                                                max="95" 
+                                                step="5" 
+                                                value={autoAcceptDelayPct} 
+                                                onChange={(e) => setAutoAcceptDelayPct(parseFloat(e.target.value))}
+                                                className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
+                                            />
+                                            <p className="text-[9px] text-slate-500 font-bold tracking-wider leading-relaxed uppercase">
+                                                Porcentaje del tiempo transcurrido del cartel de aceptación antes de dar click. Por defecto es 80%.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Notificaciones de Telegram */}
+                                <div className="border-t border-border-warm/50 pt-6 flex flex-col gap-5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Notificaciones de Telegram</span>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Recibe alertas en tu celular en tiempo real</span>
+                                        </div>
+
+                                        <label className={`flex items-center justify-between p-2 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                            ${telegramNotificationsEnabled 
+                                                ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]' 
+                                                : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={telegramNotificationsEnabled} 
+                                                onChange={(e) => setTelegramNotificationsEnabled(e.target.checked)}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${telegramNotificationsEnabled ? 'bg-purple-accent' : 'bg-slate-800'}`}>
+                                                <div className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-md ${telegramNotificationsEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {telegramNotificationsEnabled && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+                                            <div className="space-y-2">
+                                                <label className="block text-[9.5px] uppercase font-black tracking-widest text-slate-300">
+                                                    Token del Bot de Telegram
+                                                </label>
+                                                <input 
+                                                    type="password" 
+                                                    value={telegramBotToken} 
+                                                    onChange={(e) => setTelegramBotToken(e.target.value)}
+                                                    placeholder="123456789:ABCdefGh..." 
+                                                    className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="block text-[9.5px] uppercase font-black tracking-widest text-slate-300">
+                                                    Chat ID de Telegram
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        value={telegramChatId} 
+                                                        onChange={(e) => setTelegramChatId(e.target.value)}
+                                                        placeholder="987654321" 
+                                                        className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                                    />
+                                                    
+                                                    <button 
+                                                        type="button"
+                                                        onClick={handleTestTelegram}
+                                                        disabled={testSending || !telegramBotToken || !telegramChatId}
+                                                        className="px-3 bg-black/40 border border-border-warm hover:border-purple-accent/50 text-slate-300 hover:text-white disabled:opacity-30 text-[9px] uppercase tracking-wider font-black transition-all rounded-sm cursor-pointer shrink-0"
+                                                    >
+                                                        {testSending ? 'Enviando...' : testSuccess ? '¡Enviado! ✓' : 'Probar'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

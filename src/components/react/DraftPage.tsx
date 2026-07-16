@@ -68,6 +68,22 @@ export const DraftPage = () => {
     const apiTimeAtSyncRef = useRef<number>(0);
     const timestampAtSyncRef = useRef<number>(0);
 
+    const notifiedBanRef = useRef<number>(0);
+    const notifiedPickRef = useRef<number>(0);
+    const notifiedStartRef = useRef<boolean>(false);
+
+    const notifyTelegram = async (message: string) => {
+        try {
+            await fetch('/api/telegram-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+        } catch (e) {
+            console.error('[DraftPage] Error al enviar notificación:', e);
+        }
+    };
+
     const isPlaying = gamePhase === 'InProgress';
 
     const myPlayer = myTeam.find(p => p.cellId === localPlayerCellId);
@@ -223,7 +239,18 @@ export const DraftPage = () => {
                 } else {
                     // Recalcular solo como fallback si la lista de la UI está vacía
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
-                    const bans = getProcessedBans(picks).filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
+                    const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+                    const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                    const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                    const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
+                    const bans = getProcessedBans(
+                        picks,
+                        myHoverName,
+                        currentRole,
+                        allyNames,
+                        enemyNames,
+                        bannedNames
+                    ).filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
                     if (bans.length > 0) targetId = bans[0].id;
                 }
             }
@@ -306,6 +333,27 @@ export const DraftPage = () => {
         lastActionKeyRef.current = "none";
         timestampAtSyncRef.current = 0;
         activeActionRef.current = null;
+        
+        notifiedBanRef.current = 0;
+        notifiedPickRef.current = 0;
+        notifiedStartRef.current = false;
+
+        // Limpiar claves del sessionStorage para la siguiente partida
+        try {
+            sessionStorage.removeItem('hexdraft_telegram_notified_readycheck');
+            sessionStorage.removeItem('hexdraft_telegram_notified_accepted');
+            sessionStorage.removeItem('hexdraft_telegram_notified_start');
+            // Eliminar todas las claves de bans y picks de la sesión
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && (key.startsWith('hexdraft_telegram_notified_ban_') || key.startsWith('hexdraft_telegram_notified_pick_'))) {
+                    sessionStorage.removeItem(key);
+                    i--; // Ajustar índice tras remoción
+                }
+            }
+        } catch (e) {
+            console.error("Error al limpiar sessionStorage:", e);
+        }
 
         setInDraft(false);
         setRecommendations([]);
@@ -343,6 +391,38 @@ export const DraftPage = () => {
                     setTheirTeam(data.theirTeam);
                     setLocalPlayerCellId(data.localPlayerCellId || 0);
                     handleTimerSync(data);
+
+                    // --- DETECTAR ACCIONES COMPLETADAS PARA TELEGRAM ---
+                    const cellId = data.localPlayerCellId || 0;
+                    if (cellId > 0 && data.actions) {
+                        const myBanAction = data.actions.flat().find(
+                            (a: any) => a.actorCellId === cellId && a.type === 'ban' && a.completed
+                        );
+                        if (myBanAction && myBanAction.championId > 0 && notifiedBanRef.current !== myBanAction.championId) {
+                            notifiedBanRef.current = myBanAction.championId;
+                            const name = getNameFromId(myBanAction.championId) || `ID ${myBanAction.championId}`;
+                            
+                            const storageKey = `hexdraft_telegram_notified_ban_${myBanAction.championId}`;
+                            if (sessionStorage.getItem(storageKey) !== 'true') {
+                                sessionStorage.setItem(storageKey, 'true');
+                                notifyTelegram(`Fase de Bloqueo: Baneando a <b>${name}</b>.`);
+                            }
+                        }
+
+                        const myPickAction = data.actions.flat().find(
+                            (a: any) => a.actorCellId === cellId && a.type === 'pick' && a.completed
+                        );
+                        if (myPickAction && myPickAction.championId > 0 && notifiedPickRef.current !== myPickAction.championId) {
+                            notifiedPickRef.current = myPickAction.championId;
+                            const name = getNameFromId(myPickAction.championId) || `ID ${myPickAction.championId}`;
+                            
+                            const storageKey = `hexdraft_telegram_notified_pick_${myPickAction.championId}`;
+                            if (sessionStorage.getItem(storageKey) !== 'true') {
+                                sessionStorage.setItem(storageKey, 'true');
+                                notifyTelegram(`Fase de Selección: Campeón bloqueado: <b>${name}</b>.`);
+                            }
+                        }
+                    }
 
                     const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
                     const myId = myPlayer?.championId || 0;
@@ -474,8 +554,19 @@ export const DraftPage = () => {
                         if (fingerprint !== lastFingerprintRef.current) {
                             lastFingerprintRef.current = fingerprint;
 
-                            // Permitimos recomendar baneo de preselecciones en la UI
-                            const bans = getProcessedBans(picks).filter(b => !lockedAndBannedIds.includes(b.id));
+                             // Recomendaciones contextuales de bans en la UI pasando parámetros de draft completos
+                             const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+                             const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                             const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                             const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
+                             const bans = getProcessedBans(
+                                 picks,
+                                 myHoverName,
+                                 currentRole,
+                                 allyNames,
+                                 enemyNames,
+                                 bannedNames
+                             ).filter(b => !lockedAndBannedIds.includes(b.id));
 
                             setRecommendations(picks.slice(0, 30));
                             setBanRecommendations(bans.slice(0, 20));
@@ -486,6 +577,16 @@ export const DraftPage = () => {
             }
             else if (phase === 'InProgress') {
                 nextInterval = 30000;
+
+                if (!notifiedStartRef.current) {
+                    notifiedStartRef.current = true;
+                    
+                    const storageKey = 'hexdraft_telegram_notified_start';
+                    if (sessionStorage.getItem(storageKey) !== 'true') {
+                        sessionStorage.setItem(storageKey, 'true');
+                        notifyTelegram('La partida ha comenzado. ¡Buena suerte en la Grieta! 🎮');
+                    }
+                }
 
                 // 1. Restaurar build desde localStorage si no está en memoria
                 let activeBuild = currentBuild;

@@ -18,6 +18,11 @@ export const GET: APIRoute = async () => {
       last_sync_timestamp: rawConfigs.last_sync_timestamp || '-',
       last_lane_sync_timestamp: rawConfigs.last_lane_sync_timestamp || '-',
       meta_sync_frequency: rawConfigs.meta_sync_frequency !== undefined ? parseFloat(rawConfigs.meta_sync_frequency) : 2,
+      auto_accept_enabled: rawConfigs.auto_accept_enabled === 'true',
+      auto_accept_delay_pct: parseFloat(rawConfigs.auto_accept_delay_pct || '80') || 80,
+      telegram_notifications_enabled: rawConfigs.telegram_notifications_enabled === 'true',
+      telegram_bot_token: rawConfigs.telegram_bot_token || '',
+      telegram_chat_id: rawConfigs.telegram_chat_id || '',
       engine_weights: JSON.parse(rawConfigs.engine_weights || '{}')
     };
 
@@ -74,6 +79,27 @@ export const POST: APIRoute = async ({ request }) => {
     if (payload.meta_sync_frequency !== undefined) {
       const val = parseFloat(payload.meta_sync_frequency);
       if (!isNaN(val)) updates.meta_sync_frequency = String(val);
+    }
+
+    if (payload.auto_accept_enabled !== undefined) {
+      updates.auto_accept_enabled = payload.auto_accept_enabled ? 'true' : 'false';
+    }
+
+    if (payload.auto_accept_delay_pct !== undefined) {
+      const val = parseFloat(payload.auto_accept_delay_pct);
+      if (!isNaN(val)) updates.auto_accept_delay_pct = String(val);
+    }
+
+    if (payload.telegram_notifications_enabled !== undefined) {
+      updates.telegram_notifications_enabled = payload.telegram_notifications_enabled ? 'true' : 'false';
+    }
+
+    if (payload.telegram_bot_token !== undefined) {
+      updates.telegram_bot_token = String(payload.telegram_bot_token).trim();
+    }
+
+    if (payload.telegram_chat_id !== undefined) {
+      updates.telegram_chat_id = String(payload.telegram_chat_id).trim();
     }
     
     if (payload.engine_weights !== undefined) {

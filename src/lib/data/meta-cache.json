@@ -2,2783 +2,2507 @@
   "top": [
     {
       "rank": "1",
-      "name": "Garen",
-      "winRate": "51.35%",
-      "pickRate": "7.71%",
+      "name": "Mordekaiser",
+      "winRate": "52.44%",
+      "pickRate": "6.88%",
       "counters": [
-        "Maokai",
-        "Quinn",
-        "Kayle"
+        "Pantheon",
+        "Dr. Mundo",
+        "Camille"
       ]
     },
     {
       "rank": "2",
-      "name": "Malphite",
-      "winRate": "51.33%",
-      "pickRate": "7.06%",
+      "name": "Riven",
+      "winRate": "53.8%",
+      "pickRate": "3.19%",
       "counters": [
-        "Maokai",
-        "Shen",
-        "Sion"
+        "Mordekaiser",
+        "Sett"
       ]
     },
     {
       "rank": "3",
-      "name": "Gangplank",
-      "winRate": "51.25%",
-      "pickRate": "5.74%",
+      "name": "Malphite",
+      "winRate": "51.23%",
+      "pickRate": "6.59%",
       "counters": [
-        "Maokai",
-        "Urgot",
-        "Ryze"
+        "Cho'Gath",
+        "Dr. Mundo",
+        "Sion"
       ]
     },
     {
       "rank": "4",
-      "name": "Darius",
-      "winRate": "50.38%",
-      "pickRate": "6.66%",
-      "counters": [
-        "Cassiopeia",
-        "Anivia",
-        "Maokai"
-      ]
+      "name": "Quinn",
+      "winRate": "56.81%",
+      "pickRate": "0.83%",
+      "counters": []
     },
     {
       "rank": "5",
-      "name": "Shen",
-      "winRate": "51.25%",
-      "pickRate": "4.28%",
+      "name": "Dr. Mundo",
+      "winRate": "50.88%",
+      "pickRate": "6%",
       "counters": [
-        "Aurora",
-        "Cassiopeia",
-        "Lissandra"
+        "Teemo",
+        "Ambessa",
+        "Zaahen"
       ]
     },
     {
       "rank": "6",
-      "name": "Urgot",
-      "winRate": "52.16%",
-      "pickRate": "2.57%",
+      "name": "Gangplank",
+      "winRate": "50.92%",
+      "pickRate": "5.48%",
       "counters": [
-        "Lissandra",
-        "Cassiopeia",
-        "Wukong"
+        "Singed",
+        "Mordekaiser",
+        "Irelia"
       ]
     },
     {
       "rank": "7",
-      "name": "Aatrox",
-      "winRate": "50.25%",
-      "pickRate": "6.68%",
-      "counters": [
-        "Malzahar",
-        "Varus",
-        "Master Yi"
-      ]
+      "name": "Poppy",
+      "winRate": "54.38%",
+      "pickRate": "1.37%",
+      "counters": []
     },
     {
       "rank": "8",
-      "name": "Singed",
-      "winRate": "51.92%",
-      "pickRate": "2.54%",
+      "name": "Kled",
+      "winRate": "53.2%",
+      "pickRate": "2.08%",
       "counters": [
-        "Cassiopeia",
-        "Aurora",
-        "Kayle"
+        "Aatrox",
+        "Renekton"
       ]
     },
     {
       "rank": "9",
-      "name": "Kayle",
-      "winRate": "51.91%",
-      "pickRate": "2.49%",
+      "name": "Ambessa",
+      "winRate": "50.24%",
+      "pickRate": "5.7%",
       "counters": [
-        "Quinn",
-        "Cassiopeia",
-        "Malphite"
+        "Urgot",
+        "Singed",
+        "Renekton"
       ]
     },
     {
       "rank": "10",
-      "name": "Jax",
-      "winRate": "50.02%",
-      "pickRate": "5.92%",
+      "name": "Garen",
+      "winRate": "49.94%",
+      "pickRate": "6.37%",
       "counters": [
-        "Quinn",
-        "Vladimir",
-        "Kennen"
+        "Gangplank",
+        "Riven",
+        "Yasuo"
       ]
     },
     {
       "rank": "11",
-      "name": "Olaf",
-      "winRate": "51.53%",
-      "pickRate": "2.79%",
+      "name": "Singed",
+      "winRate": "52.24%",
+      "pickRate": "2.87%",
       "counters": [
-        "Heimerdinger",
-        "Ambessa",
-        "Illaoi"
+        "Nasus",
+        "Malphite",
+        "Garen"
       ]
     },
     {
       "rank": "12",
-      "name": "Ornn",
-      "winRate": "50.81%",
-      "pickRate": "4.17%",
+      "name": "Fiora",
+      "winRate": "50.99%",
+      "pickRate": "4.15%",
       "counters": [
-        "Master Yi",
-        "Wukong",
-        "Lissandra"
+        "Riven",
+        "Darius",
+        "Gangplank"
       ]
     },
     {
       "rank": "13",
-      "name": "Yone",
-      "winRate": "49.55%",
-      "pickRate": "6.8%",
+      "name": "Aatrox",
+      "winRate": "49.3%",
+      "pickRate": "7.05%",
       "counters": [
-        "Quinn",
-        "Lissandra",
-        "Master Yi"
+        "Olaf",
+        "Ornn",
+        "Yasuo"
       ]
     },
     {
       "rank": "14",
-      "name": "Dr. Mundo",
-      "winRate": "50.5%",
-      "pickRate": "4.19%",
+      "name": "Jax",
+      "winRate": "49.38%",
+      "pickRate": "6.03%",
       "counters": [
-        "Master Yi",
-        "Aurora",
-        "Quinn"
+        "K'Sante",
+        "Gnar",
+        "Sett"
       ]
     },
     {
       "rank": "15",
-      "name": "Teemo",
-      "winRate": "50.79%",
-      "pickRate": "3.38%",
+      "name": "Darius",
+      "winRate": "49.21%",
+      "pickRate": "6.43%",
       "counters": [
-        "Swain",
-        "Xin Zhao",
-        "Kayle"
+        "Riven",
+        "Singed",
+        "Sett"
       ]
     },
     {
       "rank": "16",
-      "name": "Quinn",
-      "winRate": "53.26%",
-      "pickRate": "0.87%",
+      "name": "Renekton",
+      "winRate": "49.29%",
+      "pickRate": "6.07%",
       "counters": [
-        "Irelia",
-        "Ornn",
-        "Olaf"
+        "Gragas",
+        "Malphite",
+        "Mordekaiser"
       ]
     },
     {
       "rank": "17",
-      "name": "Fiora",
-      "winRate": "50.61%",
-      "pickRate": "3.6%",
+      "name": "Shen",
+      "winRate": "50.6%",
+      "pickRate": "3.79%",
       "counters": [
-        "Quinn",
-        "Swain",
-        "Malphite"
+        "Ambessa",
+        "Jayce",
+        "Mordekaiser"
       ]
     },
     {
       "rank": "18",
-      "name": "Zaahen",
-      "winRate": "50.68%",
-      "pickRate": "3.51%",
-      "counters": [
-        "Quinn",
-        "Aurora",
-        "Malzahar"
-      ]
+      "name": "Warwick",
+      "winRate": "53.4%",
+      "pickRate": "1.33%",
+      "counters": []
     },
     {
       "rank": "19",
-      "name": "Sett",
-      "winRate": "49.98%",
-      "pickRate": "4.88%",
+      "name": "Yorick",
+      "winRate": "50.67%",
+      "pickRate": "3.39%",
       "counters": [
-        "Cassiopeia",
-        "Kayle",
-        "Singed"
+        "Ambessa",
+        "Gangplank",
+        "Yone"
       ]
     },
     {
       "rank": "20",
-      "name": "Pantheon",
-      "winRate": "50.77%",
-      "pickRate": "2.85%",
+      "name": "Yasuo",
+      "winRate": "50.02%",
+      "pickRate": "3.35%",
       "counters": [
-        "Malzahar",
-        "Maokai",
-        "Quinn"
+        "Renekton",
+        "Jax",
+        "Gangplank"
       ]
     },
     {
       "rank": "21",
-      "name": "Riven",
-      "winRate": "50.46%",
-      "pickRate": "3.36%",
+      "name": "Zaahen",
+      "winRate": "50.45%",
+      "pickRate": "3.43%",
       "counters": [
-        "Trundle",
-        "Udyr",
-        "Quinn"
+        "Gragas",
+        "Renekton",
+        "Jax"
       ]
     },
     {
       "rank": "22",
       "name": "Irelia",
-      "winRate": "49.85%",
-      "pickRate": "4.22%",
+      "winRate": "49.58%",
+      "pickRate": "4.21%",
       "counters": [
-        "Udyr",
-        "Warwick",
-        "Singed"
+        "Fiora",
+        "Malphite",
+        "Yasuo"
       ]
     },
     {
       "rank": "23",
-      "name": "Tryndamere",
-      "winRate": "50.56%",
-      "pickRate": "3.2%",
+      "name": "Olaf",
+      "winRate": "50.39%",
+      "pickRate": "3.18%",
       "counters": [
-        "Cassiopeia",
-        "Ornn",
-        "Kennen"
+        "Yone",
+        "Gnar",
+        "Mordekaiser"
       ]
     },
     {
       "rank": "24",
-      "name": "Gragas",
-      "winRate": "50.86%",
-      "pickRate": "2.66%",
-      "counters": [
-        "Quinn",
-        "Zaahen",
-        "Singed"
-      ]
+      "name": "Anivia",
+      "winRate": "53.82%",
+      "pickRate": "0.9%",
+      "counters": []
     },
     {
       "rank": "25",
-      "name": "Renekton",
-      "winRate": "49.37%",
-      "pickRate": "5.55%",
+      "name": "Ornn",
+      "winRate": "49.86%",
+      "pickRate": "3.73%",
       "counters": [
-        "Varus",
-        "Vayne",
-        "Urgot"
+        "Gangplank",
+        "Sett",
+        "Dr. Mundo"
       ]
     },
     {
       "rank": "26",
-      "name": "Camille",
-      "winRate": "50.4%",
-      "pickRate": "3.04%",
+      "name": "Urgot",
+      "winRate": "51.1%",
+      "pickRate": "2.39%",
       "counters": [
-        "Swain",
-        "Heimerdinger",
-        "Malzahar"
+        "Aatrox",
+        "Mordekaiser"
       ]
     },
     {
       "rank": "27",
-      "name": "Warwick",
-      "winRate": "51.63%",
-      "pickRate": "1.5%",
+      "name": "Teemo",
+      "winRate": "50.34%",
+      "pickRate": "3.05%",
       "counters": [
-        "Heimerdinger",
-        "Nasus",
-        "Gragas"
+        "Gangplank",
+        "Sion",
+        "Malphite"
       ]
     },
     {
       "rank": "28",
-      "name": "Illaoi",
-      "winRate": "50.7%",
-      "pickRate": "2.44%",
+      "name": "Gnar",
+      "winRate": "49.28%",
+      "pickRate": "4.49%",
       "counters": [
-        "Yasuo",
-        "Lissandra",
-        "Varus"
-      ]
-    },
-    {
-      "rank": "29",
-      "name": "Yasuo",
-      "winRate": "49.71%",
-      "pickRate": "3.34%",
-      "counters": [
-        "Singed",
-        "Riven",
-        "Malzahar"
-      ]
-    },
-    {
-      "rank": "30",
-      "name": "Akali",
-      "winRate": "50.08%",
-      "pickRate": "2.73%",
-      "counters": [
-        "Sion",
-        "Quinn",
-        "Poppy"
-      ]
-    },
-    {
-      "rank": "31",
-      "name": "Wukong",
-      "winRate": "52.02%",
-      "pickRate": "1.06%",
-      "counters": [
-        "Warwick",
-        "Kennen",
-        "Trundle"
-      ]
-    },
-    {
-      "rank": "32",
-      "name": "Jayce",
-      "winRate": "48.66%",
-      "pickRate": "5.98%",
-      "counters": [
-        "Kled",
-        "Master Yi",
+        "Garen",
+        "Dr. Mundo",
         "Ornn"
       ]
     },
     {
-      "rank": "33",
-      "name": "Yorick",
-      "winRate": "49.79%",
-      "pickRate": "3.38%",
+      "rank": "29",
+      "name": "Sett",
+      "winRate": "49.07%",
+      "pickRate": "4.62%",
       "counters": [
-        "Olaf",
-        "Quinn",
-        "Maokai"
-      ]
-    },
-    {
-      "rank": "34",
-      "name": "Kled",
-      "winRate": "50.94%",
-      "pickRate": "1.84%",
-      "counters": [
-        "Master Yi",
-        "Ornn",
-        "Pantheon"
-      ]
-    },
-    {
-      "rank": "35",
-      "name": "Sion",
-      "winRate": "49.16%",
-      "pickRate": "4.43%",
-      "counters": [
-        "Swain",
-        "Poppy",
+        "Sion",
+        "Zaahen",
         "Fiora"
       ]
     },
     {
-      "rank": "36",
-      "name": "Locke",
-      "winRate": "48.07%",
-      "pickRate": "1.7%",
-      "counters": [
-        "Tahm Kench",
-        "Ambessa",
-        "Riven"
-      ]
-    },
-    {
-      "rank": "37",
-      "name": "Cho'Gath",
-      "winRate": "50.02%",
-      "pickRate": "2.47%",
-      "counters": [
-        "Udyr",
-        "Poppy",
-        "Wukong"
-      ]
-    },
-    {
-      "rank": "38",
-      "name": "Nasus",
-      "winRate": "49.71%",
-      "pickRate": "2.7%",
-      "counters": [
-        "Anivia",
-        "Olaf",
-        "Master Yi"
-      ]
-    },
-    {
-      "rank": "39",
-      "name": "Mordekaiser",
-      "winRate": "48.67%",
-      "pickRate": "4.44%",
-      "counters": [
-        "Master Yi",
-        "Aurora",
-        "Warwick"
-      ]
-    },
-    {
-      "rank": "40",
-      "name": "Ambessa",
-      "winRate": "48.62%",
-      "pickRate": "3.87%",
-      "counters": [
-        "Quinn",
-        "Malzahar",
-        "Heimerdinger"
-      ]
-    },
-    {
-      "rank": "41",
-      "name": "Vladimir",
-      "winRate": "50.12%",
-      "pickRate": "1.64%",
-      "counters": [
-        "Locke",
-        "Anivia",
-        "Tahm Kench"
-      ]
-    },
-    {
-      "rank": "42",
-      "name": "Gnar",
-      "winRate": "48.6%",
-      "pickRate": "3.9%",
-      "counters": [
-        "Malzahar",
-        "Xin Zhao",
-        "Cassiopeia"
-      ]
-    },
-    {
-      "rank": "43",
-      "name": "Poppy",
-      "winRate": "50.51%",
-      "pickRate": "1.25%",
-      "counters": [
-        "Singed",
-        "Kayle",
-        "Vladimir"
-      ]
-    },
-    {
-      "rank": "44",
-      "name": "Gwen",
-      "winRate": "49.56%",
-      "pickRate": "1.99%",
+      "rank": "30",
+      "name": "Vayne",
+      "winRate": "49.57%",
+      "pickRate": "3.43%",
       "counters": [
         "Teemo",
-        "Yasuo",
-        "Singed"
-      ]
-    },
-    {
-      "rank": "45",
-      "name": "Lissandra",
-      "winRate": "51.52%",
-      "pickRate": "0.66%",
-      "counters": [
-        "Gnar",
         "Malphite",
-        "Volibear"
-      ]
-    },
-    {
-      "rank": "46",
-      "name": "Anivia",
-      "winRate": "50.88%",
-      "pickRate": "0.89%",
-      "counters": [
-        "Locke",
-        "Pantheon",
-        "Riven"
-      ]
-    },
-    {
-      "rank": "47",
-      "name": "Vayne",
-      "winRate": "48.52%",
-      "pickRate": "2.9%",
-      "counters": [
-        "Xin Zhao",
-        "Malphite",
-        "Lissandra"
-      ]
-    },
-    {
-      "rank": "48",
-      "name": "Tahm Kench",
-      "winRate": "49.45%",
-      "pickRate": "1.78%",
-      "counters": [
-        "Heimerdinger",
-        "Warwick",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "49",
-      "name": "Volibear",
-      "winRate": "48.62%",
-      "pickRate": "2.37%",
-      "counters": [
-        "Jax",
-        "Ryze",
-        "Urgot"
-      ]
-    },
-    {
-      "rank": "50",
-      "name": "K'Sante",
-      "winRate": "47.43%",
-      "pickRate": "4.32%",
-      "counters": [
-        "Malzahar",
-        "Lissandra",
-        "Singed"
-      ]
-    },
-    {
-      "rank": "51",
-      "name": "Kennen",
-      "winRate": "49.18%",
-      "pickRate": "1.59%",
-      "counters": [
-        "Kled",
-        "Warwick",
-        "Cassiopeia"
-      ]
-    },
-    {
-      "rank": "52",
-      "name": "Heimerdinger",
-      "winRate": "49.7%",
-      "pickRate": "1.07%",
-      "counters": [
-        "Gangplank",
-        "Gwen",
-        "Wukong"
-      ]
-    },
-    {
-      "rank": "53",
-      "name": "Aurora",
-      "winRate": "50.29%",
-      "pickRate": "0.63%",
-      "counters": [
-        "Locke",
-        "Illaoi",
-        "Irelia"
-      ]
-    },
-    {
-      "rank": "54",
-      "name": "Udyr",
-      "winRate": "50.2%",
-      "pickRate": "0.61%",
-      "counters": [
-        "Kayle",
-        "Urgot",
-        "Vayne"
-      ]
-    },
-    {
-      "rank": "55",
-      "name": "Cassiopeia",
-      "winRate": "49.97%",
-      "pickRate": "0.66%",
-      "counters": [
-        "Olaf",
-        "Illaoi",
-        "Tahm Kench"
-      ]
-    }
-  ],
-  "jungle": [
-    {
-      "rank": "1",
-      "name": "Nocturne",
-      "winRate": "51.68%",
-      "pickRate": "6.95%",
-      "counters": [
-        "Nasus",
-        "Rammus",
-        "Volibear"
-      ]
-    },
-    {
-      "rank": "2",
-      "name": "Sylas",
-      "winRate": "50.14%",
-      "pickRate": "8.88%",
-      "counters": [
-        "Poppy",
-        "Warwick",
-        "Taliyah"
-      ]
-    },
-    {
-      "rank": "3",
-      "name": "Wukong",
-      "winRate": "51.1%",
-      "pickRate": "5.76%",
-      "counters": [
-        "Jax",
-        "Zyra",
-        "Nunu & Willump"
-      ]
-    },
-    {
-      "rank": "4",
-      "name": "Naafiri",
-      "winRate": "50.23%",
-      "pickRate": "7.01%",
-      "counters": [
-        "Taliyah",
-        "Diana",
-        "Ivern"
-      ]
-    },
-    {
-      "rank": "5",
-      "name": "Nasus",
-      "winRate": "51.97%",
-      "pickRate": "3.14%",
-      "counters": [
-        "Ivern",
-        "Gragas",
-        "Volibear"
-      ]
-    },
-    {
-      "rank": "6",
-      "name": "Graves",
-      "winRate": "49.68%",
-      "pickRate": "11%",
-      "counters": [
-        "Taliyah",
-        "Olaf",
-        "Zyra"
-      ]
-    },
-    {
-      "rank": "7",
-      "name": "Lee Sin",
-      "winRate": "49.3%",
-      "pickRate": "13%",
-      "counters": [
-        "Taliyah",
-        "Skarner",
-        "Naafiri"
-      ]
-    },
-    {
-      "rank": "8",
-      "name": "Master Yi",
-      "winRate": "50.5%",
-      "pickRate": "5.82%",
-      "counters": [
-        "Udyr",
-        "Shaco",
-        "Ivern"
-      ]
-    },
-    {
-      "rank": "9",
-      "name": "Viego",
-      "winRate": "49.64%",
-      "pickRate": "9.64%",
-      "counters": [
-        "Rammus",
-        "Gwen",
-        "Rek'Sai"
-      ]
-    },
-    {
-      "rank": "10",
-      "name": "Bel'Veth",
-      "winRate": "52.07%",
-      "pickRate": "2.38%",
-      "counters": [
-        "Malphite",
-        "Darius",
-        "Taliyah"
-      ]
-    },
-    {
-      "rank": "11",
-      "name": "Kayn",
-      "winRate": "50.25%",
-      "pickRate": "6.64%",
-      "counters": [
-        "Bel'Veth",
-        "Nunu & Willump",
-        "Ivern"
-      ]
-    },
-    {
-      "rank": "12",
-      "name": "Briar",
-      "winRate": "50.82%",
-      "pickRate": "4.65%",
-      "counters": [
-        "Dr. Mundo",
-        "Nunu & Willump",
-        "Ivern"
-      ]
-    },
-    {
-      "rank": "13",
-      "name": "Jarvan IV",
-      "winRate": "50.09%",
-      "pickRate": "7.02%",
-      "counters": [
-        "Rammus",
-        "Talon",
-        "Taliyah"
-      ]
-    },
-    {
-      "rank": "14",
-      "name": "Udyr",
-      "winRate": "52.14%",
-      "pickRate": "2.1%",
-      "counters": [
-        "Pantheon",
-        "Darius",
-        "Ekko"
-      ]
-    },
-    {
-      "rank": "15",
-      "name": "Talon",
-      "winRate": "50.37%",
-      "pickRate": "5.34%",
-      "counters": [
-        "Fizz",
-        "Dr. Mundo",
-        "Bel'Veth"
-      ]
-    },
-    {
-      "rank": "16",
-      "name": "Kha'Zix",
-      "winRate": "50.24%",
-      "pickRate": "6.03%",
-      "counters": [
-        "Sejuani",
-        "Warwick",
-        "Naafiri"
-      ]
-    },
-    {
-      "rank": "17",
-      "name": "Shaco",
-      "winRate": "50.63%",
-      "pickRate": "4.18%",
-      "counters": [
-        "Fizz",
-        "Udyr",
-        "Gragas"
-      ]
-    },
-    {
-      "rank": "18",
-      "name": "Vi",
-      "winRate": "50.22%",
-      "pickRate": "4.88%",
-      "counters": [
-        "Nunu & Willump",
-        "Kindred",
-        "Udyr"
-      ]
-    },
-    {
-      "rank": "19",
-      "name": "Nunu & Willump",
-      "winRate": "51.63%",
-      "pickRate": "2.08%",
-      "counters": [
-        "Gragas",
-        "Jax",
-        "Ivern"
-      ]
-    },
-    {
-      "rank": "20",
-      "name": "Nidalee",
-      "winRate": "50.84%",
-      "pickRate": "3.08%",
-      "counters": [
-        "Udyr",
-        "Dr. Mundo",
-        "Fizz"
-      ]
-    },
-    {
-      "rank": "21",
-      "name": "Shyvana",
-      "winRate": "50.68%",
-      "pickRate": "3.31%",
-      "counters": [
-        "Darius",
-        "Ivern",
-        "Jax"
-      ]
-    },
-    {
-      "rank": "22",
-      "name": "Rammus",
-      "winRate": "51.97%",
-      "pickRate": "1.58%",
-      "counters": [
-        "Ivern",
-        "Aatrox",
-        "Udyr"
-      ]
-    },
-    {
-      "rank": "23",
-      "name": "Ekko",
-      "winRate": "50.36%",
-      "pickRate": "3.88%",
-      "counters": [
-        "Ambessa",
-        "Kha'Zix",
-        "Nunu & Willump"
-      ]
-    },
-    {
-      "rank": "24",
-      "name": "Hecarim",
-      "winRate": "50.03%",
-      "pickRate": "4.23%",
-      "counters": [
-        "Malphite",
-        "Ivern",
-        "Poppy"
-      ]
-    },
-    {
-      "rank": "25",
-      "name": "Aatrox",
-      "winRate": "51.59%",
-      "pickRate": "1.56%",
-      "counters": [
-        "Lillia",
-        "Taliyah",
-        "Jax"
-      ]
-    },
-    {
-      "rank": "26",
-      "name": "Fiddlesticks",
-      "winRate": "51.34%",
-      "pickRate": "1.98%",
-      "counters": [
-        "Volibear",
-        "Rek'Sai",
-        "Udyr"
-      ]
-    },
-    {
-      "rank": "27",
-      "name": "Warwick",
-      "winRate": "50.91%",
-      "pickRate": "2.52%",
-      "counters": [
-        "Darius",
-        "Taliyah",
-        "Rammus"
-      ]
-    },
-    {
-      "rank": "28",
-      "name": "Ivern",
-      "winRate": "52.24%",
-      "pickRate": "1.11%",
-      "counters": [
-        "Olaf",
-        "Bel'Veth",
-        "Rek'Sai"
-      ]
-    },
-    {
-      "rank": "29",
-      "name": "Diana",
-      "winRate": "49.8%",
-      "pickRate": "4.2%",
-      "counters": [
-        "Gwen",
-        "Evelynn",
-        "Nasus"
-      ]
-    },
-    {
-      "rank": "30",
-      "name": "Evelynn",
-      "winRate": "50.72%",
-      "pickRate": "2.43%",
-      "counters": [
-        "Darius",
-        "Rammus",
-        "Poppy"
-      ]
-    },
-    {
-      "rank": "31",
-      "name": "Kindred",
-      "winRate": "50.63%",
-      "pickRate": "2.46%",
-      "counters": [
-        "Gragas",
-        "Gwen",
         "Aatrox"
       ]
     },
     {
+      "rank": "31",
+      "name": "Kayle",
+      "winRate": "50.9%",
+      "pickRate": "2.11%",
+      "counters": []
+    },
+    {
       "rank": "32",
-      "name": "Rengar",
-      "winRate": "49.4%",
-      "pickRate": "4.23%",
+      "name": "Sion",
+      "winRate": "49.19%",
+      "pickRate": "3.68%",
       "counters": [
-        "Aatrox",
-        "Gwen",
+        "Zaahen",
+        "Yone",
         "Darius"
       ]
     },
     {
       "rank": "33",
-      "name": "Zyra",
-      "winRate": "51.88%",
-      "pickRate": "0.99%",
+      "name": "Tryndamere",
+      "winRate": "49.73%",
+      "pickRate": "3%",
       "counters": [
-        "Skarner",
-        "Zed",
-        "Shaco"
+        "Mordekaiser",
+        "Gangplank",
+        "Aatrox"
       ]
     },
     {
       "rank": "34",
-      "name": "Lillia",
-      "winRate": "50.09%",
-      "pickRate": "2.33%",
+      "name": "Yone",
+      "winRate": "47.17%",
+      "pickRate": "6.82%",
       "counters": [
-        "Jayce",
-        "Ivern",
-        "Gragas"
+        "Pantheon",
+        "Teemo",
+        "Mordekaiser"
       ]
     },
     {
       "rank": "35",
-      "name": "Rek'Sai",
-      "winRate": "50.52%",
-      "pickRate": "1.8%",
+      "name": "Illaoi",
+      "winRate": "50.36%",
+      "pickRate": "2.21%",
       "counters": [
-        "Vi",
-        "Nidalee",
-        "Kindred"
+        "Dr. Mundo"
       ]
     },
     {
       "rank": "36",
-      "name": "Zac",
-      "winRate": "49.91%",
-      "pickRate": "2.42%",
+      "name": "Camille",
+      "winRate": "49.38%",
+      "pickRate": "2.82%",
       "counters": [
+        "Renekton",
         "Aatrox",
-        "Gwen",
-        "Fiddlesticks"
+        "Jax"
       ]
     },
     {
       "rank": "37",
-      "name": "Xin Zhao",
-      "winRate": "49.34%",
-      "pickRate": "3.32%",
+      "name": "Jayce",
+      "winRate": "47.38%",
+      "pickRate": "5.55%",
       "counters": [
-        "Volibear",
-        "Taliyah",
-        "Ivern"
+        "Olaf",
+        "Ornn",
+        "Zaahen"
       ]
     },
     {
       "rank": "38",
-      "name": "Taliyah",
-      "winRate": "51.95%",
-      "pickRate": "0.73%",
+      "name": "Nasus",
+      "winRate": "49.28%",
+      "pickRate": "2.55%",
       "counters": [
-        "Shaco",
-        "Master Yi",
-        "Diana"
+        "Mordekaiser",
+        "Garen"
       ]
     },
     {
       "rank": "39",
-      "name": "Elise",
-      "winRate": "49.89%",
-      "pickRate": "2.11%",
-      "counters": [
-        "Gwen",
-        "Shyvana",
-        "Taliyah"
-      ]
+      "name": "Rumble",
+      "winRate": "51.12%",
+      "pickRate": "1.44%",
+      "counters": []
     },
     {
       "rank": "40",
-      "name": "Sejuani",
-      "winRate": "50.26%",
-      "pickRate": "1.68%",
+      "name": "Cho'Gath",
+      "winRate": "49.45%",
+      "pickRate": "2.38%",
       "counters": [
-        "Zyra",
-        "Aatrox",
-        "Malphite"
+        "Dr. Mundo"
       ]
     },
     {
       "rank": "41",
-      "name": "Darius",
-      "winRate": "51.33%",
-      "pickRate": "0.72%",
+      "name": "Pantheon",
+      "winRate": "48.9%",
+      "pickRate": "2.66%",
       "counters": [
-        "Amumu",
-        "Shaco",
-        "Zac"
+        "Dr. Mundo",
+        "Jayce",
+        "Ambessa"
       ]
     },
     {
       "rank": "42",
-      "name": "Skarner",
-      "winRate": "50.42%",
-      "pickRate": "1.18%",
+      "name": "Gragas",
+      "winRate": "48.82%",
+      "pickRate": "2.72%",
       "counters": [
-        "Ambessa",
-        "Rek'Sai",
-        "Amumu"
+        "Garen",
+        "Dr. Mundo",
+        "Jax"
       ]
     },
     {
       "rank": "43",
-      "name": "Jax",
-      "winRate": "49.5%",
-      "pickRate": "1.55%",
+      "name": "K'Sante",
+      "winRate": "47.65%",
+      "pickRate": "4.05%",
       "counters": [
-        "Quinn",
-        "Malphite",
-        "Jayce"
+        "Fiora",
+        "Ambessa",
+        "Garen"
       ]
     },
     {
       "rank": "44",
-      "name": "Jayce",
-      "winRate": "48.53%",
-      "pickRate": "2.32%",
-      "counters": [
-        "Fizz",
-        "Nocturne",
-        "Kindred"
-      ]
+      "name": "Malzahar",
+      "winRate": "52.66%",
+      "pickRate": "0.55%",
+      "counters": []
     },
     {
       "rank": "45",
-      "name": "Gragas",
-      "winRate": "50.68%",
-      "pickRate": "0.7%",
-      "counters": [
-        "Elise",
-        "Zac",
-        "Evelynn"
-      ]
+      "name": "Kennen",
+      "winRate": "49.37%",
+      "pickRate": "1.51%",
+      "counters": []
     },
     {
       "rank": "46",
-      "name": "Quinn",
-      "winRate": "48.93%",
-      "pickRate": "1.4%",
-      "counters": [
-        "Taliyah",
-        "Amumu",
-        "Evelynn"
-      ]
+      "name": "Lissandra",
+      "winRate": "51.89%",
+      "pickRate": "0.54%",
+      "counters": []
     },
     {
       "rank": "47",
-      "name": "Qiyana",
-      "winRate": "47.64%",
-      "pickRate": "2.76%",
-      "counters": [
-        "Taliyah",
-        "Bel'Veth",
-        "Fiddlesticks"
-      ]
+      "name": "Locke",
+      "winRate": "46.33%",
+      "pickRate": "1.23%",
+      "counters": []
     },
     {
       "rank": "48",
-      "name": "Gwen",
-      "winRate": "50.21%",
-      "pickRate": "0.61%",
+      "name": "Volibear",
+      "winRate": "47.9%",
+      "pickRate": "2.23%",
       "counters": [
-        "Shyvana",
         "Jax",
-        "Bel'Veth"
+        "Mordekaiser",
+        "Darius"
       ]
     },
     {
       "rank": "49",
-      "name": "Poppy",
-      "winRate": "49.33%",
-      "pickRate": "0.93%",
+      "name": "Tahm Kench",
+      "winRate": "48.57%",
+      "pickRate": "1.63%",
       "counters": [
-        "Amumu",
-        "Sejuani",
-        "Skarner"
+        "Darius"
       ]
     },
     {
       "rank": "50",
-      "name": "Amumu",
-      "winRate": "48.34%",
-      "pickRate": "1.52%",
+      "name": "Akali",
+      "winRate": "46.92%",
+      "pickRate": "2.47%",
       "counters": [
-        "Aatrox",
-        "Ambessa",
-        "Fiddlesticks"
+        "Malphite",
+        "Jax"
       ]
     },
     {
       "rank": "51",
-      "name": "Zed",
-      "winRate": "47.13%",
-      "pickRate": "2.13%",
+      "name": "Wukong",
+      "winRate": "49.67%",
+      "pickRate": "0.89%",
+      "counters": []
+    },
+    {
+      "rank": "52",
+      "name": "Heimerdinger",
+      "winRate": "48.64%",
+      "pickRate": "1.18%",
+      "counters": []
+    },
+    {
+      "rank": "53",
+      "name": "Cassiopeia",
+      "winRate": "49.89%",
+      "pickRate": "0.69%",
+      "counters": []
+    },
+    {
+      "rank": "54",
+      "name": "Vladimir",
+      "winRate": "47.46%",
+      "pickRate": "1.44%",
+      "counters": []
+    },
+    {
+      "rank": "55",
+      "name": "Swain",
+      "winRate": "48.21%",
+      "pickRate": "0.9%",
+      "counters": []
+    }
+  ],
+  "jungle": [
+    {
+      "rank": "1",
+      "name": "Naafiri",
+      "winRate": "51.39%",
+      "pickRate": "7.08%",
+      "counters": [
+        "Nasus",
+        "Wukong",
+        "Kayn"
+      ]
+    },
+    {
+      "rank": "2",
+      "name": "Lee Sin",
+      "winRate": "50.08%",
+      "pickRate": "14.42%",
+      "counters": [
+        "Udyr",
+        "Warwick",
+        "Rek'Sai"
+      ]
+    },
+    {
+      "rank": "3",
+      "name": "Udyr",
+      "winRate": "53.68%",
+      "pickRate": "2.3%",
+      "counters": [
+        "Jarvan IV",
+        "Graves",
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "4",
+      "name": "Rek'Sai",
+      "winRate": "53.69%",
+      "pickRate": "1.7%",
+      "counters": []
+    },
+    {
+      "rank": "5",
+      "name": "Nasus",
+      "winRate": "51.9%",
+      "pickRate": "3.76%",
+      "counters": [
+        "Kayn",
+        "Viego",
+        "Shyvana"
+      ]
+    },
+    {
+      "rank": "6",
+      "name": "Bel'Veth",
+      "winRate": "52.65%",
+      "pickRate": "2.45%",
+      "counters": [
+        "Sylas",
+        "Lee Sin",
+        "Viego"
+      ]
+    },
+    {
+      "rank": "7",
+      "name": "Sylas",
+      "winRate": "49.52%",
+      "pickRate": "8.72%",
       "counters": [
         "Kindred",
-        "Taliyah",
-        "Olaf"
+        "Kha'Zix",
+        "Warwick"
+      ]
+    },
+    {
+      "rank": "8",
+      "name": "Graves",
+      "winRate": "49.52%",
+      "pickRate": "10.16%",
+      "counters": [
+        "Rek'Sai",
+        "Wukong",
+        "Xin Zhao"
+      ]
+    },
+    {
+      "rank": "9",
+      "name": "Wukong",
+      "winRate": "50.74%",
+      "pickRate": "5.9%",
+      "counters": [
+        "Lillia",
+        "Shaco",
+        "Talon"
+      ]
+    },
+    {
+      "rank": "10",
+      "name": "Nocturne",
+      "winRate": "50.04%",
+      "pickRate": "7.26%",
+      "counters": [
+        "Jarvan IV",
+        "Shaco",
+        "Kayn"
+      ]
+    },
+    {
+      "rank": "11",
+      "name": "Rengar",
+      "winRate": "51.06%",
+      "pickRate": "4.07%",
+      "counters": [
+        "Graves",
+        "Naafiri",
+        "Jarvan IV"
+      ]
+    },
+    {
+      "rank": "12",
+      "name": "Viego",
+      "winRate": "49.15%",
+      "pickRate": "9.77%",
+      "counters": [
+        "Nidalee",
+        "Zac",
+        "Rengar"
+      ]
+    },
+    {
+      "rank": "13",
+      "name": "Jarvan IV",
+      "winRate": "49.85%",
+      "pickRate": "7.14%",
+      "counters": [
+        "Talon",
+        "Naafiri",
+        "Kayn"
+      ]
+    },
+    {
+      "rank": "14",
+      "name": "Nidalee",
+      "winRate": "51.6%",
+      "pickRate": "3.01%",
+      "counters": [
+        "Vi",
+        "Naafiri",
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "15",
+      "name": "Kayn",
+      "winRate": "50.03%",
+      "pickRate": "6.27%",
+      "counters": [
+        "Zac",
+        "Talon",
+        "Ekko"
+      ]
+    },
+    {
+      "rank": "16",
+      "name": "Kha'Zix",
+      "winRate": "49.99%",
+      "pickRate": "5.64%",
+      "counters": [
+        "Naafiri",
+        "Rengar",
+        "Warwick"
+      ]
+    },
+    {
+      "rank": "17",
+      "name": "Xin Zhao",
+      "winRate": "50.45%",
+      "pickRate": "4.35%",
+      "counters": [
+        "Naafiri",
+        "Viego",
+        "Rengar"
+      ]
+    },
+    {
+      "rank": "18",
+      "name": "Ivern",
+      "winRate": "53.04%",
+      "pickRate": "1.1%",
+      "counters": []
+    },
+    {
+      "rank": "19",
+      "name": "Hecarim",
+      "winRate": "50.09%",
+      "pickRate": "4.74%",
+      "counters": [
+        "Lillia",
+        "Nidalee",
+        "Shyvana"
+      ]
+    },
+    {
+      "rank": "20",
+      "name": "Master Yi",
+      "winRate": "49.72%",
+      "pickRate": "5.29%",
+      "counters": [
+        "Kindred",
+        "Graves",
+        "Wukong"
+      ]
+    },
+    {
+      "rank": "21",
+      "name": "Shyvana",
+      "winRate": "50.97%",
+      "pickRate": "2.99%",
+      "counters": [
+        "Sylas",
+        "Naafiri",
+        "Lee Sin"
+      ]
+    },
+    {
+      "rank": "22",
+      "name": "Taliyah",
+      "winRate": "53.58%",
+      "pickRate": "0.75%",
+      "counters": []
+    },
+    {
+      "rank": "23",
+      "name": "Elise",
+      "winRate": "51.59%",
+      "pickRate": "2.01%",
+      "counters": [
+        "Nocturne",
+        "Viego"
+      ]
+    },
+    {
+      "rank": "24",
+      "name": "Poppy",
+      "winRate": "53.44%",
+      "pickRate": "0.74%",
+      "counters": []
+    },
+    {
+      "rank": "25",
+      "name": "Talon",
+      "winRate": "49.53%",
+      "pickRate": "5.14%",
+      "counters": [
+        "Nasus",
+        "Sylas",
+        "Xin Zhao"
+      ]
+    },
+    {
+      "rank": "26",
+      "name": "Briar",
+      "winRate": "49.77%",
+      "pickRate": "4.37%",
+      "counters": [
+        "Shyvana",
+        "Nasus",
+        "Vi"
+      ]
+    },
+    {
+      "rank": "27",
+      "name": "Ekko",
+      "winRate": "50.17%",
+      "pickRate": "3.5%",
+      "counters": [
+        "Shaco",
+        "Kha'Zix",
+        "Briar"
+      ]
+    },
+    {
+      "rank": "28",
+      "name": "Shaco",
+      "winRate": "49.71%",
+      "pickRate": "4.02%",
+      "counters": [
+        "Kayn",
+        "Kha'Zix",
+        "Lee Sin"
+      ]
+    },
+    {
+      "rank": "29",
+      "name": "Kindred",
+      "winRate": "50.42%",
+      "pickRate": "2.63%",
+      "counters": [
+        "Wukong",
+        "Kha'Zix",
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "30",
+      "name": "Quinn",
+      "winRate": "51.87%",
+      "pickRate": "1.25%",
+      "counters": []
+    },
+    {
+      "rank": "31",
+      "name": "Vi",
+      "winRate": "48.43%",
+      "pickRate": "5.67%",
+      "counters": [
+        "Shaco",
+        "Kayn",
+        "Jarvan IV"
+      ]
+    },
+    {
+      "rank": "32",
+      "name": "Zac",
+      "winRate": "50.03%",
+      "pickRate": "2.52%",
+      "counters": [
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "33",
+      "name": "Gwen",
+      "winRate": "52.82%",
+      "pickRate": "0.52%",
+      "counters": []
+    },
+    {
+      "rank": "34",
+      "name": "Aatrox",
+      "winRate": "50.14%",
+      "pickRate": "1.55%",
+      "counters": [
+        "Lee Sin"
+      ]
+    },
+    {
+      "rank": "35",
+      "name": "Volibear",
+      "winRate": "51.79%",
+      "pickRate": "0.73%",
+      "counters": []
+    },
+    {
+      "rank": "36",
+      "name": "Sejuani",
+      "winRate": "50.08%",
+      "pickRate": "1.75%",
+      "counters": [
+        "Lee Sin",
+        "Jarvan IV"
+      ]
+    },
+    {
+      "rank": "37",
+      "name": "Lillia",
+      "winRate": "49.44%",
+      "pickRate": "2.36%",
+      "counters": [
+        "Graves",
+        "Viego",
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "38",
+      "name": "Jax",
+      "winRate": "49.68%",
+      "pickRate": "1.82%",
+      "counters": [
+        "Master Yi",
+        "Graves"
+      ]
+    },
+    {
+      "rank": "39",
+      "name": "Diana",
+      "winRate": "48.26%",
+      "pickRate": "3.44%",
+      "counters": [
+        "Xin Zhao",
+        "Sylas",
+        "Nocturne"
+      ]
+    },
+    {
+      "rank": "40",
+      "name": "Nunu & Willump",
+      "winRate": "49.32%",
+      "pickRate": "2.03%",
+      "counters": [
+        "Jarvan IV"
+      ]
+    },
+    {
+      "rank": "41",
+      "name": "Fiddlesticks",
+      "winRate": "49.44%",
+      "pickRate": "1.82%",
+      "counters": []
+    },
+    {
+      "rank": "42",
+      "name": "Warwick",
+      "winRate": "48.68%",
+      "pickRate": "2.6%",
+      "counters": [
+        "Naafiri",
+        "Master Yi",
+        "Jarvan IV"
+      ]
+    },
+    {
+      "rank": "43",
+      "name": "Dr. Mundo",
+      "winRate": "51.01%",
+      "pickRate": "0.72%",
+      "counters": []
+    },
+    {
+      "rank": "44",
+      "name": "Evelynn",
+      "winRate": "48.48%",
+      "pickRate": "2.35%",
+      "counters": [
+        "Nocturne",
+        "Naafiri",
+        "Viego"
+      ]
+    },
+    {
+      "rank": "45",
+      "name": "Fizz",
+      "winRate": "50.75%",
+      "pickRate": "0.68%",
+      "counters": []
+    },
+    {
+      "rank": "46",
+      "name": "Darius",
+      "winRate": "50.46%",
+      "pickRate": "0.64%",
+      "counters": []
+    },
+    {
+      "rank": "47",
+      "name": "Rammus",
+      "winRate": "48.69%",
+      "pickRate": "1.51%",
+      "counters": [
+        "Viego",
+        "Graves",
+        "Master Yi"
+      ]
+    },
+    {
+      "rank": "48",
+      "name": "Karthus",
+      "winRate": "49.06%",
+      "pickRate": "1.24%",
+      "counters": [
+        "Lee Sin"
+      ]
+    },
+    {
+      "rank": "49",
+      "name": "Ambessa",
+      "winRate": "48.48%",
+      "pickRate": "1.53%",
+      "counters": [
+        "Viego",
+        "Lee Sin"
+      ]
+    },
+    {
+      "rank": "50",
+      "name": "Qiyana",
+      "winRate": "46.78%",
+      "pickRate": "3.6%",
+      "counters": [
+        "Sylas",
+        "Graves",
+        "Briar"
+      ]
+    },
+    {
+      "rank": "51",
+      "name": "Jayce",
+      "winRate": "47.49%",
+      "pickRate": "2.13%",
+      "counters": [
+        "Jarvan IV",
+        "Nocturne",
+        "Naafiri"
       ]
     },
     {
       "rank": "52",
-      "name": "Ambessa",
-      "winRate": "48.32%",
-      "pickRate": "1.12%",
+      "name": "Skarner",
+      "winRate": "48.63%",
+      "pickRate": "1.17%",
       "counters": [
-        "Nidalee",
-        "Elise",
-        "Bel'Veth"
+        "Lee Sin"
       ]
     },
     {
       "rank": "53",
-      "name": "Volibear",
-      "winRate": "48.96%",
-      "pickRate": "0.81%",
+      "name": "Zed",
+      "winRate": "46.85%",
+      "pickRate": "2.15%",
       "counters": [
-        "Jax",
-        "Rek'Sai",
-        "Zac"
+        "Lee Sin",
+        "Graves"
       ]
     },
     {
       "rank": "54",
-      "name": "Karthus",
-      "winRate": "48.31%",
-      "pickRate": "1.18%",
-      "counters": [
-        "Rammus",
-        "Udyr",
-        "Evelynn"
-      ]
+      "name": "Amumu",
+      "winRate": "48.08%",
+      "pickRate": "1.29%",
+      "counters": []
     },
     {
       "rank": "55",
-      "name": "Olaf",
-      "winRate": "48.87%",
-      "pickRate": "0.8%",
-      "counters": [
-        "Ekko",
-        "Bel'Veth",
-        "Nidalee"
-      ]
+      "name": "Zyra",
+      "winRate": "48.54%",
+      "pickRate": "0.85%",
+      "counters": []
     }
   ],
   "mid": [
     {
       "rank": "1",
       "name": "Locke",
-      "winRate": "51.17%",
-      "pickRate": "9.98%",
+      "winRate": "52.88%",
+      "pickRate": "7.58%",
       "counters": [
-        "Katarina",
-        "Naafiri",
-        "Sion"
+        "Yasuo",
+        "Aurelion Sol",
+        "Lissandra"
       ]
     },
     {
       "rank": "2",
-      "name": "Katarina",
-      "winRate": "51.51%",
-      "pickRate": "7.08%",
+      "name": "Sylas",
+      "winRate": "50.71%",
+      "pickRate": "9.42%",
       "counters": [
-        "Jayce",
-        "Vladimir",
+        "Talon",
+        "Malzahar",
         "Galio"
       ]
     },
     {
       "rank": "3",
-      "name": "Sylas",
-      "winRate": "50.72%",
-      "pickRate": "8.82%",
+      "name": "Ahri",
+      "winRate": "50.93%",
+      "pickRate": "9.63%",
       "counters": [
-        "Pantheon",
-        "Brand",
-        "Kayle"
+        "Kassadin",
+        "Syndra",
+        "Taliyah"
       ]
     },
     {
       "rank": "4",
-      "name": "Ahri",
-      "winRate": "50.86%",
-      "pickRate": "9.49%",
-      "counters": [
-        "Brand",
-        "Annie",
-        "Zoe"
-      ]
-    },
-    {
-      "rank": "5",
-      "name": "Syndra",
-      "winRate": "50.65%",
-      "pickRate": "7.85%",
-      "counters": [
-        "Locke",
-        "Veigar",
-        "Qiyana"
-      ]
-    },
-    {
-      "rank": "6",
-      "name": "Vladimir",
-      "winRate": "51.42%",
-      "pickRate": "4.63%",
-      "counters": [
-        "Cho'Gath",
-        "Riven",
-        "Malzahar"
-      ]
-    },
-    {
-      "rank": "7",
-      "name": "Viktor",
-      "winRate": "50.04%",
-      "pickRate": "9.28%",
-      "counters": [
-        "Brand",
-        "Zoe",
-        "Jayce"
-      ]
-    },
-    {
-      "rank": "8",
       "name": "Xerath",
-      "winRate": "51.08%",
-      "pickRate": "4.76%",
+      "winRate": "52.3%",
+      "pickRate": "4.33%",
       "counters": [
-        "Ekko",
-        "Talon",
+        "Lux",
+        "Katarina",
         "Fizz"
       ]
     },
     {
-      "rank": "9",
-      "name": "Lissandra",
-      "winRate": "50.83%",
-      "pickRate": "5.24%",
+      "rank": "5",
+      "name": "Viktor",
+      "winRate": "50.45%",
+      "pickRate": "9.54%",
       "counters": [
-        "Kayle",
-        "Zoe",
-        "Annie"
+        "Vex",
+        "Sylas",
+        "Zoe"
+      ]
+    },
+    {
+      "rank": "6",
+      "name": "Katarina",
+      "winRate": "50.95%",
+      "pickRate": "7.31%",
+      "counters": [
+        "Talon",
+        "Kassadin",
+        "Lux"
+      ]
+    },
+    {
+      "rank": "7",
+      "name": "Syndra",
+      "winRate": "50.23%",
+      "pickRate": "8.49%",
+      "counters": [
+        "Kassadin",
+        "Qiyana",
+        "Vex"
+      ]
+    },
+    {
+      "rank": "8",
+      "name": "Zoe",
+      "winRate": "52.81%",
+      "pickRate": "2.75%",
+      "counters": [
+        "Sylas",
+        "Akali",
+        "Locke"
+      ]
+    },
+    {
+      "rank": "9",
+      "name": "Vex",
+      "winRate": "52.49%",
+      "pickRate": "2.61%",
+      "counters": [
+        "Katarina"
       ]
     },
     {
       "rank": "10",
-      "name": "Fizz",
-      "winRate": "51%",
-      "pickRate": "4.61%",
+      "name": "Akali",
+      "winRate": "50.15%",
+      "pickRate": "6.03%",
       "counters": [
-        "Riven",
-        "Diana",
-        "Ziggs"
+        "LeBlanc",
+        "Twisted Fate",
+        "Viktor"
       ]
     },
     {
       "rank": "11",
-      "name": "Hwei",
-      "winRate": "50.85%",
-      "pickRate": "4.99%",
+      "name": "Talon",
+      "winRate": "52.4%",
+      "pickRate": "2.21%",
       "counters": [
-        "Ziggs",
-        "Vel'Koz",
-        "Twisted Fate"
+        "Ahri"
       ]
     },
     {
       "rank": "12",
-      "name": "Zed",
-      "winRate": "49.99%",
-      "pickRate": "6.96%",
+      "name": "Galio",
+      "winRate": "50.62%",
+      "pickRate": "5%",
       "counters": [
-        "Riven",
-        "Katarina",
-        "Pantheon"
+        "Vladimir",
+        "Hwei",
+        "Zed"
       ]
     },
     {
       "rank": "13",
-      "name": "Diana",
-      "winRate": "51.03%",
-      "pickRate": "4.17%",
+      "name": "Fizz",
+      "winRate": "50.67%",
+      "pickRate": "4.62%",
       "counters": [
-        "Riven",
-        "Brand",
-        "Cho'Gath"
+        "Diana",
+        "Kassadin",
+        "Locke"
       ]
     },
     {
       "rank": "14",
       "name": "Twisted Fate",
-      "winRate": "50.7%",
-      "pickRate": "5.09%",
+      "winRate": "50.2%",
+      "pickRate": "5.44%",
       "counters": [
-        "Swain",
-        "Pantheon",
-        "Fizz"
-      ]
-    },
-    {
-      "rank": "15",
-      "name": "Riven",
-      "winRate": "52.66%",
-      "pickRate": "1.37%",
-      "counters": [
-        "Lissandra",
         "Orianna",
-        "Annie"
-      ]
-    },
-    {
-      "rank": "16",
-      "name": "Akali",
-      "winRate": "49.83%",
-      "pickRate": "5.89%",
-      "counters": [
-        "Sion",
-        "Veigar",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "17",
-      "name": "Vex",
-      "winRate": "51.34%",
-      "pickRate": "2.79%",
-      "counters": [
-        "Swain",
-        "Kayle",
-        "Taliyah"
-      ]
-    },
-    {
-      "rank": "18",
-      "name": "Zoe",
-      "winRate": "50.96%",
-      "pickRate": "2.78%",
-      "counters": [
-        "Ziggs",
-        "Katarina",
-        "Tristana"
-      ]
-    },
-    {
-      "rank": "19",
-      "name": "Galio",
-      "winRate": "50.13%",
-      "pickRate": "4.46%",
-      "counters": [
-        "Ziggs",
-        "Hwei",
-        "Cho'Gath"
-      ]
-    },
-    {
-      "rank": "20",
-      "name": "Malzahar",
-      "winRate": "49.8%",
-      "pickRate": "5.08%",
-      "counters": [
         "Talon",
-        "Sion",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "21",
-      "name": "Talon",
-      "winRate": "50.98%",
-      "pickRate": "2.12%",
-      "counters": [
-        "Sion",
-        "Veigar",
-        "Vex"
-      ]
-    },
-    {
-      "rank": "22",
-      "name": "Annie",
-      "winRate": "51.17%",
-      "pickRate": "2.06%",
-      "counters": [
-        "Sion",
-        "Jayce",
-        "Pantheon"
-      ]
-    },
-    {
-      "rank": "23",
-      "name": "Ekko",
-      "winRate": "50.37%",
-      "pickRate": "2.97%",
-      "counters": [
-        "Cassiopeia",
-        "Riven",
-        "Sion"
-      ]
-    },
-    {
-      "rank": "24",
-      "name": "Lux",
-      "winRate": "49.97%",
-      "pickRate": "3.62%",
-      "counters": [
-        "Ziggs",
-        "Jayce",
         "Xerath"
       ]
     },
     {
-      "rank": "25",
-      "name": "Yasuo",
-      "winRate": "48.42%",
-      "pickRate": "7.18%",
+      "rank": "15",
+      "name": "Lissandra",
+      "winRate": "50.34%",
+      "pickRate": "5.05%",
       "counters": [
-        "Kayle",
-        "Riven",
-        "Taliyah"
-      ]
-    },
-    {
-      "rank": "26",
-      "name": "Akshan",
-      "winRate": "49.96%",
-      "pickRate": "3.42%",
-      "counters": [
-        "Kayle",
-        "Malphite",
-        "Riven"
-      ]
-    },
-    {
-      "rank": "27",
-      "name": "Kassadin",
-      "winRate": "50.06%",
-      "pickRate": "3.2%",
-      "counters": [
-        "Riven",
-        "Cho'Gath",
-        "Kayle"
-      ]
-    },
-    {
-      "rank": "28",
-      "name": "Veigar",
-      "winRate": "50.28%",
-      "pickRate": "2.72%",
-      "counters": [
-        "Vel'Koz",
-        "LeBlanc",
-        "Jayce"
-      ]
-    },
-    {
-      "rank": "29",
-      "name": "Anivia",
-      "winRate": "50.14%",
-      "pickRate": "2.56%",
-      "counters": [
-        "Talon",
-        "Diana",
-        "Vel'Koz"
-      ]
-    },
-    {
-      "rank": "30",
-      "name": "Naafiri",
-      "winRate": "49.89%",
-      "pickRate": "2.11%",
-      "counters": [
-        "Malphite",
-        "Irelia",
-        "Sion"
-      ]
-    },
-    {
-      "rank": "31",
-      "name": "LeBlanc",
-      "winRate": "48.89%",
-      "pickRate": "4.19%",
-      "counters": [
-        "Sion",
-        "Pantheon",
-        "Naafiri"
-      ]
-    },
-    {
-      "rank": "32",
-      "name": "Qiyana",
-      "winRate": "49.92%",
-      "pickRate": "2.29%",
-      "counters": [
-        "Swain",
-        "Aurelion Sol",
-        "Twisted Fate"
-      ]
-    },
-    {
-      "rank": "33",
-      "name": "Pantheon",
-      "winRate": "51.56%",
-      "pickRate": "0.85%",
-      "counters": [
-        "Xerath",
-        "Hwei",
-        "Zoe"
-      ]
-    },
-    {
-      "rank": "34",
-      "name": "Cho'Gath",
-      "winRate": "52.16%",
-      "pickRate": "0.58%",
-      "counters": [
+        "Kassadin",
         "Twisted Fate",
-        "Lux",
-        "Akshan"
+        "Galio"
       ]
     },
     {
-      "rank": "35",
-      "name": "Yone",
-      "winRate": "47.89%",
-      "pickRate": "5.67%",
-      "counters": [
-        "Vel'Koz",
-        "Akshan",
-        "Riven"
-      ]
-    },
-    {
-      "rank": "36",
-      "name": "Aurora",
-      "winRate": "49.2%",
-      "pickRate": "2.5%",
-      "counters": [
-        "Aurelion Sol",
-        "Fizz",
-        "Riven"
-      ]
-    },
-    {
-      "rank": "37",
-      "name": "Kayle",
-      "winRate": "51.5%",
-      "pickRate": "0.54%",
-      "counters": [
-        "Fizz",
-        "Syndra",
-        "Vladimir"
-      ]
-    },
-    {
-      "rank": "38",
-      "name": "Swain",
-      "winRate": "50.89%",
-      "pickRate": "0.77%",
-      "counters": [
-        "Katarina",
-        "Orianna",
-        "Anivia"
-      ]
-    },
-    {
-      "rank": "39",
-      "name": "Taliyah",
-      "winRate": "49.37%",
-      "pickRate": "1.42%",
-      "counters": [
-        "Katarina",
-        "Hwei",
-        "Locke"
-      ]
-    },
-    {
-      "rank": "40",
-      "name": "Vel'Koz",
-      "winRate": "49.7%",
-      "pickRate": "1.13%",
-      "counters": [
-        "Naafiri",
-        "Malzahar",
-        "Ekko"
-      ]
-    },
-    {
-      "rank": "41",
-      "name": "Aurelion Sol",
-      "winRate": "49.47%",
-      "pickRate": "1.33%",
-      "counters": [
-        "Swain",
-        "Riven",
-        "Irelia"
-      ]
-    },
-    {
-      "rank": "42",
-      "name": "Irelia",
-      "winRate": "48.02%",
-      "pickRate": "2.56%",
-      "counters": [
-        "Cho'Gath",
-        "Pantheon",
-        "Kayle"
-      ]
-    },
-    {
-      "rank": "43",
-      "name": "Ziggs",
-      "winRate": "50.41%",
-      "pickRate": "0.65%",
+      "rank": "16",
+      "name": "Hwei",
+      "winRate": "50.13%",
+      "pickRate": "4.45%",
       "counters": [
         "Xerath",
-        "Ekko",
-        "Mel"
+        "Fizz",
+        "Syndra"
       ]
     },
     {
-      "rank": "44",
-      "name": "Malphite",
-      "winRate": "49.61%",
-      "pickRate": "0.71%",
+      "rank": "17",
+      "name": "Qiyana",
+      "winRate": "51.43%",
+      "pickRate": "2.48%",
       "counters": [
-        "Diana",
+        "Locke",
         "Katarina",
         "Viktor"
       ]
     },
     {
-      "rank": "45",
-      "name": "Sion",
-      "winRate": "49.6%",
-      "pickRate": "0.83%",
+      "rank": "18",
+      "name": "Diana",
+      "winRate": "50.27%",
+      "pickRate": "3.79%",
       "counters": [
-        "Aurora",
-        "Yone",
-        "Lux"
-      ]
-    },
-    {
-      "rank": "46",
-      "name": "Orianna",
-      "winRate": "47.26%",
-      "pickRate": "2.78%",
-      "counters": [
-        "Cho'Gath",
-        "Vel'Koz",
-        "Aurelion Sol"
-      ]
-    },
-    {
-      "rank": "47",
-      "name": "Cassiopeia",
-      "winRate": "47.93%",
-      "pickRate": "1.45%",
-      "counters": [
-        "Vel'Koz",
-        "Xerath",
-        "Naafiri"
-      ]
-    },
-    {
-      "rank": "48",
-      "name": "Jayce",
-      "winRate": "48.62%",
-      "pickRate": "0.88%",
-      "counters": [
-        "Riven",
-        "Kassadin",
-        "Vel'Koz"
-      ]
-    },
-    {
-      "rank": "49",
-      "name": "Ryze",
-      "winRate": "46.58%",
-      "pickRate": "2.95%",
-      "counters": [
-        "Vel'Koz",
-        "Cho'Gath",
-        "Veigar"
-      ]
-    },
-    {
-      "rank": "50",
-      "name": "Brand",
-      "winRate": "48.58%",
-      "pickRate": "0.73%",
-      "counters": [
-        "Annie",
-        "LeBlanc",
-        "Qiyana"
-      ]
-    },
-    {
-      "rank": "51",
-      "name": "Azir",
-      "winRate": "46.58%",
-      "pickRate": "1.34%",
-      "counters": [
-        "Qiyana",
         "Twisted Fate",
-        "Irelia"
+        "Galio",
+        "Ahri"
       ]
     },
     {
-      "rank": "52",
-      "name": "Mel",
-      "winRate": "44.9%",
-      "pickRate": "2.53%",
+      "rank": "19",
+      "name": "Zed",
+      "winRate": "48.47%",
+      "pickRate": "6.91%",
       "counters": [
-        "Pantheon",
-        "Azir",
-        "Vel'Koz"
+        "Xerath",
+        "Malphite",
+        "Ekko"
       ]
     },
     {
-      "rank": "53",
-      "name": "Tristana",
-      "winRate": "46.85%",
-      "pickRate": "0.6%",
+      "rank": "20",
+      "name": "LeBlanc",
+      "winRate": "49.81%",
+      "pickRate": "3.83%",
       "counters": [
-        "Vladimir",
+        "Fizz",
+        "Zed",
+        "Lissandra"
+      ]
+    },
+    {
+      "rank": "21",
+      "name": "Veigar",
+      "winRate": "50.81%",
+      "pickRate": "2.64%",
+      "counters": [
+        "Hwei",
+        "Katarina",
+        "Viktor"
+      ]
+    },
+    {
+      "rank": "22",
+      "name": "Yasuo",
+      "winRate": "48.06%",
+      "pickRate": "7.43%",
+      "counters": [
+        "Ekko",
+        "Talon",
+        "Vex"
+      ]
+    },
+    {
+      "rank": "23",
+      "name": "Vladimir",
+      "winRate": "49.53%",
+      "pickRate": "4.25%",
+      "counters": [
+        "Locke",
+        "Hwei",
+        "Viktor"
+      ]
+    },
+    {
+      "rank": "24",
+      "name": "Lux",
+      "winRate": "49.94%",
+      "pickRate": "3.46%",
+      "counters": [
+        "Yone",
+        "Hwei",
+        "Akali"
+      ]
+    },
+    {
+      "rank": "25",
+      "name": "Kassadin",
+      "winRate": "50.11%",
+      "pickRate": "3.21%",
+      "counters": [
+        "Zed",
+        "Viktor",
+        "Yone"
+      ]
+    },
+    {
+      "rank": "26",
+      "name": "Akshan",
+      "winRate": "49.81%",
+      "pickRate": "3.06%",
+      "counters": [
+        "Malzahar",
+        "Viktor",
+        "Hwei"
+      ]
+    },
+    {
+      "rank": "27",
+      "name": "Taliyah",
+      "winRate": "51.2%",
+      "pickRate": "1.59%",
+      "counters": [
         "Syndra",
+        "Viktor"
+      ]
+    },
+    {
+      "rank": "28",
+      "name": "Irelia",
+      "winRate": "49.77%",
+      "pickRate": "2.56%",
+      "counters": [
+        "Sylas",
+        "Akali",
+        "Zed"
+      ]
+    },
+    {
+      "rank": "29",
+      "name": "Vel'Koz",
+      "winRate": "51.67%",
+      "pickRate": "1.1%",
+      "counters": []
+    },
+    {
+      "rank": "30",
+      "name": "Riven",
+      "winRate": "51.5%",
+      "pickRate": "1.18%",
+      "counters": []
+    },
+    {
+      "rank": "31",
+      "name": "Gwen",
+      "winRate": "53.28%",
+      "pickRate": "0.52%",
+      "counters": []
+    },
+    {
+      "rank": "32",
+      "name": "Anivia",
+      "winRate": "49.45%",
+      "pickRate": "2.54%",
+      "counters": [
+        "Locke",
+        "Ahri"
+      ]
+    },
+    {
+      "rank": "33",
+      "name": "Malzahar",
+      "winRate": "47.79%",
+      "pickRate": "4.91%",
+      "counters": [
+        "Fizz",
+        "Galio",
+        "Orianna"
+      ]
+    },
+    {
+      "rank": "34",
+      "name": "Swain",
+      "winRate": "51.37%",
+      "pickRate": "1.02%",
+      "counters": []
+    },
+    {
+      "rank": "35",
+      "name": "Yone",
+      "winRate": "47.08%",
+      "pickRate": "6.17%",
+      "counters": [
+        "Fizz",
+        "Viktor",
+        "Malzahar"
+      ]
+    },
+    {
+      "rank": "36",
+      "name": "Ekko",
+      "winRate": "48.92%",
+      "pickRate": "2.79%",
+      "counters": [
+        "Yone",
+        "Locke",
+        "Sylas"
+      ]
+    },
+    {
+      "rank": "37",
+      "name": "Cassiopeia",
+      "winRate": "50.29%",
+      "pickRate": "1.51%",
+      "counters": []
+    },
+    {
+      "rank": "38",
+      "name": "Annie",
+      "winRate": "49.63%",
+      "pickRate": "1.79%",
+      "counters": []
+    },
+    {
+      "rank": "39",
+      "name": "Cho'Gath",
+      "winRate": "51.69%",
+      "pickRate": "0.66%",
+      "counters": []
+    },
+    {
+      "rank": "40",
+      "name": "Naafiri",
+      "winRate": "48.51%",
+      "pickRate": "1.83%",
+      "counters": [
+        "Ahri"
+      ]
+    },
+    {
+      "rank": "41",
+      "name": "Sion",
+      "winRate": "51.14%",
+      "pickRate": "0.78%",
+      "counters": []
+    },
+    {
+      "rank": "42",
+      "name": "Aurora",
+      "winRate": "48.52%",
+      "pickRate": "2.44%",
+      "counters": [
+        "Syndra",
+        "Viktor"
+      ]
+    },
+    {
+      "rank": "43",
+      "name": "Aurelion Sol",
+      "winRate": "48.68%",
+      "pickRate": "1.45%",
+      "counters": []
+    },
+    {
+      "rank": "44",
+      "name": "Pantheon",
+      "winRate": "49.52%",
+      "pickRate": "0.93%",
+      "counters": [
         "Yasuo"
       ]
     },
     {
-      "rank": "54",
-      "name": "Smolder",
-      "winRate": "44.68%",
-      "pickRate": "0.56%",
+      "rank": "45",
+      "name": "Malphite",
+      "winRate": "49.69%",
+      "pickRate": "0.71%",
+      "counters": []
+    },
+    {
+      "rank": "46",
+      "name": "Ryze",
+      "winRate": "46.5%",
+      "pickRate": "3.22%",
       "counters": [
-        "Diana",
-        "Twisted Fate",
-        "Sylas"
+        "Katarina",
+        "Locke",
+        "Akali"
+      ]
+    },
+    {
+      "rank": "47",
+      "name": "Tristana",
+      "winRate": "49.15%",
+      "pickRate": "0.69%",
+      "counters": []
+    },
+    {
+      "rank": "48",
+      "name": "Orianna",
+      "winRate": "45.49%",
+      "pickRate": "3.27%",
+      "counters": [
+        "Akali",
+        "Xerath",
+        "Viktor"
+      ]
+    },
+    {
+      "rank": "49",
+      "name": "Jayce",
+      "winRate": "48.16%",
+      "pickRate": "0.92%",
+      "counters": []
+    },
+    {
+      "rank": "50",
+      "name": "Azir",
+      "winRate": "45.67%",
+      "pickRate": "1.94%",
+      "counters": [
+        "Viktor",
+        "Ahri",
+        "Locke"
+      ]
+    },
+    {
+      "rank": "51",
+      "name": "Mel",
+      "winRate": "44.45%",
+      "pickRate": "2.18%",
+      "counters": [
+        "Sylas",
+        "Syndra",
+        "Ahri"
+      ]
+    },
+    {
+      "rank": "52",
+      "name": "Ziggs",
+      "winRate": "47.14%",
+      "pickRate": "0.64%",
+      "counters": []
+    },
+    {
+      "rank": "53",
+      "name": "Brand",
+      "winRate": "47.37%",
+      "pickRate": "0.59%",
+      "counters": []
+    },
+    {
+      "rank": "54",
+      "name": "Gragas",
+      "winRate": "47.08%",
+      "pickRate": "0.5%",
+      "counters": []
+    },
+    {
+      "rank": "55",
+      "name": "Smolder",
+      "winRate": "46.43%",
+      "pickRate": "0.58%",
+      "counters": [
+        "Malzahar"
       ]
     }
   ],
   "adc": [
     {
       "rank": "1",
-      "name": "Senna",
-      "winRate": "53.12%",
-      "pickRate": "9.3%",
+      "name": "Tristana",
+      "winRate": "52.69%",
+      "pickRate": "6.85%",
       "counters": [
-        "Brand",
-        "Lux",
-        "Seraphine"
+        "Sivir",
+        "Corki",
+        "Syndra"
       ]
     },
     {
       "rank": "2",
-      "name": "Seraphine",
-      "winRate": "54.15%",
-      "pickRate": "3.35%",
+      "name": "Hwei",
+      "winRate": "54.9%",
+      "pickRate": "2.15%",
       "counters": [
-        "Syndra",
-        "Veigar",
-        "Katarina"
+        "Miss Fortune"
       ]
     },
     {
       "rank": "3",
       "name": "Jinx",
-      "winRate": "51.89%",
-      "pickRate": "11.42%",
+      "winRate": "50.78%",
+      "pickRate": "9.71%",
       "counters": [
-        "Seraphine",
         "Hwei",
-        "Karthus"
+        "Lux",
+        "Jhin"
       ]
     },
     {
       "rank": "4",
-      "name": "Ashe",
-      "winRate": "51.04%",
-      "pickRate": "9.97%",
+      "name": "Jhin",
+      "winRate": "49.8%",
+      "pickRate": "13.36%",
       "counters": [
-        "Katarina",
-        "Yasuo",
-        "Karthus"
+        "Seraphine",
+        "Hwei",
+        "Kog'Maw"
       ]
     },
     {
       "rank": "5",
-      "name": "Tristana",
-      "winRate": "51.23%",
-      "pickRate": "7.16%",
+      "name": "Caitlyn",
+      "winRate": "49.33%",
+      "pickRate": "13.73%",
       "counters": [
-        "Veigar",
-        "Karthus",
-        "Xerath"
+        "Vel'Koz",
+        "Lux",
+        "Brand"
       ]
     },
     {
       "rank": "6",
-      "name": "Jhin",
-      "winRate": "49.21%",
-      "pickRate": "15.25%",
+      "name": "Senna",
+      "winRate": "51.79%",
+      "pickRate": "4.87%",
       "counters": [
-        "Karthus",
-        "Nilah",
-        "Syndra"
+        "Seraphine",
+        "Twitch",
+        "Xerath"
       ]
     },
     {
       "rank": "7",
-      "name": "Caitlyn",
-      "winRate": "48.98%",
-      "pickRate": "14.88%",
+      "name": "Seraphine",
+      "winRate": "51.86%",
+      "pickRate": "4.1%",
       "counters": [
         "Xerath",
-        "Seraphine",
-        "Lux"
+        "Ziggs",
+        "Tristana"
       ]
     },
     {
       "rank": "8",
-      "name": "Kai'Sa",
-      "winRate": "48.87%",
-      "pickRate": "14.74%",
+      "name": "Ashe",
+      "winRate": "50.76%",
+      "pickRate": "7.33%",
       "counters": [
-        "Nilah",
-        "Karthus",
-        "Lux"
+        "Sivir",
+        "Xayah",
+        "Kai'Sa"
       ]
     },
     {
       "rank": "9",
-      "name": "Ziggs",
-      "winRate": "51.4%",
-      "pickRate": "3.75%",
+      "name": "Kai'Sa",
+      "winRate": "49.09%",
+      "pickRate": "12.73%",
       "counters": [
         "Kog'Maw",
-        "Hwei",
-        "Vel'Koz"
+        "Nilah",
+        "Hwei"
       ]
     },
     {
       "rank": "10",
-      "name": "Xayah",
-      "winRate": "51.21%",
-      "pickRate": "3.81%",
+      "name": "Yunara",
+      "winRate": "49.9%",
+      "pickRate": "9.13%",
       "counters": [
-        "Lux",
-        "Vladimir",
-        "Syndra"
+        "Hwei",
+        "Twitch",
+        "Seraphine"
       ]
     },
     {
       "rank": "11",
-      "name": "Hwei",
-      "winRate": "53.04%",
-      "pickRate": "1.53%",
+      "name": "Ziggs",
+      "winRate": "50.69%",
+      "pickRate": "6.57%",
       "counters": [
-        "Katarina",
         "Xerath",
-        "Vel'Koz"
+        "Twitch",
+        "Hwei"
       ]
     },
     {
       "rank": "12",
-      "name": "Samira",
-      "winRate": "50.67%",
-      "pickRate": "4.62%",
-      "counters": [
-        "Karthus",
-        "Syndra",
-        "Nilah"
-      ]
-    },
-    {
-      "rank": "13",
-      "name": "Twitch",
-      "winRate": "50.45%",
-      "pickRate": "5.05%",
-      "counters": [
-        "Katarina",
-        "Vladimir",
-        "Veigar"
-      ]
-    },
-    {
-      "rank": "14",
-      "name": "Lucian",
-      "winRate": "49.19%",
-      "pickRate": "8.68%",
-      "counters": [
-        "Swain",
-        "Nilah",
-        "Hwei"
-      ]
-    },
-    {
-      "rank": "15",
-      "name": "Miss Fortune",
-      "winRate": "50.12%",
-      "pickRate": "5.71%",
-      "counters": [
-        "Lux",
-        "Katarina",
-        "Yasuo"
-      ]
-    },
-    {
-      "rank": "16",
-      "name": "Zeri",
-      "winRate": "50.67%",
-      "pickRate": "4.2%",
-      "counters": [
-        "Hwei",
-        "Nilah",
-        "Katarina"
-      ]
-    },
-    {
-      "rank": "17",
-      "name": "Sivir",
-      "winRate": "50.23%",
-      "pickRate": "5.01%",
-      "counters": [
-        "Vladimir",
-        "Katarina",
-        "Jinx"
-      ]
-    },
-    {
-      "rank": "18",
-      "name": "Lux",
-      "winRate": "53.15%",
-      "pickRate": "1.09%",
-      "counters": [
-        "Swain",
-        "Veigar",
-        "Yasuo"
-      ]
-    },
-    {
-      "rank": "19",
-      "name": "Kog'Maw",
-      "winRate": "52.38%",
-      "pickRate": "1.65%",
-      "counters": [
-        "Vladimir",
-        "Hwei",
-        "Vel'Koz"
-      ]
-    },
-    {
-      "rank": "20",
       "name": "Xerath",
-      "winRate": "52.14%",
-      "pickRate": "1.56%",
+      "winRate": "51.04%",
+      "pickRate": "4.7%",
       "counters": [
-        "Nilah",
-        "Vayne",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "21",
-      "name": "Smolder",
-      "winRate": "49.72%",
-      "pickRate": "4.81%",
-      "counters": [
-        "Syndra",
-        "Vel'Koz",
-        "Hwei"
-      ]
-    },
-    {
-      "rank": "22",
-      "name": "Brand",
-      "winRate": "51.58%",
-      "pickRate": "1.95%",
-      "counters": [
-        "Seraphine",
-        "Lux",
-        "Karthus"
-      ]
-    },
-    {
-      "rank": "23",
-      "name": "Vayne",
-      "winRate": "49.57%",
-      "pickRate": "4.64%",
-      "counters": [
-        "Kog'Maw",
-        "Vladimir",
-        "Aphelios"
-      ]
-    },
-    {
-      "rank": "24",
-      "name": "Ezreal",
-      "winRate": "46.91%",
-      "pickRate": "15.15%",
-      "counters": [
-        "Seraphine",
-        "Aurelion Sol",
-        "Nilah"
-      ]
-    },
-    {
-      "rank": "25",
-      "name": "Nilah",
-      "winRate": "52.4%",
-      "pickRate": "1.36%",
-      "counters": [
-        "Syndra",
-        "Xayah",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "26",
-      "name": "Aphelios",
-      "winRate": "48.75%",
-      "pickRate": "6.84%",
-      "counters": [
-        "Swain",
-        "Katarina",
-        "Hwei"
-      ]
-    },
-    {
-      "rank": "27",
-      "name": "Draven",
-      "winRate": "49.69%",
-      "pickRate": "4.2%",
-      "counters": [
-        "Vel'Koz",
-        "Kog'Maw",
-        "Veigar"
-      ]
-    },
-    {
-      "rank": "28",
-      "name": "Swain",
-      "winRate": "52.37%",
-      "pickRate": "1.26%",
-      "counters": [
-        "Hwei",
-        "Vel'Koz",
-        "Kog'Maw"
-      ]
-    },
-    {
-      "rank": "29",
-      "name": "Vel'Koz",
-      "winRate": "52.34%",
-      "pickRate": "1.19%",
-      "counters": [
-        "Varus",
-        "Xerath",
+        "Aphelios",
+        "Kai'Sa",
         "Sivir"
       ]
     },
     {
-      "rank": "30",
+      "rank": "13",
+      "name": "Lucian",
+      "winRate": "49.55%",
+      "pickRate": "8.33%",
+      "counters": [
+        "Seraphine",
+        "Aphelios",
+        "Draven"
+      ]
+    },
+    {
+      "rank": "14",
+      "name": "Xayah",
+      "winRate": "51.7%",
+      "pickRate": "3.37%",
+      "counters": [
+        "Yunara",
+        "Ezreal",
+        "Jinx"
+      ]
+    },
+    {
+      "rank": "15",
       "name": "Veigar",
-      "winRate": "52.39%",
-      "pickRate": "1.13%",
+      "winRate": "53.57%",
+      "pickRate": "1.55%",
       "counters": [
-        "Jinx",
-        "Ziggs",
-        "Zeri"
+        "Caitlyn",
+        "Jhin"
       ]
     },
     {
-      "rank": "31",
-      "name": "Karthus",
-      "winRate": "52.97%",
-      "pickRate": "0.73%",
-      "counters": [
-        "Kalista",
-        "Lux",
-        "Syndra"
-      ]
+      "rank": "16",
+      "name": "Nilah",
+      "winRate": "54.17%",
+      "pickRate": "1.12%",
+      "counters": []
     },
     {
-      "rank": "32",
-      "name": "Syndra",
-      "winRate": "51.48%",
-      "pickRate": "1.34%",
-      "counters": [
-        "Ziggs",
-        "Veigar",
-        "Kog'Maw"
-      ]
-    },
-    {
-      "rank": "33",
-      "name": "Yasuo",
-      "winRate": "51.08%",
-      "pickRate": "1.33%",
-      "counters": [
-        "Swain",
-        "Vel'Koz",
-        "Vladimir"
-      ]
-    },
-    {
-      "rank": "34",
-      "name": "Yunara",
-      "winRate": "48.61%",
-      "pickRate": "4.68%",
-      "counters": [
-        "Karthus",
-        "Hwei",
-        "Twitch"
-      ]
-    },
-    {
-      "rank": "35",
+      "rank": "17",
       "name": "Katarina",
-      "winRate": "51.88%",
-      "pickRate": "0.74%",
+      "winRate": "55.25%",
+      "pickRate": "0.64%",
+      "counters": []
+    },
+    {
+      "rank": "18",
+      "name": "Miss Fortune",
+      "winRate": "48.57%",
+      "pickRate": "9.43%",
       "counters": [
         "Kog'Maw",
-        "Veigar",
-        "Vayne"
-      ]
-    },
-    {
-      "rank": "36",
-      "name": "Kalista",
-      "winRate": "49.54%",
-      "pickRate": "2%",
-      "counters": [
-        "Syndra",
-        "Vel'Koz",
-        "Katarina"
-      ]
-    },
-    {
-      "rank": "37",
-      "name": "Vladimir",
-      "winRate": "50.59%",
-      "pickRate": "0.83%",
-      "counters": [
-        "Katarina",
         "Senna",
         "Seraphine"
       ]
     },
     {
-      "rank": "38",
-      "name": "Aurelion Sol",
-      "winRate": "50.97%",
-      "pickRate": "0.55%",
+      "rank": "19",
+      "name": "Smolder",
+      "winRate": "50.76%",
+      "pickRate": "3.91%",
+      "counters": [
+        "Tristana",
+        "Miss Fortune",
+        "Kai'Sa"
+      ]
+    },
+    {
+      "rank": "20",
+      "name": "Kog'Maw",
+      "winRate": "52.79%",
+      "pickRate": "1.69%",
+      "counters": [
+        "Jinx"
+      ]
+    },
+    {
+      "rank": "21",
+      "name": "Vel'Koz",
+      "winRate": "53.12%",
+      "pickRate": "1.38%",
+      "counters": []
+    },
+    {
+      "rank": "22",
+      "name": "Brand",
+      "winRate": "53.1%",
+      "pickRate": "1.36%",
+      "counters": [
+        "Jhin"
+      ]
+    },
+    {
+      "rank": "23",
+      "name": "Swain",
+      "winRate": "52.89%",
+      "pickRate": "1.49%",
+      "counters": [
+        "Jhin",
+        "Kai'Sa"
+      ]
+    },
+    {
+      "rank": "24",
+      "name": "Corki",
+      "winRate": "51.72%",
+      "pickRate": "2.37%",
+      "counters": [
+        "Jinx",
+        "Yunara",
+        "Jhin"
+      ]
+    },
+    {
+      "rank": "25",
+      "name": "Viktor",
+      "winRate": "51.72%",
+      "pickRate": "1.74%",
       "counters": [
         "Yunara",
-        "Miss Fortune",
-        "Zeri"
+        "Jhin",
+        "Caitlyn"
       ]
     },
     {
-      "rank": "39",
-      "name": "Corki",
-      "winRate": "49.03%",
-      "pickRate": "1.27%",
+      "rank": "26",
+      "name": "Ezreal",
+      "winRate": "46.56%",
+      "pickRate": "13.53%",
       "counters": [
-        "Swain",
-        "Syndra",
-        "Brand"
+        "Brand",
+        "Smolder",
+        "Veigar"
       ]
     },
     {
-      "rank": "40",
-      "name": "Varus",
-      "winRate": "47.31%",
-      "pickRate": "2.76%",
+      "rank": "27",
+      "name": "Karthus",
+      "winRate": "53.66%",
+      "pickRate": "0.85%",
+      "counters": []
+    },
+    {
+      "rank": "28",
+      "name": "Sivir",
+      "winRate": "49.63%",
+      "pickRate": "4.17%",
       "counters": [
-        "Karthus",
         "Seraphine",
+        "Vayne",
         "Senna"
       ]
     },
     {
-      "rank": "41",
-      "name": "Mel",
-      "winRate": "46.47%",
-      "pickRate": "3.12%",
+      "rank": "29",
+      "name": "Vayne",
+      "winRate": "49.3%",
+      "pickRate": "4.15%",
       "counters": [
-        "Aurelion Sol",
-        "Zeri",
-        "Vel'Koz"
+        "Xayah",
+        "Yunara",
+        "Smolder"
       ]
+    },
+    {
+      "rank": "30",
+      "name": "Kalista",
+      "winRate": "51.77%",
+      "pickRate": "1.6%",
+      "counters": [
+        "Ashe",
+        "Caitlyn",
+        "Kai'Sa"
+      ]
+    },
+    {
+      "rank": "31",
+      "name": "Twitch",
+      "winRate": "49.06%",
+      "pickRate": "4.43%",
+      "counters": [
+        "Seraphine",
+        "Tristana",
+        "Ashe"
+      ]
+    },
+    {
+      "rank": "32",
+      "name": "Aphelios",
+      "winRate": "49.02%",
+      "pickRate": "4.58%",
+      "counters": [
+        "Draven",
+        "Caitlyn",
+        "Twitch"
+      ]
+    },
+    {
+      "rank": "33",
+      "name": "Draven",
+      "winRate": "49.3%",
+      "pickRate": "3.75%",
+      "counters": [
+        "Seraphine",
+        "Ziggs",
+        "Miss Fortune"
+      ]
+    },
+    {
+      "rank": "34",
+      "name": "Syndra",
+      "winRate": "49.67%",
+      "pickRate": "3.05%",
+      "counters": [
+        "Ashe",
+        "Xerath",
+        "Lucian"
+      ]
+    },
+    {
+      "rank": "35",
+      "name": "Zeri",
+      "winRate": "49.5%",
+      "pickRate": "3.47%",
+      "counters": [
+        "Jinx",
+        "Ziggs",
+        "Senna"
+      ]
+    },
+    {
+      "rank": "36",
+      "name": "Samira",
+      "winRate": "48.66%",
+      "pickRate": "4.25%",
+      "counters": [
+        "Jinx",
+        "Miss Fortune",
+        "Ziggs"
+      ]
+    },
+    {
+      "rank": "37",
+      "name": "Lux",
+      "winRate": "50.23%",
+      "pickRate": "1.56%",
+      "counters": [
+        "Jhin"
+      ]
+    },
+    {
+      "rank": "38",
+      "name": "Cassiopeia",
+      "winRate": "52.8%",
+      "pickRate": "0.55%",
+      "counters": []
+    },
+    {
+      "rank": "39",
+      "name": "Yasuo",
+      "winRate": "49.55%",
+      "pickRate": "1.47%",
+      "counters": []
+    },
+    {
+      "rank": "40",
+      "name": "Aurelion Sol",
+      "winRate": "52.16%",
+      "pickRate": "0.57%",
+      "counters": []
+    },
+    {
+      "rank": "41",
+      "name": "Varus",
+      "winRate": "48.5%",
+      "pickRate": "2.19%",
+      "counters": [
+        "Yunara",
+        "Caitlyn",
+        "Miss Fortune"
+      ]
+    },
+    {
+      "rank": "42",
+      "name": "Mel",
+      "winRate": "45.25%",
+      "pickRate": "5.77%",
+      "counters": [
+        "Viktor",
+        "Twitch",
+        "Tristana"
+      ]
+    },
+    {
+      "rank": "43",
+      "name": "Vladimir",
+      "winRate": "48.48%",
+      "pickRate": "0.96%",
+      "counters": []
+    },
+    {
+      "rank": "44",
+      "name": "Taliyah",
+      "winRate": "45.19%",
+      "pickRate": "0.56%",
+      "counters": []
     }
   ],
   "support": [
     {
       "rank": "1",
       "name": "Thresh",
-      "winRate": "51.96%",
-      "pickRate": "14%",
+      "winRate": "51.61%",
+      "pickRate": "12.69%",
       "counters": [
-        "Fiddlesticks",
-        "Amumu",
-        "Rell"
+        "Taric",
+        "Shen",
+        "Alistar"
       ]
     },
     {
       "rank": "2",
       "name": "Senna",
-      "winRate": "52.05%",
-      "pickRate": "7.97%",
+      "winRate": "52.35%",
+      "pickRate": "7.17%",
       "counters": [
-        "Hwei",
-        "Fiddlesticks",
-        "Elise"
+        "Xerath",
+        "Camille",
+        "Pyke"
       ]
     },
     {
       "rank": "3",
-      "name": "Seraphine",
-      "winRate": "51.06%",
-      "pickRate": "11.05%",
+      "name": "Nautilus",
+      "winRate": "50.46%",
+      "pickRate": "10.43%",
       "counters": [
-        "Fiddlesticks",
-        "Taric",
-        "Zilean"
+        "Sona",
+        "Leona",
+        "Pantheon"
       ]
     },
     {
       "rank": "4",
-      "name": "Leona",
-      "winRate": "51.87%",
-      "pickRate": "7.38%",
+      "name": "Nami",
+      "winRate": "50.76%",
+      "pickRate": "9.73%",
       "counters": [
-        "Elise",
-        "Xerath",
-        "Rakan"
+        "Pantheon",
+        "Poppy",
+        "Blitzcrank"
       ]
     },
     {
       "rank": "5",
-      "name": "Nautilus",
-      "winRate": "50.4%",
-      "pickRate": "10.54%",
+      "name": "Seraphine",
+      "winRate": "50.05%",
+      "pickRate": "11.12%",
       "counters": [
-        "Rell",
-        "Amumu",
-        "Shen"
+        "Brand",
+        "Shaco",
+        "Rakan"
       ]
     },
     {
       "rank": "6",
-      "name": "Rell",
-      "winRate": "52.52%",
-      "pickRate": "3.7%",
-      "counters": [
-        "Taric",
-        "Poppy",
-        "Zyra"
-      ]
-    },
-    {
-      "rank": "7",
-      "name": "Braum",
-      "winRate": "51.73%",
-      "pickRate": "4.91%",
-      "counters": [
-        "Senna",
-        "Tahm Kench",
-        "Anivia"
-      ]
-    },
-    {
-      "rank": "8",
-      "name": "Janna",
-      "winRate": "51.46%",
-      "pickRate": "4.26%",
-      "counters": [
-        "Galio",
-        "Taric",
-        "Sona"
-      ]
-    },
-    {
-      "rank": "9",
       "name": "Pyke",
-      "winRate": "50.01%",
-      "pickRate": "7.1%",
-      "counters": [
-        "Amumu",
-        "Renata Glasc",
-        "Soraka"
-      ]
-    },
-    {
-      "rank": "10",
-      "name": "Lulu",
-      "winRate": "49.52%",
-      "pickRate": "9.7%",
-      "counters": [
-        "Amumu",
-        "Zilean",
-        "Rell"
-      ]
-    },
-    {
-      "rank": "11",
-      "name": "Blitzcrank",
-      "winRate": "50.69%",
-      "pickRate": "5.47%",
-      "counters": [
-        "Poppy",
-        "Alistar",
-        "Braum"
-      ]
-    },
-    {
-      "rank": "12",
-      "name": "Zilean",
-      "winRate": "51.53%",
-      "pickRate": "3.23%",
+      "winRate": "50.72%",
+      "pickRate": "7.68%",
       "counters": [
         "Janna",
-        "LeBlanc",
-        "Amumu"
-      ]
-    },
-    {
-      "rank": "13",
-      "name": "Sona",
-      "winRate": "51.6%",
-      "pickRate": "3.1%",
-      "counters": [
-        "Galio",
-        "Taric",
-        "Alistar"
-      ]
-    },
-    {
-      "rank": "14",
-      "name": "Nami",
-      "winRate": "49.37%",
-      "pickRate": "8.81%",
-      "counters": [
-        "Galio",
-        "Sona",
-        "Amumu"
-      ]
-    },
-    {
-      "rank": "15",
-      "name": "Soraka",
-      "winRate": "50.54%",
-      "pickRate": "5.04%",
-      "counters": [
-        "Elise",
-        "Amumu",
-        "Galio"
-      ]
-    },
-    {
-      "rank": "16",
-      "name": "Milio",
-      "winRate": "49.86%",
-      "pickRate": "6.74%",
-      "counters": [
-        "Poppy",
-        "Anivia",
-        "Taric"
-      ]
-    },
-    {
-      "rank": "17",
-      "name": "Karma",
-      "winRate": "49.33%",
-      "pickRate": "8.16%",
-      "counters": [
-        "Rell",
-        "Fiddlesticks",
-        "Janna"
-      ]
-    },
-    {
-      "rank": "18",
-      "name": "Alistar",
-      "winRate": "50.65%",
-      "pickRate": "4.24%",
-      "counters": [
-        "Janna",
-        "Brand",
-        "Swain"
-      ]
-    },
-    {
-      "rank": "19",
-      "name": "Poppy",
-      "winRate": "51.88%",
-      "pickRate": "2.16%",
-      "counters": [
-        "Galio",
-        "Taric",
+        "Xerath",
         "Tahm Kench"
       ]
     },
     {
-      "rank": "20",
-      "name": "Rakan",
-      "winRate": "50.63%",
-      "pickRate": "3.77%",
+      "rank": "7",
+      "name": "Zilean",
+      "winRate": "53.4%",
+      "pickRate": "3.23%",
       "counters": [
-        "Neeko",
-        "Sona",
-        "Fiddlesticks"
+        "Pyke",
+        "Lux"
+      ]
+    },
+    {
+      "rank": "8",
+      "name": "Blitzcrank",
+      "winRate": "51.43%",
+      "pickRate": "5.81%",
+      "counters": [
+        "Rakan",
+        "Alistar",
+        "Leona"
+      ]
+    },
+    {
+      "rank": "9",
+      "name": "Poppy",
+      "winRate": "53.47%",
+      "pickRate": "2.61%",
+      "counters": [
+        "Rakan",
+        "Rell"
+      ]
+    },
+    {
+      "rank": "10",
+      "name": "Taric",
+      "winRate": "55.54%",
+      "pickRate": "1.19%",
+      "counters": [
+        "Nautilus"
+      ]
+    },
+    {
+      "rank": "11",
+      "name": "Braum",
+      "winRate": "52.23%",
+      "pickRate": "4.19%",
+      "counters": [
+        "Senna",
+        "Rell",
+        "Pyke"
+      ]
+    },
+    {
+      "rank": "12",
+      "name": "Rell",
+      "winRate": "52.31%",
+      "pickRate": "3.95%",
+      "counters": [
+        "Alistar",
+        "Janna",
+        "Soraka"
+      ]
+    },
+    {
+      "rank": "13",
+      "name": "Leona",
+      "winRate": "50.42%",
+      "pickRate": "7.41%",
+      "counters": [
+        "Lux",
+        "Vel'Koz",
+        "Soraka"
+      ]
+    },
+    {
+      "rank": "14",
+      "name": "Janna",
+      "winRate": "51.62%",
+      "pickRate": "4.04%",
+      "counters": [
+        "Zilean",
+        "Senna",
+        "Nautilus"
+      ]
+    },
+    {
+      "rank": "15",
+      "name": "Milio",
+      "winRate": "50.19%",
+      "pickRate": "5.88%",
+      "counters": [
+        "Vel'Koz",
+        "Zilean",
+        "Soraka"
+      ]
+    },
+    {
+      "rank": "16",
+      "name": "Lulu",
+      "winRate": "48.35%",
+      "pickRate": "8.94%",
+      "counters": [
+        "Braum",
+        "Vel'Koz",
+        "Pyke"
+      ]
+    },
+    {
+      "rank": "17",
+      "name": "Bard",
+      "winRate": "49.26%",
+      "pickRate": "6.53%",
+      "counters": [
+        "Janna",
+        "Blitzcrank",
+        "Rell"
+      ]
+    },
+    {
+      "rank": "18",
+      "name": "Soraka",
+      "winRate": "49.79%",
+      "pickRate": "4.91%",
+      "counters": [
+        "Braum",
+        "Lulu",
+        "Janna"
+      ]
+    },
+    {
+      "rank": "19",
+      "name": "Alistar",
+      "winRate": "50.11%",
+      "pickRate": "4.13%",
+      "counters": [
+        "Janna",
+        "Pyke",
+        "Leona"
+      ]
+    },
+    {
+      "rank": "20",
+      "name": "Camille",
+      "winRate": "48.12%",
+      "pickRate": "7.73%",
+      "counters": [
+        "Rell",
+        "Rakan",
+        "Alistar"
       ]
     },
     {
       "rank": "21",
-      "name": "Tahm Kench",
-      "winRate": "51.44%",
-      "pickRate": "2.43%",
+      "name": "Karma",
+      "winRate": "48.31%",
+      "pickRate": "7.58%",
       "counters": [
-        "Renata Glasc",
-        "Shen",
-        "Vel'Koz"
+        "Alistar",
+        "Nautilus",
+        "Senna"
       ]
     },
     {
       "rank": "22",
-      "name": "Bard",
-      "winRate": "49.09%",
-      "pickRate": "6.69%",
+      "name": "Maokai",
+      "winRate": "52.43%",
+      "pickRate": "1.51%",
       "counters": [
-        "Tahm Kench",
-        "Poppy",
-        "Amumu"
+        "Thresh"
       ]
     },
     {
       "rank": "23",
-      "name": "Taric",
-      "winRate": "52.33%",
-      "pickRate": "1.26%",
+      "name": "Vel'Koz",
+      "winRate": "50.44%",
+      "pickRate": "3.18%",
       "counters": [
-        "Nami",
-        "Vel'Koz",
-        "Galio"
+        "Bard",
+        "Senna",
+        "Sona"
       ]
     },
     {
       "rank": "24",
-      "name": "Vel'Koz",
-      "winRate": "49.95%",
-      "pickRate": "3.66%",
+      "name": "Rakan",
+      "winRate": "50.13%",
+      "pickRate": "3.49%",
       "counters": [
-        "Poppy",
-        "Rell",
-        "Braum"
+        "Leona",
+        "Nautilus",
+        "Senna"
       ]
     },
     {
       "rank": "25",
-      "name": "Morgana",
-      "winRate": "49.81%",
-      "pickRate": "3.51%",
+      "name": "Lux",
+      "winRate": "48.94%",
+      "pickRate": "5.01%",
       "counters": [
-        "LeBlanc",
-        "Milio",
+        "Pyke",
+        "Camille",
         "Sona"
       ]
     },
     {
       "rank": "26",
-      "name": "Lux",
-      "winRate": "48.87%",
-      "pickRate": "5.29%",
+      "name": "Sona",
+      "winRate": "49.59%",
+      "pickRate": "3.63%",
       "counters": [
-        "LeBlanc",
-        "Poppy",
-        "Taric"
+        "Blitzcrank",
+        "Pyke",
+        "Seraphine"
       ]
     },
     {
       "rank": "27",
-      "name": "Maokai",
-      "winRate": "50.99%",
-      "pickRate": "1.71%",
-      "counters": [
-        "Senna",
-        "Soraka",
-        "Mel"
-      ]
+      "name": "Shen",
+      "winRate": "51.56%",
+      "pickRate": "1.42%",
+      "counters": []
     },
     {
       "rank": "28",
-      "name": "Galio",
-      "winRate": "52.15%",
-      "pickRate": "0.86%",
+      "name": "Xerath",
+      "winRate": "49.52%",
+      "pickRate": "2.58%",
       "counters": [
-        "Tahm Kench",
-        "Senna",
-        "Pyke"
+        "Nami",
+        "Camille",
+        "Lux"
       ]
     },
     {
       "rank": "29",
-      "name": "Camille",
-      "winRate": "48.93%",
-      "pickRate": "3.91%",
+      "name": "Yuumi",
+      "winRate": "47.75%",
+      "pickRate": "5.37%",
       "counters": [
-        "Taric",
-        "Janna",
-        "Braum"
+        "Alistar",
+        "Rell",
+        "Pyke"
       ]
     },
     {
       "rank": "30",
-      "name": "Amumu",
-      "winRate": "52.72%",
-      "pickRate": "0.53%",
+      "name": "Neeko",
+      "winRate": "50.72%",
+      "pickRate": "1.53%",
       "counters": [
-        "Alistar",
-        "Poppy",
-        "Morgana"
+        "Seraphine",
+        "Nautilus"
       ]
     },
     {
       "rank": "31",
-      "name": "Xerath",
-      "winRate": "49.01%",
-      "pickRate": "2.87%",
-      "counters": [
-        "Galio",
-        "Shen",
-        "Rakan"
-      ]
-    },
-    {
-      "rank": "32",
       "name": "Pantheon",
-      "winRate": "48.99%",
-      "pickRate": "2.89%",
+      "winRate": "48.32%",
+      "pickRate": "3.63%",
       "counters": [
         "Rell",
-        "Galio",
-        "Janna"
-      ]
-    },
-    {
-      "rank": "33",
-      "name": "Yuumi",
-      "winRate": "47.38%",
-      "pickRate": "5.59%",
-      "counters": [
-        "Braum",
-        "Poppy",
-        "Thresh"
-      ]
-    },
-    {
-      "rank": "34",
-      "name": "Zyra",
-      "winRate": "49.25%",
-      "pickRate": "2.13%",
-      "counters": [
-        "Taric",
-        "Tahm Kench",
-        "Elise"
-      ]
-    },
-    {
-      "rank": "35",
-      "name": "Elise",
-      "winRate": "50.96%",
-      "pickRate": "0.89%",
-      "counters": [
-        "Maokai",
-        "Blitzcrank",
-        "Janna"
-      ]
-    },
-    {
-      "rank": "36",
-      "name": "Renata Glasc",
-      "winRate": "50.31%",
-      "pickRate": "1.17%",
-      "counters": [
-        "Xerath",
-        "Sona",
-        "Taric"
-      ]
-    },
-    {
-      "rank": "37",
-      "name": "Brand",
-      "winRate": "48.76%",
-      "pickRate": "2.25%",
-      "counters": [
-        "Renata Glasc",
-        "Maokai",
-        "Zilean"
-      ]
-    },
-    {
-      "rank": "38",
-      "name": "Neeko",
-      "winRate": "49.18%",
-      "pickRate": "1.74%",
-      "counters": [
-        "Taric",
-        "Soraka",
-        "Sona"
-      ]
-    },
-    {
-      "rank": "39",
-      "name": "Fiddlesticks",
-      "winRate": "51.29%",
-      "pickRate": "0.55%",
-      "counters": [
-        "Leona",
-        "Janna",
-        "Rell"
-      ]
-    },
-    {
-      "rank": "40",
-      "name": "LeBlanc",
-      "winRate": "49.53%",
-      "pickRate": "0.71%",
-      "counters": [
-        "Braum",
-        "Zyra",
-        "Tahm Kench"
-      ]
-    },
-    {
-      "rank": "41",
-      "name": "Swain",
-      "winRate": "47.45%",
-      "pickRate": "2.09%",
-      "counters": [
-        "Poppy",
-        "Brand",
-        "Vel'Koz"
-      ]
-    },
-    {
-      "rank": "42",
-      "name": "Shaco",
-      "winRate": "48.19%",
-      "pickRate": "1.2%",
-      "counters": [
-        "Mel",
-        "Senna",
-        "Alistar"
-      ]
-    },
-    {
-      "rank": "43",
-      "name": "Shen",
-      "winRate": "49.13%",
-      "pickRate": "0.72%",
-      "counters": [
-        "Maokai",
-        "Morgana",
-        "Janna"
-      ]
-    },
-    {
-      "rank": "44",
-      "name": "Hwei",
-      "winRate": "48.18%",
-      "pickRate": "0.61%",
-      "counters": [
-        "Xerath",
-        "Rell",
+        "Thresh",
         "Camille"
       ]
     },
     {
-      "rank": "45",
-      "name": "Anivia",
-      "winRate": "48.48%",
-      "pickRate": "0.52%",
+      "rank": "32",
+      "name": "Morgana",
+      "winRate": "48.33%",
+      "pickRate": "3.22%",
       "counters": [
-        "Tahm Kench",
-        "Zilean",
+        "Camille",
+        "Pyke",
         "Blitzcrank"
       ]
     },
     {
-      "rank": "46",
-      "name": "Zoe",
-      "winRate": "47.06%",
-      "pickRate": "0.87%",
+      "rank": "33",
+      "name": "Sylas",
+      "winRate": "49.36%",
+      "pickRate": "1.5%",
       "counters": [
-        "Sona",
-        "Shaco",
-        "Poppy"
+        "Thresh",
+        "Camille"
       ]
     },
     {
-      "rank": "47",
-      "name": "Mel",
-      "winRate": "42.43%",
-      "pickRate": "1.61%",
+      "rank": "34",
+      "name": "Galio",
+      "winRate": "50.97%",
+      "pickRate": "1.06%",
+      "counters": []
+    },
+    {
+      "rank": "35",
+      "name": "Zyra",
+      "winRate": "49.44%",
+      "pickRate": "1.97%",
       "counters": [
-        "Soraka",
-        "Camille",
-        "Rell"
+        "Nautilus",
+        "Lulu",
+        "Nami"
       ]
+    },
+    {
+      "rank": "36",
+      "name": "Brand",
+      "winRate": "48.81%",
+      "pickRate": "1.85%",
+      "counters": [
+        "Nami",
+        "Nautilus"
+      ]
+    },
+    {
+      "rank": "37",
+      "name": "Tahm Kench",
+      "winRate": "48.18%",
+      "pickRate": "2.22%",
+      "counters": [
+        "Rell",
+        "Camille",
+        "Karma"
+      ]
+    },
+    {
+      "rank": "38",
+      "name": "Elise",
+      "winRate": "49.51%",
+      "pickRate": "1.05%",
+      "counters": []
+    },
+    {
+      "rank": "39",
+      "name": "Renata Glasc",
+      "winRate": "49.67%",
+      "pickRate": "0.88%",
+      "counters": []
+    },
+    {
+      "rank": "40",
+      "name": "Swain",
+      "winRate": "47.06%",
+      "pickRate": "2.27%",
+      "counters": [
+        "Lulu",
+        "Seraphine",
+        "Thresh"
+      ]
+    },
+    {
+      "rank": "41",
+      "name": "Shaco",
+      "winRate": "47.25%",
+      "pickRate": "1.15%",
+      "counters": []
+    },
+    {
+      "rank": "42",
+      "name": "LeBlanc",
+      "winRate": "46.92%",
+      "pickRate": "0.74%",
+      "counters": []
+    },
+    {
+      "rank": "43",
+      "name": "Mel",
+      "winRate": "44.43%",
+      "pickRate": "1.47%",
+      "counters": [
+        "Karma",
+        "Thresh",
+        "Seraphine"
+      ]
+    },
+    {
+      "rank": "44",
+      "name": "Zoe",
+      "winRate": "46.74%",
+      "pickRate": "0.81%",
+      "counters": []
+    },
+    {
+      "rank": "45",
+      "name": "Ashe",
+      "winRate": "38.4%",
+      "pickRate": "0.57%",
+      "counters": []
     }
   ]
 }

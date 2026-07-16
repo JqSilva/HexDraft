@@ -4,18 +4,121 @@ export const AutoUpdateGuard = () => {
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [reason, setReason] = useState<string>('');
 
-  // 1. Polling para redireccionar a /draft en selección de campeón (una sola vez por fase)
+  // 1. Cargar configuraciones del auto-aceptar al montar
+  const [configs, setConfigs] = useState({ autoAcceptEnabled: false, autoAcceptDelayPct: 80 });
+  const readyCheckMaxRef = React.useRef<number>(10);
+  const readyCheckStartRef = React.useRef<number>(0);
+  const lastNotifiedReadyCheckRef = React.useRef<boolean>(false);
+  const isAcceptingRef = React.useRef<boolean>(false);
+
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          setConfigs({
+            autoAcceptEnabled: data.auto_accept_enabled === true,
+            autoAcceptDelayPct: data.auto_accept_delay_pct || 80
+          });
+        }
+      } catch (e) {
+        console.error('[AutoUpdateGuard] Error cargando configs:', e);
+      }
+    };
+    fetchConfigs();
+  }, []);
+
+  // Endpoint de notificación en Telegram
+  const notifyTelegram = async (message: string) => {
+    try {
+      await fetch('/api/telegram-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+    } catch (e) {
+      console.error('[AutoUpdateGuard] Fallo al simular notificación de Telegram:', e);
+    }
+  };
+
+  // 2. Polling dinámico para redireccionar a /draft, monitorear matchmaking y auto-aceptar
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    let pollingTimeout: any = null;
+
     const checkDraftPhase = async () => {
+      let nextInterval = 3000;
       try {
         const res = await fetch('/api/game-status');
         if (!res.ok) return;
 
         const { phase } = await res.json();
-        
-        if (phase === 'ChampSelect') {
+
+        if (phase === 'Matchmaking') {
+          nextInterval = 1000; // Polling rápido buscando partida
+          readyCheckMaxRef.current = 10;
+          readyCheckStartRef.current = 0;
+          lastNotifiedReadyCheckRef.current = false;
+          isAcceptingRef.current = false;
+        } 
+        else if (phase === 'ReadyCheck') {
+          nextInterval = 500; // Polling ultra-rápido durante el cartel
+
+          if (readyCheckStartRef.current === 0) {
+            readyCheckStartRef.current = Date.now();
+          }
+
+          if (!lastNotifiedReadyCheckRef.current) {
+            lastNotifiedReadyCheckRef.current = true;
+            console.log('[AutoUpdateGuard] ¡Partida encontrada!');
+            
+            if (sessionStorage.getItem('hexdraft_telegram_notified_readycheck') !== 'true') {
+              sessionStorage.setItem('hexdraft_telegram_notified_readycheck', 'true');
+              notifyTelegram('¡Partida encontrada! Preparando fase de selección.');
+            }
+          }
+
+          if (configs.autoAcceptEnabled && !isAcceptingRef.current) {
+            const readyCheckRes = await fetch('/api/ready-check');
+            if (readyCheckRes.ok) {
+              const readyCheckData = await readyCheckRes.json();
+
+              if (readyCheckData.active && readyCheckData.playerResponse === 'None') {
+                const totalTimer = readyCheckData.timer || 12; // Duración máxima (habitualmente 10 o 12 segundos)
+                if (totalTimer > 0) {
+                  readyCheckMaxRef.current = totalTimer;
+                }
+
+                const elapsedMs = Date.now() - readyCheckStartRef.current;
+                const elapsedPct = (elapsedMs / (readyCheckMaxRef.current * 1000)) * 100;
+                
+                console.log(`[AutoUpdateGuard] ReadyCheck activo. Transcurrido: ${(elapsedMs / 1000).toFixed(1)}s / Total LCU: ${readyCheckMaxRef.current}s (${elapsedPct.toFixed(1)}% transcurrido / Límite: ${configs.autoAcceptDelayPct}%)`);
+
+                if (elapsedPct >= configs.autoAcceptDelayPct) {
+                  isAcceptingRef.current = true;
+                  console.log(`[AutoUpdateGuard] Límite de tiempo local alcanzado (${elapsedPct.toFixed(1)}% >= ${configs.autoAcceptDelayPct}%). Aceptando partida automáticamente...`);
+                  
+                  const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
+                  if (acceptRes.ok) {
+                    console.log('[AutoUpdateGuard] Partida aceptada.');
+                    
+                    if (sessionStorage.getItem('hexdraft_telegram_notified_accepted') !== 'true') {
+                      sessionStorage.setItem('hexdraft_telegram_notified_accepted', 'true');
+                      notifyTelegram('Partida aceptada. Entrando al lobby de draft.');
+                    }
+                  } else {
+                    console.error('[AutoUpdateGuard] Error al aceptar partida.');
+                    isAcceptingRef.current = false;
+                  }
+                }
+              }
+            }
+          }
+        } 
+        else if (phase === 'ChampSelect') {
+          nextInterval = 3000;
           const hasRedirected = sessionStorage.getItem('hexdraft_draft_redirected') === 'true';
           const isCurrentlyOnDraft = window.location.pathname === '/draft';
 
@@ -24,22 +127,30 @@ export const AutoUpdateGuard = () => {
             sessionStorage.setItem('hexdraft_draft_redirected', 'true');
             window.location.href = '/draft';
           }
-        } else {
-          // Si no está en selección de campeones, limpiar la flag para el siguiente juego
+        } 
+        else {
           sessionStorage.removeItem('hexdraft_draft_redirected');
+          sessionStorage.removeItem('hexdraft_telegram_notified_readycheck');
+          sessionStorage.removeItem('hexdraft_telegram_notified_accepted');
+          readyCheckMaxRef.current = 10;
+          readyCheckStartRef.current = 0;
+          lastNotifiedReadyCheckRef.current = false;
+          isAcceptingRef.current = false;
         }
+
       } catch (e) {
-        console.warn('[AutoUpdateGuard] Error comprobando fase de juego para redirección:', e);
+        console.warn('[AutoUpdateGuard] Error comprobando fase de juego:', e);
+      } finally {
+        pollingTimeout = setTimeout(checkDraftPhase, nextInterval);
       }
     };
 
-    // Pollear cada 3 segundos
-    const interval = setInterval(checkDraftPhase, 3000);
-    // Ejecución inicial inmediata
     checkDraftPhase();
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (pollingTimeout) clearTimeout(pollingTimeout);
+    };
+  }, [configs]);
 
   // 2. Comprobar recomendación de actualización al iniciar la sesión de la app
   useEffect(() => {

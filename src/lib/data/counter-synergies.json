@@ -84551,7 +84551,7 @@
     }
   },
   "Diana": {
-    "lane": "JUNGLE",
+    "lane": "MIDDLE",
     "tags": [
       "Fighter",
       "Mage"
@@ -139288,7 +139288,7 @@
     }
   },
   "Gwen": {
-    "lane": "TOP",
+    "lane": "JUNGLE",
     "tags": [
       "Fighter",
       "Assassin"
@@ -387206,7 +387206,7 @@
     }
   },
   "Senna": {
-    "lane": "BOTTOM",
+    "lane": "UTILITY",
     "tags": [
       "Marksman",
       "Support"
@@ -445523,7 +445523,7 @@
     }
   },
   "Sylas": {
-    "lane": "JUNGLE",
+    "lane": "MIDDLE",
     "tags": [
       "Mage",
       "Assassin"
@@ -554322,7 +554322,7 @@
     }
   },
   "Xerath": {
-    "lane": "MIDDLE",
+    "lane": "BOTTOM",
     "tags": [
       "Mage"
     ],

@@ -243,6 +243,11 @@ insertConfigStmt.run('last_lane_sync_timestamp', '-');
 insertConfigStmt.run('last_sync_version', '-');
 insertConfigStmt.run('meta_sync_frequency', '2');
 insertConfigStmt.run('last_meta_cache_sync', '-');
+insertConfigStmt.run('auto_accept_enabled', 'false');
+insertConfigStmt.run('auto_accept_delay_pct', '80');
+insertConfigStmt.run('telegram_notifications_enabled', 'false');
+insertConfigStmt.run('telegram_bot_token', '');
+insertConfigStmt.run('telegram_chat_id', '');
 
 // Actualizar engine_weights en config fusionándolo si ya existe, o insertándolo
 const defaultWeights = {
