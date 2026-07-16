@@ -106,7 +106,7 @@ def delete_release(github_repo, github_token, release_id, tag_name):
         print(f"  [INFO] Tag git '{tag_name}' no se pudo eliminar o ya estaba borrado.")
 
 def main():
-    print("====================================================")
+    print("\n\n\n====================================================")
     print(">>> Publicador de instaladores de HexDraft a GitHub >>>")
     print("====================================================\n")
     
@@ -366,22 +366,65 @@ def main():
                 print(f"\n[INFO] Versión más reciente de Instalador Normal en GitHub: {max_normal_tag or 'Ninguna'}")
                 print(f"[INFO] Versión más reciente de Instalador Admin en GitHub: {max_admin_tag or 'Ninguna'}")
                 
-                confirm = input("⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub anteriores, exceptuando las más recientes de cada tipo? (s/n): ").strip().lower()
+                confirm = input("⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub y archivos locales anteriores, exceptuando las más recientes de cada tipo? (s/n): ").strip().lower()
                 if confirm == "s":
+                    # 1. Eliminar de GitHub
                     for rel in releases:
                         tag = rel.get("tag_name", "")
                         if tag == max_normal_tag or tag == max_admin_tag:
                             print(f"[CONSERVAR] Conservando release '{tag}' por ser la más reciente de su tipo.")
                             continue
                         delete_release(github_repo, github_token, rel["id"], tag)
+                    
+                    # 2. Eliminar de la carpeta local dist-installer
+                    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+                    local_files = list_local_installers(dist_installer_dir)
+                    print("\n[LOCAL] Limpiando instaladores locales antiguos...")
+                    for filename in local_files:
+                        match = re.search(r"(\d+\.\d+\.\d+)", filename)
+                        if not match:
+                            continue
+                        ver_tuple = parse_version(match.group(1))
+                        
+                        should_delete = False
+                        if "Admin" in filename:
+                            if ver_tuple < max_admin_ver:
+                                should_delete = True
+                        else:
+                            if ver_tuple < max_normal_ver:
+                                should_delete = True
+                                
+                        if should_delete:
+                            filepath = os.path.join(dist_installer_dir, filename)
+                            try:
+                                os.remove(filepath)
+                                print(f"  [DELETE LOCAL] Archivo '{filename}' eliminado.")
+                            except Exception as e:
+                                print(f"  [WARN] No se pudo eliminar archivo local '{filename}': {e}")
                 continue
                 
             if 1 <= idx_del <= len(releases):
                 target_rel = releases[idx_del - 1]
                 tag = target_rel.get("tag_name", "")
-                confirm = input(f"⚠️ ¿Estás 100% seguro de que deseas eliminar permanentemente la release '{tag}' y su tag en Git de GitHub? (s/n): ").strip().lower()
+                confirm = input(f"⚠️ ¿Estás 100% seguro de que deseas eliminar permanentemente la release '{tag}', su tag en Git de GitHub y sus archivos locales correspondientes? (s/n): ").strip().lower()
                 if confirm == "s":
+                    # 1. Eliminar de GitHub
                     delete_release(github_repo, github_token, target_rel["id"], tag)
+                    
+                    # 2. Eliminar de la carpeta local dist-installer
+                    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+                    local_files = list_local_installers(dist_installer_dir)
+                    version_str = tag.replace("v", "")
+                    
+                    print(f"\n[LOCAL] Buscando archivos locales correspondientes a la versión '{version_str}'...")
+                    for filename in local_files:
+                        if f"-{version_str}.exe" in filename:
+                            filepath = os.path.join(dist_installer_dir, filename)
+                            try:
+                                os.remove(filepath)
+                                print(f"  [DELETE LOCAL] Archivo '{filename}' eliminado.")
+                            except Exception as e:
+                                print(f"  [WARN] No se pudo eliminar archivo local '{filename}': {e}")
             else:
                 print("[ERROR] Opción inválida.")
                 
