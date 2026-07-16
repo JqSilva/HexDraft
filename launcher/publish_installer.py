@@ -49,6 +49,54 @@ def detect_version():
             print(f"⚠️ Advertencia al leer HexDraftSetup.iss: {e}")
     return "1.3.0"  # fallback por defecto
 
+def list_local_installers(dist_installer_dir):
+    """Retorna una lista ordenada de instaladores ejecutables encontrados localmente."""
+    if not os.path.exists(dist_installer_dir):
+        return []
+    files = []
+    for file in os.listdir(dist_installer_dir):
+        if file.endswith(".exe") and "Setup" in file:
+            files.append(file)
+    return sorted(files)
+
+def get_releases(github_repo, github_token):
+    """Consulta la lista de todas las releases en el repositorio de GitHub."""
+    url = f"https://api.github.com/repos/{github_repo}/releases"
+    req = urllib.request.Request(url)
+    req.add_header("Authorization", f"token {github_token}")
+    req.add_header("Accept", "application/vnd.github.v3+json")
+    req.add_header("User-Agent", "HexDraft-Publisher-Python")
+    try:
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print(f"❌ Error al consultar releases en GitHub: {e}")
+        return []
+
+def delete_release(github_repo, github_token, release_id, tag_name):
+    """Elimina permanentemente una release y su tag git asociado de GitHub."""
+    # 1. Eliminar release
+    url_release = f"https://api.github.com/repos/{github_repo}/releases/{release_id}"
+    req_release = urllib.request.Request(url_release, method="DELETE")
+    req_release.add_header("Authorization", f"token {github_token}")
+    req_release.add_header("User-Agent", "HexDraft-Publisher-Python")
+    try:
+        with urllib.request.urlopen(req_release) as response:
+            print(f"  [DELETE] Release '{tag_name}' (ID: {release_id}) eliminada de GitHub.")
+    except Exception as e:
+        print(f"  [WARN] No se pudo eliminar la release '{tag_name}': {e}")
+
+    # 2. Eliminar referencia del tag git
+    url_tag = f"https://api.github.com/repos/{github_repo}/git/refs/tags/{tag_name}"
+    req_tag = urllib.request.Request(url_tag, method="DELETE")
+    req_tag.add_header("Authorization", f"token {github_token}")
+    req_tag.add_header("User-Agent", "HexDraft-Publisher-Python")
+    try:
+        with urllib.request.urlopen(req_tag) as response:
+            print(f"  [DELETE] Tag git '{tag_name}' eliminado del repositorio remoto.")
+    except Exception as e:
+        print(f"  [INFO] Tag git '{tag_name}' no se pudo eliminar o ya estaba borrado.")
+
 def main():
     print("====================================================")
     print(">>> Publicador de instaladores de HexDraft a GitHub >>>")
@@ -82,158 +130,229 @@ def main():
         
     github_repo = "JqSilva/HexDraft-Launcher"
     
-    # 2. Detectar y solicitar versión
-    default_version = detect_version()
-    print(f"Versión detectada en script de Inno Setup: {default_version}")
-    version = input(f"Introduce la versión a publicar (Por defecto [{default_version}]): ").strip()
-    if not version:
-        version = default_version
+    while True:
+        print("\nElige una acción:")
+        print("1) Subir instalador(es) a GitHub")
+        print("2) Eliminar versiones (releases) antiguas de GitHub")
+        print("3) Salir")
         
-    # 3. Selección de instalador a subir
-    print("\nSelecciona qué instalador(es) deseas subir:")
-    print("1) Solo Instalador de Usuario (Normal)")
-    print("2) Solo Instalador de Administrador (Admin)")
-    print("3) Ambos instaladores (Normal y Admin)")
-    
-    opcion = input("Elige una opción (1/2/3 - Por defecto [3]): ").strip()
-    if not opcion:
-        opcion = "3"
-        
-    dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
-    user_installer_name = f"HexDraft-Setup-{version}.exe"
-    admin_installer_name = f"HexDraft-Setup-Admin-{version}.exe"
-    
-    user_installer_path = os.path.join(dist_installer_dir, user_installer_name)
-    admin_installer_path = os.path.join(dist_installer_dir, admin_installer_name)
-    
-    files_to_upload = []
-    if opcion == "1":
-        files_to_upload.append((user_installer_name, user_installer_path))
-    elif opcion == "2":
-        files_to_upload.append((admin_installer_name, admin_installer_path))
-    elif opcion == "3":
-        files_to_upload.append((user_installer_name, user_installer_path))
-        files_to_upload.append((admin_installer_name, admin_installer_path))
-    else:
-        print("[ERROR] Opción inválida.")
-        sys.exit(1)
-        
-    # Validar existencia local de los archivos seleccionados
-    print("\nVerificando archivos locales...")
-    for name, path in files_to_upload:
-        if os.path.exists(path):
-            size_mb = os.path.getsize(path) / 1024 / 1024
-            print(f"  [OK] Encontrado: {name} ({size_mb:.2f} MB)")
-        else:
-            print(f"  [ERROR] No se encuentra {name} en {dist_installer_dir}")
-            print("  Por favor, genera primero el instalador correspondiente con Inno Setup.")
-            sys.exit(1)
+        opcion_menu = input("Elige una opción (1/2/3 - Por defecto [1]): ").strip()
+        if not opcion_menu:
+            opcion_menu = "1"
             
-    # 4. Consultar o crear la Release en GitHub
-    tag_name = f"v{version}"
-    latest_url = f"https://api.github.com/repos/{github_repo}/releases/tags/{tag_name}"
-    
-    req_check = urllib.request.Request(latest_url)
-    req_check.add_header("Authorization", f"token {github_token}")
-    req_check.add_header("Accept", "application/vnd.github.v3+json")
-    req_check.add_header("User-Agent", "HexDraft-Publisher-Python")
-    
-    release_data = None
-    try:
-        print(f"\nConsultando release para el tag '{tag_name}' en GitHub...")
-        with urllib.request.urlopen(req_check) as response:
-            release_data = json.loads(response.read().decode("utf-8"))
-            print(f"[API] Release '{tag_name}' encontrada. Se utilizará la existente.")
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print(f"[API] La release '{tag_name}' no existe. Creando una nueva...")
-        else:
-            print(f"[ERROR] al consultar la release ({e.code}): {e.read().decode('utf-8')}")
-            sys.exit(1)
-    except Exception as e:
-        print(f"[ERROR] de conexión: {e}")
-        sys.exit(1)
-        
-    # Crear release si no existe
-    if not release_data:
-        body_text = (
-            f"HexDraft Versión {version}\n\n"
-            "Descarga el instalador correspondiente:\n\n"
-            f"    Instalador de Usuario (HexDraft-Setup-{version}.exe): Se instala en el perfil del usuario actual sin requerir permisos de administrador.\n"
-            f"    Instalador de Administrador (HexDraft-Setup-Admin-{version}.exe): Se instala a nivel de sistema para todos los usuarios (requiere permisos de administrador)."
-        )
-        
-        create_url = f"https://api.github.com/repos/{github_repo}/releases"
-        create_payload = json.dumps({
-            "tag_name": tag_name,
-            "name": f"HexDraft Versión {version}",
-            "body": body_text,
-            "draft": False,
-            "prerelease": False
-        }).encode("utf-8")
-        
-        req_create = urllib.request.Request(create_url, data=create_payload, method="POST")
-        req_create.add_header("Authorization", f"token {github_token}")
-        req_create.add_header("Content-Type", "application/json")
-        req_create.add_header("User-Agent", "HexDraft-Publisher-Python")
-        
-        try:
-            with urllib.request.urlopen(req_create) as response:
-                release_data = json.loads(response.read().decode("utf-8"))
-                print(f"[OK] Nueva release '{tag_name}' creada con éxito. URL: {release_data['html_url']}")
-        except urllib.error.HTTPError as e:
-            print(f"[ERROR] al crear la release ({e.code}): {e.read().decode('utf-8')}")
-            sys.exit(1)
-        except Exception as e:
-            print(f"[ERROR] al crear la release: {e}")
-            sys.exit(1)
+        if opcion_menu == "1":
+            # --- SUBIR INSTALADORES ---
+            dist_installer_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+            local_files = list_local_installers(dist_installer_dir)
             
-    # 5. Subir los archivos seleccionados como assets
-    upload_url_template = release_data["upload_url"]
-    upload_base_url = upload_url_template.split("{")[0]
-    existing_assets = release_data.get("assets", [])
-    
-    print("\nIniciando subida de assets a GitHub...")
-    for name, path in files_to_upload:
-        # Verificar si el asset ya existe y borrarlo para evitar conflictos
-        for asset in existing_assets:
-            if asset["name"] == name:
-                asset_id = asset["id"]
-                print(f"[INFO] El asset '{name}' ya existe en la release (ID: {asset_id}). Eliminándolo...")
-                delete_url = f"https://api.github.com/repos/{github_repo}/releases/assets/{asset_id}"
-                req_delete = urllib.request.Request(delete_url, method="DELETE")
-                req_delete.add_header("Authorization", f"token {github_token}")
-                req_delete.add_header("User-Agent", "HexDraft-Publisher-Python")
-                try:
-                    with urllib.request.urlopen(req_delete) as response:
-                        print(f"  [DELETE] Asset '{name}' anterior eliminado.")
-                except Exception as e:
-                    print(f"  [WARN] Advertencia al eliminar asset existente '{name}': {e}")
-                    
-        # Subir el archivo nuevo
-        upload_url = f"{upload_base_url}?name={name}"
-        size_bytes = os.path.getsize(path)
-        print(f"[UPLOAD] Subiendo '{name}' ({size_bytes / 1024 / 1024:.2f} MB)...")
-        
-        try:
-            with open(path, "rb") as f:
-                file_data = f.read()
+            if not local_files:
+                print(f"\n[ERROR] No se encontraron instaladores ejecutables en '{dist_installer_dir}'.")
+                print("Por favor, genera primero el instalador correspondiente con Inno Setup.")
+                continue
                 
-            req_upload = urllib.request.Request(upload_url, data=file_data, method="POST")
-            req_upload.add_header("Authorization", f"token {github_token}")
-            req_upload.add_header("Content-Type", "application/octet-stream")
-            req_upload.add_header("Content-Length", str(size_bytes))
-            req_upload.add_header("User-Agent", "HexDraft-Publisher-Python")
+            print(f"\nInstaladores encontrados en '{dist_installer_dir}':")
+            for i, filename in enumerate(local_files, 1):
+                filepath = os.path.join(dist_installer_dir, filename)
+                size_mb = os.path.getsize(filepath) / 1024 / 1024
+                print(f" {i}) {filename} ({size_mb:.2f} MB)")
+            print(f" {len(local_files) + 1}) Subir TODOS los instaladores listados")
+            print(f" {len(local_files) + 2}) Volver")
             
-            with urllib.request.urlopen(req_upload) as response:
-                print(f"  [OK] Asset '{name}' subido con éxito.")
-        except urllib.error.HTTPError as e:
-            print(f"  [ERROR] al subir asset '{name}' ({e.code}): {e.read().decode('utf-8')}")
-        except Exception as e:
-            print(f"  [ERROR] al subir asset '{name}': {e}")
+            seleccion = input(f"Elige el instalador que deseas subir (1-{len(local_files) + 2} - Por defecto [1]): ").strip()
+            if not seleccion:
+                seleccion = "1"
+                
+            if not seleccion.isdigit():
+                print("[ERROR] Selección inválida.")
+                continue
+                
+            idx = int(seleccion)
+            if idx == len(local_files) + 2:
+                continue  # Volver
+                
+            files_to_upload = []
+            if idx == len(local_files) + 1:
+                # Todos
+                for filename in local_files:
+                    filepath = os.path.join(dist_installer_dir, filename)
+                    files_to_upload.append((filename, filepath))
+            elif 1 <= idx <= len(local_files):
+                filename = local_files[idx - 1]
+                filepath = os.path.join(dist_installer_dir, filename)
+                files_to_upload.append((filename, filepath))
+            else:
+                print("[ERROR] Selección fuera de rango.")
+                continue
+                
+            # Extraer versión del primer archivo
+            version = detect_version()  # fallback
+            first_filename = files_to_upload[0][0]
+            match = re.search(r"(\d+\.\d+\.\d+)", first_filename)
+            if match:
+                version = match.group(1)
             
-    print("\n[FINISH] Proceso de publicación completado.")
-    print(f"[URL] Puedes ver el resultado en: {release_data['html_url']}")
+            print(f"\n[INFO] Versión identificada para la release: {version}")
+            
+            # Consultar/Crear la Release en GitHub
+            tag_name = f"v{version}"
+            latest_url = f"https://api.github.com/repos/{github_repo}/releases/tags/{tag_name}"
+            
+            req_check = urllib.request.Request(latest_url)
+            req_check.add_header("Authorization", f"token {github_token}")
+            req_check.add_header("Accept", "application/vnd.github.v3+json")
+            req_check.add_header("User-Agent", "HexDraft-Publisher-Python")
+            
+            release_data = None
+            try:
+                print(f"Consultando release para el tag '{tag_name}' en GitHub...")
+                with urllib.request.urlopen(req_check) as response:
+                    release_data = json.loads(response.read().decode("utf-8"))
+                    print(f"[API] Release '{tag_name}' encontrada. Se utilizará la existente.")
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    print(f"[API] La release '{tag_name}' no existe. Creando una nueva...")
+                else:
+                    print(f"[ERROR] al consultar la release ({e.code}): {e.read().decode('utf-8')}")
+                    continue
+            except Exception as e:
+                print(f"[ERROR] de conexión: {e}")
+                continue
+                
+            # Crear release si no existe
+            if not release_data:
+                body_text = (
+                    f"HexDraft Versión {version}\n\n"
+                    "Descarga el instalador correspondiente:\n\n"
+                    f"    Instalador de Usuario (HexDraft-Setup-{version}.exe): Se instala en el perfil del usuario actual sin requerir permisos de administrador.\n"
+                    f"    Instalador de Administrador (HexDraft-Setup-Admin-{version}.exe): Se instala a nivel de sistema para todos los usuarios (requiere permisos de administrador)."
+                )
+                
+                create_url = f"https://api.github.com/repos/{github_repo}/releases"
+                create_payload = json.dumps({
+                    "tag_name": tag_name,
+                    "name": f"HexDraft Versión {version}",
+                    "body": body_text,
+                    "draft": False,
+                    "prerelease": False
+                }).encode("utf-8")
+                
+                req_create = urllib.request.Request(create_url, data=create_payload, method="POST")
+                req_create.add_header("Authorization", f"token {github_token}")
+                req_create.add_header("Content-Type", "application/json")
+                req_create.add_header("User-Agent", "HexDraft-Publisher-Python")
+                
+                try:
+                    with urllib.request.urlopen(req_create) as response:
+                        release_data = json.loads(response.read().decode("utf-8"))
+                        print(f"[OK] Nueva release '{tag_name}' creada con éxito. URL: {release_data['html_url']}")
+                except urllib.error.HTTPError as e:
+                    print(f"[ERROR] al crear la release ({e.code}): {e.read().decode('utf-8')}")
+                    continue
+                except Exception as e:
+                    print(f"[ERROR] al crear la release: {e}")
+                    continue
+                    
+            # Subir los archivos seleccionados como assets
+            upload_url_template = release_data["upload_url"]
+            upload_base_url = upload_url_template.split("{")[0]
+            existing_assets = release_data.get("assets", [])
+            
+            print("\nIniciando subida de assets a GitHub...")
+            for name, path in files_to_upload:
+                # Verificar si el asset ya existe y borrarlo
+                for asset in existing_assets:
+                    if asset["name"] == name:
+                        asset_id = asset["id"]
+                        print(f"[INFO] El asset '{name}' ya existe en la release (ID: {asset_id}). Eliminándolo...")
+                        delete_url = f"https://api.github.com/repos/{github_repo}/releases/assets/{asset_id}"
+                        req_delete = urllib.request.Request(delete_url, method="DELETE")
+                        req_delete.add_header("Authorization", f"token {github_token}")
+                        req_delete.add_header("User-Agent", "HexDraft-Publisher-Python")
+                        try:
+                            with urllib.request.urlopen(req_delete) as response:
+                                print(f"  [DELETE] Asset '{name}' anterior eliminado.")
+                        except Exception as e:
+                            print(f"  [WARN] Advertencia al eliminar asset existente '{name}': {e}")
+                            
+                # Subir el archivo nuevo
+                upload_url = f"{upload_base_url}?name={name}"
+                size_bytes = os.path.getsize(path)
+                print(f"[UPLOAD] Subiendo '{name}' ({size_bytes / 1024 / 1024:.2f} MB)...")
+                
+                try:
+                    with open(path, "rb") as f:
+                        file_data = f.read()
+                        
+                    req_upload = urllib.request.Request(upload_url, data=file_data, method="POST")
+                    req_upload.add_header("Authorization", f"token {github_token}")
+                    req_upload.add_header("Content-Type", "application/octet-stream")
+                    req_upload.add_header("Content-Length", str(size_bytes))
+                    req_upload.add_header("User-Agent", "HexDraft-Publisher-Python")
+                    
+                    with urllib.request.urlopen(req_upload) as response:
+                        print(f"  [OK] Asset '{name}' subido con éxito.")
+                except urllib.error.HTTPError as e:
+                    print(f"  [ERROR] al subir asset '{name}' ({e.code}): {e.read().decode('utf-8')}")
+                except Exception as e:
+                    print(f"  [ERROR] al subir asset '{name}': {e}")
+                    
+            print("\n[FINISH] Proceso de publicación completado.")
+            print(f"[URL] Puedes ver el resultado en: {release_data['html_url']}")
+            
+        elif opcion_menu == "2":
+            # --- ELIMINAR RELEASES ANTIGUAS ---
+            releases = get_releases(github_repo, github_token)
+            if not releases:
+                print("\n[INFO] No se encontraron releases en GitHub.")
+                continue
+                
+            print("\nReleases encontradas en GitHub:")
+            for i, rel in enumerate(releases, 1):
+                tag = rel.get("tag_name", "Desconocido")
+                name = rel.get("name", "Sin nombre")
+                assets_count = len(rel.get("assets", []))
+                print(f" {i}) {tag} - {name} ({assets_count} assets)")
+                
+            print(f" {len(releases) + 1}) Eliminar TODAS las anteriores a la versión actual")
+            print(f" {len(releases) + 2}) Volver")
+            
+            sel_del = input(f"Elige la release que deseas eliminar por completo (1-{len(releases) + 2}): ").strip()
+            if not sel_del:
+                continue
+                
+            if not sel_del.isdigit():
+                print("[ERROR] Selección inválida.")
+                continue
+                
+            idx_del = int(sel_del)
+            if idx_del == len(releases) + 2:
+                continue  # Volver
+                
+            if idx_del == len(releases) + 1:
+                # Eliminar todas excepto la actual
+                current_ver = detect_version()
+                confirm = input(f"⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub anteriores a v{current_ver}? (s/n): ").strip().lower()
+                if confirm == "s":
+                    for rel in releases:
+                        tag = rel.get("tag_name", "")
+                        if tag != f"v{current_ver}":
+                            delete_release(github_repo, github_token, rel["id"], tag)
+                continue
+                
+            if 1 <= idx_del <= len(releases):
+                target_rel = releases[idx_del - 1]
+                tag = target_rel.get("tag_name", "")
+                confirm = input(f"⚠️ ¿Estás 100% seguro de que deseas eliminar permanentemente la release '{tag}' y su tag en Git de GitHub? (s/n): ").strip().lower()
+                if confirm == "s":
+                    delete_release(github_repo, github_token, target_rel["id"], tag)
+            else:
+                print("[ERROR] Opción inválida.")
+                
+        elif opcion_menu == "3":
+            print("\n¡Proceso finalizado!")
+            break
+        else:
+            print("[ERROR] Opción inválida.")
 
 if __name__ == "__main__":
     try:
