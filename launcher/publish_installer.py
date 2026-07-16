@@ -49,6 +49,14 @@ def detect_version():
             print(f"⚠️ Advertencia al leer HexDraftSetup.iss: {e}")
     return "1.3.0"  # fallback por defecto
 
+def parse_version(v_str):
+    """Parsea una cadena de versión a una tupla de enteros para su comparación lógica."""
+    clean = re.sub(r"[^\d.]", "", v_str)
+    try:
+        return tuple(int(x) for x in clean.split(".") if x.isdigit())
+    except Exception:
+        return (0, 0, 0)
+
 def list_local_installers(dist_installer_dir):
     """Retorna una lista ordenada de instaladores ejecutables encontrados localmente."""
     if not os.path.exists(dist_installer_dir):
@@ -329,14 +337,43 @@ def main():
                 continue  # Volver
                 
             if idx_del == len(releases) + 1:
-                # Eliminar todas excepto la actual
-                current_ver = detect_version()
-                confirm = input(f"⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub anteriores a v{current_ver}? (s/n): ").strip().lower()
+                # Determinar la versión más reciente en GitHub para cada tipo de instalador
+                max_normal_ver = (0, 0, 0)
+                max_normal_tag = None
+                max_admin_ver = (0, 0, 0)
+                max_admin_tag = None
+                
+                for rel in releases:
+                    tag = rel.get("tag_name", "")
+                    assets = rel.get("assets", [])
+                    
+                    for asset in assets:
+                        name = asset.get("name", "")
+                        match = re.search(r"(\d+\.\d+\.\d+)", name)
+                        if not match:
+                            continue
+                        ver_tuple = parse_version(match.group(1))
+                        
+                        if "Admin" in name:
+                            if ver_tuple > max_admin_ver:
+                                max_admin_ver = ver_tuple
+                                max_admin_tag = tag
+                        else:
+                            if ver_tuple > max_normal_ver:
+                                max_normal_ver = ver_tuple
+                                max_normal_tag = tag
+                                
+                print(f"\n[INFO] Versión más reciente de Instalador Normal en GitHub: {max_normal_tag or 'Ninguna'}")
+                print(f"[INFO] Versión más reciente de Instalador Admin en GitHub: {max_admin_tag or 'Ninguna'}")
+                
+                confirm = input("⚠️ ¿Estás completamente seguro de eliminar TODAS las releases de GitHub anteriores, exceptuando las más recientes de cada tipo? (s/n): ").strip().lower()
                 if confirm == "s":
                     for rel in releases:
                         tag = rel.get("tag_name", "")
-                        if tag != f"v{current_ver}":
-                            delete_release(github_repo, github_token, rel["id"], tag)
+                        if tag == max_normal_tag or tag == max_admin_tag:
+                            print(f"[CONSERVAR] Conservando release '{tag}' por ser la más reciente de su tipo.")
+                            continue
+                        delete_release(github_repo, github_token, rel["id"], tag)
                 continue
                 
             if 1 <= idx_del <= len(releases):
