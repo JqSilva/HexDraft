@@ -84,7 +84,7 @@ export const AutoUpdateGuard = () => {
                 fetch('/api/ready-check')
                   .then(res => res.ok ? res.json() : null)
                   .then(readyCheckData => {
-                    const duration = (readyCheckData && readyCheckData.timer > 0) ? readyCheckData.timer : 12;
+                    const duration = (readyCheckData && readyCheckData.timer > 0) ? readyCheckData.timer : 10;
                     readyCheckMaxRef.current = duration;
 
                     // Descontar holgura de 1.5s al final para no arriesgarnos
