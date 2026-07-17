@@ -81,6 +81,8 @@ export const AutoUpdateGuard = () => {
               fetch('/api/ready-check')
                 .then(res => res.ok ? res.json() : null)
                 .then(readyCheckData => {
+                  console.log('[AutoUpdateGuard] Datos completos de ReadyCheck LCU:', readyCheckData);
+                  
                   const duration = (readyCheckData && readyCheckData.timer > 0) ? readyCheckData.timer : 12;
                   readyCheckMaxRef.current = duration;
 
@@ -91,18 +93,20 @@ export const AutoUpdateGuard = () => {
                   console.log(`[AutoUpdateGuard] Auto-Aceptar programado. Esperando ${(delayMs / 1000).toFixed(1)}s (Límite: ${configs.autoAcceptDelayPct}% de ${maxWaitSeconds.toFixed(1)}s con holgura)`);
 
                   autoAcceptTimeoutRef.current = setTimeout(async () => {
-                    console.log('[AutoUpdateGuard] Ejecutando auto-aceptar de partida...');
-                    const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
-                    if (acceptRes.ok) {
-                      console.log('[AutoUpdateGuard] Partida aceptada.');
+                    console.log('[AutoUpdateGuard] [SIMULADO] Ejecutando auto-aceptar de partida...');
+                    
+                    // Comentado para realizar pruebas en vivo y validar en consola
+                    // const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
+                    // if (acceptRes.ok) {
+                      console.log('[AutoUpdateGuard] [SIMULADO] Partida aceptada.');
                       
                       if (sessionStorage.getItem('hexdraft_telegram_notified_accepted') !== 'true') {
                         sessionStorage.setItem('hexdraft_telegram_notified_accepted', 'true');
-                        notifyTelegram('Partida aceptada. Entrando al lobby de draft.');
+                        notifyTelegram('[SIMULADO] Partida aceptada. Entrando al lobby de draft.');
                       }
-                    } else {
-                      console.error('[AutoUpdateGuard] Error al auto-aceptar partida.');
-                    }
+                    // } else {
+                    //   console.error('[AutoUpdateGuard] Error al auto-aceptar partida.');
+                    // }
                   }, delayMs);
                 })
                 .catch(e => {
