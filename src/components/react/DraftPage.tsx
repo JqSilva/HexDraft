@@ -72,6 +72,7 @@ export const DraftPage = () => {
     const notifiedPickRef = useRef<number>(0);
     const notifiedStartRef = useRef<boolean>(false);
     const handleAutoExecutionRef = useRef<any>(null);
+    const isRestoredRef = useRef<boolean>(false);
 
     const notifyTelegram = async (message: string) => {
         try {
@@ -344,6 +345,7 @@ export const DraftPage = () => {
         notifiedBanRef.current = 0;
         notifiedPickRef.current = 0;
         notifiedStartRef.current = false;
+        isRestoredRef.current = false;
 
         // Limpiar claves del sessionStorage para la siguiente partida
         try {
@@ -595,65 +597,70 @@ export const DraftPage = () => {
                     }
                 }
 
-                // 1. Restaurar build desde localStorage si no está en memoria
-                let activeBuild = currentBuild;
-                if (!activeBuild) {
-                    try {
-                        const savedBuild = localStorage.getItem('last_build_data:v1');
-                        if (savedBuild) {
-                            activeBuild = JSON.parse(savedBuild);
-                            setCurrentBuild(activeBuild);
-                            console.log("🔄 Build restaurada desde localStorage para InProgress");
+                if (!isRestoredRef.current) {
+                    isRestoredRef.current = true;
+                    console.log("🔌 [InProgress] Iniciando restauración única de estado de juego...");
+
+                    // 1. Restaurar build desde localStorage si no está en memoria
+                    let activeBuild = currentBuild;
+                    if (!activeBuild) {
+                        try {
+                            const savedBuild = localStorage.getItem('last_build_data:v1');
+                            if (savedBuild) {
+                                activeBuild = JSON.parse(savedBuild);
+                                setCurrentBuild(activeBuild);
+                                console.log("🔄 Build restaurada desde localStorage para InProgress");
+                            }
+                        } catch (e) {
+                            console.error("Error restaurando build:", e);
                         }
-                    } catch (e) {
-                        console.error("Error restaurando build:", e);
                     }
-                }
 
-                // 2. Restaurar equipos si están vacíos
-                const teamsEmpty = myTeam.every(p => p.championId === 0 && p.championPickIntent === 0);
-                if (teamsEmpty) {
-                    try {
-                        const savedMyTeam = localStorage.getItem('last_my_team:v1');
-                        const savedTheirTeam = localStorage.getItem('last_their_team:v1');
-                        const savedRole = localStorage.getItem('last_my_role:v1');
-                        if (savedMyTeam) setMyTeam(JSON.parse(savedMyTeam));
-                        if (savedTheirTeam) setTheirTeam(JSON.parse(savedTheirTeam));
-                        if (savedRole) setMyRole(savedRole);
-                        console.log("🔄 Equipos restaurados desde localStorage");
-                    } catch (e) {
-                        console.error("Error restaurando equipos:", e);
+                    // 2. Restaurar equipos si están vacíos
+                    const teamsEmpty = myTeam.every(p => p.championId === 0 && p.championPickIntent === 0);
+                    if (teamsEmpty) {
+                        try {
+                            const savedMyTeam = localStorage.getItem('last_my_team:v1');
+                            const savedTheirTeam = localStorage.getItem('last_their_team:v1');
+                            const savedRole = localStorage.getItem('last_my_role:v1');
+                            if (savedMyTeam) setMyTeam(JSON.parse(savedMyTeam));
+                            if (savedTheirTeam) setTheirTeam(JSON.parse(savedTheirTeam));
+                            if (savedRole) setMyRole(savedRole);
+                            console.log("🔄 Equipos restaurados desde localStorage");
+                        } catch (e) {
+                            console.error("Error restaurando equipos:", e);
+                        }
                     }
-                }
 
-                // 3. Cargar datos tácticos si no están en memoria
-                if (!tacticalData && activeBuild) {
-                    fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${myRole}`)
-                        .then(res => res.json())
-                        .then(tData => {
-                            setTacticalData(tData);
-                            console.log("🔥 Data táctica cargada durante InProgress");
-                        })
-                        .catch(err => console.error("Error táctico InProgress:", err));
-                }
-
-                // 4. Restaurar recomendación seleccionada
-                let currentRec = selectedRecommendation;
-                if (!currentRec) {
-                    const saved = localStorage.getItem('last_pick_analysis:v1');
-                    if (saved) {
-                        currentRec = JSON.parse(saved);
-                        setSelectedRecommendation(currentRec);
+                    // 3. Cargar datos tácticos si no están en memoria
+                    if (!tacticalData && activeBuild) {
+                        fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${myRole}`)
+                            .then(res => res.json())
+                            .then(tData => {
+                                setTacticalData(tData);
+                                console.log("🔥 Data táctica cargada durante InProgress");
+                            })
+                            .catch(err => console.error("Error táctico InProgress:", err));
                     }
-                }
 
-                // 5. Establecer vista correcta
-                if (activeBuild) {
-                    if (view !== 'build' && view !== 'reasons') {
-                        setView('build');
+                    // 4. Restaurar recomendación seleccionada
+                    let currentRec = selectedRecommendation;
+                    if (!currentRec) {
+                        const saved = localStorage.getItem('last_pick_analysis:v1');
+                        if (saved) {
+                            currentRec = JSON.parse(saved);
+                            setSelectedRecommendation(currentRec);
+                        }
                     }
-                } else if (currentRec && view !== 'reasons') {
-                    setView('reasons');
+
+                    // 5. Establecer vista correcta
+                    if (activeBuild) {
+                        if (view !== 'build' && view !== 'reasons') {
+                            setView('build');
+                        }
+                    } else if (currentRec && view !== 'reasons') {
+                        setView('reasons');
+                    }
                 }
             }
             else {
@@ -662,6 +669,7 @@ export const DraftPage = () => {
                     setSelectedRecommendation(null);
                     setCurrentBuild(null);
                     setTacticalData(null);
+                    isRestoredRef.current = false;
                     localStorage.removeItem('last_build_data');
                     localStorage.removeItem('last_my_team');
                     localStorage.removeItem('last_their_team');
