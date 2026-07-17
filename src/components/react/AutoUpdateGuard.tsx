@@ -7,9 +7,8 @@ export const AutoUpdateGuard = () => {
   // 1. Cargar configuraciones del auto-aceptar al montar
   const [configs, setConfigs] = useState({ autoAcceptEnabled: false, autoAcceptDelayPct: 80 });
   const readyCheckMaxRef = React.useRef<number>(10);
-  const readyCheckStartRef = React.useRef<number>(0);
   const lastNotifiedReadyCheckRef = React.useRef<boolean>(false);
-  const isAcceptingRef = React.useRef<boolean>(false);
+  const autoAcceptTimeoutRef = React.useRef<any>(null);
 
   useEffect(() => {
     const fetchConfigs = async () => {
@@ -59,16 +58,14 @@ export const AutoUpdateGuard = () => {
         if (phase === 'Matchmaking') {
           nextInterval = 1000; // Polling rápido buscando partida
           readyCheckMaxRef.current = 10;
-          readyCheckStartRef.current = 0;
           lastNotifiedReadyCheckRef.current = false;
-          isAcceptingRef.current = false;
+          if (autoAcceptTimeoutRef.current) {
+            clearTimeout(autoAcceptTimeoutRef.current);
+            autoAcceptTimeoutRef.current = null;
+          }
         } 
         else if (phase === 'ReadyCheck') {
-          nextInterval = 500; // Polling ultra-rápido durante el cartel
-
-          if (readyCheckStartRef.current === 0) {
-            readyCheckStartRef.current = Date.now();
-          }
+          nextInterval = 1000; // No necesitamos polling tan rápido si usamos un setTimeout directo para la acción
 
           if (!lastNotifiedReadyCheckRef.current) {
             lastNotifiedReadyCheckRef.current = true;
@@ -78,42 +75,39 @@ export const AutoUpdateGuard = () => {
               sessionStorage.setItem('hexdraft_telegram_notified_readycheck', 'true');
               notifyTelegram('¡Partida encontrada! Preparando fase de selección.');
             }
-          }
 
-          if (configs.autoAcceptEnabled && !isAcceptingRef.current) {
-            const readyCheckRes = await fetch('/api/ready-check');
-            if (readyCheckRes.ok) {
-              const readyCheckData = await readyCheckRes.json();
+            // Programar aceptación automática mediante setTimeout asíncrono con holgura de 1.5s
+            if (configs.autoAcceptEnabled && !autoAcceptTimeoutRef.current) {
+              fetch('/api/ready-check')
+                .then(res => res.ok ? res.json() : null)
+                .then(readyCheckData => {
+                  const duration = (readyCheckData && readyCheckData.timer > 0) ? readyCheckData.timer : 12;
+                  readyCheckMaxRef.current = duration;
 
-              if (readyCheckData.active && readyCheckData.playerResponse === 'None') {
-                const totalTimer = readyCheckData.timer || 12; // Duración máxima (habitualmente 10 o 12 segundos)
-                if (totalTimer > 0) {
-                  readyCheckMaxRef.current = totalTimer;
-                }
+                  // Descontar holgura de 1.5s al final para no arriesgarnos
+                  const maxWaitSeconds = Math.max(2.0, duration - 1.5);
+                  const delayMs = (configs.autoAcceptDelayPct / 100) * maxWaitSeconds * 1000;
 
-                const elapsedMs = Date.now() - readyCheckStartRef.current;
-                const elapsedPct = (elapsedMs / (readyCheckMaxRef.current * 1000)) * 100;
-                
-                console.log(`[AutoUpdateGuard] ReadyCheck activo. Transcurrido: ${(elapsedMs / 1000).toFixed(1)}s / Total LCU: ${readyCheckMaxRef.current}s (${elapsedPct.toFixed(1)}% transcurrido / Límite: ${configs.autoAcceptDelayPct}%)`);
+                  console.log(`[AutoUpdateGuard] Auto-Aceptar programado. Esperando ${(delayMs / 1000).toFixed(1)}s (Límite: ${configs.autoAcceptDelayPct}% de ${maxWaitSeconds.toFixed(1)}s con holgura)`);
 
-                if (elapsedPct >= configs.autoAcceptDelayPct) {
-                  isAcceptingRef.current = true;
-                  console.log(`[AutoUpdateGuard] Límite de tiempo local alcanzado (${elapsedPct.toFixed(1)}% >= ${configs.autoAcceptDelayPct}%). Aceptando partida automáticamente...`);
-                  
-                  const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
-                  if (acceptRes.ok) {
-                    console.log('[AutoUpdateGuard] Partida aceptada.');
-                    
-                    if (sessionStorage.getItem('hexdraft_telegram_notified_accepted') !== 'true') {
-                      sessionStorage.setItem('hexdraft_telegram_notified_accepted', 'true');
-                      notifyTelegram('Partida aceptada. Entrando al lobby de draft.');
+                  autoAcceptTimeoutRef.current = setTimeout(async () => {
+                    console.log('[AutoUpdateGuard] Ejecutando auto-aceptar de partida...');
+                    const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
+                    if (acceptRes.ok) {
+                      console.log('[AutoUpdateGuard] Partida aceptada.');
+                      
+                      if (sessionStorage.getItem('hexdraft_telegram_notified_accepted') !== 'true') {
+                        sessionStorage.setItem('hexdraft_telegram_notified_accepted', 'true');
+                        notifyTelegram('Partida aceptada. Entrando al lobby de draft.');
+                      }
+                    } else {
+                      console.error('[AutoUpdateGuard] Error al auto-aceptar partida.');
                     }
-                  } else {
-                    console.error('[AutoUpdateGuard] Error al aceptar partida.');
-                    isAcceptingRef.current = false;
-                  }
-                }
-              }
+                  }, delayMs);
+                })
+                .catch(e => {
+                  console.error('[AutoUpdateGuard] Error al planificar auto-aceptar:', e);
+                });
             }
           }
         } 
@@ -121,6 +115,11 @@ export const AutoUpdateGuard = () => {
           nextInterval = 3000;
           const hasRedirected = sessionStorage.getItem('hexdraft_draft_redirected') === 'true';
           const isCurrentlyOnDraft = window.location.pathname === '/draft';
+
+          if (autoAcceptTimeoutRef.current) {
+            clearTimeout(autoAcceptTimeoutRef.current);
+            autoAcceptTimeoutRef.current = null;
+          }
 
           if (!hasRedirected && !isCurrentlyOnDraft) {
             console.log('[AutoUpdateGuard] ¡Fase de selección detectada! Redirigiendo a /draft...');
@@ -133,9 +132,11 @@ export const AutoUpdateGuard = () => {
           sessionStorage.removeItem('hexdraft_telegram_notified_readycheck');
           sessionStorage.removeItem('hexdraft_telegram_notified_accepted');
           readyCheckMaxRef.current = 10;
-          readyCheckStartRef.current = 0;
           lastNotifiedReadyCheckRef.current = false;
-          isAcceptingRef.current = false;
+          if (autoAcceptTimeoutRef.current) {
+            clearTimeout(autoAcceptTimeoutRef.current);
+            autoAcceptTimeoutRef.current = null;
+          }
         }
 
       } catch (e) {

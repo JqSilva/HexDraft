@@ -4,9 +4,9 @@
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft
-AppVersion=2.0.0
-AppVerName=HexDraft 2.0.0
-VersionInfoVersion=2.0.0
+AppVersion=2.1.0
+AppVerName=HexDraft 2.1.0
+VersionInfoVersion=2.1.0
 AppPublisher=HexDraft
 AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
 AppSupportURL=https://github.com/JqSilva/HexDraft-Launcher
@@ -14,7 +14,7 @@ AppUpdatesURL=https://github.com/JqSilva/HexDraft-Launcher/releases
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=HexDraft-Setup-2.0.0
+OutputBaseFilename=HexDraft-Setup-2.1.0
 SetupIconFile=..\public\app-icon.ico
 UninstallDisplayIcon={app}\HexDraft.exe
 Compression=lzma
