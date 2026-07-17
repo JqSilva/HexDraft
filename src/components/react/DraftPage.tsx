@@ -71,6 +71,7 @@ export const DraftPage = () => {
     const notifiedBanRef = useRef<number>(0);
     const notifiedPickRef = useRef<number>(0);
     const notifiedStartRef = useRef<boolean>(false);
+    const handleAutoExecutionRef = useRef<any>(null);
 
     const notifyTelegram = async (message: string) => {
         try {
@@ -265,6 +266,10 @@ export const DraftPage = () => {
         }
     };
 
+    useEffect(() => {
+        handleAutoExecutionRef.current = handleAutoExecution;
+    });
+
     // =========================================================
     // RELOJ ÚNICO (Con baneo/pick automático)
     // =========================================================
@@ -281,7 +286,9 @@ export const DraftPage = () => {
                 if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
                     if ((activeActionRef.current.type === 'pick' && autoPick) ||
                         (activeActionRef.current.type === 'ban' && autoBan)) {
-                        handleAutoExecution();
+                        if (handleAutoExecutionRef.current) {
+                            handleAutoExecutionRef.current();
+                        }
                     }
                 }
             }
