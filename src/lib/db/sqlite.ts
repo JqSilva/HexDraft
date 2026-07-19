@@ -248,6 +248,7 @@ insertConfigStmt.run('auto_accept_delay_pct', '80');
 insertConfigStmt.run('telegram_notifications_enabled', 'false');
 insertConfigStmt.run('telegram_bot_token', '');
 insertConfigStmt.run('telegram_chat_id', '');
+insertConfigStmt.run('telegram_deduplicate_enabled', 'true');
 
 // Actualizar engine_weights en config fusionándolo si ya existe, o insertándolo
 const defaultWeights = {

@@ -18,6 +18,7 @@ export const SettingsPage = () => {
     const [telegramNotificationsEnabled, setTelegramNotificationsEnabled] = useState<boolean>(false);
     const [telegramBotToken, setTelegramBotToken] = useState<string>('');
     const [telegramChatId, setTelegramChatId] = useState<string>('');
+    const [telegramDeduplicateEnabled, setTelegramDeduplicateEnabled] = useState<boolean>(true);
     const [testSending, setTestSending] = useState<boolean>(false);
     const [testSuccess, setTestSuccess] = useState<boolean | null>(null);
     const [engineWeights, setEngineWeights] = useState<any>({
@@ -55,6 +56,7 @@ export const SettingsPage = () => {
                     setTelegramNotificationsEnabled(data.telegram_notifications_enabled);
                     setTelegramBotToken(data.telegram_bot_token || '');
                     setTelegramChatId(data.telegram_chat_id || '');
+                    setTelegramDeduplicateEnabled(data.telegram_deduplicate_enabled !== false);
                     if (data.engine_weights && Object.keys(data.engine_weights).length > 0) {
                         setEngineWeights(data.engine_weights);
                     }
@@ -98,6 +100,7 @@ export const SettingsPage = () => {
                     telegram_notifications_enabled: telegramNotificationsEnabled,
                     telegram_bot_token: telegramBotToken,
                     telegram_chat_id: telegramChatId,
+                    telegram_deduplicate_enabled: telegramDeduplicateEnabled,
                     puppeteer_concurrency: puppeteerConcurrency,
                     sync_period_days: syncPeriodDays,
                     lane_sync_period_days: laneSyncPeriodDays,
@@ -363,6 +366,29 @@ export const SettingsPage = () => {
                                                     >
                                                         {testSending ? 'Enviando...' : testSuccess ? '¡Enviado! ✓' : 'Probar'}
                                                     </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="md:col-span-2 space-y-2 pt-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[9.5px] uppercase font-black tracking-widest text-slate-300">Evitar Notificaciones Duplicadas</span>
+                                                        <span className="text-[8px] text-slate-500 uppercase tracking-wide font-bold mt-0.5">Filtra mensajes repetidos en un intervalo de 5 segundos</span>
+                                                    </div>
+                                                    <label className={`flex items-center justify-between p-1.5 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                                        ${telegramDeduplicateEnabled 
+                                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]' 
+                                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={telegramDeduplicateEnabled} 
+                                                            onChange={(e) => setTelegramDeduplicateEnabled(e.target.checked)}
+                                                            className="sr-only"
+                                                        />
+                                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${telegramDeduplicateEnabled ? 'bg-purple-accent' : 'bg-slate-800'}`}>
+                                                            <div className={`w-3 h-3 rounded-full bg-white transition-transform duration-200 shadow-md ${telegramDeduplicateEnabled ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                                                        </div>
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>

@@ -23,6 +23,7 @@ export const GET: APIRoute = async () => {
       telegram_notifications_enabled: rawConfigs.telegram_notifications_enabled === 'true',
       telegram_bot_token: rawConfigs.telegram_bot_token || '',
       telegram_chat_id: rawConfigs.telegram_chat_id || '',
+      telegram_deduplicate_enabled: rawConfigs.telegram_deduplicate_enabled !== 'false',
       engine_weights: JSON.parse(rawConfigs.engine_weights || '{}')
     };
 
@@ -100,6 +101,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (payload.telegram_chat_id !== undefined) {
       updates.telegram_chat_id = String(payload.telegram_chat_id).trim();
+    }
+
+    if (payload.telegram_deduplicate_enabled !== undefined) {
+      updates.telegram_deduplicate_enabled = payload.telegram_deduplicate_enabled ? 'true' : 'false';
     }
     
     if (payload.engine_weights !== undefined) {

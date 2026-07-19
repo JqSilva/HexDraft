@@ -15,6 +15,8 @@ export const SyncPanel = () => {
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [progressPhase, setProgressPhase] = useState<string>('idle');
   const [showRecommendAlert, setShowRecommendAlert] = useState<boolean>(false);
+  const [showDockerAlert, setShowDockerAlert] = useState<boolean>(false);
+  const [pendingSyncType, setPendingSyncType] = useState<'meta_builds' | 'SyncEstructuraLanes' | null>(null);
 
   const [logs, setLogs] = useState<LogItem[]>([
     { time: '--:--', msg: 'Esperando inicialización de sincronización masiva...', type: 'idle' }
@@ -115,6 +117,11 @@ export const SyncPanel = () => {
     setLogs(prev => [{ time, msg, type }, ...prev].slice(0, 50));
   };
 
+  const handleInitiateSync = (type: 'meta_builds' | 'SyncEstructuraLanes') => {
+    setPendingSyncType(type);
+    setShowDockerAlert(true);
+  };
+
   const runSync = async (type: 'meta_builds' | 'SyncEstructuraLanes') => {
     setIsSyncing(type);
     setProgressPercent(0);
@@ -198,6 +205,44 @@ export const SyncPanel = () => {
   return (
     <>
       <SyncToast toast={toast} />
+
+      {showDockerAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 transition-opacity duration-200">
+          <div className="w-full max-w-md bg-[#0e0e12] border border-slate-800 rounded-sm p-6 shadow-2xl relative">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">
+              REQUISITO DE DOCKER
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold leading-relaxed mb-6 uppercase tracking-wide">
+              Esta sincronización utiliza FlareSolverr y requiere que tengas **Docker** instalado en tu sistema.
+              <br /><br />
+              HexDraft intentará arrancar Docker Desktop de fondo e iniciar el contenedor de forma automática.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowDockerAlert(false);
+                  setPendingSyncType(null);
+                }}
+                className="px-4 py-2.5 bg-transparent hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-[9px] font-black uppercase tracking-widest rounded-sm transition-colors duration-150 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (pendingSyncType) {
+                    runSync(pendingSyncType);
+                  }
+                  setShowDockerAlert(false);
+                  setPendingSyncType(null);
+                }}
+                className="px-4 py-2.5 bg-purple-950/45 hover:bg-purple-900 border border-purple-800/80 text-purple-300 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-sm transition-colors duration-150 cursor-pointer shadow-[0_2px_4px_rgba(0,0,0,0.4)]"
+              >
+                Confirmar e Iniciar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
         
@@ -325,7 +370,7 @@ export const SyncPanel = () => {
 
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => runSync('meta_builds')}
+                    onClick={() => handleInitiateSync('meta_builds')}
                     disabled={!!isSyncing} 
                     className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
                       ${isSyncing 
@@ -363,7 +408,7 @@ export const SyncPanel = () => {
 
               <div className="pt-2 flex items-center gap-3">
                 <button 
-                  onClick={() => runSync('SyncEstructuraLanes')}
+                  onClick={() => handleInitiateSync('SyncEstructuraLanes')}
                   disabled={!!isSyncing}
                   className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
                     ${isSyncing 

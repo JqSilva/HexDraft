@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { resetLastExecutedChampionId } from './execute-action.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -17,7 +18,13 @@ export const GET: APIRoute = async () => {
     if (!response.ok) return new Response(JSON.stringify({ phase: 'None' }), { status: 200 });
     
     const data = await response.json();
-    return new Response(JSON.stringify({ phase: data.phase }), { status: 200 });
+    const phase = data.phase;
+    
+    if (phase === 'Matchmaking' || phase === 'InProgress') {
+      resetLastExecutedChampionId();
+    }
+    
+    return new Response(JSON.stringify({ phase }), { status: 200 });
   } catch (e) {
     return new Response(JSON.stringify({ phase: 'None' }), { status: 200 });
   }

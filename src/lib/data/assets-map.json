@@ -436,7 +436,7 @@
     },
     "1033": {
       "name": "Manto Anulamagia",
-      "description": "<mainText><stats><attention>20</attention> de Resistencia Mágica</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 20</attention> de Resistencia Mágica</stats><br><br></mainText>",
       "gold": 400,
       "icon": "ASSETS/Items/Icons2D/1033_Base_T1_MagicMantle.png"
     },
@@ -520,7 +520,7 @@
     },
     "1057": {
       "name": "Capa de Negatrones",
-      "description": "<mainText><stats><attention>45</attention> de Resistencia Mágica</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Resistencia Mágica</stats><br><br></mainText>",
       "gold": 850,
       "icon": "ASSETS/Items/Icons2D/1057_Tank_T2_NegatronCloak.png"
     },
@@ -616,13 +616,13 @@
     },
     "1111": {
       "name": "Jarvan Primero",
-      "description": "<mainText><stats><attention> 25%</attention> de Velocidad de Ataque<br><attention> 100</attention> de Velocidad de Movimiento<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 12</attention> de Penetración de Magia<br><attention> 25</attention> de Armadura<br><attention>20</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Jarvan One</passive><br>Te otorga las estadísticas y la pasiva de todas las demás botas.<br><br><b>Requiere un Aumento: <prismatic>Misión: Sneakerhead</prismatic></b></mainText>",
+      "description": "<mainText><stats><attention> 25%</attention> de Velocidad de Ataque<br><attention> 100</attention> de Velocidad de Movimiento<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 12</attention> de Penetración de Magia<br><attention> 25</attention> de Armadura<br><attention> 20</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Jarvan One</passive><br>Te otorga las estadísticas y la pasiva de todas las demás botas.<br><br><b>Requiere un Aumento: <prismatic>Misión: Sneakerhead</prismatic></b></mainText>",
       "gold": 300,
       "icon": "ASSETS/Items/Icons2D/1111_JarvanIs.png"
     },
     "1120": {
       "name": "Casco de Doran",
-      "description": "<mainText><stats><attention> 150</attention> de Vida<br><attention> 8</attention> de Armadura<br><attention>8</attention> de Resistencia Mágica</stats><br><br><passive>Una Ayudita</passive><br>Los ataques infligen <physicalDamage>5 de daño físico adicional</physicalDamage> contra súbditos.</mainText>",
+      "description": "<mainText><stats><attention> 150</attention> de Vida<br><attention> 8</attention> de Armadura<br><attention> 8</attention> de Resistencia Mágica</stats><br><br><passive>Una Ayudita</passive><br>Los ataques infligen <physicalDamage>5 de daño físico adicional</physicalDamage> contra súbditos.</mainText>",
       "gold": 450,
       "icon": "ASSETS/Items/Icons2D/1120_Dorans_Helm.png"
     },
@@ -856,7 +856,7 @@
     },
     "2504": {
       "name": "Rukerno Kaénico",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention>80</attention> de Resistencia Mágica<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Ruina del Mago</passive><br>Si no recibes daño mágico durante 15 seg, obtienes un <shield>escudo mágico</shield>. </mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 80</attention> de Resistencia Mágica<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Ruina del Mago</passive><br>Si no recibes daño mágico durante 15 seg, obtienes un <shield>escudo mágico</shield>. </mainText>",
       "gold": 2900,
       "icon": "ASSETS/Items/Icons2D/2504_KaenicRookern.png"
     },
@@ -904,14 +904,14 @@
     },
     "2524": {
       "name": "Flautas de Bandle",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 20</attention> de Armadura<br><attention>20</attention> de Resistencia Mágica</stats><br><br><passive>Fanfarria</passive><br><keyword>Al ralentizar</keyword> o <keyword>inmovilizar</keyword> a un campeón enemigo, obtienes la mejora Fanfarria durante 0 seg. Fanfarria te otorga <speed>20 de Velocidad de Movimiento</speed>. Además, mientras esté activa, tanto tú como tus aliados cercanos obtienen <attackSpeed>0 de Velocidad de Ataque</attackSpeed>.</mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 20</attention> de Armadura<br><attention> 20</attention> de Resistencia Mágica</stats><br><br><passive>Fanfarria</passive><br><keyword>Al ralentizar</keyword> o <keyword>inmovilizar</keyword> a un campeón enemigo, obtienes la mejora Fanfarria durante 0 seg. Fanfarria te otorga <speed>20 de Velocidad de Movimiento</speed>. Además, mientras esté activa, tanto tú como tus aliados cercanos obtienen <attackSpeed>0 de Velocidad de Ataque</attackSpeed>.</mainText>",
       "gold": 2300,
       "icon": "ASSETS/Items/Icons2D/2524_TankASAura.png"
     },
     "2525": {
       "name": "Arnés de Protoplasma",
       "description": "<mainText><stats><attention> 600</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Salvavidas</passive>  (0 seg)<br>Al recibir daño que reduciría tu Vida por debajo de un 30%, obtienes <health>0 de Vida Máxima</health> durante 5 seg y te curas <health>0 de Vida</health> a lo largo del efecto. Mientras recuperas vida, aumentas de tamaño en un 15%, y obtienes un 10% de Velocidad de Movimiento y un 25% de Tenacidad. </mainText>",
-      "gold": 2500,
+      "gold": 2600,
       "icon": "ASSETS/Items/Icons2D/2525_TankLifeline.png"
     },
     "2526": {
@@ -928,7 +928,7 @@
     },
     "3001": {
       "name": "Manto del Ocaso",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Chispa:</passive> Luego de <status>inmovilizar</status> campeones o de quedar <status>inmovilizado</status>, hace que el objetivo y todos los enemigos cercanos reciban un 7% de daño aumentado durante 5 seg. <br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention>5</attention> <scaleArmor> de Armadura</scaleArmor> <attention>y</attention> <scaleMR> de Resistencia Mágica</scaleMR><attention>.</attention></mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Chispa:</passive> Luego de <status>inmovilizar</status> campeones o de quedar <status>inmovilizado</status>, hace que el objetivo y todos los enemigos cercanos reciban un 7% de daño aumentado durante 5 seg. <br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention>5</attention> <scaleArmor> de Armadura</scaleArmor> <attention>y</attention> <scaleMR> de Resistencia Mágica</scaleMR><attention>.</attention></mainText>",
       "gold": 2300,
       "icon": "ASSETS/Items/Icons2D/3001_Support_Lunari.png"
     },
@@ -1096,7 +1096,7 @@
     },
     "3050": {
       "name": "Convergencia de Zeke",
-      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention>25</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>30 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
+      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention> 25</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>30 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
       "gold": 2200,
       "icon": "ASSETS/Items/Icons2D/3050_Enchanter_T3_ZekesConvergence.png"
     },
@@ -1120,7 +1120,7 @@
     },
     "3065": {
       "name": "Apariencia Espiritual",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention>50</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Vitalidad Ilimitada</passive><br>Las curaciones y los escudos que tengas aumentarán en un 25%.</mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 50</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Vitalidad Ilimitada</passive><br>Las curaciones y los escudos que tengas aumentarán en un 25%.</mainText>",
       "gold": 2700,
       "icon": "ASSETS/Items/Icons2D/3065_Tank_T3_SpiritVisage.png"
     },
@@ -1227,7 +1227,7 @@
       "icon": "ASSETS/Items/Icons2D/3086_Fighter_T2_Zeal.png"
     },
     "3087": {
-      "name": "Daga de Statikk",
+      "name": "Navaja de Statikk",
       "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 45</attention> de Poder de Habilidad<br><attention> 30%</attention> de Velocidad de Ataque<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Electrochispa</passive><br>Tus <keyword>ataques energizados</keyword> lanzan una cadena de rayos que aplica efectos <OnHit>al impacto</OnHit> () e inflige <magicDamage>daño mágico</magicDamage> a los objetivos cercanos.<br><br><passive>Electrochoque</passive> <br>Los ataques básicos otorgan acumulaciones de <keyword>Energizado</keyword> adicionales.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/3087_Statikk_Shiv.png"
@@ -1240,7 +1240,7 @@
     },
     "3091": {
       "name": "Al Filo de la Cordura",
-      "description": "<mainText><stats><attention> 50%</attention> de Velocidad de Ataque<br><attention>45</attention> de Resistencia Mágica<br><attention> 20%</attention> de Tenacidad</stats><br><br><passive>Fragor</passive><br>Los ataques infligen <magicDamage>daño mágico adicional</magicDamage>  <OnHit>al impacto</OnHit>.</mainText>",
+      "description": "<mainText><stats><attention> 50%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Resistencia Mágica<br><attention> 20%</attention> de Tenacidad</stats><br><br><passive>Fragor</passive><br>Los ataques infligen <magicDamage>daño mágico adicional</magicDamage>  <OnHit>al impacto</OnHit>.</mainText>",
       "gold": 2800,
       "icon": "ASSETS/Items/Icons2D/3091_Fighter_T3_WitsEnd.png"
     },
@@ -1270,13 +1270,13 @@
     },
     "3102": {
       "name": "Velo de la Banshee",
-      "description": "<mainText><stats><attention> 105</attention> de Poder de Habilidad<br><attention>40</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un escudo antihechizos que bloquea la siguiente habilidad de un enemigo.</mainText>",
+      "description": "<mainText><stats><attention> 105</attention> de Poder de Habilidad<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un escudo antihechizos que bloquea la siguiente habilidad de un enemigo.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/3102_Mage_T3_BansheesVeil.png"
     },
     "3105": {
       "name": "Égida de la Legión",
-      "description": "<mainText><stats><attention> 25</attention> de Armadura<br><attention>25</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 25</attention> de Armadura<br><attention> 25</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br></mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/3105_Tank_T2_AegisOfTheLegion.png"
     },
@@ -1306,7 +1306,7 @@
     },
     "3111": {
       "name": "Botas de Mercurio",
-      "description": "<mainText><stats><attention>20</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 20</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br></mainText>",
       "gold": 1250,
       "icon": "ASSETS/Items/Icons2D/3111_Class_T2_MercurysTreads.png"
     },
@@ -1414,13 +1414,13 @@
     },
     "3139": {
       "name": "Cimitarra Mercurial",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention>35</attention> de Resistencia Mágica<br><attention> 10%</attention> de Robo de Vida</stats><br><br><br><br> <active>ACTIVA</active><br><active>Capa Mercurial</active><br>Elimina todas las debilitaciones de control de masas (excluyendo <keyword>levantamientos por el aire</keyword>) y otorga velocidad de movimiento.</mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 35</attention> de Resistencia Mágica<br><attention> 10%</attention> de Robo de Vida</stats><br><br><br><br> <active>ACTIVA</active><br><active>Capa Mercurial</active><br>Elimina todas las debilitaciones de control de masas (excluyendo <keyword>levantamientos por el aire</keyword>) y otorga velocidad de movimiento.</mainText>",
       "gold": 3200,
       "icon": "ASSETS/Items/Icons2D/3139_Marksman_T3_MercurialScimitar.png"
     },
     "3140": {
       "name": "Fajín de Mercurio",
-      "description": "<mainText><stats><attention>30</attention> de Resistencia Mágica</stats><br><br> <active>Capa Mercurial</active><br>Elimina todas las debilitaciones de control de masas (excepto <keyword>lanzamientos por el aire</keyword>).</mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Resistencia Mágica</stats><br><br> <active>Capa Mercurial</active><br>Elimina todas las debilitaciones de control de masas (excepto <keyword>lanzamientos por el aire</keyword>).</mainText>",
       "gold": 1300,
       "icon": "ASSETS/Items/Icons2D/3140_Marksman_T2_QuicksilverSash.png"
     },
@@ -1462,7 +1462,7 @@
     },
     "3152": {
       "name": "Cinturón Cohete Hextech",
-      "description": "<mainText><stats><attention> 70</attention> de Poder de Habilidad<br><attention> 300</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br> <active>Supersónico</active><br>Te desplazas en la dirección objetivo y liberas misiles que infligen <magicDamage>daño mágico</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention> 60</attention> de Poder de Habilidad<br><attention> 350</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br> <active>Supersónico</active><br>Te desplazas en la dirección objetivo y liberas misiles que infligen <magicDamage>daño mágico</magicDamage>.</mainText>",
       "gold": 2650,
       "icon": "ASSETS/Items/Icons2D/3152_Mage_T4_HextechRocketBelt.png"
     },
@@ -1474,13 +1474,13 @@
     },
     "3155": {
       "name": "Sorbechizos",
-      "description": "<mainText><stats><attention> 25</attention> de Daño de Ataque<br><attention>25</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo de un 30%, obtienes un <shield>escudo contra daño mágico</shield> durante 2.5 seg.</mainText>",
+      "description": "<mainText><stats><attention> 25</attention> de Daño de Ataque<br><attention> 25</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo de un 30%, obtienes un <shield>escudo contra daño mágico</shield> durante 2.5 seg.</mainText>",
       "gold": 1300,
       "icon": "ASSETS/Items/Icons2D/3155_Fighter_T2_Hexdrinker.png"
     },
     "3156": {
       "name": "Fauces de Malmortius",
-      "description": "<mainText><stats><attention> 60</attention> de Daño de Ataque<br><attention> 15</attention> de Aceleración de Habilidad<br><attention>40</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo de un 30%, obtienes un <shield>escudo contra daño mágico</shield> durante 3 seg y un <lifeSteal>10% de Omnivampirismo</lifeSteal> hasta el final del combate.</mainText>",
+      "description": "<mainText><stats><attention> 60</attention> de Daño de Ataque<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo de un 30%, obtienes un <shield>escudo contra daño mágico</shield> durante 3 seg y un <lifeSteal>10% de Omnivampirismo</lifeSteal> hasta el final del combate.</mainText>",
       "gold": 3100,
       "icon": "ASSETS/Items/Icons2D/3156_Fighter_T3_MawOfMalmortius.png"
     },
@@ -1510,7 +1510,7 @@
     },
     "3168": {
       "name": "Camino Inmortal",
-      "description": "<mainText><stats><attention> 45</attention> de Velocidad de Movimiento<br><attention> 4%</attention> de Omnivampirismo</stats><br><br><passive>Exterminar</passive><br>Al derribar campeones, obtienes un 0.6% de Omnivampirismo. El efecto se acumula hasta 10 veces.<br><br><passive>Ahora y Siempre</passive><br>Cuando tienes más de la mitad de vida, infliges un 5% más de daño.<br><br>Cuando tienes menos de la mitad de vida, obtienes un 15% más de curaciones, escudos y regeneración.</mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Velocidad de Movimiento<br><attention> 4%</attention> de Omnivampirismo</stats><br><br><passive>Exterminar</passive><br>Al derribar campeones, obtienes un 0.6% de Omnivampirismo. El efecto se acumula hasta 10 veces.<br><br><passive>Ahora y Siempre</passive><br>Cuando tienes más de la mitad de vida, infliges un 4% más de daño.<br><br>Cuando tienes menos de la mitad de vida, obtienes un 12% más de curaciones, escudos y regeneración.</mainText>",
       "gold": 1000,
       "icon": "ASSETS/Items/Icons2D/3168_ImmortalCreed.png"
     },
@@ -1534,7 +1534,7 @@
     },
     "3173": {
       "name": "Trituradoras Aceradas",
-      "description": "<mainText><stats><attention>30</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Persistencia Noxiana</passive>  (0 seg)<br>Tras recibir daño mágico de un campeón, obtienes un <shield>escudo</shield> que protege contra <shield>0</shield> de <magicDamage>daño mágico</magicDamage> durante 5 seg.</mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Persistencia Noxiana</passive>  (0 seg)<br>Tras recibir daño mágico de un campeón, obtienes un <shield>escudo</shield> que protege contra <shield>0</shield> de <magicDamage>daño mágico</magicDamage> durante 5 seg.</mainText>",
       "gold": 1250,
       "icon": "ASSETS/Items/Icons2D/Boots_Tier3_Mercury_64.png"
     },
@@ -1582,19 +1582,19 @@
     },
     "3190": {
       "name": "Relicario de los Solari de Hierro",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br> <active>Devoción</active><br>Otorga a los aliados cercanos de <shield>290 a 360 de escudo</shield> que decae a lo largo de 2.5 seg.</mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br> <active>Devoción</active><br>Otorga a los aliados cercanos de <shield>290 a 360 de escudo</shield> que decae a lo largo de 2.5 seg.</mainText>",
       "gold": 2200,
       "icon": "ASSETS/Items/Icons2D/3190_Enchanter_T4_LocketOfIronSolari.png"
     },
     "3193": {
       "name": "Armadura Pétrea",
-      "description": "<mainText><stats><attention> 60</attention> de Armadura<br><attention>60</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Fortificación:</passive> Recibir daño de un campeón otorga una acumulación de <scaleArmor>0 de Armadura</scaleArmor> y <scaleMR>0 de Resistencia Mágica</scaleMR> durante 6 seg.<br><br><rules>Máximo 5 acumulaciones, 1 por campeón.</rules><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtiene un escudo que decae y crece en tamaño.</mainText>",
+      "description": "<mainText><stats><attention> 60</attention> de Armadura<br><attention> 60</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Fortificación:</passive> Recibir daño de un campeón otorga una acumulación de <scaleArmor>0 de Armadura</scaleArmor> y <scaleMR>0 de Resistencia Mágica</scaleMR> durante 6 seg.<br><br><rules>Máximo 5 acumulaciones, 1 por campeón.</rules><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtiene un escudo que decae y crece en tamaño.</mainText>",
       "gold": 3150,
       "icon": "ASSETS/Items/Icons2D/3193_Tank_T3_GargoyleStonePlate.png"
     },
     "3211": {
       "name": "Hábito del Espectro",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention>35</attention> de Resistencia Mágica<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 35</attention> de Resistencia Mágica<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br></mainText>",
       "gold": 1250,
       "icon": "ASSETS/Items/Icons2D/3211_Tank_T2_SpectresCowl.png"
     },
@@ -1858,13 +1858,13 @@
     },
     "4012": {
       "name": "Devorador de pecados",
-      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 45</attention> de Armadura<br><attention>45</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><br><li><passive>El festín:</passive> Cada vez que un campeón aliado cercano se vea afectado por un efecto inmovilizador de control de masas, quedarás aturdido en su lugar por ese tiempo. (20 (0 seg)).</mainText>",
+      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 45</attention> de Armadura<br><attention> 45</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><br><li><passive>El festín:</passive> Cada vez que un campeón aliado cercano se vea afectado por un efecto inmovilizador de control de masas, quedarás aturdido en su lugar por ese tiempo. (20 (0 seg)).</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/4012_SinEater.png"
     },
     "4013": {
       "name": "Trenza eléctrica",
-      "description": "<mainText><stats><attention> 70</attention> de Poder de Habilidad<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><br><li><passive>Cadena de Rayos:</passive> Infliges un 20% de daño de habilidad reducido. En una cadencia de 1 seg, los enemigos a los que hayas infligido daño con habilidades, encadenan un 66.6% del daño de la habilidad que les hayas infligido a otro enemigo cercano, priorizando a los campeones.</mainText>",
+      "description": "<mainText><stats><attention> 70</attention> de Poder de Habilidad<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 30%</attention> de Tenacidad</stats><br><br><br><li><passive>Cadena de Rayos:</passive> Infliges un 20% de daño de habilidad reducido. En una cadencia de 1 seg, los enemigos a los que hayas infligido daño con habilidades, encadenan un 66.6% del daño de la habilidad que les hayas infligido a otro enemigo cercano, priorizando a los campeones.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/4013_Lightning_Braid.png"
     },
@@ -1894,7 +1894,7 @@
     },
     "4401": {
       "name": "Fuerza de la Naturaleza",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention>55</attention> de Resistencia Mágica<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Firmeza</passive><br>Obtienes <scaleMR>70 de Resistencia Mágica</scaleMR> y un <speed>6% de Velocidad de Movimiento adicional</speed> tras recibir daño mágico de campeones 8 veces.</mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 55</attention> de Resistencia Mágica<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Firmeza</passive><br>Obtienes <scaleMR>70 de Resistencia Mágica</scaleMR> y un <speed>6% de Velocidad de Movimiento adicional</speed> tras recibir daño mágico de campeones 8 veces.</mainText>",
       "gold": 2800,
       "icon": "ASSETS/Items/Icons2D/4401_Tank_T3_ForceOfNature.png"
     },
@@ -1906,7 +1906,7 @@
     },
     "4403": {
       "name": "La Espátula Dorada",
-      "description": "<mainText><stats><attention> 70</attention> de Daño de Ataque<br><attention> 120</attention> de Poder de Habilidad<br><attention> 50%</attention> de Velocidad de Ataque<br><attention> 30%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Robo de Vida<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><br><li><passive>Haciendo Algo:</passive> Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''</flavorText></mainText>",
+      "description": "<mainText><stats><attention> 70</attention> de Daño de Ataque<br><attention> 120</attention> de Poder de Habilidad<br><attention> 50%</attention> de Velocidad de Ataque<br><attention> 30%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Robo de Vida<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><br><li><passive>Haciendo Algo:</passive> Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''</flavorText></mainText>",
       "gold": 7187,
       "icon": "ASSETS/Items/Icons2D/4403_GoldenSpatula.png"
     },
@@ -1930,7 +1930,7 @@
     },
     "4632": {
       "name": "Barrera Esmeralda",
-      "description": "<mainText><stats><attention> 40</attention> de Poder de Habilidad<br><attention>25</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un escudo antihechizos que bloquea la siguiente habilidad de un enemigo.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Poder de Habilidad<br><attention> 25</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un escudo antihechizos que bloquea la siguiente habilidad de un enemigo.</mainText>",
       "gold": 1600,
       "icon": "ASSETS/Items/Icons2D/4632_Tank_T2_VerdantBarrier.png"
     },
@@ -1960,7 +1960,7 @@
     },
     "4638": {
       "name": "Piedravigía Observadora",
-      "description": "<mainText><stats><attention> 150</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 10</attention> de Armadura<br><attention>15</attention> de Resistencia Mágica</stats><br><br><passive>Cofre Arcano</passive><br>Este objeto puede almacenar hasta 3 centinelas de control comprados.</mainText>",
+      "description": "<mainText><stats><attention> 150</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 10</attention> de Armadura<br><attention> 15</attention> de Resistencia Mágica</stats><br><br><passive>Cofre Arcano</passive><br>Este objeto puede almacenar hasta 3 centinelas de control comprados.</mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/4638_Enchanter_T3_WatchfulSightstone.png"
     },
@@ -1978,7 +1978,7 @@
     },
     "4643": {
       "name": "Piedravigía Alerta",
-      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 25</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica</stats><br><br><passive>Cofre Arcano</passive><br>Este objeto puede almacenar hasta 3 Centinelas de Control comprados. <br><br><passive>Contemplen</passive><br>Aumenta los límites de Centinelas Invisibles y Centinelas de Control que puedes colocar en 1.</mainText>",
+      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 25</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica</stats><br><br><passive>Cofre Arcano</passive><br>Este objeto puede almacenar hasta 3 Centinelas de Control comprados. <br><br><passive>Contemplen</passive><br>Aumenta los límites de Centinelas Invisibles y Centinelas de Control que puedes colocar en 1.</mainText>",
       "gold": 2300,
       "icon": "ASSETS/Items/Icons2D/4643_Enchanter_T3_VigilantSightstone.png"
     },
@@ -2014,7 +2014,7 @@
     },
     "6035": {
       "name": "Amanecer Plateado",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 300</attention> de Vida<br><attention>40</attention> de Resistencia Mágica</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y obtienes Tenacidad y resistencia a ralentizaciones.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 300</attention> de Vida<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y obtienes Tenacidad y resistencia a ralentizaciones.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/6035_Fighter_T3_SilvermereDawn.png"
     },
@@ -2116,19 +2116,19 @@
     },
     "6664": {
       "name": "Resplandor Vacío",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention>40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Inmolar</passive><br>Tras recibir o infligir daño, infliges <magicDamage>daño mágico</magicDamage> por seg a los enemigos cercanos durante 3 seg. <br><br><passive>Desolar</passive><br>Matar a un enemigo inflige <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Vida Básica</stats><br><br><passive>Inmolar</passive><br>Tras recibir o infligir daño, infliges <magicDamage>daño mágico</magicDamage> por seg a los enemigos cercanos durante 3 seg. <br><br><passive>Desolar</passive><br>Matar a un enemigo inflige <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
       "gold": 2800,
       "icon": "ASSETS/Items/Icons2D/6664_HollowRadiance.png"
     },
     "6665": {
       "name": "Jak'Sho, el Proteico",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 45</attention> de Armadura<br><attention>45</attention> de Resistencia Mágica</stats><br><br><passive>Resiliencia del Vacuonato</passive><br>Después de 5 seg de combate contra campeones, aumenta tu <scaleArmor>Armadura</scaleArmor> y <scaleMR>Resistencia Mágica</scaleMR> adicionales en un 30% hasta el final del combate.<br><br></mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 45</attention> de Armadura<br><attention> 45</attention> de Resistencia Mágica</stats><br><br><passive>Resiliencia del Vacuonato</passive><br>Después de 5 seg de combate contra campeones, aumenta tu <scaleArmor>Armadura</scaleArmor> y <scaleMR>Resistencia Mágica</scaleMR> adicionales en un 30% hasta el final del combate.<br><br></mainText>",
       "gold": 3200,
       "icon": "ASSETS/Items/Icons2D/6665_Tank_T4_JakShoTheProtean.png"
     },
     "6667": {
       "name": "Virtud Radiante",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Luz Guía:</passive> Trasciendes al lanzar tu definitiva, lo que aumenta tu Vida Máxima en un 12.5% por 9 seg. Al estar bajo el efecto de Trascendencia, tú y tus aliados dentro de un alcance de 1200 se curan un 10% de tu Vida Máxima mientras dure el efecto (90 (0 seg)).<br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention> 75</attention> de Vida.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Luz Guía:</passive> Trasciendes al lanzar tu definitiva, lo que aumenta tu Vida Máxima en un 12.5% por 9 seg. Al estar bajo el efecto de Trascendencia, tú y tus aliados dentro de un alcance de 1200 se curan un 10% de tu Vida Máxima mientras dure el efecto (90 (0 seg)).<br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention> 75</attention> de Vida.</mainText>",
       "gold": 2600,
       "icon": "ASSETS/Items/Icons2D/6667_Tank_T4_RadiantVirtue.png"
     },
@@ -2260,7 +2260,7 @@
     },
     "8020": {
       "name": "Máscara Abisal",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention>45</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un 12% más de <magicDamage>daño mágico</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 45</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un 12% más de <magicDamage>daño mágico</magicDamage>.</mainText>",
       "gold": 2650,
       "icon": "ASSETS/Items/Icons2D/8020_Tank_T3_AbyssalMask.png"
     },
@@ -2752,7 +2752,7 @@
     },
     "221057": {
       "name": "Capa de Negatrones",
-      "description": "<mainText><stats><attention>30</attention> de Resistencia Mágica</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Resistencia Mágica</stats><br><br></mainText>",
       "gold": 450,
       "icon": "ASSETS/Items/Icons2D/1057_Tank_T2_NegatronCloak.png"
     },
@@ -2800,7 +2800,7 @@
     },
     "222504": {
       "name": "Rukerno Kaénico",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention>80</attention> de Resistencia Mágica</stats><br><br><passive>Ruina del Mago</passive><br>Si no recibes daño mágico durante 10 seg, obtienes un <shield>escudo mágico</shield>. </mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 80</attention> de Resistencia Mágica</stats><br><br><passive>Ruina del Mago</passive><br>Si no recibes daño mágico durante 10 seg, obtienes un <shield>escudo mágico</shield>. </mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/2504_KaenicRookern.png"
     },
@@ -2836,7 +2836,7 @@
     },
     "222524": {
       "name": "Flautas de Bandle",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 25</attention> de Armadura<br><attention>25</attention> de Resistencia Mágica</stats><br><br><passive>Fanfarria</passive><br><keyword>Al ralentizar</keyword> o <keyword>inmovilizar</keyword> a un campeón enemigo, obtienes la mejora Fanfarria durante 0 seg. Fanfarria te otorga <speed>35 de Velocidad de Movimiento</speed>. Además, mientras esté activa, tanto tú como tus aliados cercanos obtienen <attackSpeed>0 de Velocidad de Ataque</attackSpeed>.</mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 25</attention> de Armadura<br><attention> 25</attention> de Resistencia Mágica</stats><br><br><passive>Fanfarria</passive><br><keyword>Al ralentizar</keyword> o <keyword>inmovilizar</keyword> a un campeón enemigo, obtienes la mejora Fanfarria durante 0 seg. Fanfarria te otorga <speed>35 de Velocidad de Movimiento</speed>. Además, mientras esté activa, tanto tú como tus aliados cercanos obtienen <attackSpeed>0 de Velocidad de Ataque</attackSpeed>.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/2524_TankASAura.png"
     },
@@ -2860,7 +2860,7 @@
     },
     "223001": {
       "name": "Manto del Ocaso",
-      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Chispa:</passive> Luego de <status>inmovilizar</status> campeones o de quedar <status>inmovilizado</status>, hace que el objetivo y todos los enemigos cercanos reciban un <buffedStat>7% de daño aumentado</buffedStat> durante 5 seg. <br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention>5  de Armadura y  de Resistencia Mágica</attention></mainText>",
+      "description": "<mainText><stats><attention> 200</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Chispa:</passive> Luego de <status>inmovilizar</status> campeones o de quedar <status>inmovilizado</status>, hace que el objetivo y todos los enemigos cercanos reciban un <buffedStat>7% de daño aumentado</buffedStat> durante 5 seg. <br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention>5  de Armadura y  de Resistencia Mágica</attention></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3001_Support_Lunari.png"
     },
@@ -2968,7 +2968,7 @@
     },
     "223046": {
       "name": "Bailarín Espectral",
-      "description": "<mainText><stats><attention> 60%</attention> de Velocidad de Ataque<br><attention> 8%</attention> de Velocidad de Movimiento<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Vals Espectral</passive><br>Te vuelves <keyword>Fantasma</keyword>.</mainText>",
+      "description": "<mainText><stats><attention> 65%</attention> de Velocidad de Ataque<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Vals Espectral</passive><br>Te vuelves <keyword>Fantasma</keyword>.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3046_Marksman_T3_PhantomDancer.png"
     },
@@ -2980,7 +2980,7 @@
     },
     "223050": {
       "name": "Convergencia de Zeke",
-      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention> 15</attention> de Aceleración de Habilidad<br><attention>30</attention> de Resistencia Mágica</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>0 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
+      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 30</attention> de Resistencia Mágica</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>0 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3050_Enchanter_T3_ZekesConvergence.png"
     },
@@ -2998,7 +2998,7 @@
     },
     "223065": {
       "name": "Apariencia Espiritual",
-      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention>40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Vitalidad Ilimitada</passive><br>Aumenta la eficacia de todas las <healing>curaciones</healing> y los <shield>escudos</shield> sobre ti en un 30%.</mainText>",
+      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Vitalidad Ilimitada</passive><br>Aumenta la eficacia de todas las <healing>curaciones</healing> y los <shield>escudos</shield> sobre ti en un 30%.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3065_Tank_T3_SpiritVisage.png"
     },
@@ -3016,9 +3016,9 @@
     },
     "223069": {
       "name": "Inmolación del Vacío",
-      "description": "<mainText><stats><attention> 1000</attention> de Vida<br><attention> 100</attention> de Armadura<br><attention>80</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad<br><attention> 200%</attention> de Regen. de Vida Básica</stats><br><br><passive>Inmolar</passive><br>Al recibir o infligir daño, infliges <magicDamage>0 de daño mágico</magicDamage> por seg a los enemigos cercanos durante 5 seg. <br><br><passive>Desolar</passive><br>Al derribar a un enemigo, infliges <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
+      "description": "<mainText><stats><attention> 1000</attention> de Vida<br><attention> 100</attention> de Armadura<br><attention> 80</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad<br><attention> 200%</attention> de Regen. de Vida Básica</stats><br><br><passive>Inmolar</passive><br>Al recibir o infligir daño, infliges <magicDamage>0 de daño mágico</magicDamage> por seg a los enemigos cercanos durante 5 seg. <br><br><passive>Desolar</passive><br>Al derribar a un enemigo, infliges <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
       "gold": 6000,
-      "icon": "ASSETS/Items/Icons2D/223069_Kiwi_VoidImmolation.MAYHEM_New_Augments.png"
+      "icon": "ASSETS/Items/Icons2D/223069_Kiwi_VoidImmolation.png"
     },
     "223071": {
       "name": "Cuchilla Oscura",
@@ -3069,7 +3069,7 @@
       "icon": "ASSETS/Items/Icons2D/3085_Marksman_T3_Runaans.png"
     },
     "223087": {
-      "name": "Daga de Statikk",
+      "name": "Navaja de Statikk",
       "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 45</attention> de Poder de Habilidad<br><attention> 30%</attention> de Velocidad de Ataque<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Electrochispa</passive><br>Tus <keyword>ataques energizados</keyword> lanzan una cadena de rayos que aplica efectos  <OnHit>al impacto</OnHit> e inflige <magicDamage>daño mágico</magicDamage> hasta a <attention>0</attention> objetivos.<br><br><passive>Electrochoque</passive> <br>Los ataques básicos otorgan acumulaciones <keyword>Energizadas</keyword> adicionales.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3087_Statikk_Shiv.png"
@@ -3082,13 +3082,13 @@
     },
     "223091": {
       "name": "Al Filo de la Cordura",
-      "description": "<mainText><stats><attention> 50%</attention> de Velocidad de Ataque<br><attention>45</attention> de Resistencia Mágica<br><attention> 20%</attention> de Tenacidad</stats><br><br><br><li><passive>Fragor:</passive> Los ataques aplican daño al impacto y otorgan velocidad de movimiento.</mainText>",
+      "description": "<mainText><stats><attention> 50%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Resistencia Mágica<br><attention> 20%</attention> de Tenacidad</stats><br><br><br><li><passive>Fragor:</passive> Los ataques aplican daño al impacto y otorgan velocidad de movimiento.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3091_Fighter_T3_WitsEnd.png"
     },
     "223094": {
       "name": "Cañón de Fuego Rápido",
-      "description": "<mainText><stats><attention> 30%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Francotirador</passive><br>Tu <keyword>ataque energizado</keyword> inflige <magicDamage>200 de daño mágico adicional</magicDamage>. Además, los ataques energizados obtienen hasta un 35% de alcance de ataque adicional.<br></mainText>",
+      "description": "<mainText><stats><attention> 35%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Francotirador</passive><br>Tu <keyword>ataque energizado</keyword> inflige <magicDamage>200 de daño mágico adicional</magicDamage>. Además, los ataques energizados obtienen hasta un 35% de alcance de ataque adicional.<br></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3094_Marksman_T3_RapidFireHandCannon.png"
     },
@@ -3106,13 +3106,13 @@
     },
     "223102": {
       "name": "Velo de la Banshee",
-      "description": "<mainText><stats><attention> 80</attention> de Poder de Habilidad<br><attention>40</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un <shield>Escudo Antihechizos</shield> que bloquea la próxima habilidad de un enemigo.<br><br><rules>El enfriamiento del objeto se reinicia si recibes daño de campeones antes de que termine.</rules></mainText>",
+      "description": "<mainText><stats><attention> 80</attention> de Poder de Habilidad<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><passive>Anulación</passive><br>Otorga un <shield>Escudo Antihechizos</shield> que bloquea la próxima habilidad de un enemigo.<br><br><rules>El enfriamiento del objeto se reinicia si recibes daño de campeones antes de que termine.</rules></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3102_Mage_T3_BansheesVeil.png"
     },
     "223105": {
       "name": "Égida de la Legión",
-      "description": "<mainText><stats><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br></mainText>",
       "gold": 500,
       "icon": "ASSETS/Items/Icons2D/3105_Tank_T2_AegisOfTheLegion.png"
     },
@@ -3136,7 +3136,7 @@
     },
     "223111": {
       "name": "Botas de Mercurio",
-      "description": "<mainText><stats><attention>30</attention> de Resistencia Mágica<br><attention> 30</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Resistencia Mágica<br><attention> 30</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br></mainText>",
       "gold": 500,
       "icon": "ASSETS/Items/Icons2D/3111_Class_T2_MercurysTreads.png"
     },
@@ -3196,7 +3196,7 @@
     },
     "223139": {
       "name": "Cimitarra Mercurial",
-      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention>40</attention> de Resistencia Mágica<br><attention> 10%</attention> de Robo de Vida</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y gana velocidad de movimiento.</mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 40</attention> de Resistencia Mágica<br><attention> 10%</attention> de Robo de Vida</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y gana velocidad de movimiento.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3139_Marksman_T3_MercurialScimitar.png"
     },
@@ -3232,7 +3232,7 @@
     },
     "223156": {
       "name": "Fauces de Malmortius",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 15</attention> de Aceleración de Habilidad<br><attention>40</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo del 30%, obtienes un escudo contra daño mágico. Cuando <passive>Salvavidas</passive> se activa, obtienes Omnivampirismo hasta el final del combate.  </mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><passive>Salvavidas</passive><br>Tras recibir daño mágico que reduciría tu Vida por debajo del 30%, obtienes un escudo contra daño mágico. Cuando <passive>Salvavidas</passive> se activa, obtienes Omnivampirismo hasta el final del combate.  </mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3156_Fighter_T3_MawOfMalmortius.png"
     },
@@ -3292,13 +3292,13 @@
     },
     "223190": {
       "name": "Relicario de los Solari de Hierro",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention>35</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad</stats><br><br><active>Devoción</active><br>Otorga un <shield>escudo</shield> a los aliados cercanos, el cual decae con el tiempo.</mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 25</attention> de Armadura<br><attention> 35</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad</stats><br><br><active>Devoción</active><br>Otorga un <shield>escudo</shield> a los aliados cercanos, el cual decae con el tiempo.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3190_Enchanter_T4_LocketOfIronSolari.png"
     },
     "223193": {
       "name": "Armadura Pétrea",
-      "description": "<mainText><stats><attention> 60</attention> de Armadura<br><attention>60</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Fortificación:</passive> Recibir daño de un campeón otorga una acumulación de <scaleArmor>0 Armadura</scaleArmor> y <scaleMR>0 Resistencia Mágica</scaleMR> durante 6 seg.<br><br><rules>Máximo 5 acumulaciones, 1 por campeón.</rules> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
+      "description": "<mainText><stats><attention> 60</attention> de Armadura<br><attention> 60</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Fortificación:</passive> Recibir daño de un campeón otorga una acumulación de <scaleArmor>0 Armadura</scaleArmor> y <scaleMR>0 Resistencia Mágica</scaleMR> durante 6 seg.<br><br><rules>Máximo 5 acumulaciones, 1 por campeón.</rules> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3193_Tank_T3_GargoyleStonePlate.png"
     },
@@ -3358,13 +3358,13 @@
     },
     "224401": {
       "name": "Fuerza de la Naturaleza",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention>50</attention> de Resistencia Mágica<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Absorber</passive><br>Al recibir <magicDamage>daño mágico</magicDamage> de campeones enemigos, te otorga una acumulación de <attention>Firmeza</attention> (máximo 10) durante 7 seg. Los efectos de <status>inmovilización</status> de enemigos te otorgan 2 acumulaciones adicionales.<br><br><passive>Disipar</passive><br>Al alcanzar las 10 acumulaciones de <attention>Firmeza</attention>, obtienes <scaleMR>50 de Resistencia Mágica</scaleMR> y un aumento del <speed>14% de Velocidad de Movimiento</speed>.<br><br><rules>Un hechizo puede agregar una acumulación nueva de <attention>Firmeza</attention> cada 1 seg.</rules></mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 50</attention> de Resistencia Mágica<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Absorber</passive><br>Al recibir <magicDamage>daño mágico</magicDamage> de campeones enemigos, te otorga una acumulación de <attention>Firmeza</attention> (máximo 10) durante 7 seg. Los efectos de <status>inmovilización</status> de enemigos te otorgan 2 acumulaciones adicionales.<br><br><passive>Disipar</passive><br>Al alcanzar las 10 acumulaciones de <attention>Firmeza</attention>, obtienes <scaleMR>50 de Resistencia Mágica</scaleMR> y un aumento del <speed>14% de Velocidad de Movimiento</speed>.<br><br><rules>Un hechizo puede agregar una acumulación nueva de <attention>Firmeza</attention> cada 1 seg.</rules></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/4401_Tank_T3_ForceOfNature.png"
     },
     "224403": {
       "name": "La Espátula Dorada",
-      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 125</attention> de Poder de Habilidad<br><attention> 60%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Omnivampirismo<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><passive>Haciendo Algo</passive><br>Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
+      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 125</attention> de Poder de Habilidad<br><attention> 60%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Omnivampirismo<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><passive>Haciendo Algo</passive><br>Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/4403_GoldenSpatula.png"
     },
@@ -3418,7 +3418,7 @@
     },
     "226035": {
       "name": "Amanecer Plateado",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 300</attention> de Vida<br><attention>40</attention> de Resistencia Mágica</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y obtienes Tenacidad y resistencia a ralentizaciones.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 300</attention> de Vida<br><attention> 40</attention> de Resistencia Mágica</stats><br><br><br><br> <active>Activa:</active> <active>Capa Mercurial:</active> Elimina todas las debilitaciones de control de masas y obtienes Tenacidad y resistencia a ralentizaciones.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6035_Fighter_T3_SilvermereDawn.png"
     },
@@ -3514,19 +3514,19 @@
     },
     "226664": {
       "name": "Resplandor Vacío",
-      "description": "<mainText><stats><attention> 450</attention> de Vida<br><attention>40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Inmolar</passive><br>Tras recibir o infligir daño, infliges <magicDamage>daño mágico</magicDamage> por seg a los enemigos cercanos durante 3 seg. <br><br><passive>Desolar</passive><br>Matar a un enemigo inflige <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
+      "description": "<mainText><stats><attention> 450</attention> de Vida<br><attention> 40</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Inmolar</passive><br>Tras recibir o infligir daño, infliges <magicDamage>daño mágico</magicDamage> por seg a los enemigos cercanos durante 3 seg. <br><br><passive>Desolar</passive><br>Matar a un enemigo inflige <magicDamage>daño mágico</magicDamage> a su alrededor.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6664_HollowRadiance.png"
     },
     "226665": {
       "name": "Jak'Sho, el Proteico",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 35</attention> de Armadura<br><attention>35</attention> de Resistencia Mágica</stats><br><br><passive>Resiliencia del Vacuonato</passive><br>Después de 5 seg de estar en combate contra campeones, aumenta tu <scaleArmor>Armadura</scaleArmor> y tu <scaleMR>Resistencia Mágica</scaleMR> adicionales en un 40% hasta el final del combate.<br><br></mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 35</attention> de Armadura<br><attention> 35</attention> de Resistencia Mágica</stats><br><br><passive>Resiliencia del Vacuonato</passive><br>Después de 5 seg de estar en combate contra campeones, aumenta tu <scaleArmor>Armadura</scaleArmor> y tu <scaleMR>Resistencia Mágica</scaleMR> adicionales en un 40% hasta el final del combate.<br><br></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6665_Tank_T4_JakShoTheProtean.png"
     },
     "226667": {
       "name": "Virtud Radiante",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Luz Guía:</passive> Trasciendes al lanzar tu definitiva, lo que aumenta tu Vida Máxima en un 12.5% durante 9 seg. Al estar bajo el efecto de Trascendencia, tú y tus aliados dentro de un radio de 1200 se curan un 10% de tu Vida Máxima mientras dure el efecto (90 (0 seg)).<br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention> 75</attention> de Vida.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><br><li><passive>Luz Guía:</passive> Trasciendes al lanzar tu definitiva, lo que aumenta tu Vida Máxima en un 12.5% durante 9 seg. Al estar bajo el efecto de Trascendencia, tú y tus aliados dentro de un radio de 1200 se curan un 10% de tu Vida Máxima mientras dure el efecto (90 (0 seg)).<br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention> 75</attention> de Vida.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6667_Tank_T4_RadiantVirtue.png"
     },
@@ -3538,7 +3538,7 @@
     },
     "226672": {
       "name": "Matakrakens",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 35%</attention> de Velocidad de Ataque<br><attention> 7%</attention> de Velocidad de Movimiento</stats><br><br><passive>Derríbalo</passive><br>Cada tercer ataque inflige <physicalDamage>daño físico adicional</physicalDamage>  <OnHit>al impacto</OnHit>. Este daño aumenta según la vida faltante del objetivo.</mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 40%</attention> de Velocidad de Ataque<br><attention> 7%</attention> de Velocidad de Movimiento</stats><br><br><passive>Derríbalo</passive><br>Cada tercer ataque inflige <physicalDamage>daño físico adicional</physicalDamage>  <OnHit>al impacto</OnHit>. Este daño aumenta según la vida faltante del objetivo.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6672_Marksman_T4_BehemothSlayer.png"
     },
@@ -3550,7 +3550,7 @@
     },
     "226675": {
       "name": "Cuchillas Raudas de Navori",
-      "description": "<mainText><stats><attention> 35%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Trascendencia</passive><br>Tus ataques reducen los enfriamientos de tus habilidades básicas en un <attention>15%</attention> de su enfriamiento restante.</mainText>",
+      "description": "<mainText><stats><attention> 40%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Trascendencia</passive><br>Tus ataques reducen los enfriamientos de tus habilidades básicas en un <attention>15%</attention> de su enfriamiento restante.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6675_NavoriFlickerblade.png"
     },
@@ -3670,7 +3670,7 @@
     },
     "228020": {
       "name": "Máscara Abisal",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention>50</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un <magicDamage>12% de daño mágico adicional</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 50</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un <magicDamage>12% de daño mágico adicional</magicDamage>.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/8020_Tank_T3_AbyssalMask.png"
     },
@@ -3724,7 +3724,7 @@
     },
     "323050": {
       "name": "Convergencia de Zeke",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>30 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Tempestad de Fuego Escarchado</passive><br>Al lanzar tu definitiva, invocas una tormenta a tu alrededor durante 5 seg. La tormenta inflige <magicDamage>30 de daño mágico</magicDamage> por seg a los campeones enemigos y los <keyword>ralentiza</keyword> en un 30%.</mainText>",
       "gold": 2300,
       "icon": "ASSETS/Items/Icons2D/3050_Enchanter_T3_ZekesConvergence.png"
     },
@@ -3772,7 +3772,7 @@
     },
     "323190": {
       "name": "Relicario de los Solari de Hierro",
-      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br> <active>Devoción</active><br>Otorga a los aliados cercanos de <shield>290 a 360 de escudo</shield> que decae a lo largo de 2.5 seg.</mainText>",
+      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br> <active>Devoción</active><br>Otorga a los aliados cercanos de <shield>290 a 360 de escudo</shield> que decae a lo largo de 2.5 seg.</mainText>",
       "gold": 2600,
       "icon": "ASSETS/Items/Icons2D/3190_Enchanter_T4_LocketOfIronSolari.png"
     },
@@ -3826,7 +3826,7 @@
     },
     "328020": {
       "name": "Máscara Abisal",
-      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention>50</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un 12% más de <magicDamage>daño mágico</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 50</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Deshacer</passive><br>Los campeones enemigos cercanos reciben un 12% más de <magicDamage>daño mágico</magicDamage>.</mainText>",
       "gold": 2850,
       "icon": "ASSETS/Items/Icons2D/8020_Tank_T3_AbyssalMask.png"
     },
@@ -3856,7 +3856,7 @@
     },
     "443059": {
       "name": "Manto de la Noche Estrellada",
-      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention>100</attention> de Resistencia Mágica</stats><br><br><passive>Ilimitado como las Estrellas</passive><br>Tu <scaleMR>Resistencia Mágica</scaleMR> aumenta en un 20%. Todo el daño que recibes de fuentes de ataques no básicos se reduce en un porcentaje que aumenta con tu <scaleMR>resistencia mágica</scaleMR>, hasta un límite de un 50%.</mainText>",
+      "description": "<mainText><stats><attention> 300</attention> de Vida<br><attention> 100</attention> de Resistencia Mágica</stats><br><br><passive>Ilimitado como las Estrellas</passive><br>Tu <scaleMR>Resistencia Mágica</scaleMR> aumenta en un 20%. Todo el daño que recibes de fuentes de ataques no básicos se reduce en un porcentaje que aumenta con tu <scaleMR>resistencia mágica</scaleMR>, hasta un límite de un 50%.</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/3059_CloakofStarryNight.png"
     },
@@ -3880,7 +3880,7 @@
     },
     "443063": {
       "name": "Milagro de Eleisa",
-      "description": "<mainText><stats><attention> 50</attention> de Armadura<br><attention>50</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad</stats><br><br><passive>Vitalidad Imperecedera</passive><br>Obtienes <healing>+ 2.5% de poder de curaciones y escudos</healing> por cada <scaleHealth>100 de Vida faltante</scaleHealth>, hasta un 60%.</mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Armadura<br><attention> 50</attention> de Resistencia Mágica<br><attention> 25</attention> de Aceleración de Habilidad</stats><br><br><passive>Vitalidad Imperecedera</passive><br>Obtienes <healing>+ 2.5% de poder de curaciones y escudos</healing> por cada <scaleHealth>100 de Vida faltante</scaleHealth>, hasta un 60%.</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/3063_ElishasMiracle.png"
     },
@@ -3928,7 +3928,7 @@
     },
     "443193": {
       "name": "Armadura Pétrea",
-      "description": "<mainText><stats><attention> 65</attention> de Armadura<br><attention>65</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento</stats><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
+      "description": "<mainText><stats><attention> 65</attention> de Armadura<br><attention> 65</attention> de Resistencia Mágica<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento</stats><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/3193_Tank_T3_GargoyleStonePlate.png"
     },
@@ -3964,7 +3964,7 @@
     },
     "446667": {
       "name": "Virtud Radiante",
-      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 35</attention> de Armadura<br><attention>35</attention> de Resistencia Mágica<br><attention> 12%</attention> de poder de curaciones y escudos</stats><br><br><passive>Juicio</passive><br>Obtienes 30 de Aceleración de Definitiva.<br><br><passive>Luz Guía</passive><br><status>Trasciendes</status> al lanzar tu definitiva, lo que aumenta tu <scaleHealth>Vida Máxima en 0</scaleHealth> durante 9 seg. Al estar bajo el efecto de <status>Trascendencia</status>, tú y tus aliados dentro de un alcance de 5000 se <healing>curan por 0 ()</healing> mientras dure el efecto  (0 seg).</mainText>",
+      "description": "<mainText><stats><attention> 400</attention> de Vida<br><attention> 35</attention> de Armadura<br><attention> 35</attention> de Resistencia Mágica<br><attention> 12%</attention> de poder de curaciones y escudos</stats><br><br><passive>Juicio</passive><br>Obtienes 30 de Aceleración de Definitiva.<br><br><passive>Luz Guía</passive><br><status>Trasciendes</status> al lanzar tu definitiva, lo que aumenta tu <scaleHealth>Vida Máxima en 0</scaleHealth> durante 9 seg. Al estar bajo el efecto de <status>Trascendencia</status>, tú y tus aliados dentro de un alcance de 5000 se <healing>curan por 0 ()</healing> mientras dure el efecto  (0 seg).</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/6667_Tank_T4_RadiantVirtue.png"
     },
@@ -4042,7 +4042,7 @@
     },
     "447109": {
       "name": "Crueldad",
-      "description": "<mainText><stats><attention> 80</attention> de Poder de Habilidad<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica</stats><br><br><passive>Míralos Caer</passive><br>Cuando <status>inmovilizas</status> o <status>anclas</status> a un campeón enemigo, invocas un cometa sobre él. El cometa aterriza después de 1 seg, lo que inflige <magicDamage>0 de daño mágico</magicDamage> adicional en el área. Este efecto tiene 6 seg de enfriamiento por objetivo por lanzamiento de hechizo.</mainText>",
+      "description": "<mainText><stats><attention> 80</attention> de Poder de Habilidad<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica</stats><br><br><passive>Míralos Caer</passive><br>Cuando <status>inmovilizas</status> o <status>anclas</status> a un campeón enemigo, invocas un cometa sobre él. El cometa aterriza después de 1 seg, lo que inflige <magicDamage>0 de daño mágico</magicDamage> adicional en el área. Este efecto tiene 6 seg de enfriamiento por objetivo por lanzamiento de hechizo.</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/6035_Fighter_T3_SilvermereDawn.png"
     },
@@ -4072,7 +4072,7 @@
     },
     "447114": {
       "name": "Reverberación",
-      "description": "<mainText><stats><attention> 35</attention> de Armadura<br><attention>35</attention> de Resistencia Mágica<br><attention> 40%</attention> de Velocidad de Ataque</stats><br><br><passive>Reverberar</passive><br>Al inicio del combate, obtienes <healing>50 de Vida Máxima</healing> por cada <attackSpeed>10% de Velocidad de Ataque adicional</attackSpeed>.<br><br><passive>Resonar</passive><br>Los ataques infligen <magicDamage>0 de daño mágico  <OnHit>al impacto</OnHit></magicDamage>.<br><br><passive>Estruendo</passive><br><status>Inmovilizar</status> o <status>anclar</status> a un campeón enemigo aplica efectos  <OnHit>al impacto</OnHit> 3 veces.</mainText>",
+      "description": "<mainText><stats><attention> 35</attention> de Armadura<br><attention> 35</attention> de Resistencia Mágica<br><attention> 40%</attention> de Velocidad de Ataque</stats><br><br><passive>Reverberar</passive><br>Al inicio del combate, obtienes <healing>50 de Vida Máxima</healing> por cada <attackSpeed>10% de Velocidad de Ataque adicional</attackSpeed>.<br><br><passive>Resonar</passive><br>Los ataques infligen <magicDamage>0 de daño mágico  <OnHit>al impacto</OnHit></magicDamage>.<br><br><passive>Estruendo</passive><br><status>Inmovilizar</status> o <status>anclar</status> a un campeón enemigo aplica efectos  <OnHit>al impacto</OnHit> 3 veces.</mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/447114_Reverberation.png"
     },
@@ -4096,7 +4096,7 @@
     },
     "447119": {
       "name": "Vara del Rayo",
-      "description": "<mainText><stats><attention> 500</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention>30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Llamado de Rayos</passive><br>Cada 16 seg, <keywordMajor>autolanzas</keywordMajor> la invocación de una tormenta eléctrica sobre ti. Después de unos momentos, la tormenta dispara un rayo que inflige <magicDamage>0 más un 10% de tu Vida Máxima como daño mágico</magicDamage> y <status>ralentiza</status> en un 30% durante 2 seg.<br><br>Si el rayo te golpea, obtienes <shield>0 de Escudo</shield> durante 2 seg.<br><br><passive>Automatización Completa</passive><br>Tus hechizos de <keywordMajor>autolanzamiento</keywordMajor> se benefician de tu aceleración de habilidad.<br><br><rules>Llamado del Rayo tiene un enfriamiento mínimo de 5 seg.</rules></mainText>",
+      "description": "<mainText><stats><attention> 500</attention> de Vida<br><attention> 30</attention> de Armadura<br><attention> 30</attention> de Resistencia Mágica<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Llamado de Rayos</passive><br>Cada 16 seg, <keywordMajor>autolanzas</keywordMajor> la invocación de una tormenta eléctrica sobre ti. Después de unos momentos, la tormenta dispara un rayo que inflige <magicDamage>0 más un 10% de tu Vida Máxima como daño mágico</magicDamage> y <status>ralentiza</status> en un 30% durante 2 seg.<br><br>Si el rayo te golpea, obtienes <shield>0 de Escudo</shield> durante 2 seg.<br><br><passive>Automatización Completa</passive><br>Tus hechizos de <keywordMajor>autolanzamiento</keywordMajor> se benefician de tu aceleración de habilidad.<br><br><rules>Llamado del Rayo tiene un enfriamiento mínimo de 5 seg.</rules></mainText>",
       "gold": 2750,
       "icon": "ASSETS/Items/Icons2D/447119_LightningRod.png"
     },
@@ -4186,7 +4186,7 @@
     },
     "663059": {
       "name": "Manto de la Noche Estrellada",
-      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention>60</attention> de Resistencia Mágica</stats><br><br><passive>Ilimitado como las Estrellas</passive><br>Tu <scaleMR>Resistencia Mágica</scaleMR> aumenta en un 10%. Todo el daño que recibes de fuentes de ataques no básicos se reduce en un porcentaje que aumenta con tu <scaleMR>resistencia mágica</scaleMR>, hasta un límite de un 25%.</mainText>",
+      "description": "<mainText><stats><attention> 250</attention> de Vida<br><attention> 60</attention> de Resistencia Mágica</stats><br><br><passive>Ilimitado como las Estrellas</passive><br>Tu <scaleMR>Resistencia Mágica</scaleMR> aumenta en un 10%. Todo el daño que recibes de fuentes de ataques no básicos se reduce en un porcentaje que aumenta con tu <scaleMR>resistencia mágica</scaleMR>, hasta un límite de un 25%.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3059_CloakofStarryNight.png"
     },
@@ -4216,7 +4216,7 @@
     },
     "663193": {
       "name": "Armadura Pétrea",
-      "description": "<mainText><stats><attention> 55</attention> de Armadura<br><attention>55</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 8%</attention> de Velocidad de Movimiento</stats><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
+      "description": "<mainText><stats><attention> 55</attention> de Armadura<br><attention> 55</attention> de Resistencia Mágica<br><attention> 10</attention> de Aceleración de Habilidad<br><attention> 8%</attention> de Velocidad de Movimiento</stats><br><br> <active>Activa:</active> <active>Inquebrantable:</active> Obtienes un escudo que decae y crece en tamaño.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3193_Tank_T3_GargoyleStonePlate.png"
     },
@@ -4228,7 +4228,7 @@
     },
     "664403": {
       "name": "La Espátula Dorada",
-      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 125</attention> de Poder de Habilidad<br><attention> 30%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 10</attention> de Armadura<br><attention>10</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Robo de Vida<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
+      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 125</attention> de Poder de Habilidad<br><attention> 30%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 250</attention> de Vida<br><attention> 10</attention> de Armadura<br><attention> 10</attention> de Resistencia Mágica<br><attention> 250</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Robo de Vida<br><attention> 100%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/4403_GoldenSpatula.png"
     },
@@ -4246,7 +4246,7 @@
     },
     "667109": {
       "name": "Crueldad",
-      "description": "<mainText><stats><attention> 60</attention> de Poder de Habilidad<br><attention> 25</attention> de Armadura<br><attention>25</attention> de Resistencia Mágica</stats><br><br><passive>Míralos Caer</passive><br>Cuando <status>inmovilizas</status> o <status>anclas</status> a un campeón enemigo, invocas un cometa sobre él. El cometa aterriza después de 1 seg, lo que inflige <magicDamage>0 de daño mágico</magicDamage> adicional en el área. Este efecto tiene 6 seg de enfriamiento por objetivo por lanzamiento de hechizo.</mainText>",
+      "description": "<mainText><stats><attention> 60</attention> de Poder de Habilidad<br><attention> 25</attention> de Armadura<br><attention> 25</attention> de Resistencia Mágica</stats><br><br><passive>Míralos Caer</passive><br>Cuando <status>inmovilizas</status> o <status>anclas</status> a un campeón enemigo, invocas un cometa sobre él. El cometa aterriza después de 1 seg, lo que inflige <magicDamage>0 de daño mágico</magicDamage> adicional en el área. Este efecto tiene 6 seg de enfriamiento por objetivo por lanzamiento de hechizo.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6035_Fighter_T3_SilvermereDawn.png"
     },
@@ -4264,7 +4264,7 @@
     },
     "994403": {
       "name": "Espátula Dorada",
-      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 110</attention> de Poder de Habilidad<br><attention> 40%</attention> de Velocidad de Ataque<br><attention> 15%</attention> de Probabilidad de Golpe Crítico<br><attention> 200</attention> de Vida<br><attention> 20</attention> de Armadura<br><attention>20</attention> de Resistencia Mágica<br><attention> 200</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Robo de Vida<br><attention> 50%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><passive>Haciendo Algo</passive><br>Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
+      "description": "<mainText><stats><attention> 90</attention> de Daño de Ataque<br><attention> 110</attention> de Poder de Habilidad<br><attention> 40%</attention> de Velocidad de Ataque<br><attention> 15%</attention> de Probabilidad de Golpe Crítico<br><attention> 200</attention> de Vida<br><attention> 20</attention> de Armadura<br><attention> 20</attention> de Resistencia Mágica<br><attention> 200</attention> de Maná<br><attention> 20</attention> de Aceleración de Habilidad<br><attention> 10%</attention> de Velocidad de Movimiento<br><attention> 10%</attention> de Robo de Vida<br><attention> 50%</attention> de Regen. de Vida Básica<br><attention> 100%</attention> de Regen. de Maná Básica</stats><br><br><passive>Haciendo Algo</passive><br>Estás ¡En llamas! permanentemente.<br><br><flavorText>''Debe hacer algo...<br>Corrección, hace DE TODO''.</flavorText></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/4403_GoldenSpatula.png"
     }

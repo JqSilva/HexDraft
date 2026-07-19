@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { syncMetaAndBuilds } from '../../lib/services/sync.service.js';
 import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
+import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
 import { initializeEngineData } from '../../lib/engine/dataProvider.js';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
 
@@ -175,55 +176,59 @@ export const GET: APIRoute = async ({ url }) => {
         progressPhase = 'starting';
         writeLog(`Motor de sincronización iniciado (Tipo: ${type}, Versión: ${version}, Fuerza: ${force}).`);
         
-        if (type === 'meta_builds') {
-            syncMetaAndBuilds(version, () => shouldAbort, writeLog, force, updateProgress)
-            .then((resStatus) => {
-                try {
-                    initializeEngineData();
-                    if (resStatus === "Cancelado por el usuario") {
-                        progressPhase = 'cancelled';
-                        writeLog("[ABORT] Sincronizacion cancelada por el usuario.");
-                    } else {
-                        progressPhase = 'done';
-                        progressPercent = 100;
-                        writeLog("[OK] Sincronizacion y recarga del motor en memoria completadas.");
+        const runSyncFlow = async () => {
+            let dockerDesktopStarted = false;
+            try {
+                // 1. Levantar Docker y FlareSolverr de fondo
+                dockerDesktopStarted = await startDockerAndFlareSolverr(writeLog);
+
+                // 2. Ejecutar la sincronización correspondiente
+                if (type === 'meta_builds') {
+                    const resStatus = await syncMetaAndBuilds(version, () => shouldAbort, writeLog, force, updateProgress);
+                    try {
+                        initializeEngineData();
+                        if (resStatus === "Cancelado por el usuario") {
+                            progressPhase = 'cancelled';
+                            writeLog("[ABORT] Sincronizacion cancelada por el usuario.");
+                        } else {
+                            progressPhase = 'done';
+                            progressPercent = 100;
+                            writeLog("[OK] Sincronizacion y recarga del motor en memoria completadas.");
+                        }
+                    } catch (e: any) {
+                        writeLog(`[WARN] Sincronizacion completada, pero fallo la recarga en memoria: ${e.message || e}`);
                     }
-                } catch (e: any) {
-                    writeLog(`[WARN] Sincronizacion completada, pero fallo la recarga en memoria: ${e.message || e}`);
+                } else if (type === 'SyncEstructuraLanes') {
+                    await SyncEstructuraLanes(version, () => shouldAbort, writeLog, updateProgress);
+                    try {
+                        initializeEngineData();
+                        if (shouldAbort) {
+                            progressPhase = 'cancelled';
+                            writeLog("[ABORT] Mapeo cancelado por el usuario.");
+                        } else {
+                            progressPhase = 'done';
+                            progressPercent = 100;
+                            writeLog("[OK] Mapeo de carriles y recarga del motor en memoria completadas.");
+                        }
+                    } catch (e: any) {
+                        writeLog(`[WARN] Mapeo completado, pero fallo la recarga en memoria: ${e.message || e}`);
+                    }
                 }
-            })
-            .catch((err) => {
+            } catch (err: any) {
                 progressPhase = 'error';
                 writeLog(`[ERROR] Sincronizacion fallo: ${err.message || err}`);
-            })
-            .finally(() => {
-                isGlobalSyncing = false;
-            });
-        } else if (type === 'SyncEstructuraLanes') {
-            SyncEstructuraLanes(version, () => shouldAbort, writeLog, updateProgress)
-            .then(() => {
+            } finally {
+                // 3. Detener FlareSolverr y apagar Docker Desktop de fondo si se inició en este flujo
                 try {
-                    initializeEngineData();
-                    if (shouldAbort) {
-                        progressPhase = 'cancelled';
-                        writeLog("[ABORT] Mapeo cancelado por el usuario.");
-                    } else {
-                        progressPhase = 'done';
-                        progressPercent = 100;
-                        writeLog("[OK] Mapeo de carriles y recarga del motor en memoria completadas.");
-                    }
-                } catch (e: any) {
-                    writeLog(`[WARN] Mapeo completado, pero fallo la recarga en memoria: ${e.message || e}`);
+                    await stopDockerAndFlareSolverr(writeLog, dockerDesktopStarted);
+                } catch (dockerStopErr: any) {
+                    writeLog(`[WARN] No se pudo detener Docker/FlareSolverr: ${dockerStopErr.message}`);
                 }
-            })
-            .catch((err) => {
-                progressPhase = 'error';
-                writeLog(`[ERROR] Mapeo fallo: ${err.message || err}`);
-            })
-            .finally(() => {
                 isGlobalSyncing = false;
-            });
-        }
+            }
+        };
+
+        runSyncFlow();
         return new Response(JSON.stringify({ message: "Iniciado" }), { status: 200 });
         
     } catch (e: any) {

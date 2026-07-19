@@ -409,9 +409,10 @@ export const DraftPage = () => {
                         );
                         if (myBanAction && myBanAction.championId > 0 && notifiedBanRef.current !== myBanAction.championId) {
                             notifiedBanRef.current = myBanAction.championId;
-                            const name = getNameFromId(myBanAction.championId) || `ID ${myBanAction.championId}`;
+                            const finalChampId = data.lastExecutedChampionId || myBanAction.championId;
+                            const name = getNameFromId(finalChampId) || `ID ${finalChampId}`;
                             
-                            const storageKey = `hexdraft_telegram_notified_ban_${myBanAction.championId}`;
+                            const storageKey = `hexdraft_telegram_notified_ban_${finalChampId}`;
                             if (sessionStorage.getItem(storageKey) !== 'true') {
                                 sessionStorage.setItem(storageKey, 'true');
                                 notifyTelegram(`Fase de Bloqueo: Baneando a <b>${name}</b>.`);
@@ -423,9 +424,10 @@ export const DraftPage = () => {
                         );
                         if (myPickAction && myPickAction.championId > 0 && notifiedPickRef.current !== myPickAction.championId) {
                             notifiedPickRef.current = myPickAction.championId;
-                            const name = getNameFromId(myPickAction.championId) || `ID ${myPickAction.championId}`;
+                            const finalChampId = data.lastExecutedChampionId || myPickAction.championId;
+                            const name = getNameFromId(finalChampId) || `ID ${finalChampId}`;
                             
-                            const storageKey = `hexdraft_telegram_notified_pick_${myPickAction.championId}`;
+                            const storageKey = `hexdraft_telegram_notified_pick_${finalChampId}`;
                             if (sessionStorage.getItem(storageKey) !== 'true') {
                                 sessionStorage.setItem(storageKey, 'true');
                                 notifyTelegram(`Fase de Selección: Campeón bloqueado: <b>${name}</b>.`);
