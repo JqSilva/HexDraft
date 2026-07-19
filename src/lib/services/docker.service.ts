@@ -103,7 +103,7 @@ export async function stopDockerAndFlareSolverr(writeLog: (msg: string) => void,
   if (stopDaemon) {
     writeLog('[DOCKER] Apagando Docker Desktop para liberar recursos del sistema...');
     try {
-      await execAsync('powershell -Command "Stop-Process -Name \'Docker Desktop\', \'com.docker.backend\' -Force -ErrorAction SilentlyContinue"');
+      await execAsync('taskkill /F /IM "Docker Desktop.exe" /IM "com.docker.backend.exe" /T');
       writeLog('[DOCKER] Docker Desktop apagado.');
     } catch (err: any) {
       writeLog(`[DOCKER] Advertencia al detener Docker Desktop: ${err.message}`);
