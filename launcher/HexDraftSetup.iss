@@ -37,7 +37,7 @@ Name: "startup"; Description: "Iniciar HexDraft automáticamente al iniciar sesi
 [Files]
 ; Copiar todos los archivos generados en el directorio de lanzamiento
 Source: "..\release\HexDraft\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\launcher\config-user.json"; DestDir: "{app}\data"; DestName: "config.json"; Flags: ignoreversion
+Source: "..\release\HexDraft\data\config-user.json"; DestDir: "{app}\data"; DestName: "config.json"; Flags: ignoreversion
 
 [Icons]
 ; Acceso directo al lanzador directo principal

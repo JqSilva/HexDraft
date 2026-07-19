@@ -6,6 +6,7 @@ import shutil
 import re
 import urllib.request
 import zipfile
+import json
 
 # --- CONFIGURACIÓN ---
 # Nos aseguramos de estar en la raíz del proyecto
@@ -183,6 +184,23 @@ def build_python():
     print(f"\n[OK] Carpeta de lanzamiento lista en: {release_dir}")
 
 
+def load_env(env_path):
+    """Carga variables de entorno de forma manual desde un archivo .env local."""
+    env_vars = {}
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if "=" in line:
+                        key, val = line.split("=", 1)
+                        env_vars[key.strip()] = val.strip()
+        except Exception as e:
+            print(f"[WARN] No se pudo leer el archivo .env: {e}")
+    return env_vars
+
 def copiar_recursos_release(release_dir):
     print("\n>>> Preparando y copiando recursos adicionales a la carpeta de lanzamiento...")
     
@@ -237,6 +255,44 @@ def copiar_recursos_release(release_dir):
     if os.path.exists(bat_path):
         print("Copiando Detener-HexDraft.bat...")
         shutil.copy2(bat_path, os.path.join(release_dir, "Detener-HexDraft.bat"))
+
+    # 6. Copiar y procesar configuraciones en release/HexDraft/data/
+    print("Preparando archivos de configuración (data/)...")
+    release_data_dir = os.path.join(release_dir, "data")
+    os.makedirs(release_data_dir, exist_ok=True)
+    
+    # Copiar config-user.json directamente
+    user_config_src = os.path.join("launcher", "config-user.json")
+    user_config_dest = os.path.join(release_data_dir, "config-user.json")
+    if os.path.exists(user_config_src):
+        shutil.copy2(user_config_src, user_config_dest)
+        print("  Copiado config-user.json")
+        
+    # Procesar config-admin.json para inyectar token de .env
+    admin_config_src = os.path.join("launcher", "config-admin.json")
+    admin_config_dest = os.path.join(release_data_dir, "config-admin.json")
+    if os.path.exists(admin_config_src):
+        try:
+            with open(admin_config_src, "r", encoding="utf-8") as f:
+                config_admin = json.load(f)
+            
+            # Cargar token desde .env
+            env_vars = load_env(".env")
+            token = env_vars.get("GITHUB_LAUNCHER_TOKEN", "")
+            
+            if token:
+                config_admin["github_token"] = token
+                print("  [OK] Token GITHUB_LAUNCHER_TOKEN de .env inyectado en config-admin.json de release.")
+            else:
+                print("  [WARN] No se encontró GITHUB_LAUNCHER_TOKEN en .env. Compilando con token vacío.")
+                
+            with open(admin_config_dest, "w", encoding="utf-8") as f:
+                json.dump(config_admin, f, indent=2)
+            print("  Escrito config-admin.json procesado en release")
+        except Exception as e:
+            print(f"  [ERROR] Al procesar config-admin.json: {e}")
+            # Fallback: copiar directamente
+            shutil.copy2(admin_config_src, admin_config_dest)
 
 
 def obtener_version_actual():
