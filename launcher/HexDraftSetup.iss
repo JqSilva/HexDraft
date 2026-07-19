@@ -4,9 +4,9 @@
 [Setup]
 AppId={{928F6DFD-C3A5-470E-9023-CD2A5C1E7202}}
 AppName=HexDraft
-AppVersion=2.2.0
-AppVerName=HexDraft 2.2.0
-VersionInfoVersion=2.2.0
+AppVersion=2.3.0
+AppVerName=HexDraft 2.3.0
+VersionInfoVersion=2.3.0
 AppPublisher=HexDraft
 AppPublisherURL=https://github.com/JqSilva/HexDraft-Launcher
 AppSupportURL=https://github.com/JqSilva/HexDraft-Launcher
@@ -14,9 +14,9 @@ AppUpdatesURL=https://github.com/JqSilva/HexDraft-Launcher/releases
 DefaultDirName={autopf}\HexDraft
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=HexDraft-Setup-2.2.0
+OutputBaseFilename=HexDraft-Setup-2.3.0
 SetupIconFile=..\public\app-icon.ico
-UninstallDisplayIcon={app}\HexDraft.exe
+UninstallDisplayIcon={app}\public\app-icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern dark
@@ -41,21 +41,21 @@ Source: "..\launcher\config-user.json"; DestDir: "{app}\data"; DestName: "config
 
 [Icons]
 ; Acceso directo al lanzador directo principal
-Name: "{autoprograms}\HexDraft"; Filename: "{app}\HexDraftApp.exe"; IconFilename: "{app}\public\app-icon.ico"
-Name: "{autodesktop}\HexDraft"; Filename: "{app}\HexDraftApp.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\HexDraft"; Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher\app-hexdraft.py"""; IconFilename: "{app}\public\app-icon.ico"
+Name: "{autodesktop}\HexDraft"; Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher\app-hexdraft.py"""; IconFilename: "{app}\public\app-icon.ico"; Tasks: desktopicon
 
 ; Acceso directo opcional para el monitor en segundo plano
-Name: "{autoprograms}\HexDraft Monitor"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"
+Name: "{autoprograms}\HexDraft Monitor"; Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher\automatizador-hexdraft.py"""; IconFilename: "{app}\public\app-icon.ico"
 
 ; Acceso directo para detener el servicio
 Name: "{autoprograms}\Detener HexDraft"; Filename: "{app}\Detener-HexDraft.bat"
 
 ; Acceso directo de inicio automático (Startup) - Ejecuta el monitor en segundo plano
-Name: "{userstartup}\HexDraft"; Filename: "{app}\HexDraft.exe"; IconFilename: "{app}\public\app-icon.ico"; Tasks: startup
+Name: "{userstartup}\HexDraft"; Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher\automatizador-hexdraft.py"""; IconFilename: "{app}\public\app-icon.ico"; Tasks: startup
 
 [Run]
 ; Opción para ejecutar la aplicación al finalizar la instalación
-Filename: "{app}\HexDraft.exe"; Description: "{cm:LaunchProgram,HexDraft}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher\automatizador-hexdraft.py"""; Description: "{cm:LaunchProgram,HexDraft}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 ; Detener servicios de HexDraft al desinstalar

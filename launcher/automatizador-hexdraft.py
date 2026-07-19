@@ -310,6 +310,18 @@ def main():
 
     while True:
         try:
+            # Comprobar señal de parada para cierre limpio
+            stop_flag = os.path.join(PROYECTO_DIR, "stop.flag")
+            if os.path.exists(stop_flag):
+                try:
+                    os.remove(stop_flag)
+                except Exception:
+                    pass
+                write_log("Detectada señal de parada (stop.flag). Deteniendo monitor...")
+                if server_active and was_started_by_us:
+                    stop_services()
+                break
+
             lol_on = is_lol_active()
             if lol_on and not server_active:
                 # Comprobar si la ventana ya está abierta (HexDraftApp.exe está corriendo)

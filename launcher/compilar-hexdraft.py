@@ -4,6 +4,8 @@ import sys
 import importlib.util
 import shutil
 import re
+import urllib.request
+import zipfile
 
 # --- CONFIGURACIÓN ---
 # Nos aseguramos de estar en la raíz del proyecto
@@ -13,7 +15,7 @@ os.chdir(PROYECTO_DIR)
 
 NOMBRE_SCRIPT = os.path.join("launcher", "automatizador-hexdraft.py")
 NOMBRE_EXE = "HexDraft"
-DEPENDENCIAS_PY = ["pyinstaller"]
+DEPENDENCIAS_PY = []
 CARPETA_BUILD_NODE = "dist" 
 
 def preparar_entorno_node():
@@ -49,8 +51,11 @@ def preparar_entorno_node():
         subprocess.run(["npm", "run", "build"], shell=True, check=True)
         print("[OK] Build de Node finalizado.")
     except subprocess.CalledProcessError:
-        print("[ERROR] al ejecutar npm run build.")
-        return False
+        if os.path.exists(CARPETA_BUILD_NODE) and len(os.listdir(CARPETA_BUILD_NODE)) > 0:
+            print("[WARN] 'npm run build' reportó un error o advertencias, pero la carpeta 'dist' se generó con éxito. Continuando...")
+        else:
+            print("[ERROR] al ejecutar npm run build y no se encontró la carpeta 'dist'.")
+            return False
     return True
 
 
@@ -95,98 +100,88 @@ def verificar_dependencias_python():
         else:
             print(f"[OK] {dep} detectada.")
 
+def descargar_python_embed(destino_zip):
+    url = "https://www.python.org/ftp/python/3.12.1/python-3.12.1-embed-amd64.zip"
+    print(f"\n>>> Descargando Python Embebido desde {url}...")
+    os.makedirs(os.path.dirname(destino_zip), exist_ok=True)
+    try:
+        def reporthook(count, block_size, total_size):
+            if total_size > 0:
+                percent = int(count * block_size * 100 / total_size)
+                # Limitar a 100%
+                percent = min(100, percent)
+                sys.stdout.write(f"\rProgreso: {percent}%")
+                sys.stdout.flush()
+        
+        urllib.request.urlretrieve(url, destino_zip, reporthook)
+        print("\n[OK] Descarga completa.")
+        return True
+    except Exception as e:
+        print(f"\n[ERROR] No se pudo descargar Python Embebido: {e}")
+        return False
+
 def build_python():
-    temp_dist_dir = os.path.abspath("build/pyinstaller_temp")
     release_dir = os.path.abspath("release/HexDraft")
     os.makedirs(release_dir, exist_ok=True)
-    icon_path = os.path.join("public", "app-icon.ico")
     
-    # 1. COMPILAR LAUNCHER EN SEGUNDO PLANO (HexDraft.exe)
-    print(f"\n>>> Generando ejecutable HexDraft (Segundo Plano) en modo carpeta (onedir)...")
-    script_bg = os.path.join("launcher", "automatizador-hexdraft.py")
-    command_bg = [
-        sys.executable, "-m", "PyInstaller",
-        "--noconsole", "--onedir",
-        "--name=HexDraft",
-        f"--distpath={temp_dist_dir}",
-        f"--icon={icon_path}" if os.path.exists(icon_path) else "",
-        "--clean", "--noconfirm",
-        script_bg
-    ]
-    command_bg = [c for c in command_bg if c]
+    # Eliminar ejecutables antiguos de PyInstaller para evitar bloqueos del antivirus
+    for exe_name in ["HexDraft.exe", "HexDraftApp.exe"]:
+        exe_path = os.path.join(release_dir, exe_name)
+        if os.path.exists(exe_path):
+            try:
+                os.remove(exe_path)
+                print(f"Eliminado ejecutable antiguo de PyInstaller: {exe_name}")
+            except Exception as e:
+                print(f"[WARN] No se pudo eliminar el ejecutable antiguo {exe_name}: {e}")
+                
+    internal_dir = os.path.join(release_dir, "_internal")
+    if os.path.exists(internal_dir):
+        try:
+            shutil.rmtree(internal_dir)
+            print("Eliminada carpeta antiguo _internal de PyInstaller")
+        except Exception as e:
+            print(f"[WARN] No se pudo eliminar la carpeta antiguo _internal: {e}")
+    
+    # 1. Resolver el zip embebido
+    cache_dir = os.path.abspath("build")
+    zip_path = os.path.join(cache_dir, "python-embed.zip")
+    
+    if not os.path.exists(zip_path):
+        if not descargar_python_embed(zip_path):
+            print("[ERROR] Error crítico al obtener Python Embebido.")
+            return
 
+    # 2. Descomprimir Python Embebido en release/HexDraft/python
+    python_dest = os.path.join(release_dir, "python")
+    if os.path.exists(python_dest):
+        shutil.rmtree(python_dest)
+    os.makedirs(python_dest, exist_ok=True)
+    
+    print(f"Extrayendo Python Embebido en: {python_dest}...")
     try:
-        subprocess.run(command_bg, check=True)
-        print(f"[OK] PyInstaller finalizado para HexDraft.exe.")
-        
-        # Mover HexDraft.exe
-        shutil.copy2(
-            os.path.join(temp_dist_dir, "HexDraft", "HexDraft.exe"),
-            os.path.join(release_dir, "HexDraft.exe")
-        )
-        
-        # Mover carpeta _internal
-        internal_src = os.path.join(temp_dist_dir, "HexDraft", "_internal")
-        internal_dest = os.path.join(release_dir, "_internal")
-        if os.path.exists(internal_dest):
-            shutil.rmtree(internal_dest)
-        shutil.copytree(internal_src, internal_dest)
-        print("[OK] Copiado HexDraft.exe y _internal a release.")
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] en PyInstaller para HexDraft: {e}")
-        return
-
-    # 2. COMPILAR LAUNCHER DIRECTO (HexDraftApp.exe)
-    print(f"\n>>> Generando ejecutable HexDraftApp (Directo) en modo carpeta (onedir)...")
-    script_dir = os.path.join("launcher", "app-hexdraft.py")
-    command_dir = [
-        sys.executable, "-m", "PyInstaller",
-        "--noconsole", "--onedir",
-        "--name=HexDraftApp",
-        f"--distpath={temp_dist_dir}",
-        f"--icon={icon_path}" if os.path.exists(icon_path) else "",
-        "--clean", "--noconfirm",
-        script_dir
-    ]
-    command_dir = [c for c in command_dir if c]
-
-    try:
-        subprocess.run(command_dir, check=True)
-        print(f"[OK] PyInstaller finalizado para HexDraftApp.exe.")
-        
-        # Mover HexDraftApp.exe
-        shutil.copy2(
-            os.path.join(temp_dist_dir, "HexDraftApp", "HexDraftApp.exe"),
-            os.path.join(release_dir, "HexDraftApp.exe")
-        )
-        
-        # Fusionar cualquier dependencia nueva en _internal
-        internal_app_src = os.path.join(temp_dist_dir, "HexDraftApp", "_internal")
-        if os.path.exists(internal_app_src):
-            print("Fusionando carpetas _internal para soportar ambos ejecutables...")
-            for item in os.listdir(internal_app_src):
-                s = os.path.join(internal_app_src, item)
-                d = os.path.join(internal_dest, item)
-                if os.path.isdir(s):
-                    if not os.path.exists(d):
-                        shutil.copytree(s, d)
-                else:
-                    shutil.copy2(s, d)
-        
-        print("[OK] Copiado HexDraftApp.exe y fusionado _internal a release.")
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] en PyInstaller para HexDraftApp: {e}")
-        return
-
-    # 3. Limpiar carpeta temporal de compilación
-    try:
-        shutil.rmtree(temp_dist_dir)
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(python_dest)
+        print("[OK] Python Embebido extraído.")
     except Exception as e:
-        print(f"[WARN] No se pudo limpiar la carpeta temporal {temp_dist_dir}: {e}")
-        
+        print(f"[ERROR] No se pudo extraer Python Embebido: {e}")
+        return
+
+    # 3. Copiar scripts de Python a release/HexDraft/launcher
+    launcher_dest = os.path.join(release_dir, "launcher")
+    os.makedirs(launcher_dest, exist_ok=True)
+    
+    print("Copiando scripts de Python...")
+    scripts = ["automatizador-hexdraft.py", "app-hexdraft.py"]
+    for script in scripts:
+        src = os.path.join("launcher", script)
+        dest = os.path.join(launcher_dest, script)
+        shutil.copy2(src, dest)
+        print(f"  Copiado: {script}")
+
     # 4. Copiar todos los recursos requeridos para el lanzamiento
     copiar_recursos_release(release_dir)
     print(f"\n[OK] Carpeta de lanzamiento lista en: {release_dir}")
+
 
 def copiar_recursos_release(release_dir):
     print("\n>>> Preparando y copiando recursos adicionales a la carpeta de lanzamiento...")
