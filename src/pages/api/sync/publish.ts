@@ -145,7 +145,44 @@ export const POST: APIRoute = async () => {
       throw new Error(`Error subiendo el asset hexdraft.db a GitHub: ${uploadRes.status} - ${errText}`);
     }
 
-    // 7. Guardar la versión publicada en data/db-version.json local
+    // 7. Borrar releases y tags anteriores para no acumular basura
+    try {
+      console.log('>>> Limpiando releases y tags antiguos en GitHub...');
+      const listRes = await fetch(
+        `https://api.github.com/repos/${appConfig.github_repo}/releases?per_page=100`,
+        { headers: gitHeaders }
+      );
+      if (listRes.ok) {
+        const releases = await listRes.json();
+        if (Array.isArray(releases)) {
+          for (const rel of releases) {
+            // No borrar la release que acabamos de crear
+            if (rel.id === releaseData.id) {
+              continue;
+            }
+            
+            console.log(`  Borrando release antigua ID: ${rel.id} (${rel.tag_name})`);
+            // 1. Borrar la release
+            await fetch(
+              `https://api.github.com/repos/${appConfig.github_repo}/releases/${rel.id}`,
+              { method: 'DELETE', headers: gitHeaders }
+            );
+            
+            // 2. Borrar el tag asociado
+            if (rel.tag_name) {
+              await fetch(
+                `https://api.github.com/repos/${appConfig.github_repo}/git/refs/tags/${rel.tag_name}`,
+                { method: 'DELETE', headers: gitHeaders }
+              );
+            }
+          }
+        }
+      }
+    } catch (cleanErr: any) {
+      console.warn('⚠️ No se pudieron limpiar las releases antiguas:', cleanErr.message || cleanErr);
+    }
+
+    // 8. Guardar la versión publicada en data/db-version.json local
     fs.writeFileSync(appConfig.dbVersionPath, JSON.stringify(manifest, null, 2), 'utf-8');
 
     return new Response(
