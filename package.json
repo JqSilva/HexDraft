@@ -1,7 +1,7 @@
 {
   "name": "hexdraft",
   "type": "module",
-  "version": "1.2.0",
+  "version": "2.3.2",
   "engines": {
     "node": ">=22.12.0"
   },

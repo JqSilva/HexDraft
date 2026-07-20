@@ -4,6 +4,7 @@ import HextechBackground from "../components/HextechBackground.astro";
 import Sidebar from "../components/Sidebar.astro";
 import { AutoUpdateGuard } from "../components/react/AutoUpdateGuard";
 import { UpdatePopup } from "../components/react/UpdatePopup";
+import { AppUpdatePopup } from "../components/react/AppUpdatePopup";
 import { ClientRouter } from "astro:transitions";
 
 const { title = "HexDraft" } = Astro.props;
@@ -37,6 +38,7 @@ const { title = "HexDraft" } = Astro.props;
 
 		<!-- Auto-check sync status on launch -->
 		<AutoUpdateGuard client:only="react" />
+		<AppUpdatePopup client:only="react" />
 
 		<!-- Barra de progreso superior para transiciones (sin blur, fluida, con resplandor) -->
 		<div id="global-page-loader" class="fixed top-0 left-0 h-[3px] z-[10000] bg-purple-accent shadow-[0_1px_10px_rgba(144,85,255,0.8)] transition-all duration-300 ease-out" style="width: 0%; opacity: 0;"></div>

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { configRepo } from '../../lib/db/config.repo.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -29,7 +30,7 @@ export const GET: APIRoute = async () => {
 
     if (response.status === 404) {
       return new Response(
-        JSON.stringify({ active: false, state: 'None' }),
+        JSON.stringify({ active: false, state: 'None', playerResponse: 'None' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -42,8 +43,14 @@ export const GET: APIRoute = async () => {
     }
 
     const data = await response.json();
+    const playerResponse = data.playerResponse || 'None';
+
     return new Response(
-      JSON.stringify({ ...data, active: data.state === 'InProgress' }),
+      JSON.stringify({ 
+        ...data, 
+        playerResponse,
+        active: data.state === 'InProgress' 
+      }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
 

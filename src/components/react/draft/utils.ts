@@ -29,16 +29,22 @@ export const getFriendlyRoleName = (tag: string): string => {
     return ROLE_TRANSLATIONS[norm] || tag;
 };
 
-export const executeLcuAction = async (actionId: number, championId: number) => {
+export const executeLcuAction = async (actionId: number, championId: number): Promise<boolean> => {
     try {
-        await fetch('/api/execute-action', {
+        const res = await fetch('/api/execute-action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ actionId, championId, completed: true })
         });
-        console.log(`✅ Acción ejecutada: ${championId}`);
+        if (res.ok) {
+            const data = await res.json();
+            console.log(`✅ Acción ejecutada en LCU: campeón ${championId} (success: ${data.success})`);
+            return data.success === true;
+        }
+        return false;
     } catch (e) {
         console.error("❌ Error en acción LCU:", e);
+        return false;
     }
 };
 

@@ -74,6 +74,18 @@ export const DraftPage = () => {
     const handleAutoExecutionRef = useRef<any>(null);
     const isRestoredRef = useRef<boolean>(false);
 
+    const ROLE_MAP_TO_API: Record<string, string> = {
+        "top": "top",
+        "jungle": "jungle",
+        "mid": "middle",
+        "adc": "bottom",
+        "supp": "utility"
+    };
+
+    const [showRoleModal, setShowRoleModal] = useState<boolean>(false);
+    const [selectedRoleKey, setSelectedRoleKey] = useState<string>('top');
+    const manualRoleSelectedRef = useRef<boolean>(false);
+
     const notifyTelegram = async (message: string) => {
         try {
             await fetch('/api/telegram-notify', {
@@ -204,13 +216,15 @@ export const DraftPage = () => {
         localStorage.setItem('autoBan:v1', String(autoBan));
     }, [autoBan]);
 
+    const [autoPickAlert, setAutoPickAlert] = useState<{ active: boolean; message: string; submessage?: string }>({ active: false, message: '' });
+
     const handleAutoExecution = async () => {
         const data = currentDataRef.current;
         const currentAction = activeActionRef.current;
         if (!data || !currentAction || currentAction.completed) return;
 
-        currentAction.completed = true; // Bloqueo inmediato
-        console.log(`🚀 [AUTO] Ejecutando ${currentAction.type}...`);
+        currentAction.completed = true; // Bloqueo inmediato para evitar doble envío simultáneo
+        console.log(`🚀 [AUTO] Iniciando auto-ejecución para ${currentAction.type}...`);
 
         try {
             const cleanMyTeam = data.myTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
@@ -219,7 +233,9 @@ export const DraftPage = () => {
             const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
 
             const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
-            const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
+            const rawRole = myPlayer?.assignedPosition;
+            const hasValidRole = Boolean(rawRole && rawRole.trim() !== '' && rawRole.toLowerCase() !== 'none');
+            const currentRole = hasValidRole ? rawRole.toLowerCase() : "jungle";
 
             // Obtener campeones preseleccionados por compañeros de equipo (excluyéndome a mí)
             const allyHovered = data.myTeam
@@ -229,17 +245,51 @@ export const DraftPage = () => {
 
             let targetId = 0;
             if (currentAction.type === 'pick') {
-                const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
-                const availablePicks = picks.filter(p => !allyHovered.includes(p.id));
-                if (availablePicks.length > 0) targetId = availablePicks[0].id;
+                // Nivel 1: Recomendaciones en estado de React de la UI
+                const availableStatePicks = recommendations.filter(p => !unavailableIds.includes(p.id) && !allyHovered.includes(p.id));
+                if (availableStatePicks.length > 0) {
+                    targetId = availableStatePicks[0].id;
+                }
+
+                // Nivel 2: Recalcular recomendaciones con el rol del jugador
+                if (targetId === 0) {
+                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
+                    const availablePicks = picks.filter(p => !allyHovered.includes(p.id));
+                    if (availablePicks.length > 0) targetId = availablePicks[0].id;
+                }
+
+                // Nivel 3: Recalcular con roles de fallback si el rol actual fue inválido o vacío
+                if (targetId === 0) {
+                    for (const fallbackRole of ["jungle", "middle", "top", "bottom", "utility"]) {
+                        const fallbackPicks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, fallbackRole);
+                        const available = fallbackPicks.filter(p => !allyHovered.includes(p.id));
+                        if (available.length > 0) {
+                            targetId = available[0].id;
+                            break;
+                        }
+                    }
+                }
+
+                // Nivel 4: Usar el campeón preseleccionado (hover) del propio jugador si no está ocupado
+                if (targetId === 0) {
+                    const myHover = myPlayer?.championPickIntent || 0;
+                    if (myHover > 0 && !unavailableIds.includes(myHover)) {
+                        targetId = myHover;
+                    }
+                }
+
+                // (Sin Nivel 5: No se fuerza ningún campeón aleatorio al azar)
             } else if (currentAction.type === 'ban') {
                 const allyHoveredOrSelected = data.myTeam.map((p: any) => p.championId || p.championPickIntent || 0).filter((id: number) => id !== 0);
-                // Usar las recomendaciones de ban ya calculadas y renderizadas en la UI
+
+                // Nivel 1: Recomendaciones de ban de la UI
                 const availableBans = banRecommendations.filter(b => !unavailableIds.includes(b.id) && !allyHoveredOrSelected.includes(b.id));
                 if (availableBans.length > 0) {
                     targetId = availableBans[0].id;
-                } else {
-                    // Recalcular solo como fallback si la lista de la UI está vacía
+                }
+
+                // Nivel 2: Recalcular recomendaciones de ban
+                if (targetId === 0) {
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
                     const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
                     const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
@@ -258,11 +308,42 @@ export const DraftPage = () => {
             }
 
             if (targetId > 0) {
-                await executeLcuAction(currentAction.id, targetId);
+                const success = await executeLcuAction(currentAction.id, targetId);
+                if (!success) {
+                    console.warn(`⚠️ [AUTO] executeLcuAction retornó false para ${targetId}, avisando al usuario.`);
+                    currentAction.completed = false;
+                    if (currentAction.type === 'pick') {
+                        setAutoPickAlert({
+                            active: true,
+                            message: '⚠️ ALERTA: ERROR AL EJECUTAR AUTO-PICK',
+                            submessage: 'No se pudo enviar la selección al cliente de League. ¡Por favor selecciona tu campeón manualmente de inmediato!'
+                        });
+                        notifyTelegram('⚠️ ALERTA: Error enviando Auto-Pick al juego. Por favor selecciona tu campeón manualmente.');
+                    }
+                } else {
+                    console.log(`🎉 [AUTO] ${currentAction.type} completado con éxito para ID: ${targetId}`);
+                    if (currentAction.type === 'pick') {
+                        setAutoPickAlert({ active: false, message: '' });
+                    }
+                }
             } else {
+                console.error(`❌ [AUTO] No se encontró campeón elegible para ${currentAction.type}. Notificando al usuario.`);
                 currentAction.completed = false;
+                if (currentAction.type === 'pick') {
+                    const reasonMsg = !hasValidRole
+                        ? 'Riot no asignó una posición/rol válido a tu jugador. ¡Selecciona tu campeón manualmente!'
+                        : 'No se encontró un campeón disponible para auto-pick. ¡Por favor selecciona tu campeón manualmente!';
+
+                    setAutoPickAlert({
+                        active: true,
+                        message: '⚠️ ATENCIÓN: SE REQUIERE SELECCIÓN MANUAL',
+                        submessage: reasonMsg
+                    });
+                    notifyTelegram(`⚠️ ATENCIÓN: Auto-Pick requiere acción manual (${reasonMsg}). Por favor selecciona en el juego.`);
+                }
             }
         } catch (e) {
+            console.error("❌ [AUTO] Excepción en handleAutoExecution:", e);
             currentAction.completed = false;
         }
     };
@@ -323,6 +404,50 @@ export const DraftPage = () => {
 
                 timestampAtSyncRef.current = Date.now();
                 apiTimeAtSyncRef.current = adjusted;
+
+                // PRE-VERIFICACIÓN INMEDIATA AL INICIAR TU TURNO DE PICK
+                if (myAction.type === 'pick' && autoPick) {
+                    try {
+                        const cleanMyTeam = data.myTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
+                        const cleanTheirTeam = data.theirTeam.map((p: any) => p.championId).filter((id: number) => id !== 0);
+                        const bannedIds = data.actions?.flat().filter((a: any) => a.type === 'ban' && a.completed).map((a: any) => a.championId) || [];
+                        const unavailableIds = [...new Set([...bannedIds, ...cleanMyTeam, ...cleanTheirTeam])];
+                        const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
+                        const allyHovered = data.myTeam
+                            .filter((p: any) => p.cellId !== data.localPlayerCellId)
+                            .map((p: any) => p.championPickIntent || 0)
+                            .filter((id: number) => id !== 0);
+
+                        let testTargetId = 0;
+                        const statePicks = recommendations.filter(p => !unavailableIds.includes(p.id) && !allyHovered.includes(p.id));
+                        if (statePicks.length > 0) testTargetId = statePicks[0].id;
+
+                        if (testTargetId === 0) {
+                            const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
+                            const available = picks.filter(p => !allyHovered.includes(p.id));
+                            if (available.length > 0) testTargetId = available[0].id;
+                        }
+
+                        if (testTargetId === 0) {
+                            const myHover = myPlayer?.championPickIntent || 0;
+                            if (myHover > 0 && !unavailableIds.includes(myHover)) testTargetId = myHover;
+                        }
+
+                        if (testTargetId > 0) {
+                            const champName = getNameFromId(testTargetId) || `ID ${testTargetId}`;
+                            console.log(`[AUTO-PICK CHECK] Tu turno de Pick ha comenzado. Campeón listo para auto-lock: ${champName} (ID: ${testTargetId}).`);
+                        } else {
+                            console.warn(`[AUTO-PICK CHECK] Tu turno de Pick ha comenzado, pero NO se encontró ningún campeón recomendado o preseleccionado elegible. Auto-pick NO podrá fijar automáticamente. ¡PICKEA MANUALMENTE!`);
+                            setAutoPickAlert({
+                                active: true,
+                                message: 'SE REQUIERE SELECCIÓN MANUAL',
+                                submessage: 'No se encontró un campeón disponible para auto-pick. ¡Por favor selecciona tu campeón manualmente en League of Legends!'
+                            });
+                        }
+                    } catch (e) {
+                        console.error('[AUTO-PICK CHECK] Error en pre-verificación de pick:', e);
+                    }
+                }
             }
         } else {
             activeActionRef.current = null;
@@ -341,11 +466,14 @@ export const DraftPage = () => {
         lastActionKeyRef.current = "none";
         timestampAtSyncRef.current = 0;
         activeActionRef.current = null;
-        
+
         notifiedBanRef.current = 0;
         notifiedPickRef.current = 0;
         notifiedStartRef.current = false;
         isRestoredRef.current = false;
+        manualRoleSelectedRef.current = false;
+        setShowRoleModal(false);
+        setAutoPickAlert({ active: false, message: '' });
 
         // Limpiar claves del sessionStorage para la siguiente partida
         try {
@@ -411,7 +539,7 @@ export const DraftPage = () => {
                             notifiedBanRef.current = myBanAction.championId;
                             const finalChampId = data.lastExecutedChampionId || myBanAction.championId;
                             const name = getNameFromId(finalChampId) || `ID ${finalChampId}`;
-                            
+
                             const storageKey = `hexdraft_telegram_notified_ban_${finalChampId}`;
                             if (sessionStorage.getItem(storageKey) !== 'true') {
                                 sessionStorage.setItem(storageKey, 'true');
@@ -426,7 +554,7 @@ export const DraftPage = () => {
                             notifiedPickRef.current = myPickAction.championId;
                             const finalChampId = data.lastExecutedChampionId || myPickAction.championId;
                             const name = getNameFromId(finalChampId) || `ID ${finalChampId}`;
-                            
+
                             const storageKey = `hexdraft_telegram_notified_pick_${finalChampId}`;
                             if (sessionStorage.getItem(storageKey) !== 'true') {
                                 sessionStorage.setItem(storageKey, 'true');
@@ -437,8 +565,18 @@ export const DraftPage = () => {
 
                     const myPlayer = data.myTeam.find((p: any) => p.cellId === data.localPlayerCellId);
                     const myId = myPlayer?.championId || 0;
-                    const currentRole = myPlayer?.assignedPosition?.toLowerCase() || "jungle";
-                    setMyRole(currentRole);
+                    const rawRole = myPlayer?.assignedPosition;
+                    const hasValidRole = Boolean(rawRole && rawRole.trim() !== '' && rawRole.toLowerCase() !== 'none');
+
+                    let currentRole = myRole;
+                    if (hasValidRole && !manualRoleSelectedRef.current) {
+                        currentRole = rawRole.toLowerCase();
+                        setMyRole(currentRole);
+                        setShowRoleModal(false);
+                    } else if (!hasValidRole && !manualRoleSelectedRef.current) {
+                        setShowRoleModal(true);
+                    }
+
                     localStorage.setItem('last_my_team:v1', JSON.stringify(data.myTeam));
                     localStorage.setItem('last_their_team:v1', JSON.stringify(data.theirTeam));
                     localStorage.setItem('last_my_role:v1', currentRole);
@@ -565,19 +703,19 @@ export const DraftPage = () => {
                         if (fingerprint !== lastFingerprintRef.current) {
                             lastFingerprintRef.current = fingerprint;
 
-                             // Recomendaciones contextuales de bans en la UI pasando parámetros de draft completos
-                             const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
-                             const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
-                             const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
-                             const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
-                             const bans = getProcessedBans(
-                                 picks,
-                                 myHoverName,
-                                 currentRole,
-                                 allyNames,
-                                 enemyNames,
-                                 bannedNames
-                             ).filter(b => !lockedAndBannedIds.includes(b.id));
+                            // Recomendaciones contextuales de bans en la UI pasando parámetros de draft completos
+                            const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+                            const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                            const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
+                            const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
+                            const bans = getProcessedBans(
+                                picks,
+                                myHoverName,
+                                currentRole,
+                                allyNames,
+                                enemyNames,
+                                bannedNames
+                            ).filter(b => !lockedAndBannedIds.includes(b.id));
 
                             setRecommendations(picks.slice(0, 30));
                             setBanRecommendations(bans.slice(0, 20));
@@ -591,7 +729,7 @@ export const DraftPage = () => {
 
                 if (!notifiedStartRef.current) {
                     notifiedStartRef.current = true;
-                    
+
                     const storageKey = 'hexdraft_telegram_notified_start';
                     if (sessionStorage.getItem(storageKey) !== 'true') {
                         sessionStorage.setItem(storageKey, 'true');
@@ -749,6 +887,29 @@ export const DraftPage = () => {
                     <div className={`bg-panel-warm border border-border-warm rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
                         }`}>
 
+                        {/* ALERTA DE AUTO-PICK SI HUBO ERROR O NO SE DETECTÓ EL ROL */}
+                        {autoPickAlert.active && (
+                            <div className="w-full bg-[#1c0808] border-2 border-red-500/80 text-red-100 p-3.5 rounded-sm shadow-2xl flex items-center justify-between gap-4 mb-3 animate-pulse shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">[ERROR]</span>
+                                    <div>
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-red-400">
+                                            {autoPickAlert.message}
+                                        </h4>
+                                        <p className="text-[10.5px] font-bold text-red-200 leading-tight">
+                                            {autoPickAlert.submessage}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setAutoPickAlert({ active: false, message: '' })}
+                                    className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 border border-red-400 text-red-200 text-[10px] font-black uppercase tracking-wider rounded-sm cursor-pointer"
+                                >
+                                    Entendido ✕
+                                </button>
+                            </div>
+                        )}
+
                         {/* CABECERA DINÁMICA */}
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
                             <div className="flex items-center gap-3">
@@ -777,7 +938,6 @@ export const DraftPage = () => {
                                 </div>
                             </div>
                         </header>
-
                         <div className={`relative flex-1 min-h-0 pr-1 ${isBuildOrReasonsView && (currentBuild || myId > 0) ? 'overflow-hidden' : 'overflow-y-auto scrollbar-thin'}`}>
                             {/* 1. ESPERA / LOBBY */}
                             {!inDraft && !isPlaying && (
@@ -1001,6 +1161,59 @@ export const DraftPage = () => {
                                 autoBan={autoBan}
                                 setAutoBan={setAutoBan}
                             />
+                        )}
+
+                        {/* MODAL DE SELECCIÓN MANUAL DE ROL */}
+                        {showRoleModal && inDraft && (
+                            <div className="fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center p-4 backdrop-blur-none animate-in fade-in duration-200">
+                                <div className="bg-[#0b0b0f] border border-purple-500/50 rounded-sm p-6 max-w-sm w-full text-slate-200 shadow-2xl relative overflow-hidden flex flex-col gap-5 tech-corners">
+                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-purple-accent" />
+
+                                    <div>
+                                        <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+                                            <span className="text-purple-accent font-mono">[AVISO]</span> Error al detectar Línea
+                                        </h3>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider leading-relaxed mt-2">
+                                            Porfavor selecciona tu carril:
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {['top', 'jungle', 'mid', 'adc', 'supp'].map((roleKey) => {
+                                            const isSelected = selectedRoleKey === roleKey;
+                                            return (
+                                                <button
+                                                    key={roleKey}
+                                                    type="button"
+                                                    onClick={() => setSelectedRoleKey(roleKey)}
+                                                    className={`w-full py-2.5 px-4 text-xs font-mono font-black uppercase tracking-widest rounded-sm border transition-all duration-200 flex items-center justify-between cursor-pointer select-none ${isSelected
+                                                            ? 'bg-purple-accent/20 border-purple-accent text-white shadow-[0_0_12px_rgba(144,85,255,0.2)]'
+                                                            : 'bg-[#111116] border-border-warm text-slate-400 hover:text-white hover:border-slate-700'
+                                                        }`}
+                                                >
+                                                    <span>{roleKey}</span>
+                                                    {isSelected && <span className="text-purple-accent font-bold">✓</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const apiRole = ROLE_MAP_TO_API[selectedRoleKey] || 'jungle';
+                                            manualRoleSelectedRef.current = true;
+                                            setMyRole(apiRole);
+                                            setShowRoleModal(false);
+                                            setAutoPickAlert({ active: false, message: '' });
+                                            console.log(`Rol fijado manualmente: ${selectedRoleKey} -> API: ${apiRole}`);
+                                        }}
+                                        className="w-full py-2.5 bg-purple-accent hover:bg-purple-accent/90 text-white text-xs font-black uppercase tracking-widest rounded-sm transition-all duration-200 cursor-pointer shadow-lg active:scale-95 mt-1"
+                                    >
+                                        Enviar
+                                    </button>
+                                </div>
+                            </div>
                         )}
 
                         {/* MODAL DE PREVISUALIZACIÓN */}

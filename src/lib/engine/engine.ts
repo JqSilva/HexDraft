@@ -110,7 +110,7 @@ export function getProcessedRecommendations(
         "utility": "UTILITY"
     };
 
-    const targetLane = posMap[myRole.toLowerCase()] || myRole.toUpperCase();
+    const targetLane = posMap[myRole.toLowerCase()] || (DATA_BY_LANE[myRole.toUpperCase()] ? myRole.toUpperCase() : "JUNGLE");
 
     const allies = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
     const enemies = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];

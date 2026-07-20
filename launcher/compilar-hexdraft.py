@@ -442,7 +442,28 @@ def procesar_instaladores_inno(nueva_version, opciones):
             if iscc_exe:
                 ejecutar_iscc(iss_admin)
 
-    print("\n>>> Proceso de instaladores finalizado.")
+def sincronizar_version_proyecto(version):
+    """Sincroniza la nueva versión en src/config/version.ts antes del build de Node."""
+    if not version:
+        return
+    print(f"\n>>> Sincronizando versión ({version}) en src/config/version.ts...")
+    
+    # Actualizar únicamente src/config/version.ts
+    version_ts = os.path.join(PROYECTO_DIR, "src", "config", "version.ts")
+    if os.path.exists(version_ts):
+        try:
+            with open(version_ts, "r", encoding="utf-8") as f:
+                content = f.read()
+            new_content = re.sub(
+                r"export const APP_VERSION = ['\"].*?['\"];",
+                f"export const APP_VERSION = '{version}';",
+                content
+            )
+            with open(version_ts, "w", encoding="utf-8", newline="\n") as f:
+                f.write(new_content)
+            print(f"  [OK] Actualizado src/config/version.ts -> '{version}'")
+        except Exception as e:
+            print(f"  [WARN] Error al actualizar src/config/version.ts: {e}")
 
 
 if __name__ == "__main__":
@@ -452,7 +473,10 @@ if __name__ == "__main__":
     # 2. Configurar la versión e instaladores a generar de forma interactiva AL INICIO
     nueva_version, opciones_instaladores = obtener_configuracion_instaladores()
     
-    # 3. Asegurar que el proyecto Node esté compilado
+    if nueva_version:
+        sincronizar_version_proyecto(nueva_version)
+
+    # 3. Asegurar que el proyecto Node esté compilado (con el código de versión actualizado)
     if preparar_entorno_node():
         # 4. Compilar el script de Python a EXE
         if os.path.exists(NOMBRE_SCRIPT):
