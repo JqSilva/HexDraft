@@ -6,30 +6,36 @@ interface LiveGamePanelProps {
   onCloseManual?: () => void;
 }
 
-const ROLES = ['TOP', 'JNG', 'MID', 'ADC', 'SUPP'];
+const ROLE_ORDER: Record<string, number> = {
+  'TOP': 1,
+  'JNG': 2,
+  'JUNGLE': 2,
+  'MID': 3,
+  'MIDDLE': 3,
+  'ADC': 4,
+  'BOTTOM': 4,
+  'BOT': 4,
+  'SUPP': 5,
+  'SUPPORT': 5,
+  'UTILITY': 5
+};
 
-const DEFAULT_BLUE_PLACEHOLDERS: Partial<PlayerData>[] = [
-  { championName: 'Riven', role: 'TOP', riotId: 'Aliado 1', ranked: { tier: 'GOLD', division: 'I', lp: 75, wins: 45, losses: 35, winrate: 56 } },
-  { championName: 'Yasuo', role: 'JNG', riotId: 'Aliado 2', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Zed', role: 'MID', riotId: 'Aliado 3', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Jinx', role: 'ADC', riotId: 'Aliado 4', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Thresh', role: 'SUPP', riotId: 'Aliado 5', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } }
-];
-
-const DEFAULT_RED_PLACEHOLDERS: Partial<PlayerData>[] = [
-  { championName: 'Darius', role: 'TOP', riotId: 'Enemigo 1', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'LeeSin', role: 'JNG', riotId: 'Enemigo 2', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Ahri', role: 'MID', riotId: 'Enemigo 3', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Ezreal', role: 'ADC', riotId: 'Enemigo 4', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } },
-  { championName: 'Leona', role: 'SUPP', riotId: 'Enemigo 5', ranked: { tier: 'UNRANKED', division: '', lp: 0, wins: 0, losses: 0, winrate: 0 } }
-];
+function sortPlayersByRole(players: PlayerData[]): PlayerData[] {
+  return [...players].sort((a, b) => {
+    const roleA = ROLE_ORDER[(a.role || '').toUpperCase()] || 3;
+    const roleB = ROLE_ORDER[(b.role || '').toUpperCase()] || 3;
+    return roleA - roleB;
+  });
+}
 
 export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [gameData, setGameData] = useState<{
     active: boolean;
-    blueTeam: PlayerData[];
-    redTeam: PlayerData[];
+    blueTeam?: PlayerData[];
+    redTeam?: PlayerData[];
+    myTeam?: PlayerData[];
+    theirTeam?: PlayerData[];
     gameMode?: string;
   } | null>(null);
 
@@ -52,102 +58,68 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
     fetchLiveGame();
   }, []);
 
-  const rawBlue = gameData?.blueTeam || [];
-  const rawRed = gameData?.redTeam || [];
+  const rawBlue = gameData?.blueTeam || gameData?.myTeam || [];
+  const rawRed = gameData?.redTeam || gameData?.theirTeam || [];
 
-  // Completar a 5 slots por equipo para asegurar que el grid ocupe todo el espacio
-  const blueTeam: PlayerData[] = Array.from({ length: 5 }).map((_, idx) => {
-    if (rawBlue[idx]) return { ...rawBlue[idx], role: rawBlue[idx].role || ROLES[idx] };
-    const ph = DEFAULT_BLUE_PLACEHOLDERS[idx] || {};
-    return {
-      puuid: `ph_blue_${idx}`,
-      teamId: 100,
-      championId: 0,
-      championName: ph.championName || 'Riven',
-      role: ph.role || ROLES[idx],
-      riotId: ph.riotId || `Aliado ${idx + 1}`,
-      ranked: ph.ranked as any,
-      todayRecord: { wins: 0, losses: 0, winrate: 0, streak: { type: null, count: 0 } }
-    };
-  });
-
-  const redTeam: PlayerData[] = Array.from({ length: 5 }).map((_, idx) => {
-    if (rawRed[idx]) return { ...rawRed[idx], role: rawRed[idx].role || ROLES[idx] };
-    const ph = DEFAULT_RED_PLACEHOLDERS[idx] || {};
-    return {
-      puuid: `ph_red_${idx}`,
-      teamId: 200,
-      championId: 0,
-      championName: ph.championName || 'Darius',
-      role: ph.role || ROLES[idx],
-      riotId: ph.riotId || `Enemigo ${idx + 1}`,
-      ranked: ph.ranked as any,
-      todayRecord: { wins: 0, losses: 0, winrate: 0, streak: { type: null, count: 0 } }
-    };
-  });
+  const blueTeam = sortPlayersByRole(rawBlue);
+  const redTeam = sortPlayersByRole(rawRed);
 
   return (
-    <div className="w-full h-full min-h-full flex flex-col justify-between bg-[#06040a] text-white p-4 md:p-6 overflow-y-auto scrollbar-thin select-none flex-1">
-      {/* Cabecera del Panel de Carga */}
-      <div className="flex items-center justify-between gap-4 pb-3 mb-2 border-b border-purple-900/30 shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-black tracking-[0.2em] text-purple-400 uppercase bg-[#140b24] border border-purple-800/40 px-3 py-1 rounded-sm">
-            [{gameData?.gameMode || 'RANKED SOLO/DUO'}]
-          </span>
+    <div className="w-full h-full flex flex-col justify-between p-2.5 xl:p-4 text-slate-200 select-none overflow-hidden min-h-0">
+      {/* BARRA SUPERIOR DE ACCIONES */}
+      <div className="flex justify-between items-center pb-2 border-b border-purple-950/80 mb-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs xl:text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <span className="text-purple-400 font-mono">[{gameData?.gameMode || 'RANKED SOLO/DUO'}]</span>
+          </h2>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {onCloseManual && (
             <button
               onClick={onCloseManual}
-              className="px-4 py-1.5 bg-[#140b24] hover:bg-purple-900/40 border border-purple-800/60 text-purple-200 text-xs font-black tracking-wider uppercase rounded-sm transition-colors cursor-pointer"
+              className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 rounded-sm border border-purple-700/50 transition-colors cursor-pointer"
             >
-              VER VISTA IN-GAME
+              Ver Vista In-Game
             </button>
           )}
+
           <button
             onClick={fetchLiveGame}
-            className="px-4 py-1.5 bg-[#6b21a8] hover:bg-[#7e22ce] text-white text-xs font-black tracking-wider uppercase rounded-sm transition-colors shadow-md cursor-pointer"
+            className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-sm border border-slate-700 transition-colors cursor-pointer"
           >
-            ACTUALIZAR
+            Actualizar
           </button>
         </div>
       </div>
 
-      {/* Grid de Equipos: Ocupa todo el alto y ancho proporcionalmente */}
-      <div className="flex flex-col justify-around gap-4 flex-1 min-h-0 py-2">
-        {/* TEAM AZUL */}
-        <div className="flex flex-col gap-2 flex-1 min-h-0">
-          <h2 className="text-xs font-black uppercase tracking-[0.25em] text-indigo-400">
-            TEAM AZUL (ALIADOS)
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 flex-1 min-h-0">
-            {blueTeam.map((player) => (
-              <PlayerCard key={player.puuid} player={player} isAlly={true} />
-            ))}
-          </div>
+      {/* FILA SUPERIOR: JUGADORES ALIADOS ORDENADOS POR LÍNEA */}
+      <div className="flex-1 min-h-0 py-1">
+        
+        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full">
+          {blueTeam.map((p, idx) => (
+            <PlayerCard key={p.puuid || `blue_${idx}`} player={p} index={idx} isAlly={true} />
+          ))}
         </div>
+      </div>
 
-        {/* SEPARADOR CENTRAL VS */}
-        <div className="relative flex items-center justify-center my-1 shrink-0">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-purple-900/40" />
-          </div>
-          <div className="relative bg-[#0a0812] border border-purple-500/50 px-4 py-0.5 rounded-full text-xs font-black text-purple-300 tracking-widest uppercase shadow-md">
-            VS
-          </div>
+      {/* SEPARADOR CENTRAL 'VS' ESTILIZADO DE LA MAQUETA */}
+      <div className="relative my-1.5 xl:my-2.5 flex items-center justify-center shrink-0">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-purple-900/60" />
         </div>
+        <div className="relative px-4 py-0.5 bg-[#0e0a1a] border border-purple-600/50 rounded-sm text-purple-400 font-black text-xs xl:text-base italic tracking-widest shadow-lg select-none">
+          VS
+        </div>
+      </div>
 
-        {/* TEAM ROJO */}
-        <div className="flex flex-col gap-2 flex-1 min-h-0">
-          <h2 className="text-xs font-black uppercase tracking-[0.25em] text-rose-400">
-            TEAM ROJO (ENEMIGOS)
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 flex-1 min-h-0">
-            {redTeam.map((player) => (
-              <PlayerCard key={player.puuid} player={player} isAlly={false} />
-            ))}
-          </div>
+      {/* FILA INFERIOR: JUGADORES ENEMIGOS ORDENADOS POR LÍNEA */}
+      <div className="flex-1 min-h-0 py-1">
+        
+        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full">
+          {redTeam.map((p, idx) => (
+            <PlayerCard key={p.puuid || `red_${idx}`} player={p} index={idx} isAlly={false} />
+          ))}
         </div>
       </div>
     </div>

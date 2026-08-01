@@ -104,15 +104,16 @@ export const GET: APIRoute = async ({ request }) => {
     const championName = getNameFromId(championId) || `Champion_${championId}`;
     const role = ROLES_ORDER[indexInTeam % 5];
 
-    // Intentar recuperar de caché local
+    // Intentar recuperar de caché local (requiere que la entrada tenga rankedFlex y profileIconId)
     const cached = getCachedPlayer(playerPuuid);
-    if (cached) {
+    if (cached && cached.rankedFlex && cached.profileIconId) {
       return {
         ...cached,
         puuid: playerPuuid,
         teamId: p.teamId,
         championId,
         championName,
+        profileIconId: p.profileIconId || cached.profileIconId || 29,
         spell1Id: p.spell1Id,
         spell2Id: p.spell2Id,
         keystoneId: p.perks?.perkIds?.[0] || 0,
@@ -123,6 +124,14 @@ export const GET: APIRoute = async ({ request }) => {
 
     // Si no está en caché, consultar Riot API
     let rankedInfo = {
+      tier: 'UNRANKED',
+      division: '',
+      lp: 0,
+      wins: 0,
+      losses: 0,
+      winrate: 0
+    };
+    let rankedFlexInfo = {
       tier: 'UNRANKED',
       division: '',
       lp: 0,
@@ -146,6 +155,8 @@ export const GET: APIRoute = async ({ request }) => {
 
       if (rankedEntries && Array.isArray(rankedEntries)) {
         const soloQ = rankedEntries.find((r: any) => r.queueType === 'RANKED_SOLO_5x5');
+        const flexQ = rankedEntries.find((r: any) => r.queueType === 'RANKED_FLEX_SR' || r.queueType === 'RANKED_FLEX_5x5' || r.queueType?.includes('FLEX'));
+
         if (soloQ) {
           const totalGames = (soloQ.wins || 0) + (soloQ.losses || 0);
           rankedInfo = {
@@ -155,6 +166,18 @@ export const GET: APIRoute = async ({ request }) => {
             wins: soloQ.wins || 0,
             losses: soloQ.losses || 0,
             winrate: totalGames > 0 ? Math.round((soloQ.wins / totalGames) * 100) : 0
+          };
+        }
+
+        if (flexQ) {
+          const totalGamesFlex = (flexQ.wins || 0) + (flexQ.losses || 0);
+          rankedFlexInfo = {
+            tier: flexQ.tier || 'UNRANKED',
+            division: flexQ.rank || (flexQ as any).division || '',
+            lp: flexQ.leaguePoints || 0,
+            wins: flexQ.wins || 0,
+            losses: flexQ.losses || 0,
+            winrate: totalGamesFlex > 0 ? Math.round((flexQ.wins / totalGamesFlex) * 100) : 0
           };
         }
       }
@@ -189,7 +212,9 @@ export const GET: APIRoute = async ({ request }) => {
     const compiledData = {
       puuid: playerPuuid,
       riotId: p.riotId || p.summonerId || 'Invocador',
+      profileIconId: p.profileIconId || 29,
       ranked: rankedInfo,
+      rankedFlex: rankedFlexInfo,
       topMastery: topMasteryList,
       isMain,
       todayRecord
@@ -219,11 +244,14 @@ export const GET: APIRoute = async ({ request }) => {
   return new Response(
     JSON.stringify({
       active: true,
+      inGame: true,
       gameId: spectatorGame.gameId,
       gameMode: spectatorGame.gameMode,
       mapId: spectatorGame.mapId,
       blueTeam,
-      redTeam
+      redTeam,
+      myTeam: blueTeam,
+      theirTeam: redTeam
     }),
     { status: 200 }
   );
