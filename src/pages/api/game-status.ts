@@ -23,9 +23,26 @@ export const GET: APIRoute = async () => {
     if (phase === 'Matchmaking' || phase === 'InProgress') {
       resetLastExecutedChampionId();
     }
+
+    let isGameReady = false;
+    let isLoadingScreen = false;
+
+    if (phase === 'InProgress') {
+      try {
+        const activePlayerRes = await fetch('https://127.0.0.1:2999/liveclientdata/activeplayer', {
+          signal: AbortSignal.timeout(1500)
+        });
+        isGameReady = activePlayerRes.ok;
+        isLoadingScreen = !activePlayerRes.ok;
+      } catch (e) {
+        // Conexión rechazada o timeout en puerto 2999 -> aún en pantalla de carga
+        isGameReady = false;
+        isLoadingScreen = true;
+      }
+    }
     
-    return new Response(JSON.stringify({ phase }), { status: 200 });
+    return new Response(JSON.stringify({ phase, isLoadingScreen, isGameReady }), { status: 200 });
   } catch (e) {
-    return new Response(JSON.stringify({ phase: 'None' }), { status: 200 });
+    return new Response(JSON.stringify({ phase: 'None', isLoadingScreen: false, isGameReady: false }), { status: 200 });
   }
 };

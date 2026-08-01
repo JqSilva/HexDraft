@@ -252,6 +252,7 @@ async function fetchAllProfileData(lcu: any, summonerData: any, signature: strin
     isConnected: true,
     lockfileSignature: signature,
     gameVersion: gameVersion,
+    puuid: puuid,
     summoner: summonerName,
     level: summonerData.summonerLevel,
     xpPercent: summonerData.percentCompleteForNextLevel,

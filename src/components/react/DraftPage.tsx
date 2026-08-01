@@ -17,6 +17,7 @@ import { DraftSettings } from './DraftSettings';
 import { ChampionPreviewModal } from './ChampionPreviewModal';
 import { SkillTimeline } from './SkillTimeline';
 import { ItemBuild } from './ItemBuild';
+import { LiveGamePanel } from './LiveGamePanel';
 
 // Modular components & utils
 import { DraftDamageBalance } from './draft/DraftDamageBalance';
@@ -98,7 +99,12 @@ export const DraftPage = () => {
         }
     };
 
+    const [isLoadingScreen, setIsLoadingScreen] = useState<boolean>(false);
+    const [isGameReady, setIsGameReady] = useState<boolean>(false);
+    const [manualOverrideLoadingScreen, setManualOverrideLoadingScreen] = useState<boolean | null>(null);
+
     const isPlaying = gamePhase === 'InProgress';
+    const showLoadingScreenPanel = manualOverrideLoadingScreen !== null ? manualOverrideLoadingScreen : isLoadingScreen;
 
     const myPlayer = myTeam.find(p => p.cellId === localPlayerCellId);
     const myId = myPlayer?.championId || 0;
@@ -511,16 +517,24 @@ export const DraftPage = () => {
 
         try {
             const statusRes = await fetch('/api/game-status');
-            const { phase } = await statusRes.json();
+            const statusData = await statusRes.json();
+            const phase = statusData.phase || 'Offline';
 
-            setGamePhase(phase);
+            setGamePhase(prevPhase => {
+                if (prevPhase !== phase) {
+                    setManualOverrideLoadingScreen(null);
+                }
+                return phase;
+            });
+            setIsLoadingScreen(Boolean(statusData.isLoadingScreen));
+            setIsGameReady(Boolean(statusData.isGameReady));
             setIsConnected(phase !== 'Offline');
-
-            if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
+            
+            if (phase === 'ChampSelect' || phase === 'ReadyCheck' || 1==1) {
                 nextInterval = 1500;
                 const draftRes = await fetch('/api/champ-select');
                 const data = await draftRes.json();
-
+                console.log(data);
                 if (data.inDraft) {
                     setInDraft(true);
                     currentDataRef.current = data;
@@ -868,13 +882,17 @@ export const DraftPage = () => {
 
             <div className={`flex flex-row w-full items-center h-full min-h-0 relative z-10 px-2 md:px-4 transition-all duration-700 ${isPlaying ? 'gap-0 justify-center' : 'gap-4 md:gap-6 justify-between'
                 }`}>
-                {/* LISTADO DE ALIADOS */}
-                <TeamSidebar
-                    team={myTeam}
-                    isPlaying={isPlaying}
-                    isCompact={isCompact || hasPicked}
-                    isEnemy={false}
-                />
+                {showLoadingScreenPanel ? (
+                    <LiveGamePanel onCloseManual={() => setManualOverrideLoadingScreen(false)} />
+                ) : (
+                    <>
+                        {/* LISTADO DE ALIADOS */}
+                        <TeamSidebar
+                            team={myTeam}
+                            isPlaying={isPlaying}
+                            isCompact={isCompact || hasPicked}
+                            isEnemy={false}
+                        />
 
                 {/* AREA CENTRAL */}
                 <div className={`transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
@@ -932,13 +950,19 @@ export const DraftPage = () => {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 border rounded-sm select-none ${isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
+                                <button
+                                    onClick={() => setManualOverrideLoadingScreen(!showLoadingScreenPanel)}
+                                    className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none border-purple-500/40 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 transition-colors"
+                                >
+                                    {showLoadingScreenPanel ? 'VER VISTA IN-GAME' : 'PANTALLA DE CARGA'}
+                                </button>
+                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none ${isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
                                     }`}>
                                     Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
                                 </div>
                             </div>
                         </header>
-                        <div className={`relative flex-1 min-h-0 pr-1 ${isBuildOrReasonsView && (currentBuild || myId > 0) ? 'overflow-hidden' : 'overflow-y-auto scrollbar-thin'}`}>
+                        <div className={`relative flex-1 min-h-0 ${isBuildOrReasonsView && (currentBuild || myId > 0) ? 'overflow-hidden pr-1' : 'overflow-y-auto scrollbar-thin pr-1'}`}>
                             {/* 1. ESPERA / LOBBY */}
                             {!inDraft && !isPlaying && (
                                 <DraftLobby />
@@ -1231,6 +1255,8 @@ export const DraftPage = () => {
                     isCompact={isCompact || hasPicked}
                     isEnemy={true}
                 />
+                    </>
+                )}
             </div>
         </div>
     );
