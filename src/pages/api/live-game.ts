@@ -12,6 +12,7 @@ export const GET: APIRoute = async ({ request }) => {
   const urlParams = new URL(request.url).searchParams;
   let puuid = urlParams.get('puuid') || '';
   const platform = urlParams.get('platform') || (typeof process !== 'undefined' && process.env?.RIOT_PLATFORM) || 'las';
+  const forceRefresh = urlParams.get('force') === 'true' || urlParams.get('refresh') === 'true';
 
   const lcu = getLockfileData();
   let participantsRaw: any[] = [];
@@ -122,9 +123,9 @@ export const GET: APIRoute = async ({ request }) => {
     .sort()
     .join('|');
 
-  // 1. Si los datos ya fueron scrapeados para esta partida (isScraped === 1), retornar directo desde JSON
+  // 1. Si los datos ya fueron scrapeados para esta partida (isScraped === 1) y no es forceRefresh, retornar directo desde JSON
   const cachedMatch = loadLiveMatchCache();
-  if (cachedMatch && cachedMatch.isScraped === 1 && cachedMatch.matchFingerprint === matchFingerprint) {
+  if (!forceRefresh && cachedMatch && cachedMatch.isScraped === 1 && cachedMatch.matchFingerprint === matchFingerprint) {
     return new Response(
       JSON.stringify({
         active: true,
@@ -203,7 +204,7 @@ export const GET: APIRoute = async ({ request }) => {
       : ROLES_ORDER[indexInTeam % 5];
 
     // Extraer perfil y etiquetas vía OP.GG Scraper Service v2
-    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId);
+    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId, forceRefresh);
 
     return {
       ...profile,

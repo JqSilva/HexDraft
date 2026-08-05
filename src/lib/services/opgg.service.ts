@@ -6,7 +6,7 @@ import path from 'node:path';
 import { getNameFromId } from '../engine/engine.js';
 
 const CACHE_FILE_PATH = path.resolve(process.cwd(), 'src/lib/data/opgg-cache.json');
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora de caché por jugador
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutos de caché por jugador (para refresco constante entre partidas)
 
 export interface OpggPlayerProfile {
   puuid: string;
@@ -116,7 +116,8 @@ export async function scrapeOpggProfile(
   gameName: string,
   tagLine: string,
   region: string = 'las',
-  currentChampionId: number = 0
+  currentChampionId: number = 0,
+  forceRefresh: boolean = false
 ): Promise<OpggPlayerProfile> {
   const riotId = `${gameName}#${tagLine}`;
   const cleanTag = tagLine.replace(/^#/, '');
@@ -139,11 +140,11 @@ export async function scrapeOpggProfile(
     };
   }
 
-  // 2. Verificar Caché Local
+  // 2. Verificar Caché Local (omitir si forceRefresh es verdadero)
   const cacheKey = `${region}_${gameName.toLowerCase()}_${cleanTag.toLowerCase()}`;
   const cache = loadCache();
   const cachedEntry = cache.players[cacheKey];
-  if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+  if (!forceRefresh && cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
     console.log(`[OPGG Service] Usando datos de caché para: ${riotId}`);
     return cachedEntry.data;
   }
@@ -306,7 +307,7 @@ export async function scrapeOpggProfile(
         if (isWin) recentWins++;
         if (isLose) recentLosses++;
 
-        // Verificar si la partida ocurrió hoy
+        // Verificar si la partida ocurrió hoy / sesión reciente (últimas 18 horas o mismo día calendario)
         let isGameToday = false;
         if (startTimeStr) {
           const gameDate = new Date(startTimeStr);
@@ -317,14 +318,14 @@ export async function scrapeOpggProfile(
                             gameDate.getDate() === today.getDate();
 
             const diffHours = (today.getTime() - gameDate.getTime()) / (1000 * 60 * 60);
-            const hoursSinceMidnight = today.getHours() + (today.getMinutes() / 60) + 1;
 
-            if (sameDay || (diffHours >= 0 && diffHours <= hoursSinceMidnight)) {
+            // Se considera de la sesión de hoy si es el mismo día calendario o si fue jugada en las últimas 18h
+            if (sameDay || (diffHours >= 0 && diffHours <= 18)) {
               isGameToday = true;
             }
           } else {
             const lowerTime = startTimeStr.toLowerCase();
-            if (lowerTime.includes('hour') || lowerTime.includes('hora') || lowerTime.includes('min') || lowerTime.includes('m ago') || lowerTime.includes('h ago')) {
+            if (lowerTime.includes('hour') || lowerTime.includes('hora') || lowerTime.includes('min') || lowerTime.includes('m ago') || lowerTime.includes('h ago') || lowerTime.includes('atrás')) {
               isGameToday = true;
             }
           }

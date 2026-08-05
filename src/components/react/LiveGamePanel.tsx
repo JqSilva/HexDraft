@@ -39,9 +39,13 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
     gameMode?: string;
   } | null>(null);
 
-  const fetchLiveGame = useCallback(async () => {
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const fetchLiveGame = useCallback(async (force: boolean = false) => {
+    if (force) setRefreshing(true);
     try {
-      const res = await fetch('/api/live-game');
+      const endpoint = force ? '/api/live-game?force=true' : '/api/live-game';
+      const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         setGameData(data);
@@ -50,6 +54,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
       console.error('[LiveGamePanel] Error fetching live game:', e);
     } finally {
       setLoading(false);
+      if (force) setRefreshing(false);
     }
   }, []);
 
@@ -103,10 +108,11 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
           )}
 
           <button
-            onClick={fetchLiveGame}
-            className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-sm border border-slate-700 transition-colors cursor-pointer"
+            onClick={() => fetchLiveGame(true)}
+            disabled={refreshing}
+            className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-slate-200 rounded-sm border border-slate-700 transition-colors cursor-pointer"
           >
-            Actualizar
+            {refreshing ? 'Actualizando...' : 'Actualizar'}
           </button>
         </div>
       </div>
