@@ -109,7 +109,7 @@ export function getProcessedBans(
 
   if (results.length < 5) {
     const metaBans: { name: string; id: number; score: number }[] = [];
-    Object.entries(ENRICHED_DB).forEach(([name, champ]) => {
+    Object.entries(ENRICHED_DB).forEach(([name, champ]: [string, any]) => {
       const champId = NAME_TO_ID[name];
       if (!champId) return;
 

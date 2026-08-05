@@ -8,6 +8,7 @@ import { analyzeComposition, detectEnemyArchetype, detectAllyArchetype, type Ene
 import { isFlexChampion } from './bansEngine.js';
 export { getProcessedBans, getBanRecommendations } from './bansEngine.js';
 export type { BansRecommendation } from './bansEngine.js';
+export { getIdFromName } from './constants.js';
 
 export let engineWeights = {
   meta_base: 0.4,
@@ -118,7 +119,7 @@ export function getProcessedRecommendations(
     // Iteramos únicamente sobre el pool del carril seleccionado para optimizar búsquedas
     let pool = DATA_BY_LANE[targetLane] || [];
     if (singleChampId) {
-        const targetChamp = pool.find(c => c.id === singleChampId) || Object.values(ENRICHED_DB).find(c => c.id === singleChampId);
+        const targetChamp = pool.find(c => c.id === singleChampId) || (Object.values(ENRICHED_DB) as EnrichedChampion[]).find(c => c.id === singleChampId);
         pool = targetChamp ? [targetChamp] : [];
     }
 

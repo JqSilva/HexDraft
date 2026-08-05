@@ -1,16 +1,23 @@
 import assets from '../data/assets-map.json' with { type: 'json' };
+import { getDDragonUrl } from '../gameVersion.js';
 
-// URLs base para las imágenes
+// URL base para assets de CommunityDragon
 const CD_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/";
-const DD_BASE = "https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/";
 
+/**
+ * Hidrata un asset (objeto, runa, fragmento o hechizo de invocador) convirtiendo su ID
+ * en un objeto estructurado con nombre, descripción e URL de icono optimizada (vía DDragon o CommunityDragon).
+ * 
+ * @param type - Tipo de recurso a hidratar ('items' | 'runes' | 'shards' | 'summoners').
+ * @param id - Identificador numérico o en cadena del recurso.
+ * @returns Objeto hidratado con datos del recurso o null si el tipo no es soportado.
+ */
 export function hydrateAsset(type: 'runes' | 'items' | 'shards' | 'summoners', id: number | string) {
-    
     const idStr = id.toString();
 
     if (type === 'items') {
         const item = assets.items[idStr as keyof typeof assets.items];
-        let iconUrl = `${DD_BASE}${id}.png`;
+        let iconUrl = getDDragonUrl('item', `${id}.png`);
         if (item?.icon && (item.icon.includes('/') || item.icon.includes('_'))) {
             let path = item.icon.toLowerCase();
             if (path.startsWith('/')) path = path.slice(1);
@@ -27,7 +34,6 @@ export function hydrateAsset(type: 'runes' | 'items' | 'shards' | 'summoners', i
     }
 
     if (type === 'runes' || type === 'shards') {
-        // Buscamos en ambas secciones porque a veces se mezclan en la API
         const data = assets.runes[idStr as keyof typeof assets.runes] || 
                      assets.shards[idStr as keyof typeof assets.shards];
         
@@ -43,12 +49,13 @@ export function hydrateAsset(type: 'runes' | 'items' | 'shards' | 'summoners', i
         };
     }
 
-    if (type === 'summoners'){
+    if (type === 'summoners') {
         const spell = assets.summoners[idStr as keyof typeof assets.summoners];
+        const iconName = spell?.icon || 'SummonerFlash.png';
         return {
             id: Number(id),
             name: spell?.name || "Hechizo",
-            icon: `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/spell/${spell?.icon}`
+            icon: getDDragonUrl('spell', iconName)
         };
     } 
 

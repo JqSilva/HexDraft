@@ -173,3 +173,23 @@ export const NAME_TO_ID: Record<string, number> = {
   "Zoe": 142,
   "Zyra": 143
 };
+
+export function getIdFromName(name: string): number {
+  if (!name) return 0;
+  const clean = name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  for (const [key, id] of Object.entries(NAME_TO_ID)) {
+    if (key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === clean) {
+      return id;
+    }
+  }
+  return 0;
+}
+
+export function getNameFromId(id: number | string): string {
+  const numId = Number(id);
+  if (isNaN(numId) || numId <= 0) return '';
+  for (const [name, champId] of Object.entries(NAME_TO_ID)) {
+    if (champId === numId) return name;
+  }
+  return '';
+}

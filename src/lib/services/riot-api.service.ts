@@ -208,7 +208,7 @@ export async function getMatchIdsToday(
   const region = getMatchRegionFromPlatform(platform);
   // startTime en Riot API debe estar en segundos Epoch UNIX
   const startTimeSec = Math.floor(startTime / 1000);
-  const url = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${startTimeSec}&queue=420&count=20`;
+  const url = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${startTimeSec}&type=ranked&count=20`;
   const res = await riotFetch<string[]>(url);
   if (res.ok && Array.isArray(res.data)) {
     return res.data;

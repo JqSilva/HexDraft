@@ -59,7 +59,7 @@ export function computeTodayRecord(matches: MatchSummary[]): TodayRecordResult {
   }
 
   let streakType: 'win' | 'loss' | null = null;
-  if (streakCount >= 3) {
+  if (streakCount >= 1) {
     streakType = firstResult ? 'win' : 'loss';
   } else {
     streakCount = 0;

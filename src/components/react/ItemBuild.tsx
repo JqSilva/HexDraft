@@ -1,4 +1,5 @@
 import React, { memo, useState, useEffect, useRef } from 'react';
+import { getDDragonUrl } from '../../lib/gameVersion.js';
 
 interface ScoredCluster {
     pivotItem: number;
@@ -94,7 +95,7 @@ const ClusterTab = ({
                     {coreItems.slice(0, 2).map((item: any, idx: number) => (
                         <img
                             key={idx}
-                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                            src={item.icon || getDDragonUrl('item', item.id)}
                             className="w-[20px] h-[20px] rounded-sm border border-border-warm/60"
                             alt="core item"
                             title={item.name}

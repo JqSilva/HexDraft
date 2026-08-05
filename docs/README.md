@@ -6,6 +6,7 @@ Bienvenido a la documentación técnica interna de los motores de HexDraft. Aqu�
 
 * **[Motor de Recomendación de Picks (Draft Engine)](file:///d:/Documentos/HexDraft/docs/draft-engine.md):** Detalla el algoritmo de puntuación multi-capa para picks y bans, la detección de arquetipos tácticos de composiciones y los pesos del motor.
 * **[Motor de Builds, Items y Runas (Build Engine)](file:///d:/Documentos/HexDraft/docs/build-engine.md):** Explica la agrupación por clusters de ítems, el cálculo de viabilidad estadística de runas y botas, y los reemplazos dinámicos contra el enemigo.
+* **[Panel de Pantalla de Carga y Juego en Vivo](file:///d:/Documentos/HexDraft/docs/loading-screen-panel.md):** Describe el flujo de lectura de datos LCU/Riot API y estado de partida en tiempo real.
 
 ---
 

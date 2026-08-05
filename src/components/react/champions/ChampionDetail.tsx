@@ -57,7 +57,7 @@ export const ChampionDetail = ({
 
   // Lista de builds procesadas y filtradas
   const buildsList = useMemo(() => {
-    let list = [...(champ.builds || [])].filter(b => getRoleKey(b.lane) === activeDetailLane);
+    let list = [...(champ.builds || [])].filter(b => getRoleKey((b as any).lane) === activeDetailLane);
     if (list.length === 0) {
       list = [...(champ.builds || [])];
     }
@@ -830,8 +830,9 @@ export const ChampionDetail = ({
 
                     if (topSynergies.length === 0 && champ.synergies) {
                       const synList: Array<{ name: string; delta: number }> = [];
-                      Object.keys(champ.synergies).forEach(pos => {
-                        const list = champ.synergies[pos] || [];
+                      const synObj = champ.synergies as Record<string, any>;
+                      Object.keys(synObj).forEach(pos => {
+                        const list = synObj[pos] || [];
                         list.forEach((s: any) => {
                           synList.push({
                             name: s.name,

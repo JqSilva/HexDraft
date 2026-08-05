@@ -52,11 +52,11 @@ export const POST: APIRoute = async ({ request }) => {
             timeout: 60000 // 60 segundos de timeout de conexión
           });
 
-          const totalBytes = parseInt(response.headers['content-length'] || '0', 10);
+          const totalBytes = parseInt(String(response.headers['content-length'] || '0'), 10);
           let downloadedBytes = 0;
           let lastProgressPercent = -1;
 
-          response.data.on('data', (chunk: Buffer) => {
+          response.data.on('data', (chunk: any) => {
             downloadedBytes += chunk.length;
             const progress = totalBytes ? Math.round((downloadedBytes / totalBytes) * 100) : 0;
             
@@ -77,7 +77,7 @@ export const POST: APIRoute = async ({ request }) => {
           await new Promise<void>((resolve, reject) => {
             if (!writer) return reject(new Error('El escritor no fue inicializado'));
             writer.on('finish', () => resolve());
-            writer.on('error', (err) => reject(err));
+            writer.on('error', (err: any) => reject(err));
             response.data.on('error', (err: any) => reject(err));
           });
 
@@ -87,9 +87,9 @@ export const POST: APIRoute = async ({ request }) => {
           const hash = crypto.createHash('sha256');
           const fileReadStream = fs.createReadStream(tempDbPath);
           await new Promise<void>((resolve, reject) => {
-            fileReadStream.on('data', (data) => hash.update(data));
+            fileReadStream.on('data', (data: any) => hash.update(data));
             fileReadStream.on('end', () => resolve());
-            fileReadStream.on('error', (err) => reject(err));
+            fileReadStream.on('error', (err: any) => reject(err));
           });
           const calculatedChecksum = hash.digest('hex');
 

@@ -168,7 +168,7 @@ def main():
     
     # 1. Cargar Token
     env = load_env(ENV_PATH)
-    github_token = env.get("GITHUB_LAUNCHER_TOKEN")
+    github_token = env.get("GITHUB_TOKEN")
     
     # Fallback 1: data/config.json
     if not github_token:
@@ -185,7 +185,7 @@ def main():
                 
     # Fallback 2: variables de entorno
     if not github_token:
-        github_token = os.environ.get("GITHUB_LAUNCHER_TOKEN") or os.environ.get("GITHUB_TOKEN")
+        github_token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")
         
     if not github_token:
         print("[ERROR] No se encontró token de GitHub en .env, data/config.json ni variables de entorno.")

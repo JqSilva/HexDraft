@@ -68,66 +68,6 @@ export interface DbBuild {
   lane?: string;
 }
 
-// === PREPARED STATEMENTS FOR WRITES (Para optimizar rendimiento) ===
-const insertChampStmt = db.prepare(`
-  INSERT INTO champions (
-    id, name, lane, tier, win_rate, scaling_type, damage_type, class, 
-    is_frontline, is_hypercarry, has_hard_cc, tags,
-    tactic_role, mobility, target_priority, team_needs, team_provides, has_shield, has_sustain, lane_phase, resource_dependency,
-    play_lanes, lanes_pickrate, lanes_stats
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(id) DO UPDATE SET
-    name=excluded.name,
-    lane=excluded.lane,
-    tier=excluded.tier,
-    win_rate=excluded.win_rate,
-    scaling_type=excluded.scaling_type,
-    damage_type=excluded.damage_type,
-    class=excluded.class,
-    is_frontline=excluded.is_frontline,
-    is_hypercarry=excluded.is_hypercarry,
-    has_hard_cc=excluded.has_hard_cc,
-    tags=excluded.tags,
-    tactic_role=excluded.tactic_role,
-    mobility=excluded.mobility,
-    target_priority=excluded.target_priority,
-    team_needs=excluded.team_needs,
-    team_provides=excluded.team_provides,
-    has_shield=excluded.has_shield,
-    has_sustain=excluded.has_sustain,
-    lane_phase=excluded.lane_phase,
-    resource_dependency=excluded.resource_dependency,
-    play_lanes=excluded.play_lanes,
-    lanes_pickrate=excluded.lanes_pickrate,
-    lanes_stats=excluded.lanes_stats;
-`);
-
-const insertMatchupStmt = db.prepare(`
-  INSERT INTO matchups (
-    champion_id, opponent_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, matchup_type
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(champion_id, opponent_id, lane, matchup_type) DO UPDATE SET
-    winrate=excluded.winrate,
-    gold_diff=excluded.gold_diff,
-    xp_diff=excluded.xp_diff,
-    cs_diff=excluded.cs_diff,
-    dominance_score=excluded.dominance_score;
-`);
-
-const insertSynergyStmt = db.prepare(`
-  INSERT INTO synergies (
-    champion_id, partner_id, lane, delta
-  ) VALUES (?, ?, ?, ?)
-  ON CONFLICT(champion_id, partner_id, lane) DO UPDATE SET
-    delta=excluded.delta;
-`);
-
-const insertBuildStmt = db.prepare(`
-  INSERT INTO builds (
-    champion_id, build_name, is_default, patch, summoners, runes, items, skills, tags, special_notes, lane
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`);
-
 // === REPOSITORY METHODS ===
 
 export const championsRepo = {
@@ -143,7 +83,39 @@ export const championsRepo = {
 
   // Guardar un campeón básico
   saveChampion(champ: DbChampion) {
-    insertChampStmt.run(
+    const stmt = db.prepare(`
+      INSERT INTO champions (
+        id, name, lane, tier, win_rate, scaling_type, damage_type, class, 
+        is_frontline, is_hypercarry, has_hard_cc, tags,
+        tactic_role, mobility, target_priority, team_needs, team_provides, has_shield, has_sustain, lane_phase, resource_dependency,
+        play_lanes, lanes_pickrate, lanes_stats
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name=excluded.name,
+        lane=excluded.lane,
+        tier=excluded.tier,
+        win_rate=excluded.win_rate,
+        scaling_type=excluded.scaling_type,
+        damage_type=excluded.damage_type,
+        class=excluded.class,
+        is_frontline=excluded.is_frontline,
+        is_hypercarry=excluded.is_hypercarry,
+        has_hard_cc=excluded.has_hard_cc,
+        tags=excluded.tags,
+        tactic_role=excluded.tactic_role,
+        mobility=excluded.mobility,
+        target_priority=excluded.target_priority,
+        team_needs=excluded.team_needs,
+        team_provides=excluded.team_provides,
+        has_shield=excluded.has_shield,
+        has_sustain=excluded.has_sustain,
+        lane_phase=excluded.lane_phase,
+        resource_dependency=excluded.resource_dependency,
+        play_lanes=excluded.play_lanes,
+        lanes_pickrate=excluded.lanes_pickrate,
+        lanes_stats=excluded.lanes_stats;
+    `);
+    stmt.run(
       champ.id,
       champ.name,
       champ.lane,
@@ -173,7 +145,18 @@ export const championsRepo = {
 
   // Guardar un matchup
   saveMatchup(matchup: DbMatchup) {
-    insertMatchupStmt.run(
+    const stmt = db.prepare(`
+      INSERT INTO matchups (
+        champion_id, opponent_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, matchup_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(champion_id, opponent_id, lane, matchup_type) DO UPDATE SET
+        winrate=excluded.winrate,
+        gold_diff=excluded.gold_diff,
+        xp_diff=excluded.xp_diff,
+        cs_diff=excluded.cs_diff,
+        dominance_score=excluded.dominance_score;
+    `);
+    stmt.run(
       matchup.champion_id,
       matchup.opponent_id,
       matchup.lane,
@@ -188,7 +171,14 @@ export const championsRepo = {
 
   // Guardar una sinergia
   saveSynergy(synergy: DbSynergy) {
-    insertSynergyStmt.run(
+    const stmt = db.prepare(`
+      INSERT INTO synergies (
+        champion_id, partner_id, lane, delta
+      ) VALUES (?, ?, ?, ?)
+      ON CONFLICT(champion_id, partner_id, lane) DO UPDATE SET
+        delta=excluded.delta;
+    `);
+    stmt.run(
       synergy.champion_id,
       synergy.partner_id,
       synergy.lane,
@@ -208,7 +198,12 @@ export const championsRepo = {
   },
 
   saveBuild(build: DbBuild) {
-    insertBuildStmt.run(
+    const stmt = db.prepare(`
+      INSERT INTO builds (
+        champion_id, build_name, is_default, patch, summoners, runes, items, skills, tags, special_notes, lane
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(
       build.champion_id,
       build.build_name,
       build.is_default,

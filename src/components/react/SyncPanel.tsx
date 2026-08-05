@@ -15,6 +15,7 @@ export const SyncPanel = () => {
   const [progressPercent, setProgressPercent] = useState<number>(0);
   const [progressPhase, setProgressPhase] = useState<string>('idle');
   const [showRecommendAlert, setShowRecommendAlert] = useState<boolean>(false);
+  const [recommendMessage, setRecommendMessage] = useState<string>('');
   const [showDockerAlert, setShowDockerAlert] = useState<boolean>(false);
   const [pendingSyncType, setPendingSyncType] = useState<'meta_builds' | 'SyncEstructuraLanes' | null>(null);
 
@@ -46,7 +47,15 @@ export const SyncPanel = () => {
         setVersion(checkData.version || '--.--');
         setLastSync(checkData.last_sync_timestamp || '-');
         setLastLaneSync(checkData.last_lane_sync_timestamp || '-');
-        if (checkData.needs_build_sync || checkData.needs_lane_sync) {
+        
+        if (checkData.needs_build_sync && checkData.needs_lane_sync) {
+          setRecommendMessage('Se recomienda actualizar tanto el Meta/Builds como la Estructura de Carriles (Lanes).');
+          setShowRecommendAlert(true);
+        } else if (checkData.needs_build_sync) {
+          setRecommendMessage('Se ha detectado un parche nuevo o han pasado más de 3 días desde la última sincronización de Meta y Builds.');
+          setShowRecommendAlert(true);
+        } else if (checkData.needs_lane_sync) {
+          setRecommendMessage('Han pasado más de 21 días desde la última actualización de Estructura de Carriles (Lanes). Se recomienda sincronizar la estructura de carriles.');
           setShowRecommendAlert(true);
         } else {
           setShowRecommendAlert(false);
@@ -280,7 +289,7 @@ export const SyncPanel = () => {
                   Sincronización recomendada
                 </h4>
                 <p className="text-[9.5px] uppercase tracking-wide font-bold text-slate-400 mt-0.5">
-                  Se ha detectado un parche nuevo o han pasado más de 3 días desde la última sincronización masiva. Se recomienda realizar una actualización manual para asegurar la precisión de los análisis de composición.
+                  {recommendMessage}
                 </p>
               </div>
             </div>

@@ -1,5 +1,5 @@
 // src/components/react/LiveGamePanel.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlayerCard, type PlayerData } from './PlayerCard.js';
 
 interface LiveGamePanelProps {
@@ -39,8 +39,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
     gameMode?: string;
   } | null>(null);
 
-  const fetchLiveGame = async () => {
-    setLoading(true);
+  const fetchLiveGame = useCallback(async () => {
     try {
       const res = await fetch('/api/live-game');
       if (res.ok) {
@@ -52,11 +51,30 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchLiveGame();
-  }, []);
+    let ignore = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/live-game');
+        if (res.ok && !ignore) {
+          const data = await res.json();
+          setGameData(data);
+        }
+      } catch (e) {
+        console.error('[LiveGamePanel] Error fetching live game:', e);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+
+    const interval = setInterval(fetchLiveGame, 1500);
+    return () => {
+      ignore = true;
+      clearInterval(interval);
+    };
+  }, [fetchLiveGame]);
 
   const rawBlue = gameData?.blueTeam || gameData?.myTeam || [];
   const rawRed = gameData?.redTeam || gameData?.theirTeam || [];
@@ -96,7 +114,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
       {/* FILA SUPERIOR: JUGADORES ALIADOS ORDENADOS POR LÍNEA */}
       <div className="flex-1 min-h-0 py-1">
         
-        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full">
+        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
           {blueTeam.map((p, idx) => (
             <PlayerCard key={p.puuid || `blue_${idx}`} player={p} index={idx} isAlly={true} />
           ))}
@@ -104,7 +122,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
       </div>
 
       {/* SEPARADOR CENTRAL 'VS' ESTILIZADO DE LA MAQUETA */}
-      <div className="relative my-1.5 xl:my-2.5 flex items-center justify-center shrink-0">
+      <div className="relative my-1 xl:my-2 flex items-center justify-center shrink-0">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-purple-900/60" />
         </div>
@@ -116,7 +134,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
       {/* FILA INFERIOR: JUGADORES ENEMIGOS ORDENADOS POR LÍNEA */}
       <div className="flex-1 min-h-0 py-1">
         
-        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full">
+        <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
           {redTeam.map((p, idx) => (
             <PlayerCard key={p.puuid || `red_${idx}`} player={p} index={idx} isAlly={false} />
           ))}

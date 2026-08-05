@@ -12,6 +12,11 @@ export interface LCUData {
   protocol: string;
 }
 
+/**
+ * Obtiene la ruta configurada o autodetectada del archivo lockfile del cliente de League of Legends.
+ * 
+ * @returns Ruta absoluta al archivo lockfile.
+ */
 export function getLolPath(): string {
   const dbPath = configRepo.getConfig('lol_path');
   if (dbPath && dbPath.trim() !== '') {
@@ -40,6 +45,12 @@ export function getLolPath(): string {
   return dbPath || DEFAULT_PATH;
 }
 
+/**
+ * Normaliza y guarda la ruta personalizada del cliente de LoL en la base de datos de configuración.
+ * 
+ * @param inputPath - Ruta dada por el usuario (directorio o ruta directa a lockfile).
+ * @returns Ruta normalizada guardada.
+ */
 export function saveLolPath(inputPath: string): string {
   let cleanPath = inputPath.trim();
   if (cleanPath && !cleanPath.toLowerCase().endsWith('lockfile')) {

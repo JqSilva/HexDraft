@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const CACHE_FILE_PATH = path.resolve(process.cwd(), 'src/lib/data/riot-live-cache.json');
-const PLAYER_TTL_MS = 3 * 60 * 60 * 1000; // 3 horas
+const PLAYER_TTL_MS = 2 * 60 * 1000; // 2 minutos
 const MATCH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
 interface CacheSchema {

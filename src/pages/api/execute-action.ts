@@ -13,6 +13,9 @@ export function resetLastExecutedChampionId() {
 
 export const POST: APIRoute = async ({ request }) => {
     const lcu = getLockfileData();
+    if (!lcu) {
+        return new Response(JSON.stringify({ success: false, error: 'LCU no disponible' }), { status: 503 });
+    }
     const auth = btoa(`riot:${lcu.token}`);
     const { actionId, championId, completed } = await request.json();
 

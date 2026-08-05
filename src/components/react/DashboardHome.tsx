@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getNameFromId } from '../../lib/engine/engine';
 import metaCache from '../../lib/data/meta-cache.json';
 import { getChampionCdnName } from '../../lib/championMapper';
+import { RankBadge } from './common/RankBadge';
 
 // Interfaces para tipar la respuesta del API
 interface RankedStats {
@@ -27,6 +28,7 @@ interface MatchData {
   csPerMin: string;
   timeAgo: string;
   gameMode: string;
+  lane?: string;
 }
 
 interface SummonerData {
@@ -179,9 +181,7 @@ export const DashboardHome = () => {
           <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">BIENVENIDO DE NUEVO,</span>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-white uppercase tracking-tight">{summonerName}</h1>
-            <span className="bg-[#9055ff]/10 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded">
-              {ranked.tier} {ranked.division}
-            </span>
+            <RankBadge tier={ranked.tier} division={ranked.division} />
           </div>
         </div>
 

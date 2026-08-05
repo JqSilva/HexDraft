@@ -2,11 +2,11 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
-const FLARESOLVERR_PING_URL = 'http://localhost:8191/v1';
+const FLARESOLVERR_PING_URL = 'http://127.0.0.1:8191/v1';
 
 async function isFlareSolverrRunning(): Promise<boolean> {
   try {
-    const res = await fetch('http://localhost:8191/', { signal: AbortSignal.timeout(2000) });
+    const res = await fetch('http://127.0.0.1:8191/', { signal: AbortSignal.timeout(2000) });
     return res.status === 200 || res.status === 404;
   } catch {
     return false;
@@ -27,7 +27,7 @@ async function isDockerDaemonRunning(): Promise<boolean> {
  * @returns true si Docker Desktop tuvo que ser iniciado por este script.
  */
 export async function startDockerAndFlareSolverr(writeLog: (msg: string) => void): Promise<boolean> {
-  writeLog('[DOCKER] Comprobando si FlareSolverr ya está activo en http://localhost:8191...');
+  writeLog('[DOCKER] Comprobando si FlareSolverr ya está activo en http://127.0.0.1:8191...');
   if (await isFlareSolverrRunning()) {
     writeLog('[DOCKER] FlareSolverr ya está respondiendo. No se requiere acción.');
     return false;
@@ -85,7 +85,7 @@ export async function startDockerAndFlareSolverr(writeLog: (msg: string) => void
     }
   }
 
-  throw new Error('El contenedor se inició pero FlareSolverr no respondió en http://localhost:8191.');
+  throw new Error('El contenedor se inició pero FlareSolverr no respondió en http://127.0.0.1:8191.');
 }
 
 /**

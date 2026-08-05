@@ -1,258 +1,258 @@
 // src/pages/api/live-game.ts
 import type { APIRoute } from 'astro';
-import { getLockfileData, readLcuProfileCache } from '../../lib/services/lcu.service.js';
-import {
-  getActiveGame,
-  getRankedEntries,
-  getTopMastery,
-  getMatchIdsToday,
-  getMatchDetail,
-  getPuuidByRiotId
-} from '../../lib/services/riot-api.service.js';
-import { getCachedPlayer, setCachedPlayer, getCachedMatch, setCachedMatch } from '../../lib/services/riot-cache.service.js';
-import { computeTodayRecord } from '../../lib/engine/streakEngine.js';
-import { getNameFromId } from '../../lib/engine/engine.js';
+import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { scrapeOpggProfile } from '../../lib/services/opgg.service.js';
+import { getNameFromId, getIdFromName } from '../../lib/engine/engine.js';
+import { getActiveGame } from '../../lib/services/riot-api.service.js';
+import { loadLiveMatchCache, saveLiveMatchCache } from '../../lib/services/liveMatchCache.service.js';
 
 const ROLES_ORDER = ['TOP', 'JNG', 'MID', 'ADC', 'SUPP'];
-
-function getMidnightTodayMs(): number {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now.getTime();
-}
 
 export const GET: APIRoute = async ({ request }) => {
   const urlParams = new URL(request.url).searchParams;
   let puuid = urlParams.get('puuid') || '';
-  const platform = urlParams.get('platform') || (typeof process !== 'undefined' && process.env?.RIOT_PLATFORM) || (import.meta.env?.RIOT_PLATFORM as string) || 'la2';
+  const platform = urlParams.get('platform') || (typeof process !== 'undefined' && process.env?.RIOT_PLATFORM) || 'las';
 
   const lcu = getLockfileData();
-  let summonerName = '';
+  let participantsRaw: any[] = [];
+  let gameMode = 'RANKED SOLO/DUO';
 
-  if (!puuid && lcu) {
+  // 1. Intentar consultar el Puerto Local 2999 (Live Client Data directo de League of Legends.exe)
+  try {
+    const p2999Res = await fetch('https://127.0.0.1:2999/liveclientdata/playerlist');
+    if (p2999Res.ok) {
+      const players = await p2999Res.json();
+      if (Array.isArray(players) && players.length > 0) {
+        participantsRaw = players.map(p => ({
+          summonerName: p.summonerName,
+          gameName: p.summonerName.includes('#') ? p.summonerName.split('#')[0].trim() : p.summonerName,
+          tagLine: p.summonerName.includes('#') ? p.summonerName.split('#')[1].trim() : 'LAS',
+          championName: p.championName,
+          teamId: p.team === 'ORDER' ? 100 : 200,
+          assignedPosition: p.position || ''
+        }));
+      }
+    }
+  } catch (_e) {
+    // 2999 port fallback
+  }
+
+  // 2. Si el puerto 2999 no devolvió datos, intentar obtener datos vía LCU lockfile (Gameflow/ChampSelect)
+  if (participantsRaw.length === 0 && lcu) {
     try {
       const auth = btoa(`riot:${lcu.token}`);
-      const response = await fetch(
-        `https://127.0.0.1:${lcu.port}/lol-summoner/v1/current-summoner`,
-        {
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Accept': 'application/json'
+
+      // Obtener invocador local para puuid de fallback si no se pasó
+      if (!puuid) {
+        const sumRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-summoner/v1/current-summoner`, {
+          headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
+        });
+        if (sumRes.ok) {
+          const sumData = await sumRes.json();
+          puuid = sumData.puuid || '';
+        }
+      }
+
+      // Intentar obtener sesión de Gameflow (Pantalla de Carga / In-Game)
+      const gfRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-gameflow/v1/session`, {
+        headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
+      });
+
+      if (gfRes.ok) {
+        const gfData = await gfRes.json();
+        gameMode = gfData.gameData?.queue?.gameMode || 'RANKED';
+        const teamOne = gfData.gameData?.teamOne || [];
+        const teamTwo = gfData.gameData?.teamTwo || [];
+        const selections = gfData.gameData?.playerChampionSelections || [];
+
+        if (teamOne.length > 0 || teamTwo.length > 0) {
+          participantsRaw = [
+            ...teamOne.map((p: any) => ({ ...p, teamId: 100 })),
+            ...teamTwo.map((p: any) => ({ ...p, teamId: 200 }))
+          ];
+        } else if (selections.length > 0) {
+          participantsRaw = selections.map((p: any, idx: number) => ({
+            ...p,
+            teamId: idx < 5 ? 100 : 200
+          }));
+        }
+      }
+
+      // Si no hay datos en Gameflow, intentar Selección de Campeones (ChampSelect)
+      if (participantsRaw.length === 0) {
+        const draftRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-champ-select/v1/session`, {
+          headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
+        });
+        if (draftRes.ok) {
+          const draftData = await draftRes.json();
+          if (draftData.myTeam && draftData.myTeam.length > 0) {
+            const myTeam = (draftData.myTeam || []).map((p: any) => ({ ...p, teamId: 100 }));
+            const theirTeam = (draftData.theirTeam || []).map((p: any) => ({ ...p, teamId: 200 }));
+            participantsRaw = [...myTeam, ...theirTeam];
           }
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        puuid = data.puuid;
-        summonerName = data.gameName ? `${data.gameName}#${data.tagLine}` : data.displayName;
       }
     } catch (e) {
-      console.warn('[LiveGame] Error al obtener el invocador de LCU:', e);
+      console.warn('[LiveGame API] Error al obtener participantes del LCU local:', e);
     }
   }
 
-  if (!puuid) {
-    const cachedProfile = readLcuProfileCache();
-    if (cachedProfile) {
-      puuid = cachedProfile.puuid || (cachedProfile.summonerProfile && cachedProfile.summonerProfile.puuid) || '';
-      summonerName = cachedProfile.summoner || (cachedProfile.summonerProfile && cachedProfile.summonerProfile.summoner) || '';
+  // 3. Fallback a Spectator API si LCU local no retornó participantes pero tenemos puuid
+  if (participantsRaw.length === 0 && puuid) {
+    const spectatorGame = await getActiveGame(puuid, platform);
+    if (spectatorGame && spectatorGame.participants) {
+      participantsRaw = spectatorGame.participants;
+      gameMode = spectatorGame.gameMode || 'RANKED';
     }
   }
 
-  if (summonerName && summonerName.includes('#')) {
-    const [gName, tag] = summonerName.split('#');
-    if (gName && tag) {
-      const acc = await getPuuidByRiotId(gName, tag, platform);
-      if (acc?.puuid) {
-        puuid = acc.puuid;
-      }
-    }
-  }
-
-  if (!puuid) {
+  if (participantsRaw.length === 0) {
     return new Response(
       JSON.stringify({
         active: false,
-        error: 'No se pudo identificar el PUUID del invocador local.'
+        message: 'No se encontraron datos de partida en vivo.'
       }),
-      { status: 200 }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
-  // 1. Obtener la partida activa de Spectator-V5
-  const spectatorGame = await getActiveGame(puuid, platform);
+  // Generar huella (fingerprint) única de la partida
+  const matchFingerprint = participantsRaw
+    .map(p => `${p.puuid || p.summonerId || p.summonerName || p.gameName || ''}_${p.championId || p.championPickIntent || 0}_${p.teamId || 100}`)
+    .sort()
+    .join('|');
 
-  if (!spectatorGame || !spectatorGame.participants) {
+  // 1. Si los datos ya fueron scrapeados para esta partida (isScraped === 1), retornar directo desde JSON
+  const cachedMatch = loadLiveMatchCache();
+  if (cachedMatch && cachedMatch.isScraped === 1 && cachedMatch.matchFingerprint === matchFingerprint) {
     return new Response(
       JSON.stringify({
-        active: false,
-        message: 'El invocador no se encuentra en partida activa.'
+        active: true,
+        gameMode: cachedMatch.gameMode,
+        blueTeam: cachedMatch.blueTeam,
+        redTeam: cachedMatch.redTeam,
+        myTeam: cachedMatch.blueTeam,
+        theirTeam: cachedMatch.redTeam,
+        fromCache: true
       }),
-      { status: 200 }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
-  const startTimeToday = getMidnightTodayMs();
+  // 4. Procesar participantes con opgg.service.ts
+  const blueTeamRaw = participantsRaw.filter(p => p.teamId === 100);
+  const redTeamRaw = participantsRaw.filter(p => p.teamId === 200);
 
-  // 2. Procesar los 10 participantes en paralelo respetando caché local
-  const blueTeamRaw = spectatorGame.participants.filter(p => p.teamId === 100);
-  const redTeamRaw = spectatorGame.participants.filter(p => p.teamId === 200);
+  const auth = lcu ? btoa(`riot:${lcu.token}`) : '';
 
   const processParticipant = async (p: any, indexInTeam: number) => {
-    const playerPuuid = p.puuid;
-    const championId = p.championId;
-    const championName = getNameFromId(championId) || `Champion_${championId}`;
-    const role = ROLES_ORDER[indexInTeam % 5];
+    let rawName = p.gameName || p.summonerName || p.displayName || '';
+    let rawTag = p.tagLine || p.riotIdTag || '';
 
-    // Intentar recuperar de caché local (requiere que la entrada tenga rankedFlex y profileIconId)
-    const cached = getCachedPlayer(playerPuuid);
-    if (cached && cached.rankedFlex && cached.profileIconId) {
-      return {
-        ...cached,
-        puuid: playerPuuid,
-        teamId: p.teamId,
-        championId,
-        championName,
-        profileIconId: p.profileIconId || cached.profileIconId || 29,
-        spell1Id: p.spell1Id,
-        spell2Id: p.spell2Id,
-        keystoneId: p.perks?.perkIds?.[0] || 0,
-        secondaryStyleId: p.perks?.perkSubStyle || 0,
-        role
-      };
+    if (rawName.includes('#')) {
+      const parts = rawName.split('#');
+      rawName = parts[0].trim();
+      rawTag = parts[1].trim();
     }
 
-    // Si no está en caché, consultar Riot API
-    let rankedInfo = {
-      tier: 'UNRANKED',
-      division: '',
-      lp: 0,
-      wins: 0,
-      losses: 0,
-      winrate: 0
-    };
-    let rankedFlexInfo = {
-      tier: 'UNRANKED',
-      division: '',
-      lp: 0,
-      wins: 0,
-      losses: 0,
-      winrate: 0
-    };
-    let topMasteryList: any[] = [];
-    let todayRecord = {
-      wins: 0,
-      losses: 0,
-      winrate: 0,
-      streak: { type: null as 'win' | 'loss' | null, count: 0 }
-    };
-
-    try {
-      const [rankedEntries, mastery] = await Promise.all([
-        getRankedEntries(playerPuuid, platform),
-        getTopMastery(playerPuuid, 4, platform)
-      ]);
-
-      if (rankedEntries && Array.isArray(rankedEntries)) {
-        const soloQ = rankedEntries.find((r: any) => r.queueType === 'RANKED_SOLO_5x5');
-        const flexQ = rankedEntries.find((r: any) => r.queueType === 'RANKED_FLEX_SR' || r.queueType === 'RANKED_FLEX_5x5' || r.queueType?.includes('FLEX'));
-
-        if (soloQ) {
-          const totalGames = (soloQ.wins || 0) + (soloQ.losses || 0);
-          rankedInfo = {
-            tier: soloQ.tier || 'UNRANKED',
-            division: soloQ.rank || (soloQ as any).division || '',
-            lp: soloQ.leaguePoints || 0,
-            wins: soloQ.wins || 0,
-            losses: soloQ.losses || 0,
-            winrate: totalGames > 0 ? Math.round((soloQ.wins / totalGames) * 100) : 0
-          };
-        }
-
-        if (flexQ) {
-          const totalGamesFlex = (flexQ.wins || 0) + (flexQ.losses || 0);
-          rankedFlexInfo = {
-            tier: flexQ.tier || 'UNRANKED',
-            division: flexQ.rank || (flexQ as any).division || '',
-            lp: flexQ.leaguePoints || 0,
-            wins: flexQ.wins || 0,
-            losses: flexQ.losses || 0,
-            winrate: totalGamesFlex > 0 ? Math.round((flexQ.wins / totalGamesFlex) * 100) : 0
-          };
-        }
-      }
-
-      topMasteryList = mastery || [];
-
-      // Historial de partidas de hoy
-      const matchIds = await getMatchIdsToday(playerPuuid, startTimeToday, platform);
-      if (matchIds && matchIds.length > 0) {
-        const matchDetails = await Promise.all(
-          matchIds.map(async mId => {
-            const cachedM = getCachedMatch(mId);
-            if (cachedM) return cachedM;
-
-            const detail = await getMatchDetail(mId, playerPuuid, platform);
-            if (detail) {
-              setCachedMatch(mId, detail);
-            }
-            return detail;
-          })
-        );
-
-        const validMatches = matchDetails.filter(Boolean);
-        todayRecord = computeTodayRecord(validMatches);
-      }
-    } catch (e) {
-      console.warn(`[LiveGame] Error al procesar participante ${playerPuuid}:`, e);
+    if (!rawName && p.riotId && p.riotId.includes('#')) {
+      const parts = p.riotId.split('#');
+      rawName = parts[0].trim();
+      rawTag = parts[1].trim();
     }
 
-    const isMain = topMasteryList.some((m: any) => m.championId === championId);
+    // Si el nombre devuelto es vago o genérico (ej. "Invocador 1"), intentar resolver el Invocador real vía LCU
+    const isGenericPlaceholder = !rawName || rawName.toLowerCase().startsWith('invocador') || rawName.toLowerCase().startsWith('summoner');
 
-    const compiledData = {
-      puuid: playerPuuid,
-      riotId: p.riotId || p.summonerId || 'Invocador',
-      profileIconId: p.profileIconId || 29,
-      ranked: rankedInfo,
-      rankedFlex: rankedFlexInfo,
-      topMastery: topMasteryList,
-      isMain,
-      todayRecord
-    };
+    let lcuProfileIconId = p.profileIconId || 0;
 
-    // Guardar en caché local de jugadores
-    setCachedPlayer(playerPuuid, compiledData);
+    if (isGenericPlaceholder && lcu && (p.summonerId || p.puuid)) {
+      try {
+        const endpoint = p.puuid
+          ? `https://127.0.0.1:${lcu.port}/lol-summoner/v2/summoners/puuid/${p.puuid}`
+          : `https://127.0.0.1:${lcu.port}/lol-summoner/v1/summoners/${p.summonerId}`;
+
+        const res = await fetch(endpoint, {
+          headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          const sum = await res.json();
+          if (sum.gameName) rawName = sum.gameName;
+          if (sum.tagLine) rawTag = sum.tagLine;
+          if (sum.profileIconId) lcuProfileIconId = sum.profileIconId;
+          if (!rawName && sum.displayName && !sum.displayName.toLowerCase().startsWith('invocador')) {
+            rawName = sum.displayName;
+          }
+        }
+      } catch (e) {
+        console.warn('[LiveGame] Error resolviendo invocador en LCU:', e);
+      }
+    }
+
+    if (!rawTag) rawTag = 'LAS';
+
+    let championId = p.championId || p.championPickIntent || 0;
+    if (!championId && p.championName) {
+      championId = getIdFromName(p.championName);
+    }
+    const championName = getNameFromId(championId) || p.championName || `Champion_${championId}`;
+
+    const role = p.assignedPosition && p.assignedPosition.trim() !== '' && p.assignedPosition !== 'none'
+      ? p.assignedPosition.toUpperCase()
+      : ROLES_ORDER[indexInTeam % 5];
+
+    // Extraer perfil y etiquetas vía OP.GG Scraper Service v2
+    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId);
 
     return {
-      ...compiledData,
+      ...profile,
+      profileIconId: lcuProfileIconId || profile.profileIconId || 29,
       teamId: p.teamId,
       championId,
       championName,
-      spell1Id: p.spell1Id,
-      spell2Id: p.spell2Id,
-      keystoneId: p.perks?.perkIds?.[0] || 0,
-      secondaryStyleId: p.perks?.perkSubStyle || 0,
       role
     };
   };
 
-  const [blueTeam, redTeam] = await Promise.all([
+  const ROLE_SORT: Record<string, number> = {
+    'TOP': 1, 'JNG': 2, 'JUNGLE': 2, 'MID': 3, 'MIDDLE': 3, 'ADC': 4, 'BOTTOM': 4, 'BOT': 4, 'SUPP': 5, 'SUPPORT': 5, 'UTILITY': 5
+  };
+
+  const sortByRole = (team: any[]) => {
+    return [...team].sort((a, b) => {
+      const orderA = ROLE_SORT[a.role?.toUpperCase()] || 99;
+      const orderB = ROLE_SORT[b.role?.toUpperCase()] || 99;
+      return orderA - orderB;
+    });
+  };
+
+  const [blueTeamUnsorted, redTeamUnsorted] = await Promise.all([
     Promise.all(blueTeamRaw.map((p, idx) => processParticipant(p, idx))),
     Promise.all(redTeamRaw.map((p, idx) => processParticipant(p, idx)))
   ]);
 
+  const blueTeam = sortByRole(blueTeamUnsorted);
+  const redTeam = sortByRole(redTeamUnsorted);
+
+  // Guardar en JSON persistente marcando flag isScraped = 1
+  saveLiveMatchCache({
+    isScraped: 1,
+    matchFingerprint,
+    gameMode,
+    blueTeam,
+    redTeam
+  });
+
   return new Response(
     JSON.stringify({
       active: true,
-      inGame: true,
-      gameId: spectatorGame.gameId,
-      gameMode: spectatorGame.gameMode,
-      mapId: spectatorGame.mapId,
+      gameMode,
       blueTeam,
       redTeam,
       myTeam: blueTeam,
       theirTeam: redTeam
     }),
-    { status: 200 }
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 };

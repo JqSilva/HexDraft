@@ -7,6 +7,7 @@ import re
 import urllib.request
 import zipfile
 import json
+import time
 
 # --- CONFIGURACIÓN ---
 # Nos aseguramos de estar en la raíz del proyecto
@@ -370,15 +371,22 @@ def ejecutar_iscc(ruta_iss):
         return False
         
     print(f"\n>>> Compilando instalador para {os.path.basename(ruta_iss)}...")
-    try:
-        result = subprocess.run([iscc, ruta_iss], check=True)
-        return result.returncode == 0
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] La compilación con Inno Setup falló: {e}")
-        return False
-    except Exception as e:
-        print(f"[ERROR] Ocurrió un error al ejecutar ISCC: {e}")
-        return False
+    for intento in range(1, 4):
+        try:
+            result = subprocess.run([iscc, ruta_iss], check=True)
+            return result.returncode == 0
+        except subprocess.CalledProcessError as e:
+            print(f"[WARN] La compilación con Inno Setup falló (intento {intento}/3): {e}")
+            if intento < 3:
+                print("Reintentando en 3 segundos (posible bloqueo temporal por escaneo de antivirus Windows Defender)...")
+                time.sleep(3)
+            else:
+                print(f"[ERROR] La compilación falló tras 3 intentos.")
+                print("Sugerencia: Si persiste el Error 110 (EndUpdateResource), excluye la carpeta 'dist-installer' en tu antivirus o cierra instancias activas del instalador.")
+                return False
+        except Exception as e:
+            print(f"[ERROR] Ocurrió un error al ejecutar ISCC: {e}")
+            return False
 
 
 def obtener_configuracion_instaladores():
@@ -437,6 +445,8 @@ def procesar_instaladores_inno(nueva_version, opciones):
                 ejecutar_iscc(iss_normal)
                 
     if compilar_admin:
+        if compilar_normal:
+            time.sleep(2)
         iss_admin = os.path.join("launcher", "HexDraftSetupAdmin.iss")
         if actualizar_archivo_iss(iss_admin, nueva_version, es_admin=True):
             if iscc_exe:

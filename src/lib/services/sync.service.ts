@@ -13,7 +13,7 @@ import { syncItemsFromCommunityDragon } from '../scripts/sync-items.js';
 import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
-const FLARESOLVERR_URL = 'http://localhost:8191/v1';
+const FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
 
 const API_NAME_MAP: Record<string, string> = {
   "Wukong": "MonkeyKing",
@@ -110,7 +110,7 @@ const getBestSummoners = (arr: any[]) => {
 };
 
 function getStyleOfRune(runeId: number) {
-  return assetsMap.runeToStyle[runeId] || 0;
+  return (assetsMap.runeToStyle as Record<string | number, number>)[runeId] || 0;
 }
 
 const getBestRuneSlot = (arr: any[]) => {
@@ -1006,7 +1006,14 @@ export async function syncMetaAndBuilds(
 ): Promise<string> {
   const dbPath = './src/lib/data/counter-synergies.json';
   const cachePath = './src/lib/data/meta-cache.json';
-  const db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+  let db: any = {};
+  try {
+    if (fs.existsSync(dbPath)) {
+      db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+    }
+  } catch (e) {
+    db = {};
+  }
 
   const nameIdMap = championsRepo.getChampionIdNameMap();
   const nameMap = championsRepo.getChampionNameIdMap();
@@ -1100,9 +1107,13 @@ export async function syncMetaAndBuilds(
         savedCount++;
         onProgress?.(savedCount, pendingChamps.length, 'puppeteer');
 
-        // Guardar preventivamente cada 5 campeones en JSON
+        // Guardar preventivamente cada 5 campeones en JSON (fallback opcional)
         if (savedCount % 5 === 0) {
-          fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+          try {
+            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+          } catch (e) {
+            // Ignorado en producción si el sistema de archivos es de solo lectura (SQLite es la fuente primaria)
+          }
         }
       } catch (e: any) {
         writeLog(`[ERROR] [W-${workerId}] Error procesando ${name}: ${e.message || e}`);
@@ -1116,7 +1127,11 @@ export async function syncMetaAndBuilds(
   // Lanzar todos los workers en paralelo
   await Promise.all(Array.from({ length: concurrency }).map((_, i) => worker(i + 1)));
 
-  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  } catch (e) {
+    // Ignorado de forma segura en producción
+  }
 
   if (checkAbort()) {
     writeLog("[ABORT] Cancelacion procesada. Procesador detenido.");

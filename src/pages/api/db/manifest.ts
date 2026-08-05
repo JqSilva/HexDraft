@@ -29,10 +29,14 @@ export const GET: APIRoute = async () => {
     };
 
     if (appConfig.github_token) {
-      headers['Authorization'] = `token ${appConfig.github_token}`;
+      headers['Authorization'] = `Bearer ${appConfig.github_token}`;
     }
 
-    const response = await fetch(url, { headers });
+    let response = await fetch(url, { headers });
+    if (response.status === 401 && appConfig.github_token) {
+      delete headers['Authorization'];
+      response = await fetch(url, { headers });
+    }
     
     if (response.status === 404) {
       // Si no hay ninguna release en GitHub, retornamos versión remota 0 de forma controlada sin fallar

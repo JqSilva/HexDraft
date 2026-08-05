@@ -313,8 +313,8 @@ const assignLanesToTeam = (participants: any[]) => {
   let jungleIdx = participants.findIndex(p => p.spell1Id === 11 || p.spell2Id === 11);
   if (jungleIdx === -1) {
     jungleIdx = participants.findIndex(p => {
-      const name = getNameFromId(p.championId || 0);
-      return ["Lee Sin", "Vi", "Wukong", "Rek'Sai", "Hecarim", "Nidalee", "Graves", "Nunu", "Viego", "Nocturne", "Elise", "Shaco", "Evelynn", "Skarner", "Bel'Veth", "Belveth", "Ivern", "Kindred", "Lillia", "Kha'Zix", "Khazix", "Rengar", "Karthus", "Fiddlesticks", "Amumu", "Rammus", "Sejuani", "Zac", "Udyr", "Volibear", "Jax", "Trundle", "Xin Zhao", "Olaf", "Diana", "Gragas", "Ekko", "Taliyah", "Sylas", "Briar", "Brand"].includes(name);
+      const name = getNameFromId(p.championId || 0) || '';
+      return name ? ["Lee Sin", "Vi", "Wukong", "Rek'Sai", "Hecarim", "Nidalee", "Graves", "Nunu", "Viego", "Nocturne", "Elise", "Shaco", "Evelynn", "Skarner", "Bel'Veth", "Belveth", "Ivern", "Kindred", "Lillia", "Kha'Zix", "Khazix", "Rengar", "Karthus", "Fiddlesticks", "Amumu", "Rammus", "Sejuani", "Zac", "Udyr", "Volibear", "Jax", "Trundle", "Xin Zhao", "Olaf", "Diana", "Gragas", "Ekko", "Taliyah", "Sylas", "Briar", "Brand"].includes(name) : false;
     });
   }
   if (jungleIdx === -1) jungleIdx = 1; // fallback

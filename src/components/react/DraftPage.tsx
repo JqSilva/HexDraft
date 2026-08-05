@@ -7,6 +7,7 @@ import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
 import { getChampionCdnName } from '../../lib/championMapper';
+import { notifyTelegram } from '../../lib/services/telegram.service';
 
 // Importación de subcomponentes modulares
 import { ConnectionStatus } from './ConnectionStatus';
@@ -86,18 +87,6 @@ export const DraftPage = () => {
     const [showRoleModal, setShowRoleModal] = useState<boolean>(false);
     const [selectedRoleKey, setSelectedRoleKey] = useState<string>('top');
     const manualRoleSelectedRef = useRef<boolean>(false);
-
-    const notifyTelegram = async (message: string) => {
-        try {
-            await fetch('/api/telegram-notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-        } catch (e) {
-            console.error('[DraftPage] Error al enviar notificación:', e);
-        }
-    };
 
     const [isLoadingScreen, setIsLoadingScreen] = useState<boolean>(false);
     const [isGameReady, setIsGameReady] = useState<boolean>(false);
@@ -297,7 +286,7 @@ export const DraftPage = () => {
                 // Nivel 2: Recalcular recomendaciones de ban
                 if (targetId === 0) {
                     const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
-                    const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+                    const bannedNames = bannedIds.map((id: number) => getNameFromId(id)).filter(Boolean) as string[];
                     const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
                     const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
                     const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
@@ -517,22 +506,22 @@ export const DraftPage = () => {
 
         try {
             const statusRes = await fetch('/api/game-status');
+            if (!statusRes.ok) return;
             const statusData = await statusRes.json();
             const phase = statusData.phase || 'Offline';
 
-            setGamePhase(prevPhase => {
-                if (prevPhase !== phase) {
-                    setManualOverrideLoadingScreen(null);
-                }
-                return phase;
-            });
+            if (gamePhase !== phase && (phase === 'None' || phase === 'Offline')) {
+                setManualOverrideLoadingScreen(null);
+            }
+            setGamePhase(phase);
             setIsLoadingScreen(Boolean(statusData.isLoadingScreen));
             setIsGameReady(Boolean(statusData.isGameReady));
             setIsConnected(phase !== 'Offline');
             
-            if (phase === 'ChampSelect' || phase === 'ReadyCheck' || 1==1) {
+            if (phase === 'ChampSelect' || phase === 'ReadyCheck') {
                 nextInterval = 1500;
                 const draftRes = await fetch('/api/champ-select');
+                if (!draftRes.ok) return;
                 const data = await draftRes.json();
                 console.log(data);
                 if (data.inDraft) {
@@ -663,9 +652,9 @@ export const DraftPage = () => {
                             const champName = getNameFromId(myId);
                             if (champName && !tacticalData) {
                                 fetch(`/api/tactical-data?champion=${champName}&role=${currentRole}`)
-                                    .then(res => res.json())
+                                    .then(res => res.ok ? res.json() : null)
                                     .then(tData => {
-                                        setTacticalData(tData);
+                                        if (tData) setTacticalData(tData);
                                         console.log("🔥 Data táctica cargada:", tData);
                                     })
                                     .catch(err => console.error("Error táctico:", err));
@@ -718,7 +707,7 @@ export const DraftPage = () => {
                             lastFingerprintRef.current = fingerprint;
 
                             // Recomendaciones contextuales de bans en la UI pasando parámetros de draft completos
-                            const bannedNames = bannedIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+                            const bannedNames = bannedIds.map((id: number) => getNameFromId(id)).filter(Boolean) as string[];
                             const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
                             const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
                             const myHoverName = getNameFromId(myPlayer?.championPickIntent || 0) || null;
@@ -739,7 +728,12 @@ export const DraftPage = () => {
                 }
             }
             else if (phase === 'InProgress') {
-                nextInterval = 30000;
+                const isCurrentlyLoading = manualOverrideLoadingScreen !== null ? manualOverrideLoadingScreen : Boolean(statusData.isLoadingScreen);
+                if (isCurrentlyLoading || !statusData.isGameReady) {
+                    nextInterval = 1000; // Polling ultra-rápido (1s) durante la Pantalla de Carga
+                } else {
+                    nextInterval = 15000; // Polling relajado (15s) una vez iniciada la partida in-game
+                }
 
                 if (!notifiedStartRef.current) {
                     notifiedStartRef.current = true;
@@ -789,9 +783,9 @@ export const DraftPage = () => {
                     // 3. Cargar datos tácticos si no están en memoria
                     if (!tacticalData && activeBuild) {
                         fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${myRole}`)
-                            .then(res => res.json())
+                            .then(res => res.ok ? res.json() : null)
                             .then(tData => {
-                                setTacticalData(tData);
+                                if (tData) setTacticalData(tData);
                                 console.log("🔥 Data táctica cargada durante InProgress");
                             })
                             .catch(err => console.error("Error táctico InProgress:", err));
@@ -952,7 +946,7 @@ export const DraftPage = () => {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => setManualOverrideLoadingScreen(!showLoadingScreenPanel)}
-                                    className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none border-purple-500/40 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 transition-colors"
+                                    className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none border-purple-500/40 bg-black/70 text-purple-300 hover:bg-[#12101e] transition-colors"
                                 >
                                     {showLoadingScreenPanel ? 'VER VISTA IN-GAME' : 'PANTALLA DE CARGA'}
                                 </button>

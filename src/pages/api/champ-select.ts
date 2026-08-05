@@ -65,8 +65,8 @@ export const GET: APIRoute = async () => {
       data: data
     }), { status: 200 });
 
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error detallado:", e);
-    return new Response(JSON.stringify({ error: "Error de conexión", details: e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Error de conexión", details: e?.message || String(e) }), { status: 500 });
   }
 };

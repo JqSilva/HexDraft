@@ -2,11 +2,16 @@ import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
 import { resetLastExecutedChampionId } from './execute-action.js';
 
+import { resetLiveMatchFlag } from '../../lib/services/liveMatchCache.service.js';
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export const GET: APIRoute = async () => {
   const lcu = getLockfileData();
-  if (!lcu) return new Response(JSON.stringify({ phase: 'Offline' }), { status: 200 });
+  if (!lcu) {
+    resetLiveMatchFlag();
+    return new Response(JSON.stringify({ phase: 'Offline' }), { status: 200 });
+  }
 
   const auth = btoa(`riot:${lcu.token}`);
 
@@ -15,13 +20,20 @@ export const GET: APIRoute = async () => {
       headers: { 'Authorization': `Basic ${auth}` }
     });
     
-    if (!response.ok) return new Response(JSON.stringify({ phase: 'None' }), { status: 200 });
+    if (!response.ok) {
+      resetLiveMatchFlag();
+      return new Response(JSON.stringify({ phase: 'None' }), { status: 200 });
+    }
     
     const data = await response.json();
     const phase = data.phase;
     
     if (phase === 'Matchmaking' || phase === 'InProgress') {
       resetLastExecutedChampionId();
+    }
+
+    if (phase !== 'InProgress' && phase !== 'ChampSelect') {
+      resetLiveMatchFlag();
     }
 
     let isGameReady = false;

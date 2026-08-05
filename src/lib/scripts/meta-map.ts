@@ -2,7 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
-const FLARESOLVERR_URL = 'http://localhost:8191/v1';
+const FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
 
 function extractJsonFromHtml(htmlOrJson: string | any): any {
   if (typeof htmlOrJson === 'object') return htmlOrJson;

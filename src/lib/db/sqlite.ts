@@ -1,37 +1,47 @@
 // src/lib/db/sqlite.ts
-import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
-
 import fs from 'node:fs';
 
-// Determinar si estamos en desarrollo comprobando la existencia de tsconfig.json
-const isDev = fs.existsSync(path.join(process.cwd(), 'tsconfig.json'));
-let dbPath: string;
+let dbPath = '';
+let db: any = null;
 
-if (isDev) {
-  dbPath = path.resolve(process.cwd(), 'hexdraft.db');
-} else {
-  const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || '', 'AppData', 'Local');
-  const appDataDir = path.join(localAppData, 'HexDraft');
-  if (!fs.existsSync(appDataDir)) {
-    try {
-      fs.mkdirSync(appDataDir, { recursive: true });
-    } catch (e) {
-      console.error(`❌ Error creando directorio AppData para base de datos:`, e);
+let DatabaseSyncClass: any = null;
+
+if (typeof window === 'undefined') {
+  const isDev = fs.existsSync(path.join(process.cwd(), 'tsconfig.json'));
+  if (isDev) {
+    dbPath = path.resolve(process.cwd(), 'hexdraft.db');
+  } else {
+    const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || '', 'AppData', 'Local');
+    const appDataDir = path.join(localAppData, 'HexDraft');
+    if (!fs.existsSync(appDataDir)) {
+      try {
+        fs.mkdirSync(appDataDir, { recursive: true });
+      } catch (e) {
+        console.error(`❌ Error creando directorio AppData para base de datos:`, e);
+      }
     }
+    dbPath = path.join(appDataDir, 'hexdraft.db');
   }
-  dbPath = path.join(appDataDir, 'hexdraft.db');
+
+  try {
+    const sqliteMod = await import('node:sqlite');
+    DatabaseSyncClass = sqliteMod.DatabaseSync;
+    console.log(`🔌 Conectando a base de datos SQLite en: ${dbPath}`);
+    db = new DatabaseSyncClass(dbPath);
+  } catch (e) {
+    console.warn('[SQLite] node:sqlite no disponible en este entorno.');
+  }
 }
 
-console.log(`🔌 Conectando a base de datos SQLite en: ${dbPath}`);
-
-export { dbPath };
-export let db = new DatabaseSync(dbPath);
+export { dbPath, db };
 
 export function closeDb() {
   try {
-    db.close();
-    console.log(`🔒 Conexión a la base de datos cerrada.`);
+    if (db && typeof db.close === 'function') {
+      db.close();
+      console.log(`🔒 Conexión a la base de datos cerrada.`);
+    }
   } catch (e) {
     console.error('❌ Error al cerrar la base de datos:', e);
   }
@@ -39,11 +49,13 @@ export function closeDb() {
 
 export function reopenDb() {
   try {
-    db = new DatabaseSync(dbPath);
-    db.exec('PRAGMA foreign_keys = ON;');
-    db.exec('PRAGMA journal_mode = WAL;');
-    db.exec('PRAGMA synchronous = NORMAL;');
-    console.log(`🔌 Conexión a la base de datos reabierta.`);
+    if (DatabaseSyncClass) {
+      db = new DatabaseSyncClass(dbPath);
+      db.exec('PRAGMA foreign_keys = ON;');
+      db.exec('PRAGMA journal_mode = WAL;');
+      db.exec('PRAGMA synchronous = NORMAL;');
+      console.log(`🔌 Conexión a la base de datos reabierta.`);
+    }
   } catch (e) {
     console.error('❌ Error al reabrir la base de datos:', e);
   }
@@ -230,25 +242,28 @@ try {
   // Ignorar errores al leer el archivo viejo
 }
 
-const insertConfigStmt = db.prepare('INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)');
-insertConfigStmt.run('lol_path', initialLolPath);
-insertConfigStmt.run('auto_pick', 'false');
-insertConfigStmt.run('auto_ban', 'false');
-insertConfigStmt.run('auto_execute_seconds', '3.5');
-insertConfigStmt.run('puppeteer_concurrency', '3');
-insertConfigStmt.run('sync_period_days', '3');
-insertConfigStmt.run('lane_sync_period_days', '21');
-insertConfigStmt.run('last_sync_timestamp', '-');
-insertConfigStmt.run('last_lane_sync_timestamp', '-');
-insertConfigStmt.run('last_sync_version', '-');
-insertConfigStmt.run('meta_sync_frequency', '2');
-insertConfigStmt.run('last_meta_cache_sync', '-');
-insertConfigStmt.run('auto_accept_enabled', 'false');
-insertConfigStmt.run('auto_accept_delay_pct', '80');
-insertConfigStmt.run('telegram_notifications_enabled', 'false');
-insertConfigStmt.run('telegram_bot_token', '');
-insertConfigStmt.run('telegram_chat_id', '');
-insertConfigStmt.run('telegram_deduplicate_enabled', 'true');
+const setInitialConfig = (key: string, val: string) => {
+  db.prepare('INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)').run(key, val);
+};
+
+setInitialConfig('lol_path', initialLolPath);
+setInitialConfig('auto_pick', 'false');
+setInitialConfig('auto_ban', 'false');
+setInitialConfig('auto_execute_seconds', '3.5');
+setInitialConfig('puppeteer_concurrency', '3');
+setInitialConfig('sync_period_days', '3');
+setInitialConfig('lane_sync_period_days', '21');
+setInitialConfig('last_sync_timestamp', '-');
+setInitialConfig('last_lane_sync_timestamp', '-');
+setInitialConfig('last_sync_version', '-');
+setInitialConfig('meta_sync_frequency', '2');
+setInitialConfig('last_meta_cache_sync', '-');
+setInitialConfig('auto_accept_enabled', 'false');
+setInitialConfig('auto_accept_delay_pct', '80');
+setInitialConfig('telegram_notifications_enabled', 'false');
+setInitialConfig('telegram_bot_token', '');
+setInitialConfig('telegram_chat_id', '');
+setInitialConfig('telegram_deduplicate_enabled', 'true');
 
 // Actualizar engine_weights en config fusionándolo si ya existe, o insertándolo
 const defaultWeights = {
@@ -272,7 +287,7 @@ try {
     const mergedWeights = { ...defaultWeights, ...existingWeights };
     db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run('engine_weights', JSON.stringify(mergedWeights));
   } else {
-    insertConfigStmt.run('engine_weights', JSON.stringify(defaultWeights));
+    db.prepare('INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)').run('engine_weights', JSON.stringify(defaultWeights));
   }
 } catch (e) {
   console.error("⚠️ Error configurando engine_weights:", e);
@@ -323,7 +338,7 @@ try {
       for (const champ of Object.values(CHAMPIONS_DB)) {
         if (!existingIds.has(champ.id)) {
           console.log(`➕ Insertando campeón faltante en BD: ${champ.name} (ID: ${champ.id})`);
-          let defaultLane = champ.lane;
+          let defaultLane = (champ as any).lane;
           if (!defaultLane || defaultLane === "UNKNOWN") {
             if (champ.class === "Marksman") defaultLane = "BOTTOM";
             else if (champ.class === "Support") defaultLane = "UTILITY";

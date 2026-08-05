@@ -460,7 +460,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
   // Evitar runa Precision (9104, 9101) secundaria en asesinos
   if (secondaryStyle === 8000 && isAssassin) {
     const PRECISION_BLACKLIST_ASSASSIN = [9104, 9101];
-    selections = selections.map((runeId, idx) => {
+    selections = selections.map((runeId: number, idx: number) => {
       if (idx >= 4 && PRECISION_BLACKLIST_ASSASSIN.includes(runeId)) {
         const otherIdx = idx === 4 ? 5 : 4;
         const otherRune = selections[otherIdx];
@@ -471,7 +471,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
   }
 
   // Shards: evitar Attack Speed (5005) en asesinos y AP
-  shards = shards.map((shardId) => {
+  shards = shards.map((shardId: number) => {
     if (shardId === 5005 && (isAssassin || damageType === 'AP')) {
       return 5008; // Adaptive Force
     }
@@ -489,7 +489,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
 
   return {
     name: champ.name,
-    isAdapted: finalBootId !== bootId || cleanCoreIds.some((id, idx) => {
+    isAdapted: finalBootId !== bootId || cleanCoreIds.some((id: number, idx: number) => {
       const orig = coreIds[idx];
       return orig !== id;
     }),
@@ -2351,7 +2351,7 @@ filteredClusters.forEach((c, i) => {
     const NEVER_IN_ASSASSIN_SHARDS = [5005];
 
     const selectedKeystone = Number(winningClusterData.build.runes.selections[0]?.id || 0);
-    const finalCoreIds = winningClusterData.fullCoreIds.map(id => Number(id));
+    const finalCoreIds = winningClusterData.fullCoreIds.map((id: any) => Number(id));
     const firstShard = Number(winningClusterData.build.runes.shards[0]?.id || 0);
 
     if (NEVER_IN_AD_RUNES.includes(selectedKeystone)) {
