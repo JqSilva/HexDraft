@@ -2118,10 +2118,9 @@ export function getAdaptedBuild(
   console.log(`   hasDpmData: ${!!(dpmData && dpmData.coreBuilds)} | builds count: ${champ.builds?.length ?? 0}`);
   console.log(`   allies: [${myTeamIds.join(', ')}] | enemies: [${theirTeamIds.join(', ')}]`);
 
-  // Fallback si no hay dpmData para campeones sin scrapeo completo
+  // Si no hay dpmData (migración a op.gg), retornar null directamente
   if (!dpmData || !dpmData.coreBuilds) {
-    console.log(`   ⚠️  Sin dpmData → usando getFallbackStaticBuild`);
-    return getFallbackStaticBuild(champ, myRole);
+    return null;
   }
 
   const clusters = detectBuildClusters(dpmData);

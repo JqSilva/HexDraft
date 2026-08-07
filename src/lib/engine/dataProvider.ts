@@ -175,7 +175,7 @@ export function initializeEngineData(customChamps?: any[]) {
                     damageComposition: extra?.combat?.damageComposition || { physical: 50, magic: 50, true: 0 },
                     winrateCurve: curve
                 },
-                buildData: extra?.buildData || null,
+                buildData: null,
                 counters: extra?.counters || [],
                 synergies: extra?.synergies || {},
                 godMatchups: extra?.godMatchups || [],

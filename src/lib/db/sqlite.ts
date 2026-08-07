@@ -219,6 +219,23 @@ try {
   console.error("⚠️ Error en migración dinámica de columnas builds:", e);
 }
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pro_build_cache (
+    champion_name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    patch TEXT NOT NULL,
+    cached_at INTEGER NOT NULL,
+    sample_size INTEGER NOT NULL,
+    win_rate REAL NOT NULL,
+    core_items TEXT NOT NULL,
+    boots INTEGER NOT NULL,
+    runes TEXT NOT NULL,
+    summoners TEXT NOT NULL,
+    starter_items TEXT NOT NULL,
+    PRIMARY KEY (champion_name, role, patch)
+  );
+`);
+
 // Creación de la tabla de configuraciones
 db.exec(`
   CREATE TABLE IF NOT EXISTS config (

@@ -223,7 +223,7 @@ export async function scrapeOpggProfile(
     }
 
     const flexRankMatch = description.match(/FLEXRANKED rank is ([A-Za-z]+)\s*(\d*)\s*Division\s*(\d*)\s*(\d+)\s*LP with (\d+) wins, (\d+) losses, and a (\d+)%/i) ||
-                          description.match(/FLEX\s*5v5\s*[:\-]?\s*([A-Za-z]+)\s*(\d+)?\s*(\d+)LP\s*\/\s*(\d+)Win\s*(\d+)Lose\s*Win rate\s*(\d+)%/i) ||
+                          description.match(/FLEX\s*5v5\s*[:-]?\s*([A-Za-z]+)\s*(\d+)?\s*(\d+)LP\s*\/\s*(\d+)Win\s*(\d+)Lose\s*Win rate\s*(\d+)%/i) ||
                           html.match(/Flex 5v5[\s\S]{1,200}?([A-Za-z]+)\s*(\d+)?[\s\S]{1,50}?(\d+)LP/i);
 
     if (flexRankMatch) {

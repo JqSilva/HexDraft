@@ -1054,97 +1054,16 @@ export async function syncMetaAndBuilds(
   Object.keys(db).forEach(k => delete db[k]);
   Object.assign(db, updatedDb);
 
-  const syncPeriodSetting = parseInt(configRepo.getConfig('sync_period_days') || '3') || 3;
-
-  // --- COMPROBAR CAMPEONES A SINCRONIZAR (Sync Diferencial) ---
-  const pendingChamps = champions.filter(name => {
-    const id = nameIdMap[normalizeKey(name)];
-    if (!id) return false;
-    if (forceSync) return true;
-
-    // Obtener carriles jugables desde la BD
-    const laneRow = dbInstance.prepare('SELECT play_lanes FROM champions WHERE id = ?').get(id) as { play_lanes: string } | undefined;
-    const playLanes = JSON.parse(laneRow?.play_lanes || '[]');
-
-    return !isChampionBuildUpToDate(id, version, syncPeriodSetting, playLanes);
-  });
-
-  const skippedCount = champions.length - pendingChamps.length;
-  if (skippedCount > 0) {
-    writeLog(`[SKIP] Omitiendo ${skippedCount} campeones ya actualizados para el parche ${version}.`);
-  }
-
-  if (pendingChamps.length === 0) {
-    writeLog("[DONE] Todos los campeones estan al dia. Sincronizacion finalizada.");
-    onProgress?.(0, 0, 'done');
-    return "Sincronización al día";
-  }
-
-  writeLog(`[FLARESOLVERR] Iniciando procesamiento de ${pendingChamps.length} campeones.`);
-  onProgress?.(0, pendingChamps.length, 'puppeteer');
-
-  // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA CON FLARESOLVERR) ---
-  const concurrencySetting = parseInt(configRepo.getConfig('puppeteer_concurrency') || '3') || 3;
-  // Concurrencia de trabajadores
-  const concurrency = Math.min(Math.max(concurrencySetting, 1), 6); 
-
-  writeLog(`[FLARESOLVERR] Concurrencia: ${concurrency} trabajadores simultáneos.`);
-
-  let index = 0;
-  let savedCount = 0;
-
-  const worker = async (workerId: number) => {
-    while (index < pendingChamps.length) {
-      if (checkAbort()) break;
-      
-      const name = pendingChamps[index++];
-      if (!name) break;
-
-      writeLog(`[W-${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
-      
-      try {
-        await scrapeSingleChampion(name, version, db, nameIdMap, writeLog);
-        savedCount++;
-        onProgress?.(savedCount, pendingChamps.length, 'puppeteer');
-
-        // Guardar preventivamente cada 5 campeones en JSON (fallback opcional)
-        if (savedCount % 5 === 0) {
-          try {
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-          } catch (e) {
-            // Ignorado en producción si el sistema de archivos es de solo lectura (SQLite es la fuente primaria)
-          }
-        }
-      } catch (e: any) {
-        writeLog(`[ERROR] [W-${workerId}] Error procesando ${name}: ${e.message || e}`);
-      }
-
-      // Delay de cortesía para no sobrecargar el proxy/dpm.lol
-      await new Promise(r => setTimeout(r, 800));
-    }
-  };
-
-  // Lanzar todos los workers en paralelo
-  await Promise.all(Array.from({ length: concurrency }).map((_, i) => worker(i + 1)));
-
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-  } catch (e) {
-    // Ignorado de forma segura en producción
-  }
-
-  if (checkAbort()) {
-    writeLog("[ABORT] Cancelacion procesada. Procesador detenido.");
-    return "Cancelado por el usuario";
-  }
-
-  try {
-    configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
-    configRepo.setConfig('last_sync_version', version);
-  } catch (err) {
-    // Ignorado si falla persistir el timestamp de actualización de config
-  }
+  // --- PARTE 2: Sincronización Global de Metadatos (Tier y Winrate) ---
+  writeLog("[SYNC] Sincronización de builds DPM deshabilitada (migrado a OP.GG bajo demanda).");
+  writeLog("[SYNC] Actualizando únicamente tier y winrate global por campeón...");
   
+  try {
+    await syncMetaCacheOnly(writeLog);
+  } catch (e: any) {
+    writeLog(`[WARN] Error al sincronizar meta cache: ${e.message || e}`);
+  }
+
   // --- PARTE 3: Sincronizar datos semánticos de campeones ---
   try {
     writeLog("[SYNC] Sincronizando datos semanticos de campeones...");
@@ -1153,9 +1072,9 @@ export async function syncMetaAndBuilds(
     writeLog(`[WARN] Error al sincronizar datos semanticos: ${e.message || e}`);
   }
 
-  writeLog("[DONE] Sincronizacion completa - Datos actualizados en SQLite local");
-  onProgress?.(pendingChamps.length, pendingChamps.length, 'done');
-  return "Sincronización completa";
+  writeLog("[DONE] Sincronización completa - Tier y Winrate actualizados.");
+  onProgress?.(champions.length, champions.length, 'done');
+  return "Sincronización completa (Tier y Winrate actualizados)";
 }
 
 let isSyncing = false;

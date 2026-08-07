@@ -18,7 +18,9 @@ import { DraftSettings } from './DraftSettings';
 import { ChampionPreviewModal } from './ChampionPreviewModal';
 import { SkillTimeline } from './SkillTimeline';
 import { ItemBuild } from './ItemBuild';
+import { ProBuildPanel } from '../ProBuildPanel';
 import { LiveGamePanel } from './LiveGamePanel';
+import { inferEnemyOpponent } from '../../lib/engine/archetypes';
 
 // Modular components & utils
 import { DraftDamageBalance } from './draft/DraftDamageBalance';
@@ -141,6 +143,10 @@ export const DraftPage = () => {
         if (!champName) return null;
         return getTacticalDirectives(champName, myRole, allyNames, enemyNames);
     }, [myId, currentBuild, myRole, allyNames, enemyNames]);
+
+    const inferredOpponent = useMemo(() => {
+        return inferEnemyOpponent(myRole, enemyNames);
+    }, [myRole, enemyNames]);
 
     const myTeamAnalysis = useMemo(() => {
         return analyzeComposition(allyNames);
@@ -1098,6 +1104,12 @@ export const DraftPage = () => {
                                                 everyonePicked={everyonePicked}
                                                 activePlaystyleIndex={activePlaystyleIndex}
                                                 setActivePlaystyleIndex={setActivePlaystyleIndex}
+                                                isCompact={isCompact}
+                                            />
+                                            <ProBuildPanel
+                                                championName={currentBuild?.name || (myId > 0 ? getNameFromId(myId) : null)}
+                                                opponentName={inferredOpponent || enemyNames[0] || null}
+                                                role={myRole}
                                                 isCompact={isCompact}
                                             />
                                         </div>
