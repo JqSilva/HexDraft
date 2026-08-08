@@ -1012,73 +1012,8 @@ export const DraftPage = () => {
                                             </div>
                                         )}
 
-                                        {/* Columna 2: Build de Ítems (Centro) */}
-                                        <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
-                                            {currentBuild && isCompact && (
-                                                <div className="flex h-24 shrink-0 rounded-sm overflow-hidden bg-[#070709] border border-border-warm relative select-none">
-                                                    {/* Imagen de Splash horizontal de fondo */}
-                                                    <div className="absolute inset-0 z-0">
-                                                        <img
-                                                            src={`https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${getChampionCdnName(currentBuild.name)}_0.jpg`}
-                                                            alt={currentBuild.name}
-                                                            className="w-full h-full object-cover object-[right_25%] opacity-[0.2]"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).src = "/favicon.svg";
-                                                            }}
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-[#070709] via-[#070709]/95 to-transparent" />
-                                                    </div>
-
-                                                    {/* Contenido del banner */}
-                                                    <div className="relative z-10 flex w-full items-center justify-between px-6 py-2">
-                                                        <div className="flex items-center gap-4">
-                                                            {/* Retrato circular del campeón */}
-                                                            <div className="w-14 h-14 rounded-full overflow-hidden border border-purple-accent/30 bg-slate-950 shrink-0">
-                                                                <img
-                                                                    src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${myId}.png`}
-                                                                    alt={currentBuild.name}
-                                                                    className="w-full h-full object-cover scale-115"
-                                                                    onError={(e) => {
-                                                                        (e.target as HTMLImageElement).src = "/favicon.svg";
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <h2 className="text-base md:text-xl lg:text-xl font-black text-white uppercase tracking-wider leading-none mb-1.5 truncate max-w-[140px] md:max-w-[240px] lg:max-w-none">
-                                                                    {currentBuild.name}
-                                                                </h2>
-                                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                                    <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
-                                                                        {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
-                                                                    </span>
-                                                                    <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
-                                                                        {champData?.damageType || "Adaptive"}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
-                                                                <img
-                                                                    src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
-                                                                    className="w-4.5 h-4.5"
-                                                                    style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
-                                                                    alt="lane"
-                                                                />
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
-                                                                    {myRole.toUpperCase()}
-                                                                </span>
-                                                            </div>
-
-                                                            <span className="text-slate-700 font-bold">|</span>
-
-                                                            <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
+                                        {/* Columna 2: Build & Runas (Centro) */}
+                                        <div className="flex-1 min-h-0 flex flex-col gap-0 overflow-hidden">
                                             <ProBuildPanel
                                                 championName={currentBuild?.name || (myId > 0 ? getNameFromId(myId) : null)}
                                                 opponentName={inferredOpponent || enemyNames[0] || null}

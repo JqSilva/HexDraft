@@ -45,234 +45,224 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
     return null;
   }
 
-  if (loading) {
-    return (
-      <div className="w-full p-4 rounded-sm bg-panel-warm border border-border-warm text-slate-300 text-xs flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="h-4 w-40 bg-slate-800 rounded-sm"></div>
-          <div className="h-4 w-16 bg-slate-800 rounded-sm"></div>
-        </div>
-        <div className="text-slate-400 font-mono text-[11px]">
-          Consultando perfiles Top OTPs de EUW y Challenger/GM en OP.GG...
-        </div>
-      </div>
-    );
-  }
+  const primaryTree = data?.runes ? RUNE_TREES[data.runes.primaryStyleId] : null;
+  const secondaryTree = data?.runes ? RUNE_TREES[data.runes.subStyleId] : null;
 
-  if (insufficientData) {
-    return (
-      <div className="w-full p-3.5 rounded-sm bg-panel-warm border border-border-warm text-slate-400 text-xs text-center font-mono">
-        Datos insuficientes para este matchup en OP.GG
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="w-full p-3.5 rounded-sm bg-panel-warm border border-border-warm text-slate-400 text-xs text-center font-mono">
-        {error || 'No se pudo obtener información de OP.GG'}
-      </div>
-    );
-  }
-
-  const freshnessText = formatFreshness(cachedAt);
-  const keystoneId = data.runes.selections[0];
-  const primaryRunes = data.runes.selections.slice(0, 4);
-  const secondaryRunes = data.runes.selections.slice(4, 6);
-  const shards = data.runes.shards.slice(0, 3);
-
-  const primaryTree = RUNE_TREES[data.runes.primaryStyleId];
-  const secondaryTree = RUNE_TREES[data.runes.subStyleId];
-
-  const badgeText = data.source === 'otp_matchup'
-    ? `Matchup OTP (Top ${data.otpRank || 1} EUW: ${data.otpName || ''})`
-    : data.source === 'otp_general'
-    ? `Build OTP (Top 1 EUW: ${data.otpName || ''})`
-    : 'Challenger / Master GM';
+  const tabTitle = data?.source === 'otp_matchup'
+    ? `PRO BUILD (OTP #${data.otpRank || 1} ${data.otpName || ''})`
+    : data?.source === 'otp_general'
+    ? `PRO BUILD (OTP #${data.otpRank || 1} ${data.otpName || ''})`
+    : 'BUILD PRO OP.GG';
 
   return (
-    <div className="w-full rounded-sm bg-panel-warm border border-border-warm p-3.5 flex flex-col gap-3 text-slate-200">
-      {/* Cabecera Pro Build */}
-      <div className="flex flex-col gap-1 border-b border-border-warm/60 pb-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30">
-              {badgeText}
-            </span>
-            <span className="text-[11px] font-mono text-slate-400">
-              {freshnessText}
-            </span>
-          </div>
-          <span className="text-[11px] font-mono font-bold text-emerald-400 shrink-0">
-            {data.winRate}% WR
+    <div className="flex-1 min-h-0 flex flex-col gap-0 overflow-hidden">
+      {/* Cabecera / Pestaña Superior Alineada */}
+      <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
+        <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
+          <span className={`bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold uppercase text-amber-400 select-none h-[52px] flex items-center justify-center gap-2
+            ${isCompact
+              ? 'px-3 tracking-[0.1em] text-[9.5px]'
+              : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
+            }`}>
+            {tabTitle}
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono mt-0.5">
-          <span>{data.sampleSize.toLocaleString()} partidas analizadas (Parche {data.patch})</span>
-          {archetype && (
-            <span className="text-amber-400/90 font-sans text-[10.5px]">vs arquetipo {archetype}</span>
-          )}
-        </div>
+        {/* Badge de Winrate y Frescura en la esquina superior derecha */}
+        {data && (
+          <div className="border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center gap-2 px-3 h-[38px] bg-[#0c0c10] text-[10px] font-mono">
+            <span className="text-slate-400">{formatFreshness(cachedAt)}</span>
+            <span className="text-emerald-400 font-bold">{data.winRate}% WR</span>
+          </div>
+        )}
       </div>
 
-      {/* Sección 1: Runas y 3 Fragmentos de Estadísticas */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-300 uppercase tracking-wider">
-          <span>Runas & Fragmentos</span>
-          <span className="text-[10px] font-normal text-slate-400 font-mono">
-            {primaryTree?.name || 'Primaria'} + {secondaryTree?.name || 'Secundaria'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5 bg-slate-950/60 p-2.5 rounded-sm border border-border-warm/40 overflow-x-auto">
-          {/* Keystone */}
-          {keystoneId && (
-            <div className="flex items-center gap-1 shrink-0" title={hydrateAsset('runes', keystoneId)?.name || 'Keystone'}>
-              <img
-                src={hydrateAsset('runes', keystoneId)?.icon || ''}
-                alt="Keystone"
-                className="w-9 h-9 rounded-full border border-amber-400/80 bg-slate-900 shrink-0"
-              />
-            </div>
-          )}
-
-          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
-
-          {/* Rama Primaria (4 perks) */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {primaryRunes.map((runeId, idx) => {
-              const asset = hydrateAsset('runes', runeId);
-              return (
-                <img
-                  key={idx}
-                  src={asset?.icon || ''}
-                  alt={asset?.name || `Runa Primaria ${idx}`}
-                  title={asset?.name || `Runa Primaria ${idx}`}
-                  className="w-6.5 h-6.5 rounded-full bg-slate-900 border border-border-warm shrink-0"
-                />
-              );
-            })}
+      {/* Contenido Principal de la Build */}
+      <div className="flex-grow p-3 md:p-4 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-3 overflow-hidden">
+        {loading ? (
+          <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400 font-mono text-[11px] text-center">
+            <div className="w-6 h-6 border-2 border-amber-400/40 border-t-amber-400 rounded-full animate-spin"></div>
+            <span>Consultando perfiles Top OTPs de EUW y Challenger/GM en OP.GG...</span>
           </div>
-
-          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
-
-          {/* Rama Secundaria (2 perks) */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {secondaryRunes.map((runeId, idx) => {
-              const asset = hydrateAsset('runes', runeId);
-              return (
-                <img
-                  key={idx}
-                  src={asset?.icon || ''}
-                  alt={asset?.name || `Runa Secundaria ${idx}`}
-                  title={asset?.name || `Runa Secundaria ${idx}`}
-                  className="w-6.5 h-6.5 rounded-full bg-slate-900 border border-border-warm shrink-0"
-                />
-              );
-            })}
+        ) : insufficientData ? (
+          <div className="h-full w-full flex items-center justify-center text-slate-400 font-mono text-[11px] text-center">
+            Datos insuficientes para este matchup en OP.GG
           </div>
-
-          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
-
-          {/* 3 Fragmentos / Shards exactos */}
-          <div className="flex items-center gap-1 shrink-0">
-            {shards.map((shardId, idx) => {
-              const asset = hydrateAsset('shards', shardId);
-              return (
-                <img
-                  key={idx}
-                  src={asset?.icon || ''}
-                  alt={asset?.name || `Fragmento ${idx + 1}`}
-                  title={asset?.name || `Fragmento ${idx + 1}`}
-                  className="w-5 h-5 rounded-full bg-slate-900 border border-border-warm/60 shrink-0"
-                />
-              );
-            })}
+        ) : error || !data ? (
+          <div className="h-full w-full flex items-center justify-center text-slate-400 font-mono text-[11px] text-center">
+            {error || 'No se pudo obtener información de OP.GG'}
           </div>
-        </div>
-      </div>
-
-      {/* Sección 2: Iniciales, Invocadores, Core Build y Botas */}
-      <div className={`grid ${isCompact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-2.5`}>
-        {/* Objetos Iniciales y Hechizos */}
-        <div className="flex flex-col gap-1 bg-slate-950/50 p-2.5 rounded-sm border border-border-warm/40">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-            Inicio e Invocadores
-          </span>
-          <div className="flex items-center gap-2.5">
-            {/* Iniciales */}
-            <div className="flex items-center gap-1">
-              {data.starterItems.map((itemId, idx) => {
-                const asset = hydrateAsset('items', itemId);
-                return (
-                  <img
-                    key={idx}
-                    src={asset?.icon || ''}
-                    alt={asset?.name || `Inicial ${itemId}`}
-                    title={asset?.name || `Inicial ${itemId}`}
-                    className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
-                  />
-                );
-              })}
+        ) : (
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-1 flex flex-col gap-3.5">
+            {/* Subtítulo de Matchup / Arquetipo */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-b border-border-warm/30 pb-2">
+              <span className="text-slate-300 font-bold">
+                {data.source === 'otp_matchup' ? `Matchup específico vs ${opponentName || archetype || 'rival'}` : `Configuración general OTP para ${championName}`}
+              </span>
+              <span>Parche {data.patch}</span>
             </div>
 
-            <div className="h-6 w-px bg-border-warm/40"></div>
+            {/* Grid 2x2 Limpio de Componentes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Bloque 1: Runas y Shards */}
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
+                  Runas: {primaryTree?.name || 'Primaria'} + {secondaryTree?.name || 'Secundaria'}
+                </span>
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  {/* Keystone */}
+                  {data.runes.selections[0] && (
+                    <div title={hydrateAsset('runes', data.runes.selections[0])?.name || 'Keystone'}>
+                      <img
+                        src={hydrateAsset('runes', data.runes.selections[0])?.icon || ''}
+                        alt="Keystone"
+                        className="w-9 h-9 rounded-full border border-amber-400/80 bg-slate-950 shrink-0"
+                      />
+                    </div>
+                  )}
 
-            {/* Hechizos (D y F) */}
-            <div className="flex items-center gap-1">
-              {data.summoners.map((spellId, idx) => {
-                const asset = hydrateAsset('summoners', spellId);
-                return (
-                  <img
-                    key={idx}
-                    src={asset?.icon || ''}
-                    alt={asset?.name || `Hechizo ${spellId}`}
-                    title={asset?.name || `Hechizo ${spellId}`}
-                    className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
+                  <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
 
-        {/* Core Build y Botas */}
-        <div className="flex flex-col gap-1 bg-slate-950/50 p-2.5 rounded-sm border border-border-warm/40">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-            Core Build & Botas
-          </span>
-          <div className="flex items-center gap-2">
-            {/* 3 Core Items */}
-            <div className="flex items-center gap-1">
-              {data.coreItems.map((itemId, idx) => {
-                const asset = hydrateAsset('items', itemId);
-                return (
-                  <img
-                    key={idx}
-                    src={asset?.icon || ''}
-                    alt={asset?.name || `Core ${itemId}`}
-                    title={asset?.name || `Core ${itemId}`}
-                    className="w-7 h-7 rounded-sm border border-amber-400/60 bg-slate-900"
-                  />
-                );
-              })}
-            </div>
+                  {/* 3 Primarias */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {data.runes.selections.slice(1, 4).map((runeId, idx) => {
+                      const asset = hydrateAsset('runes', runeId);
+                      return (
+                        <img
+                          key={idx}
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Runa'}
+                          title={asset?.name || 'Runa'}
+                          className="w-6 h-6 rounded-full bg-slate-900 border border-border-warm shrink-0"
+                        />
+                      );
+                    })}
+                  </div>
 
-            <div className="h-6 w-px bg-border-warm/40"></div>
+                  <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
 
-            {/* Botas */}
-            {data.boots && (
-              <div title={hydrateAsset('items', data.boots)?.name || 'Botas'}>
-                <img
-                  src={hydrateAsset('items', data.boots)?.icon || ''}
-                  alt="Botas"
-                  className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
-                />
+                  {/* 2 Secundarias */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {data.runes.selections.slice(4, 6).map((runeId, idx) => {
+                      const asset = hydrateAsset('runes', runeId);
+                      return (
+                        <img
+                          key={idx}
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Runa'}
+                          title={asset?.name || 'Runa'}
+                          className="w-6 h-6 rounded-full bg-slate-900 border border-border-warm shrink-0"
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
+
+                  {/* 3 Shards exactos */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {data.runes.shards.slice(0, 3).map((shardId, idx) => {
+                      const asset = hydrateAsset('shards', shardId);
+                      return (
+                        <img
+                          key={idx}
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Fragmento'}
+                          title={asset?.name || 'Fragmento'}
+                          className="w-4.5 h-4.5 rounded-full bg-slate-900 border border-border-warm/60 shrink-0"
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            )}
+
+              {/* Bloque 2: Inicio e Invocadores */}
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
+                  Inicio e Invocadores
+                </span>
+                <div className="flex items-center gap-2.5 pt-1">
+                  {/* Starter Items */}
+                  <div className="flex items-center gap-1">
+                    {data.starterItems.map((itemId, idx) => {
+                      const asset = hydrateAsset('items', itemId);
+                      return (
+                        <img
+                          key={idx}
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Starter Item'}
+                          title={asset?.name || 'Starter Item'}
+                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="h-7 w-px bg-border-warm/30"></div>
+
+                  {/* Hechizos de Invocador D y F */}
+                  <div className="flex items-center gap-1">
+                    {data.summoners.map((spellId, idx) => {
+                      const asset = hydrateAsset('summoners', spellId);
+                      return (
+                        <img
+                          key={idx}
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Hechizo'}
+                          title={asset?.name || 'Hechizo'}
+                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bloque 3: Core Build (3 Items) */}
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
+                  Core Build
+                </span>
+                <div className="flex items-center gap-1.5 pt-1">
+                  {data.coreItems.map((itemId, idx) => {
+                    const asset = hydrateAsset('items', itemId);
+                    return (
+                      <div key={idx} className="flex items-center gap-1" title={asset?.name || 'Core Item'}>
+                        <img
+                          src={asset?.icon || ''}
+                          alt={asset?.name || 'Core Item'}
+                          className="w-8 h-8 rounded-sm border border-amber-400/60 bg-slate-900"
+                        />
+                        {idx < data.coreItems.length - 1 && (
+                          <span className="text-slate-600 font-bold text-xs">→</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Bloque 4: Botas */}
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
+                  Botas
+                </span>
+                <div className="flex items-center gap-2 pt-1">
+                  {data.boots && (
+                    <div title={hydrateAsset('items', data.boots)?.name || 'Botas'}>
+                      <img
+                        src={hydrateAsset('items', data.boots)?.icon || ''}
+                        alt="Botas"
+                        className="w-8 h-8 rounded-sm border border-border-warm bg-slate-900"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
