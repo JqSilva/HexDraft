@@ -143,20 +143,30 @@ function extractBuildFromPayload(
   if (starterItems.length === 0) starterItems.push(1056, 2003);
 
   const perkMatches = Array.from(unescaped.matchAll(/perk\/([0-9]+)\.png/g)).map(m => Number(m[1]));
-  const uniquePerks = Array.from(new Set(perkMatches));
 
   const runeStyleMatches = Array.from(unescaped.matchAll(/perkStyle\/([0-9]+)\.png/g)).map(m => Number(m[1]));
   const primaryStyleId = runeStyleMatches[0] || 8100;
   const subStyleId = runeStyleMatches[1] || 8200;
 
-  const selections = uniquePerks.filter(p => p >= 8000 && p < 9900).slice(0, 6);
+  // 6 runas principales (4 primarias + 2 secundarias)
+  const allPerks = perkMatches.filter(p => p >= 8000 && p < 9900);
+  const selections: number[] = Array.from(new Set(allPerks)).slice(0, 6);
   if (selections.length < 6) {
-    selections.push(8112, 8139, 8138, 8135, 8210, 8226);
+    const defaultPerks = [8112, 8139, 8138, 8135, 8210, 8226];
+    defaultPerks.forEach(p => {
+      if (selections.length < 6 && !selections.includes(p)) {
+        selections.push(p);
+      }
+    });
   }
 
-  const shards = uniquePerks.filter(p => p >= 5000 && p < 5020).slice(0, 3);
-  if (shards.length < 3) {
-    shards.push(5008, 5008, 5002);
+  // 3 fragmentos de estadísticas exactos (preservando duplicados válidos como 5008 + 5008)
+  const rawShards = perkMatches.filter(p => p >= 5000 && p < 5020);
+  const shards: number[] = rawShards.slice(0, 3);
+  while (shards.length < 3) {
+    if (shards.length === 0) shards.push(5008);
+    else if (shards.length === 1) shards.push(5008);
+    else shards.push(5011);
   }
 
   const spellMatches = Array.from(unescaped.matchAll(/spell\/([0-9]+)\.png/g)).map(m => Number(m[1]));
@@ -326,17 +336,29 @@ async function fetchGeneralProBuild(championName: string, role: string): Promise
     if (summoners.length < 2) summoners.push(4, 12);
 
     const perkMatches = Array.from(fullPayload.matchAll(/perk\/([0-9]+)\.png/g)).map(m => Number(m[1]));
-    const uniquePerks = Array.from(new Set(perkMatches));
 
     const runeStyleMatches = Array.from(fullPayload.matchAll(/perkStyle\/([0-9]+)\.png/g)).map(m => Number(m[1]));
     const primaryStyleId: number = runeStyleMatches[0] || 8100;
     const subStyleId: number = runeStyleMatches[1] || 8200;
 
-    const selections: number[] = uniquePerks.filter(p => p >= 8000 && p < 9900).slice(0, 6);
-    if (selections.length < 6) selections.push(8112, 8139, 8138, 8135, 8210, 8226);
+    const allPerks = perkMatches.filter(p => p >= 8000 && p < 9900);
+    const selections: number[] = Array.from(new Set(allPerks)).slice(0, 6);
+    if (selections.length < 6) {
+      const defaultPerks = [8112, 8139, 8138, 8135, 8210, 8226];
+      defaultPerks.forEach(p => {
+        if (selections.length < 6 && !selections.includes(p)) {
+          selections.push(p);
+        }
+      });
+    }
 
-    const shards: number[] = uniquePerks.filter(p => p >= 5000 && p < 5020).slice(0, 3);
-    if (shards.length < 3) shards.push(5008, 5008, 5002);
+    const rawShards = perkMatches.filter(p => p >= 5000 && p < 5020);
+    const shards: number[] = rawShards.slice(0, 3);
+    while (shards.length < 3) {
+      if (shards.length === 0) shards.push(5008);
+      else if (shards.length === 1) shards.push(5008);
+      else shards.push(5011);
+    }
 
     const gamesMatch = fullPayload.match(/([0-9,]+)\s*Games/i) || fullPayload.match(/matchCount":([0-9]+)/);
     const sampleSize: number = gamesMatch ? parseInt(gamesMatch[1].replace(/,/g, ''), 10) : 100;

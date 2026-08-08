@@ -17,7 +17,6 @@ import { DraftGrid } from './DraftGrid';
 import { DraftSettings } from './DraftSettings';
 import { ChampionPreviewModal } from './ChampionPreviewModal';
 import { SkillTimeline } from './SkillTimeline';
-import { ItemBuild } from './ItemBuild';
 import { ProBuildPanel } from '../ProBuildPanel';
 import { LiveGamePanel } from './LiveGamePanel';
 import { inferEnemyOpponent } from '../../lib/engine/archetypes';
@@ -27,7 +26,6 @@ import { DraftDamageBalance } from './draft/DraftDamageBalance';
 import {
     getFriendlyRoleName,
     executeLcuAction,
-    importToClient,
     PHASE_TRANSLATIONS,
     POS_BASE,
     posMapping,
@@ -697,13 +695,7 @@ export const DraftPage = () => {
                                 }
 
                                 if (triggerImport) {
-                                    console.log(`[AUTO] Exportando playstyle unificado al LCU para ${champName} (Firma: ${buildSig})`);
-                                    await importToClient({
-                                        build: activeBuild,
-                                        name: activeName,
-                                        id: myId,
-                                        coreItemSwaps: activeSwaps
-                                    });
+                                    console.log(`[DRAFT] Estado de selección actualizado para ${champName} (Firma: ${buildSig}). ProBuild OP.GG se sincroniza automáticamente.`);
                                 }
                             }
                         }
@@ -844,12 +836,6 @@ export const DraftPage = () => {
     }, []);
 
     // Callbacks optimizados
-    const handleReImport = useCallback((customBuild?: any) => {
-        const data = customBuild || currentBuild;
-        if (data) {
-            importToClient(data);
-        }
-    }, [currentBuild]);
 
     const handleSelectChamp = useCallback((rec: any) => {
         setPreviewChamp(rec);
@@ -1088,24 +1074,11 @@ export const DraftPage = () => {
                                                             <span className="text-slate-700 font-bold">|</span>
 
                                                             <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
-                                                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SCORE:</span>
-                                                                <span className="text-xs font-mono font-black text-[#9055ff]">
-                                                                    {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
-                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
-                                            <ItemBuild
-                                                currentBuild={currentBuild}
-                                                onReImport={handleReImport}
-                                                inDraft={inDraft}
-                                                everyonePicked={everyonePicked}
-                                                activePlaystyleIndex={activePlaystyleIndex}
-                                                setActivePlaystyleIndex={setActivePlaystyleIndex}
-                                                isCompact={isCompact}
-                                            />
                                             <ProBuildPanel
                                                 championName={currentBuild?.name || (myId > 0 ? getNameFromId(myId) : null)}
                                                 opponentName={inferredOpponent || enemyNames[0] || null}

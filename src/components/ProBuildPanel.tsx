@@ -1,6 +1,7 @@
 import React from 'react';
 import { useProBuild } from '../hooks/useProBuild';
-import { getDDragonUrl } from '../lib/gameVersion.js';
+import { hydrateAsset } from '../lib/engine/hydrator.js';
+import { RUNE_TREES } from './react/champions/utils';
 
 interface ProBuildPanelProps {
   championName: string | null;
@@ -19,27 +20,11 @@ function formatFreshness(cachedAt: number | null): string {
   if (diffHours < 1) {
     return 'hace unos minutos';
   } else if (diffHours < 24) {
-    return `hace ${diffHours} horas`;
+    return `hace ${diffHours}h`;
   } else {
     const diffDays = Math.floor(diffHours / 24);
-    return `hace ${diffDays} días`;
+    return `hace ${diffDays}d`;
   }
-}
-
-function getItemIcon(itemId: number): string {
-  return getDDragonUrl('item', itemId);
-}
-
-function getRuneIcon(perkId: number): string {
-  return `https://opgg-static.akamaized.net/meta/images/lol/perk/${perkId}.png`;
-}
-
-function getRuneStyleIcon(styleId: number): string {
-  return `https://opgg-static.akamaized.net/meta/images/lol/perkStyle/${styleId}.png`;
-}
-
-function getSpellIcon(spellId: number): string {
-  return `https://opgg-static.akamaized.net/meta/images/lol/spell/${spellId}.png`;
 }
 
 export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
@@ -47,7 +32,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
   opponentName,
   role,
   patch = '16.15',
-  isCompact: _isCompact = false
+  isCompact = false
 }) => {
   const { loading, data, error, insufficientData, archetype, cachedAt } = useProBuild(
     championName,
@@ -62,11 +47,13 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
   if (loading) {
     return (
-      <div className="w-full p-4 rounded bg-panel-warm/60 border border-border-warm/40 animate-pulse text-slate-300 text-xs flex flex-col gap-2">
-        <div className="h-4 w-48 bg-slate-800 rounded"></div>
-        <div className="h-3 w-64 bg-slate-800/80 rounded"></div>
-        <div className="text-slate-400 font-mono text-[11px] mt-2">
-          Consultando partidas de Top OTPs de EUW y Challenger/GM en op.gg...
+      <div className="w-full p-4 rounded-sm bg-panel-warm border border-border-warm text-slate-300 text-xs flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-40 bg-slate-800 rounded-sm"></div>
+          <div className="h-4 w-16 bg-slate-800 rounded-sm"></div>
+        </div>
+        <div className="text-slate-400 font-mono text-[11px]">
+          Consultando perfiles Top OTPs de EUW y Challenger/GM en OP.GG...
         </div>
       </div>
     );
@@ -74,16 +61,16 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
   if (insufficientData) {
     return (
-      <div className="w-full p-3 rounded bg-panel-warm/40 border border-border-warm/30 text-slate-400 text-xs text-center font-mono">
-        Datos insuficientes para este matchup
+      <div className="w-full p-3.5 rounded-sm bg-panel-warm border border-border-warm text-slate-400 text-xs text-center font-mono">
+        Datos insuficientes para este matchup en OP.GG
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="w-full p-3 rounded bg-panel-warm/40 border border-border-warm/30 text-slate-400 text-xs text-center font-mono">
-        {error || 'No se pudo obtener información de op.gg'}
+      <div className="w-full p-3.5 rounded-sm bg-panel-warm border border-border-warm text-slate-400 text-xs text-center font-mono">
+        {error || 'No se pudo obtener información de OP.GG'}
       </div>
     );
   }
@@ -92,178 +79,197 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
   const keystoneId = data.runes.selections[0];
   const primaryRunes = data.runes.selections.slice(0, 4);
   const secondaryRunes = data.runes.selections.slice(4, 6);
+  const shards = data.runes.shards.slice(0, 3);
+
+  const primaryTree = RUNE_TREES[data.runes.primaryStyleId];
+  const secondaryTree = RUNE_TREES[data.runes.subStyleId];
 
   const badgeText = data.source === 'otp_matchup'
-    ? `Vista Pro — Matchup OTP (Top ${data.otpRank || 1} EUW: ${data.otpName || ''})`
+    ? `Matchup OTP (Top ${data.otpRank || 1} EUW: ${data.otpName || ''})`
     : data.source === 'otp_general'
-    ? `Vista Pro — Build OTP (Top 1 EUW: ${data.otpName || ''})`
-    : 'Vista Pro — Challenger/GM';
+    ? `Build OTP (Top 1 EUW: ${data.otpName || ''})`
+    : 'Challenger / Master GM';
 
   return (
-    <div className="w-full rounded bg-panel-warm border border-border-warm/60 p-3.5 flex flex-col gap-3 text-slate-200">
-      {/* Encabezado Pro Build */}
-      <div className="flex flex-col gap-1 border-b border-border-warm/40 pb-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+    <div className="w-full rounded-sm bg-panel-warm border border-border-warm p-3.5 flex flex-col gap-3 text-slate-200">
+      {/* Cabecera Pro Build */}
+      <div className="flex flex-col gap-1 border-b border-border-warm/60 pb-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30">
               {badgeText}
             </span>
             <span className="text-[11px] font-mono text-slate-400">
               {freshnessText}
             </span>
           </div>
-          <span className="text-[11px] font-mono font-bold text-emerald-400">
+          <span className="text-[11px] font-mono font-bold text-emerald-400 shrink-0">
             {data.winRate}% WR
           </span>
         </div>
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono mt-0.5">
-          <span>Basado en {data.sampleSize.toLocaleString()} partidas — parche {data.patch}</span>
+          <span>{data.sampleSize.toLocaleString()} partidas analizadas (Parche {data.patch})</span>
           {archetype && (
-            <span className="text-slate-300">vs arquetipo {archetype}</span>
+            <span className="text-amber-400/90 font-sans text-[10.5px]">vs arquetipo {archetype}</span>
           )}
         </div>
       </div>
 
-      {/* Sección 1: Runas completas */}
-      <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-          Runas y Fragmentos
-        </span>
-        <div className="flex items-center gap-3 bg-slate-950/50 p-2.5 rounded border border-border-warm/30">
-          {/* Keystone grande */}
+      {/* Sección 1: Runas y 3 Fragmentos de Estadísticas */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-300 uppercase tracking-wider">
+          <span>Runas & Fragmentos</span>
+          <span className="text-[10px] font-normal text-slate-400 font-mono">
+            {primaryTree?.name || 'Primaria'} + {secondaryTree?.name || 'Secundaria'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2.5 bg-slate-950/60 p-2.5 rounded-sm border border-border-warm/40 overflow-x-auto">
+          {/* Keystone */}
           {keystoneId && (
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0" title={hydrateAsset('runes', keystoneId)?.name || 'Keystone'}>
               <img
-                src={getRuneIcon(keystoneId)}
+                src={hydrateAsset('runes', keystoneId)?.icon || ''}
                 alt="Keystone"
-                className="w-10 h-10 rounded-full border-2 border-amber-500/60 bg-slate-900"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = getRuneStyleIcon(data.runes.primaryStyleId);
-                }}
+                className="w-9 h-9 rounded-full border border-amber-400/80 bg-slate-900 shrink-0"
               />
             </div>
           )}
 
-          <div className="h-10 w-px bg-border-warm/30"></div>
+          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
 
-          {/* Rama Primaria */}
-          <div className="flex items-center gap-1.5">
-            {primaryRunes.map((runeId, idx) => (
-              <img
-                key={idx}
-                src={getRuneIcon(runeId)}
-                alt={`Primary Rune ${idx}`}
-                className="w-7 h-7 rounded-full bg-slate-900 border border-border-warm/50"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ))}
+          {/* Rama Primaria (4 perks) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {primaryRunes.map((runeId, idx) => {
+              const asset = hydrateAsset('runes', runeId);
+              return (
+                <img
+                  key={idx}
+                  src={asset?.icon || ''}
+                  alt={asset?.name || `Runa Primaria ${idx}`}
+                  title={asset?.name || `Runa Primaria ${idx}`}
+                  className="w-6.5 h-6.5 rounded-full bg-slate-900 border border-border-warm shrink-0"
+                />
+              );
+            })}
           </div>
 
-          <div className="h-10 w-px bg-border-warm/30"></div>
+          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
 
-          {/* Rama Secundaria */}
-          <div className="flex items-center gap-1.5">
-            {secondaryRunes.map((runeId, idx) => (
-              <img
-                key={idx}
-                src={getRuneIcon(runeId)}
-                alt={`Secondary Rune ${idx}`}
-                className="w-7 h-7 rounded-full bg-slate-900 border border-border-warm/50"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ))}
+          {/* Rama Secundaria (2 perks) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {secondaryRunes.map((runeId, idx) => {
+              const asset = hydrateAsset('runes', runeId);
+              return (
+                <img
+                  key={idx}
+                  src={asset?.icon || ''}
+                  alt={asset?.name || `Runa Secundaria ${idx}`}
+                  title={asset?.name || `Runa Secundaria ${idx}`}
+                  className="w-6.5 h-6.5 rounded-full bg-slate-900 border border-border-warm shrink-0"
+                />
+              );
+            })}
           </div>
 
-          <div className="h-10 w-px bg-border-warm/30"></div>
+          <div className="h-8 w-px bg-border-warm/40 shrink-0"></div>
 
-          {/* Shards */}
-          <div className="flex items-center gap-1">
-            {data.runes.shards.map((shardId, idx) => (
-              <img
-                key={idx}
-                src={getRuneIcon(shardId)}
-                alt={`Shard ${idx}`}
-                className="w-5 h-5 rounded-full bg-slate-900 border border-border-warm/40"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ))}
+          {/* 3 Fragmentos / Shards exactos */}
+          <div className="flex items-center gap-1 shrink-0">
+            {shards.map((shardId, idx) => {
+              const asset = hydrateAsset('shards', shardId);
+              return (
+                <img
+                  key={idx}
+                  src={asset?.icon || ''}
+                  alt={asset?.name || `Fragmento ${idx + 1}`}
+                  title={asset?.name || `Fragmento ${idx + 1}`}
+                  className="w-5 h-5 rounded-full bg-slate-900 border border-border-warm/60 shrink-0"
+                />
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Sección 2: Objetos iniciales, Core Build, Botas e Invocadores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-        {/* Objetos Iniciales e Invocadores */}
-        <div className="flex flex-col gap-1.5 bg-slate-950/40 p-2.5 rounded border border-border-warm/30">
-          <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
+      {/* Sección 2: Iniciales, Invocadores, Core Build y Botas */}
+      <div className={`grid ${isCompact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-2.5`}>
+        {/* Objetos Iniciales y Hechizos */}
+        <div className="flex flex-col gap-1 bg-slate-950/50 p-2.5 rounded-sm border border-border-warm/40">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             Inicio e Invocadores
           </span>
-          <div className="flex items-center gap-3">
-            {/* Objetos iniciales */}
+          <div className="flex items-center gap-2.5">
+            {/* Iniciales */}
             <div className="flex items-center gap-1">
-              {data.starterItems.map((itemId, idx) => (
-                <img
-                  key={idx}
-                  src={getItemIcon(itemId)}
-                  alt={`Starter item ${itemId}`}
-                  className="w-7 h-7 rounded border border-border-warm/50"
-                />
-              ))}
+              {data.starterItems.map((itemId, idx) => {
+                const asset = hydrateAsset('items', itemId);
+                return (
+                  <img
+                    key={idx}
+                    src={asset?.icon || ''}
+                    alt={asset?.name || `Inicial ${itemId}`}
+                    title={asset?.name || `Inicial ${itemId}`}
+                    className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                  />
+                );
+              })}
             </div>
 
-            <div className="h-6 w-px bg-border-warm/30"></div>
+            <div className="h-6 w-px bg-border-warm/40"></div>
 
-            {/* Hechizos de invocador */}
+            {/* Hechizos (D y F) */}
             <div className="flex items-center gap-1">
-              {data.summoners.map((spellId, idx) => (
-                <img
-                  key={idx}
-                  src={getSpellIcon(spellId)}
-                  alt={`Summoner spell ${spellId}`}
-                  className="w-7 h-7 rounded border border-border-warm/50"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = getDDragonUrl('spell', spellId);
-                  }}
-                />
-              ))}
+              {data.summoners.map((spellId, idx) => {
+                const asset = hydrateAsset('summoners', spellId);
+                return (
+                  <img
+                    key={idx}
+                    src={asset?.icon || ''}
+                    alt={asset?.name || `Hechizo ${spellId}`}
+                    title={asset?.name || `Hechizo ${spellId}`}
+                    className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
 
         {/* Core Build y Botas */}
-        <div className="flex flex-col gap-1.5 bg-slate-950/40 p-2.5 rounded border border-border-warm/30">
-          <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
-            Core Build y Botas
+        <div className="flex flex-col gap-1 bg-slate-950/50 p-2.5 rounded-sm border border-border-warm/40">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Core Build & Botas
           </span>
           <div className="flex items-center gap-2">
-            {/* Core items */}
+            {/* 3 Core Items */}
             <div className="flex items-center gap-1">
-              {data.coreItems.map((itemId, idx) => (
-                <img
-                  key={idx}
-                  src={getItemIcon(itemId)}
-                  alt={`Core item ${itemId}`}
-                  className="w-7 h-7 rounded border border-amber-500/40"
-                />
-              ))}
+              {data.coreItems.map((itemId, idx) => {
+                const asset = hydrateAsset('items', itemId);
+                return (
+                  <img
+                    key={idx}
+                    src={asset?.icon || ''}
+                    alt={asset?.name || `Core ${itemId}`}
+                    title={asset?.name || `Core ${itemId}`}
+                    className="w-7 h-7 rounded-sm border border-amber-400/60 bg-slate-900"
+                  />
+                );
+              })}
             </div>
 
-            <div className="h-6 w-px bg-border-warm/30"></div>
+            <div className="h-6 w-px bg-border-warm/40"></div>
 
             {/* Botas */}
             {data.boots && (
-              <img
-                src={getItemIcon(data.boots)}
-                alt={`Boots ${data.boots}`}
-                className="w-7 h-7 rounded border border-border-warm/50"
-              />
+              <div title={hydrateAsset('items', data.boots)?.name || 'Botas'}>
+                <img
+                  src={hydrateAsset('items', data.boots)?.icon || ''}
+                  alt="Botas"
+                  className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                />
+              </div>
             )}
           </div>
         </div>
@@ -271,5 +277,3 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
     </div>
   );
 };
-
-export default ProBuildPanel;

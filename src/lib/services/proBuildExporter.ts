@@ -25,13 +25,21 @@ export async function exportProBuildToClient(data: ProBuildData): Promise<boolea
       }
     }
 
+    const selections = data.runes.selections.slice(0, 6);
+    const shards = data.runes.shards.slice(0, 3);
+    while (shards.length < 3) {
+      if (shards.length === 0) shards.push(5008);
+      else if (shards.length === 1) shards.push(5008);
+      else shards.push(5011);
+    }
+
     const runePayload = {
       name: `HexDraft Pro: ${data.championName}`,
       primaryStyleId: data.runes.primaryStyleId,
       subStyleId: data.runes.subStyleId,
       selectedPerkIds: [
-        ...data.runes.selections,
-        ...data.runes.shards
+        ...selections,
+        ...shards
       ]
     };
 
