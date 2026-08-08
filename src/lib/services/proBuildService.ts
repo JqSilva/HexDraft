@@ -20,8 +20,8 @@ export interface InFlightState {
 
 const inFlightMap = new Map<string, InFlightState>();
 
-function buildKey(champion: string, role: string, patch: string): string {
-  return `${champion.toLowerCase()}_${role.toLowerCase()}_${patch}`;
+function buildKey(champion: string, role: string, patch: string, archetype: string): string {
+  return `${champion.toLowerCase()}_${role.toLowerCase()}_${patch}_${archetype.toLowerCase()}`;
 }
 
 export async function processProBuildRequest(
@@ -32,21 +32,21 @@ export async function processProBuildRequest(
 ) {
   cleanOldBuildCache(patch);
 
-  const archetype = getOpponentArchetype(opponent);
-  const key = buildKey(champion, role, patch);
+  const archetype = getOpponentArchetype(opponent) || 'generalist';
+  const key = buildKey(champion, role, patch, archetype);
   const nowSeconds = Math.floor(Date.now() / 1000);
 
-  logOpgg('API-REQ', `Petición recibida para ${champion} (${role}) vs ${opponent || 'ninguno'}`, {
+  logOpgg('API-REQ', `Petición recibida para ${champion} (${role}) vs ${opponent || 'ninguno'} (arquetipo: ${archetype})`, {
     champion,
     role,
     opponent,
     archetype
   });
 
-  // 1. Buscar en memoria si ya tenemos las 3 builds listas
+  // 1. Buscar en memoria si ya tenemos las 3 builds listas para este arquetipo
   const inFlight = inFlightMap.get(key);
   if (inFlight && inFlight.status === 'ready' && inFlight.builds && inFlight.builds.length > 0) {
-    logOpgg('CACHE-MEMORY-HIT', `Builds servidas desde memoria activa para ${champion}`, {
+    logOpgg('CACHE-MEMORY-HIT', `Builds servidas desde memoria activa para ${champion} vs ${archetype}`, {
       buildCount: inFlight.builds.length
     });
     return {
@@ -58,21 +58,21 @@ export async function processProBuildRequest(
     };
   }
 
-  // 2. Buscar en SQLite
-  const cachedRecord = getProBuildFromCache(champion, role, patch);
+  // 2. Buscar en SQLite para este arquetipo específico
+  const cachedRecord = getProBuildFromCache(champion, role, patch, archetype);
   if (cachedRecord) {
     const ageSeconds = nowSeconds - cachedRecord.cached_at;
     const allowedTtl = getTtlForSampleSize(cachedRecord.sample_size);
 
     if (ageSeconds <= allowedTtl) {
-      logOpgg('CACHE-SQLITE-HIT', `Build servida desde base de datos SQLite para ${champion}`, {
+      logOpgg('CACHE-SQLITE-HIT', `Build servida desde base de datos SQLite para ${champion} vs ${archetype}`, {
         sampleSize: cachedRecord.sample_size,
         ageSeconds
       });
 
       const cachedData: OpggProBuild = {
         id: 'cached-1',
-        title: 'Build Recomendada',
+        title: `Build vs ${archetype}`,
         championName: cachedRecord.champion_name,
         role: cachedRecord.role,
         patch: cachedRecord.patch,
@@ -99,7 +99,7 @@ export async function processProBuildRequest(
   // 3. Iniciar scraping en background de hasta 3 builds
   if (!inFlight || inFlight.status !== 'loading') {
     inFlightMap.set(key, { status: 'loading', timestamp: Date.now() });
-    logOpgg('SCRAPING-BACKGROUND-START', `Iniciando scraping en background para ${champion} (${role})`);
+    logOpgg('SCRAPING-BACKGROUND-START', `Iniciando scraping en background para ${champion} (${role}) vs ${archetype}`);
 
     (async () => {
       try {
@@ -114,7 +114,7 @@ export async function processProBuildRequest(
           return;
         }
 
-        saveProBuildToCache(builds[0]);
+        saveProBuildToCache(builds[0], archetype);
         inFlightMap.set(key, {
           status: 'ready',
           builds,
@@ -122,7 +122,7 @@ export async function processProBuildRequest(
           cachedAt: Math.floor(Date.now() / 1000),
           timestamp: Date.now()
         });
-        logOpgg('SCRAPING-SUCCESS', `Scraping completado para ${champion}. Builds generadas: ${builds.length}`);
+        logOpgg('SCRAPING-SUCCESS', `Scraping completado para ${champion} vs ${archetype}. Builds generadas: ${builds.length}`);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         logOpgg('SCRAPING-FATAL', `Error en background para ${champion}: ${msg}`);
@@ -150,8 +150,8 @@ export function processProBuildStatus(
   role: string,
   patch: string
 ) {
-  const archetype = getOpponentArchetype(opponent);
-  const key = buildKey(champion, role, patch);
+  const archetype = getOpponentArchetype(opponent) || 'generalist';
+  const key = buildKey(champion, role, patch, archetype);
   const nowSeconds = Math.floor(Date.now() / 1000);
 
   const inFlight = inFlightMap.get(key);

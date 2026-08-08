@@ -6,6 +6,7 @@ export interface DbProBuildRecord {
   champion_name: string;
   role: string;
   patch: string;
+  archetype: string;
   cached_at: number;
   sample_size: number;
   win_rate: number;
@@ -44,23 +45,28 @@ export function getTtlForSampleSize(sampleSize: number): number {
   return 0;                            // Insuficiente
 }
 
-export function getProBuildFromCache(championName: string, role: string, patch: string): DbProBuildRecord | null {
+export function getProBuildFromCache(
+  championName: string,
+  role: string,
+  patch: string,
+  archetype: string = 'generalist'
+): DbProBuildRecord | null {
   try {
     const stmt = db.prepare(`
-      SELECT champion_name, role, patch, cached_at, sample_size, win_rate, core_items, boots, runes, summoners, starter_items
+      SELECT champion_name, role, patch, archetype, cached_at, sample_size, win_rate, core_items, boots, runes, summoners, starter_items
       FROM pro_build_cache
-      WHERE LOWER(champion_name) = LOWER(?) AND LOWER(role) = LOWER(?) AND patch = ?
+      WHERE LOWER(champion_name) = LOWER(?) AND LOWER(role) = LOWER(?) AND patch = ? AND LOWER(archetype) = LOWER(?)
     `);
-    const record = stmt.get(championName, role, patch) as DbProBuildRecord | undefined;
+    const record = stmt.get(championName, role, patch, archetype) as DbProBuildRecord | undefined;
     return record || null;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[PRO-BUILD] Error leyendo cache para ${championName}: ${msg}`);
+    console.error(`[PRO-BUILD] Error leyendo cache para ${championName} (${archetype}): ${msg}`);
     return null;
   }
 }
 
-export function saveProBuildToCache(data: OpggProBuild): boolean {
+export function saveProBuildToCache(data: OpggProBuild, archetype: string = 'generalist'): boolean {
   if (data.sampleSize < 1 && data.source !== 'otp_matchup' && data.source !== 'otp_general') {
     console.log(`[PRO-BUILD] Muestra insuficiente (${data.sampleSize} < 1) para ${data.championName}. No se guarda en cache.`);
     return false;
@@ -71,9 +77,9 @@ export function saveProBuildToCache(data: OpggProBuild): boolean {
 
     const stmt = db.prepare(`
       INSERT INTO pro_build_cache (
-        champion_name, role, patch, cached_at, sample_size, win_rate, core_items, boots, runes, summoners, starter_items
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(champion_name, role, patch) DO UPDATE SET
+        champion_name, role, patch, archetype, cached_at, sample_size, win_rate, core_items, boots, runes, summoners, starter_items
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(champion_name, role, patch, archetype) DO UPDATE SET
         cached_at = excluded.cached_at,
         sample_size = excluded.sample_size,
         win_rate = excluded.win_rate,
@@ -90,6 +96,7 @@ export function saveProBuildToCache(data: OpggProBuild): boolean {
       data.championName,
       data.role,
       data.patch,
+      archetype || 'generalist',
       nowSeconds,
       data.sampleSize,
       data.winRate,
@@ -100,7 +107,7 @@ export function saveProBuildToCache(data: OpggProBuild): boolean {
       JSON.stringify(data.starterItems)
     );
 
-    console.log(`[PRO-BUILD] Build guardada en cache para ${data.championName} (${data.role}, ${data.patch})`);
+    console.log(`[PRO-BUILD] Build guardada en cache para ${data.championName} (${data.role}, ${data.patch}, ${archetype})`);
     return true;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

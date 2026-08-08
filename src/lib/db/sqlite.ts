@@ -224,6 +224,7 @@ db.exec(`
     champion_name TEXT NOT NULL,
     role TEXT NOT NULL,
     patch TEXT NOT NULL,
+    archetype TEXT NOT NULL DEFAULT 'generalist',
     cached_at INTEGER NOT NULL,
     sample_size INTEGER NOT NULL,
     win_rate REAL NOT NULL,
@@ -232,7 +233,7 @@ db.exec(`
     runes TEXT NOT NULL,
     summoners TEXT NOT NULL,
     starter_items TEXT NOT NULL,
-    PRIMARY KEY (champion_name, role, patch)
+    PRIMARY KEY (champion_name, role, patch, archetype)
   );
 `);
 
