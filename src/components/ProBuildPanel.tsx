@@ -34,7 +34,17 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
   patch = '16.15',
   isCompact = false
 }) => {
-  const { loading, data, error, insufficientData, archetype, cachedAt } = useProBuild(
+  const {
+    loading,
+    data,
+    builds,
+    activeBuildIndex,
+    setActiveBuildIndex,
+    error,
+    insufficientData,
+    archetype,
+    cachedAt
+  } = useProBuild(
     championName,
     opponentName,
     role || 'top',
@@ -56,21 +66,50 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-0 overflow-hidden">
-      {/* Cabecera / Pestaña Superior Alineada */}
+      {/* Cabecera / Pestañas de Builds Superiores Alineadas */}
       <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
-        <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
-          <span className={`bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold uppercase text-amber-400 select-none h-[52px] flex items-center justify-center gap-2
-            ${isCompact
-              ? 'px-3 tracking-[0.1em] text-[9.5px]'
-              : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
-            }`}>
-            {tabTitle}
-          </span>
+        <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10 overflow-x-auto">
+          {builds && builds.length > 1 ? (
+            builds.map((b, idx) => {
+              const isActive = idx === activeBuildIndex;
+              const keystone = b.runes?.selections?.[0];
+              const tabStyle = isActive
+                ? 'bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold text-amber-400'
+                : 'bg-[#0a0a0e]/70 border border-border-warm/30 rounded-t-sm text-slate-400 hover:text-slate-200 hover:bg-[#101015]';
+
+              return (
+                <button
+                  key={`build-tab-${idx}`}
+                  onClick={() => setActiveBuildIndex(idx)}
+                  className={`h-[52px] flex items-center gap-2 transition-colors cursor-pointer select-none px-3.5 shrink-0 ${tabStyle}`}
+                >
+                  {keystone && (
+                    <img
+                      src={hydrateAsset('runes', keystone)?.icon || ''}
+                      className="w-5 h-5 rounded-full border border-amber-400/50 bg-slate-950 shrink-0"
+                      alt="keystone"
+                    />
+                  )}
+                  <span className="text-[10px] md:text-[10.5px] uppercase tracking-wider font-bold truncate max-w-[130px]">
+                    {b.title || `Build #${idx + 1}`}
+                  </span>
+                </button>
+              );
+            })
+          ) : (
+            <span className={`bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold uppercase text-amber-400 select-none h-[52px] flex items-center justify-center gap-2
+              ${isCompact
+                ? 'px-3 tracking-[0.1em] text-[9.5px]'
+                : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
+              }`}>
+              {tabTitle}
+            </span>
+          )}
         </div>
 
         {/* Badge de Winrate y Frescura en la esquina superior derecha */}
         {data && (
-          <div className="border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center gap-2 px-3 h-[38px] bg-[#0c0c10] text-[10px] font-mono">
+          <div className="border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center gap-2 px-3 h-[38px] bg-[#0c0c10] text-[10px] font-mono shrink-0">
             <span className="text-slate-400">{formatFreshness(cachedAt)}</span>
             <span className="text-emerald-400 font-bold">{data.winRate}% WR</span>
           </div>
@@ -97,7 +136,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
             {/* Subtítulo de Matchup / Arquetipo */}
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 border-b border-border-warm/30 pb-2">
               <span className="text-slate-300 font-bold">
-                {data.source === 'otp_matchup' ? `Matchup específico vs ${opponentName || archetype || 'rival'}` : `Configuración general OTP para ${championName}`}
+                {data.source === 'otp_matchup' ? `Matchup específico vs ${opponentName || archetype || 'rival'}` : `Configuración para ${championName} (${data.title || 'OP.GG'})`}
               </span>
               <span>Parche {data.patch}</span>
             </div>
@@ -111,7 +150,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                 </span>
                 <div className="flex items-center gap-2 pt-1 flex-wrap">
                   {/* Keystone */}
-                  {data.runes.selections[0] && (
+                  {data.runes?.selections?.[0] && (
                     <div title={hydrateAsset('runes', data.runes.selections[0])?.name || 'Keystone'}>
                       <img
                         src={hydrateAsset('runes', data.runes.selections[0])?.icon || ''}
@@ -125,7 +164,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
                   {/* 3 Primarias */}
                   <div className="flex items-center gap-1 shrink-0">
-                    {data.runes.selections.slice(1, 4).map((runeId, idx) => {
+                    {data.runes?.selections?.slice(1, 4).map((runeId, idx) => {
                       const asset = hydrateAsset('runes', runeId);
                       return (
                         <img
@@ -143,7 +182,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
                   {/* 2 Secundarias */}
                   <div className="flex items-center gap-1 shrink-0">
-                    {data.runes.selections.slice(4, 6).map((runeId, idx) => {
+                    {data.runes?.selections?.slice(4, 6).map((runeId, idx) => {
                       const asset = hydrateAsset('runes', runeId);
                       return (
                         <img
@@ -161,7 +200,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
                   {/* 3 Shards exactos */}
                   <div className="flex items-center gap-1 shrink-0">
-                    {data.runes.shards.slice(0, 3).map((shardId, idx) => {
+                    {data.runes?.shards?.slice(0, 3).map((shardId, idx) => {
                       const asset = hydrateAsset('shards', shardId);
                       return (
                         <img
@@ -185,7 +224,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                 <div className="flex items-center gap-2.5 pt-1">
                   {/* Starter Items */}
                   <div className="flex items-center gap-1">
-                    {data.starterItems.map((itemId, idx) => {
+                    {data.starterItems?.map((itemId, idx) => {
                       const asset = hydrateAsset('items', itemId);
                       return (
                         <img
@@ -203,7 +242,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
 
                   {/* Hechizos de Invocador D y F */}
                   <div className="flex items-center gap-1">
-                    {data.summoners.map((spellId, idx) => {
+                    {data.summoners?.map((spellId, idx) => {
                       const asset = hydrateAsset('summoners', spellId);
                       return (
                         <img
@@ -225,7 +264,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                   Core Build
                 </span>
                 <div className="flex items-center gap-1.5 pt-1">
-                  {data.coreItems.map((itemId, idx) => {
+                  {data.coreItems?.map((itemId, idx) => {
                     const asset = hydrateAsset('items', itemId);
                     return (
                       <div key={idx} className="flex items-center gap-1" title={asset?.name || 'Core Item'}>

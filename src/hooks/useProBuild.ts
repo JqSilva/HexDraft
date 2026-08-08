@@ -10,6 +10,8 @@ export interface ProBuildRunes {
 }
 
 export interface ProBuildData {
+  id?: string;
+  title?: string;
   championName: string;
   role: string;
   patch: string;
@@ -28,6 +30,9 @@ export interface ProBuildData {
 export interface UseProBuildResult {
   loading: boolean;
   data: ProBuildData | null;
+  builds: ProBuildData[];
+  activeBuildIndex: number;
+  setActiveBuildIndex: (index: number) => void;
   error: string | null;
   insufficientData: boolean;
   archetype: string;
@@ -41,7 +46,8 @@ export function useProBuild(
   patch: string = '16.15'
 ): UseProBuildResult {
   const [loading, setLoading] = useState<boolean>(false);
-  const [data, setData] = useState<ProBuildData | null>(null);
+  const [builds, setBuilds] = useState<ProBuildData[]>([]);
+  const [activeBuildIndex, setActiveBuildIndex] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [insufficientData, setInsufficientData] = useState<boolean>(false);
   const [archetype, setArchetype] = useState<string>('');
@@ -51,15 +57,18 @@ export function useProBuild(
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const exportedKeyRef = useRef<string>('');
 
+  const activeBuild = builds[activeBuildIndex] || builds[0] || null;
+
+  // Auto-export al cliente LCU cuando cambia la build activa
   useEffect(() => {
-    if (data && data.championName) {
-      const buildKey = `${data.championName}_${data.role}_${data.patch}_${data.coreItems.join('-')}`;
+    if (activeBuild && activeBuild.championName) {
+      const buildKey = `${activeBuild.championName}_${activeBuild.role}_${activeBuild.patch}_${activeBuild.coreItems.join('-')}_${activeBuild.runes.selections[0]}`;
       if (exportedKeyRef.current !== buildKey) {
         exportedKeyRef.current = buildKey;
-        exportProBuildToClient(data);
+        exportProBuildToClient(activeBuild);
       }
     }
-  }, [data]);
+  }, [activeBuild]);
 
   const clearTimers = () => {
     if (pollingIntervalRef.current) {
@@ -90,7 +99,8 @@ export function useProBuild(
       setLoading(true);
       setError(null);
       setInsufficientData(false);
-      setData(null);
+      setBuilds([]);
+      setActiveBuildIndex(0);
 
       try {
         const res = await fetch(`/api/pro-build?${queryParams}`);
@@ -101,9 +111,18 @@ export function useProBuild(
         setArchetype(json.archetype || '');
         setCachedAt(json.cachedAt || null);
 
-        if (json.status === 'ready' && json.data) {
-          setData(json.data);
-          setLoading(false);
+        if (json.status === 'ready') {
+          const list: ProBuildData[] = json.builds && json.builds.length > 0
+            ? json.builds
+            : json.data ? [json.data] : [];
+
+          if (list.length > 0) {
+            setBuilds(list);
+            setLoading(false);
+          } else {
+            setInsufficientData(true);
+            setLoading(false);
+          }
         } else if (json.status === 'insufficient_data') {
           setInsufficientData(true);
           setLoading(false);
@@ -111,7 +130,6 @@ export function useProBuild(
           setError(json.error || 'No se pudo obtener información de op.gg');
           setLoading(false);
         } else {
-          // Estado 'loading' -> iniciar polling (máximo 45 segundos)
           startPolling(queryParams);
         }
       } catch (err: unknown) {
@@ -122,14 +140,12 @@ export function useProBuild(
     };
 
     const startPolling = (params: string) => {
-      // Temporizador de expiración a los 45s
       timeoutTimerRef.current = setTimeout(() => {
         clearTimers();
         setLoading(false);
         setError('Tiempo de espera agotado al consultar op.gg');
       }, 45000);
 
-      // Polling cada 2000ms
       pollingIntervalRef.current = setInterval(async () => {
         try {
           const res = await fetch(`/api/pro-build/status?${params}`);
@@ -138,22 +154,28 @@ export function useProBuild(
           const json = await res.json();
           setArchetype(json.archetype || '');
 
-          if (json.status === 'ready' && json.data) {
-            clearTimers();
-            setData(json.data);
-            setCachedAt(json.cachedAt || null);
-            setLoading(false);
+          if (json.status === 'ready') {
+            const list: ProBuildData[] = json.builds && json.builds.length > 0
+              ? json.builds
+              : json.data ? [json.data] : [];
+
+            if (list.length > 0) {
+              setBuilds(list);
+              setCachedAt(json.cachedAt || null);
+              setLoading(false);
+              clearTimers();
+            }
           } else if (json.status === 'insufficient_data') {
-            clearTimers();
             setInsufficientData(true);
             setLoading(false);
-          } else if (json.status === 'error') {
             clearTimers();
-            setError(json.error || 'No se pudo obtener información de op.gg');
+          } else if (json.status === 'error') {
+            setError(json.error || 'Error al procesar build de op.gg');
             setLoading(false);
+            clearTimers();
           }
         } catch {
-          // Ignorar errores transitorios de red durante polling
+          // Ignorar errores transitorios de polling
         }
       }, 2000);
     };
@@ -167,7 +189,10 @@ export function useProBuild(
 
   return {
     loading,
-    data,
+    data: activeBuild,
+    builds,
+    activeBuildIndex,
+    setActiveBuildIndex,
     error,
     insufficientData,
     archetype,
