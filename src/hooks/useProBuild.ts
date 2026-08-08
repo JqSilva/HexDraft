@@ -65,10 +65,15 @@ export function useProBuild(
       const buildKey = `${activeBuild.championName}_${activeBuild.role}_${activeBuild.patch}_${activeBuild.coreItems.join('-')}_${activeBuild.runes.selections[0]}`;
       if (exportedKeyRef.current !== buildKey) {
         exportedKeyRef.current = buildKey;
+        console.log(`[HexDraft LCU Export] Exportando build #${activeBuildIndex + 1} (${activeBuild.title || 'Principal'}) para ${activeBuild.championName}...`, {
+          coreItems: activeBuild.coreItems,
+          keystone: activeBuild.runes.selections[0],
+          shards: activeBuild.runes.shards
+        });
         exportProBuildToClient(activeBuild);
       }
     }
-  }, [activeBuild]);
+  }, [activeBuild, activeBuildIndex]);
 
   const clearTimers = () => {
     if (pollingIntervalRef.current) {

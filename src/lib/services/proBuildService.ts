@@ -7,6 +7,7 @@ import {
   cleanOldBuildCache
 } from '../db/proBuild.repo.js';
 import { getOpponentArchetype } from '../engine/archetypes.js';
+import { logOpgg } from '../utils/opggLogger.js';
 
 export interface InFlightState {
   status: 'loading' | 'ready' | 'error' | 'insufficient_data';
@@ -35,9 +36,19 @@ export async function processProBuildRequest(
   const key = buildKey(champion, role, patch);
   const nowSeconds = Math.floor(Date.now() / 1000);
 
+  logOpgg('API-REQ', `Petición recibida para ${champion} (${role}) vs ${opponent || 'ninguno'}`, {
+    champion,
+    role,
+    opponent,
+    archetype
+  });
+
   // 1. Buscar en memoria si ya tenemos las 3 builds listas
   const inFlight = inFlightMap.get(key);
   if (inFlight && inFlight.status === 'ready' && inFlight.builds && inFlight.builds.length > 0) {
+    logOpgg('CACHE-MEMORY-HIT', `Builds servidas desde memoria activa para ${champion}`, {
+      buildCount: inFlight.builds.length
+    });
     return {
       status: 'ready',
       cachedAt: inFlight.cachedAt || nowSeconds,
@@ -54,6 +65,11 @@ export async function processProBuildRequest(
     const allowedTtl = getTtlForSampleSize(cachedRecord.sample_size);
 
     if (ageSeconds <= allowedTtl) {
+      logOpgg('CACHE-SQLITE-HIT', `Build servida desde base de datos SQLite para ${champion}`, {
+        sampleSize: cachedRecord.sample_size,
+        ageSeconds
+      });
+
       const cachedData: OpggProBuild = {
         id: 'cached-1',
         title: 'Build Recomendada',
@@ -83,13 +99,13 @@ export async function processProBuildRequest(
   // 3. Iniciar scraping en background de hasta 3 builds
   if (!inFlight || inFlight.status !== 'loading') {
     inFlightMap.set(key, { status: 'loading', timestamp: Date.now() });
+    logOpgg('SCRAPING-BACKGROUND-START', `Iniciando scraping en background para ${champion} (${role})`);
 
     (async () => {
-      console.log(`[PRO-BUILD] Iniciando scraping de 3 builds para ${champion} (${role})...`);
       try {
         const builds = await fetchProBuilds(champion, role, opponent);
         if (!builds || builds.length === 0) {
-          console.warn(`[PRO-BUILD] Scraping finalizó sin builds para ${champion}`);
+          logOpgg('SCRAPING-WARN', `Scraping finalizó sin builds para ${champion}`);
           inFlightMap.set(key, {
             status: 'error',
             error: 'No se pudo obtener información de op.gg',
@@ -106,9 +122,10 @@ export async function processProBuildRequest(
           cachedAt: Math.floor(Date.now() / 1000),
           timestamp: Date.now()
         });
+        logOpgg('SCRAPING-SUCCESS', `Scraping completado para ${champion}. Builds generadas: ${builds.length}`);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[PRO-BUILD] Error en scraping background de ${champion}: ${msg}`);
+        logOpgg('SCRAPING-FATAL', `Error en background para ${champion}: ${msg}`);
         inFlightMap.set(key, {
           status: 'error',
           error: msg,
