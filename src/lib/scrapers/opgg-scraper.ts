@@ -122,6 +122,7 @@ async function fetchTopOtpSlugs(normalizedChamp: string): Promise<string[]> {
 function extractBuildFromPayload(
   unescaped: string,
   championName: string,
+  role: string,
   source: 'otp_matchup' | 'otp_general',
   otpName: string,
   otpRank: number
@@ -138,7 +139,7 @@ function extractBuildFromPayload(
   }
 
   const boots = uniqueItems.find(id => [3047, 3006, 3009, 3020, 3111, 3117, 3158].includes(id)) || 3020;
-  const starterItems = uniqueItems.filter(id => [1054, 1055, 1056, 2003, 1085].includes(id));
+  const starterItems = uniqueItems.filter(id => [1054, 1055, 1056, 2003, 1085, 1101, 1102, 1103, 3865, 3866, 3867].includes(id));
   if (starterItems.length === 0) starterItems.push(1056, 2003);
 
   const perkMatches = Array.from(unescaped.matchAll(/perk\/([0-9]+)\.png/g)).map(m => Number(m[1]));
@@ -158,16 +159,31 @@ function extractBuildFromPayload(
     shards.push(5008, 5008, 5002);
   }
 
+  const spellMatches = Array.from(unescaped.matchAll(/spell\/([0-9]+)\.png/g)).map(m => Number(m[1]));
+  const summoners: number[] = Array.from(new Set(spellMatches)).slice(0, 2);
+  if (summoners.length < 2) {
+    const normRole = role.toLowerCase();
+    if (normRole === 'jungle' || normRole === 'jg') {
+      summoners.push(4, 11);
+    } else if (normRole === 'adc' || normRole === 'bottom') {
+      summoners.push(4, 7);
+    } else if (normRole === 'support' || normRole === 'utility') {
+      summoners.push(4, 14);
+    } else {
+      summoners.push(4, 12);
+    }
+  }
+
   return {
     championName,
-    role: 'mid',
+    role: role || 'mid',
     patch,
-    sampleSize: 100, // Muestra representativa de alto elo
+    sampleSize: 100,
     winRate: 100.0,
     coreItems,
     boots,
     starterItems,
-    summoners: [4, 12],
+    summoners,
     runes: {
       primaryStyleId,
       subStyleId,
@@ -184,6 +200,7 @@ async function checkOtpMatchup(
   slug: string,
   championName: string,
   opponentName: string,
+  role: string,
   rank: number
 ): Promise<OpggProBuild | null> {
   const url = `https://www.op.gg/summoners/euw/${encodeURIComponent(slug)}`;
@@ -211,7 +228,7 @@ async function checkOtpMatchup(
     const hasArchetypeMention = opponentArchetype ? unescaped.toLowerCase().includes(opponentArchetype.toLowerCase()) : false;
 
     if (hasOpponentMention || hasArchetypeMention) {
-      return extractBuildFromPayload(unescaped, championName, 'otp_matchup', slug, rank);
+      return extractBuildFromPayload(unescaped, championName, role, 'otp_matchup', slug, rank);
     }
 
     return null;
@@ -225,6 +242,7 @@ async function checkOtpMatchup(
 async function checkOtpGeneralMatch(
   slug: string,
   championName: string,
+  role: string,
   rank: number
 ): Promise<OpggProBuild | null> {
   const url = `https://www.op.gg/summoners/euw/${encodeURIComponent(slug)}`;
@@ -249,7 +267,7 @@ async function checkOtpGeneralMatch(
 
     // Extraer build general de la última partida del OTP con el campeón
     if (unescaped.toLowerCase().includes(championName.toLowerCase())) {
-      return extractBuildFromPayload(unescaped, championName, 'otp_general', slug, rank);
+      return extractBuildFromPayload(unescaped, championName, role, 'otp_general', slug, rank);
     }
 
     return null;
@@ -374,7 +392,7 @@ export async function fetchProBuild(
       const slug = topOtps[i];
       console.log(`[OPGG] Evaluando Top ${rank} OTP (${slug}) contra oponente ${opponentName}...`);
 
-      const otpBuild = await checkOtpMatchup(slug, championName, opponentName, rank);
+      const otpBuild = await checkOtpMatchup(slug, championName, opponentName, role, rank);
       if (otpBuild) {
         const endTime = Date.now();
         otpBuild.executionTimeMs = endTime - startTime;
@@ -390,7 +408,7 @@ export async function fetchProBuild(
     for (let i = 0; i < topOtps.length; i++) {
       const rank = i + 1;
       const slug = topOtps[i];
-      const generalOtpBuild = await checkOtpGeneralMatch(slug, championName, rank);
+      const generalOtpBuild = await checkOtpGeneralMatch(slug, championName, role, rank);
       if (generalOtpBuild) {
         const endTime = Date.now();
         generalOtpBuild.executionTimeMs = endTime - startTime;
