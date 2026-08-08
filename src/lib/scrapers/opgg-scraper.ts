@@ -1,6 +1,6 @@
 /**
  * Scraper universal para OP.GG (Builds Reales desde tablas estadísticas de Alto Elo en OP.GG)
- * Incluye registro estructurado con logs en tiempo real, completado de 3 objetos legendarios y deduplicación inteligente.
+ * Incluye registro estructurado con logs en tiempo real, progresión completa de hasta 6 objetos (con Lágrima temprana) y deduplicación inteligente.
  */
 
 import axios from 'axios';
@@ -38,8 +38,8 @@ export interface OpggProBuild {
 const COMPONENT_AND_STARTER_IDS = new Set([
   // Starters & Consumibles
   1054, 1055, 1056, 1082, 1083, 2003, 2031, 2033, 2055, 3340, 3363, 3364,
-  // Componentes básicos e intermedios
-  3070, 3057, 3108, 3802, 3134, 3044, 3067, 3024, 3076, 1038, 1037, 1036,
+  // Componentes básicos e intermedios (3070 se maneja de forma especial)
+  3057, 3108, 3802, 3134, 3044, 3067, 3024, 3076, 1038, 1037, 1036,
   1052, 1053, 1042, 1043, 1018, 1028, 1029, 1031, 1033, 1057, 1027, 1058,
   3113, 3114, 3123, 3133, 3145, 3191, 3211, 3801, 3803, 4641, 6660
 ]);
@@ -93,7 +93,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   if (normName === 'ryze') {
     return {
-      coreItems: [6657, 3040, 2522], // Rod of Ages, Archangel, Equalizer
+      coreItems: [3070, 6657, 3040, 2522, 3089, 3157], // Tear, RoA, Seraph's, Equalizer, Rabadon, Zhonya
       starterItems: [1056, 2003],
       boots: 3111,
       summoners: [4, 12],
@@ -108,7 +108,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   if (champClass === 'Marksman' || role.toLowerCase() === 'adc' || role.toLowerCase() === 'bottom') {
     return {
-      coreItems: [6672, 3124, 3115], // Kraken, Guinsoo, Nashor
+      coreItems: [6672, 3124, 3115, 3157, 3089, 3026], // Kraken, Guinsoo, Nashor, Zhonya, Rabadon, GA
       starterItems: [1055, 2003],
       boots: 3006, // Berserker's Greaves
       summoners: [4, 7], // Flash + Heal
@@ -124,7 +124,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
   if (champClass === 'Assassin') {
     if (damageType === 'AP') {
       return {
-        coreItems: [3157, 3165, 3089],
+        coreItems: [3157, 3165, 3089, 3135, 4645],
         starterItems: [1056, 2003],
         boots: 3020,
         summoners: [4, 14],
@@ -137,7 +137,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
       };
     }
     return {
-      coreItems: [3142, 6692, 3814],
+      coreItems: [3142, 6692, 3814, 3156, 3036],
       starterItems: [1055, 2003],
       boots: 3158,
       summoners: [4, 14],
@@ -152,7 +152,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   if (champClass === 'Tank') {
     return {
-      coreItems: [3068, 3075, 6665],
+      coreItems: [3068, 3075, 6665, 3083, 3110],
       starterItems: [1054, 2003],
       boots: 3047,
       summoners: [4, 12],
@@ -167,7 +167,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   // Mage estándar
   return {
-    coreItems: [3118, 4645, 3157],
+    coreItems: [3118, 4645, 3157, 3089, 3135, 4646],
     starterItems: [1056, 2003],
     boots: 3020,
     summoners: [4, 12],
@@ -181,7 +181,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 }
 
 /**
- * Parsea las tablas de build de OP.GG y genera builds 100% completas y deduplicadas
+ * Parsea las tablas de build de OP.GG y genera secuencias completas de hasta 6 objetos
  */
 export async function fetchProBuilds(
   championName: string,
@@ -249,51 +249,86 @@ export async function fetchProBuilds(
       }
     });
 
-    // 2. Extraer core builds y 4th items
-    const cleanCoreBuilds: number[][] = [];
+    // 2. Extraer core builds, 4th, 5th y 6th items
+    const rawCoreBuilds: number[][] = [];
     const fourthItems: number[] = [];
+    const fifthItems: number[] = [];
+    const sixthItems: number[] = [];
 
     $('table').each((_, tbl) => {
       const text = $(tbl).text();
       if (text.includes('Core') || text.includes('core')) {
         $(tbl).find('tr').each((_, row) => {
-          const rawItems = $(row).find('img[src*="/item/"]').map((_, img) => {
+          const items = $(row).find('img[src*="/item/"]').map((_, img) => {
             const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
             return m ? Number(m[1]) : 0;
           }).get().filter(Boolean);
 
-          const completed = rawItems.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id));
-          if (completed.length >= 2) {
-            cleanCoreBuilds.push(completed);
+          const filtered = items.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id));
+          if (filtered.length >= 2) {
+            rawCoreBuilds.push(filtered);
           }
         });
       }
       if (text.includes('Fourth') || text.includes('fourth')) {
         $(tbl).find('tr').each((_, row) => {
-          const rawItems = $(row).find('img[src*="/item/"]').map((_, img) => {
+          const items = $(row).find('img[src*="/item/"]').map((_, img) => {
             const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
             return m ? Number(m[1]) : 0;
           }).get().filter(Boolean);
-          const completed = rawItems.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id));
+          const completed = items.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id) && id !== 3070);
           if (completed.length > 0) fourthItems.push(completed[0]);
+        });
+      }
+      if (text.includes('Fifth') || text.includes('fifth')) {
+        $(tbl).find('tr').each((_, row) => {
+          const items = $(row).find('img[src*="/item/"]').map((_, img) => {
+            const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
+            return m ? Number(m[1]) : 0;
+          }).get().filter(Boolean);
+          const completed = items.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id) && id !== 3070);
+          if (completed.length > 0) fifthItems.push(completed[0]);
+        });
+      }
+      if (text.includes('Sixth') || text.includes('sixth')) {
+        $(tbl).find('tr').each((_, row) => {
+          const items = $(row).find('img[src*="/item/"]').map((_, img) => {
+            const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
+            return m ? Number(m[1]) : 0;
+          }).get().filter(Boolean);
+          const completed = items.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id) && id !== 3070);
+          if (completed.length > 0) sixthItems.push(completed[0]);
         });
       }
     });
 
-    // Garantizar que cada core build tenga exactamente 3 objetos legendarios completados
-    const fullCoreBuilds: number[][] = [];
-    for (const cb of cleanCoreBuilds) {
-      const core = [...cb];
-      if (core.length < 3) {
-        for (const fourth of fourthItems) {
-          if (!core.includes(fourth)) {
-            core.push(fourth);
-            break;
-          }
+    // Construir secuencias completas de hasta 6 objetos
+    const fullBuildPaths: number[][] = [];
+    for (const base of rawCoreBuilds) {
+      const full = [...base];
+      // 4th item
+      for (const item of fourthItems) {
+        if (!full.includes(item)) {
+          full.push(item);
+          break;
         }
       }
-      if (core.length >= 3) {
-        fullCoreBuilds.push(core.slice(0, 3));
+      // 5th item
+      for (const item of fifthItems) {
+        if (!full.includes(item)) {
+          full.push(item);
+          break;
+        }
+      }
+      // 6th item
+      for (const item of sixthItems) {
+        if (!full.includes(item)) {
+          full.push(item);
+          break;
+        }
+      }
+      if (full.length >= 3) {
+        fullBuildPaths.push(full.slice(0, 6));
       }
     }
 
@@ -379,7 +414,7 @@ export async function fetchProBuilds(
       shards: fallbackDefaults.runes.shards
     };
 
-    // Si existen keystones secundarias distintas (ej. Lissandra con 8112 y 8229)
+    // Keystones distintas
     const distinctKeystones = uniqueActiveRunes.filter(id => [8112, 8229, 8230, 8992, 8005, 8008, 9923, 8437, 8439, 8351, 8360].includes(id));
     
     const starterItems = starterItemsList[0] || fallbackDefaults.starterItems;
@@ -387,7 +422,7 @@ export async function fetchProBuilds(
     const summoners = summonersList[0] || fallbackDefaults.summoners;
 
     logOpgg('PARSER-SUCCESS', `Tablas de OP.GG parseadas para ${championName}`, {
-      fullCoreBuildsCount: fullCoreBuilds.length,
+      fullBuildPathsCount: fullBuildPaths.length,
       distinctKeystones,
       startersFound: starterItemsList.length
     });
@@ -396,7 +431,7 @@ export async function fetchProBuilds(
     const rawBuilds: OpggProBuild[] = [];
 
     // Build 1: Principal
-    const core1 = fullCoreBuilds[0] || fallbackDefaults.coreItems;
+    const core1 = fullBuildPaths[0] || fallbackDefaults.coreItems;
     rawBuilds.push({
       id: 'build-1',
       title: 'Principal / Alta Prioridad',
@@ -431,16 +466,15 @@ export async function fetchProBuilds(
         patch,
         sampleSize: 850,
         winRate: 52.4,
-        coreItems: fullCoreBuilds[1] || core1,
+        coreItems: fullBuildPaths[1] || core1,
         boots: bootsList[1] || boots,
         starterItems,
         summoners,
         runes: altRunes,
         source: 'general_pro'
       });
-    } else if (fullCoreBuilds.length > 1) {
-      // Misma keystone pero 2do Core Build distinto
-      const core2 = fullCoreBuilds[1];
+    } else if (fullBuildPaths.length > 1) {
+      const core2 = fullBuildPaths[1];
       if (core2.join('-') !== core1.join('-')) {
         rawBuilds.push({
           id: 'build-2',
@@ -461,8 +495,8 @@ export async function fetchProBuilds(
     }
 
     // 3ra build si existe una ruta de objetos significativamente distinta
-    if (fullCoreBuilds.length > 2) {
-      const core3 = fullCoreBuilds[2];
+    if (fullBuildPaths.length > 2) {
+      const core3 = fullBuildPaths[2];
       const core1Str = core1.join('-');
       const core2Str = rawBuilds[1] ? rawBuilds[1].coreItems.join('-') : '';
       if (core3.join('-') !== core1Str && core3.join('-') !== core2Str) {
@@ -489,7 +523,7 @@ export async function fetchProBuilds(
     const deduplicatedBuilds: OpggProBuild[] = [];
 
     for (const b of rawBuilds) {
-      const sig = `${b.runes.selections[0]}_${b.coreItems.join('-')}_${b.boots}`;
+      const sig = `${b.runes.selections[0]}_${b.coreItems.slice(0, 4).join('-')}_${b.boots}`;
       if (!seenSignatures.has(sig)) {
         seenSignatures.add(sig);
         deduplicatedBuilds.push(b);
@@ -498,7 +532,7 @@ export async function fetchProBuilds(
 
     logOpgg('COMPLETE', `${deduplicatedBuilds.length} Builds únicas generadas para ${championName}`, {
       durationMs: Date.now() - startTime,
-      builds: deduplicatedBuilds.map(b => ({ title: b.title, core: b.coreItems, keystone: b.runes.selections[0] }))
+      builds: deduplicatedBuilds.map(b => ({ title: b.title, coreLength: b.coreItems.length, keystone: b.runes.selections[0] }))
     });
 
     return deduplicatedBuilds.length > 0 ? deduplicatedBuilds : [rawBuilds[0]];

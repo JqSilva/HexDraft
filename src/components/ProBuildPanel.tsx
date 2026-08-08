@@ -142,6 +142,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
             </div>
 
             {/* Grid 2x2 Limpio de Componentes */}
+            {/* Grid Limpio de Componentes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {/* Bloque 1: Runas y Shards */}
               <div className="flex flex-col gap-1.5 min-w-0">
@@ -216,14 +217,14 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                 </div>
               </div>
 
-              {/* Bloque 2: Inicio e Invocadores */}
+              {/* Bloque 2: Inicio, Invocadores y Botas */}
               <div className="flex flex-col gap-1.5 min-w-0">
                 <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
-                  Inicio e Invocadores
+                  Inicio, Invocadores y Botas
                 </span>
-                <div className="flex items-center gap-2.5 pt-1">
+                <div className="flex items-center gap-2.5 pt-1 flex-wrap">
                   {/* Starter Items */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" title="Objetos Iniciales">
                     {data.starterItems?.map((itemId, idx) => {
                       const asset = hydrateAsset('items', itemId);
                       return (
@@ -232,16 +233,16 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                           src={asset?.icon || ''}
                           alt={asset?.name || 'Starter Item'}
                           title={asset?.name || 'Starter Item'}
-                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900 shrink-0"
                         />
                       );
                     })}
                   </div>
 
-                  <div className="h-7 w-px bg-border-warm/30"></div>
+                  <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
 
                   {/* Hechizos de Invocador D y F */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" title="Hechizos de Invocador">
                     {data.summoners?.map((spellId, idx) => {
                       const asset = hydrateAsset('summoners', spellId);
                       return (
@@ -250,53 +251,60 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                           src={asset?.icon || ''}
                           alt={asset?.name || 'Hechizo'}
                           title={asset?.name || 'Hechizo'}
-                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900"
+                          className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900 shrink-0"
                         />
                       );
                     })}
                   </div>
+
+                  <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
+
+                  {/* Botas */}
+                  {data.boots && (
+                    <div className="flex items-center gap-1" title={hydrateAsset('items', data.boots)?.name || 'Botas'}>
+                      <img
+                        src={hydrateAsset('items', data.boots)?.icon || ''}
+                        alt="Botas"
+                        className="w-7 h-7 rounded-sm border border-border-warm bg-slate-900 shrink-0"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Bloque 3: Core Build (3 Items) */}
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
-                  Core Build
+              {/* Bloque 3: Ruta Completa de Objetos (Secuencia de Compra de hasta 6 Ítems) */}
+              <div className="flex flex-col gap-1.5 min-w-0 md:col-span-2 border-t border-border-warm/20 pt-2.5">
+                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block">
+                  Ruta de Objetos (Orden de Compra Completo)
                 </span>
-                <div className="flex items-center gap-1.5 pt-1">
+                <div className="flex items-center gap-1.5 pt-1 overflow-x-auto scrollbar-tactical pb-1 flex-wrap">
                   {data.coreItems?.map((itemId, idx) => {
                     const asset = hydrateAsset('items', itemId);
+                    const isTear = itemId === 3070;
                     return (
-                      <div key={idx} className="flex items-center gap-1" title={asset?.name || 'Core Item'}>
-                        <img
-                          src={asset?.icon || ''}
-                          alt={asset?.name || 'Core Item'}
-                          className="w-8 h-8 rounded-sm border border-amber-400/60 bg-slate-900"
-                        />
+                      <div key={idx} className="flex items-center gap-1.5 shrink-0" title={asset?.name || 'Item'}>
+                        <div className="relative flex flex-col items-center">
+                          <img
+                            src={asset?.icon || ''}
+                            alt={asset?.name || 'Item'}
+                            className={`w-8 h-8 rounded-sm bg-slate-900 ${
+                              isTear 
+                                ? 'border border-cyan-400/90 shadow-[0_0_8px_rgba(34,211,238,0.25)]' 
+                                : 'border border-amber-400/60'
+                            }`}
+                          />
+                          {isTear && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-cyan-950 text-cyan-300 border border-cyan-400/60 text-[6.5px] font-black px-1 rounded-xs uppercase tracking-tighter">
+                              1er Back
+                            </span>
+                          )}
+                        </div>
                         {idx < data.coreItems.length - 1 && (
                           <span className="text-slate-600 font-bold text-xs">→</span>
                         )}
                       </div>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Bloque 4: Botas */}
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
-                  Botas
-                </span>
-                <div className="flex items-center gap-2 pt-1">
-                  {data.boots && (
-                    <div title={hydrateAsset('items', data.boots)?.name || 'Botas'}>
-                      <img
-                        src={hydrateAsset('items', data.boots)?.icon || ''}
-                        alt="Botas"
-                        className="w-8 h-8 rounded-sm border border-border-warm bg-slate-900"
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
