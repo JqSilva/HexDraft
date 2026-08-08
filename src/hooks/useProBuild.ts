@@ -20,6 +20,9 @@ export interface ProBuildData {
   starterItems: number[];
   summoners: number[];
   runes: ProBuildRunes;
+  source?: 'otp_matchup' | 'otp_general' | 'general_pro';
+  otpRank?: number;
+  otpName?: string;
 }
 
 export interface UseProBuildResult {
@@ -72,13 +75,13 @@ export function useProBuild(
   useEffect(() => {
     clearTimers();
 
-    if (!championName || !opponentName || !role) {
+    if (!championName || !role) {
       return;
     }
 
     const queryParams = new URLSearchParams({
       champion: championName,
-      opponent: opponentName,
+      opponent: opponentName || '',
       role: role,
       patch: patch
     }).toString();

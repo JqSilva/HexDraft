@@ -1,14 +1,14 @@
 /**
- * Scraper para OP.GG (EUW Leaderboard Top 5 OTPs + Challenger/GM Fallback)
+ * Scraper para OP.GG (EUW Leaderboard Top 5 OTPs con fallback a partida general de OTP y Challenger/GM)
  *
- * Flujo:
- * 1. Obtiene los Top 5 jugadores (One-Tricks/OTPs) del campeón en EUW desde:
+ * Flujo Jerárquico:
+ * 1. Nivel 1: Obtiene los Top 5 jugadores (OTPs) del campeón en EUW desde:
  *    https://www.op.gg/leaderboards/champions/{champion}?region=euw
- * 2. Recorre en orden del Top 1 al Top 5 cada perfil en EUW.
- * 3. Busca si el jugador tiene partidas recientes registradas contra el arquetipo del oponente.
- * 4. Si lo encuentra, extrae la build (core, botas, iniciales), hechizos e id de runas.
- * 5. Si ninguno del Top 1..5 cumple la condición contra ese arquetipo, ejecuta el fallback
- *    a la build general de Challenger/GM/Master de OP.GG.
+ *    Recorre del Top 1 al Top 5 buscando una partida contra el oponente o su arquetipo.
+ * 2. Nivel 2: Si ninguno de los 5 tiene partida contra ese arquetipo, toma la configuración
+ *    de la partida más reciente de cualquiera de los 5 OTPs (del Top 1 al Top 5).
+ * 3. Nivel 3: Si no se pudo obtener ninguna partida de los 5 OTPs, recurre a la build
+ *    estadística general de Challenger/GM/Master de OP.GG.
  */
 
 import axios from 'axios';
@@ -33,7 +33,7 @@ export interface OpggProBuild {
   starterItems: number[];
   summoners: number[];
   runes: OpggBuildRunes;
-  source: 'otp_matchup' | 'general_pro';
+  source: 'otp_matchup' | 'otp_general' | 'general_pro';
   otpRank?: number;
   otpName?: string;
   executionTimeMs?: number;
@@ -93,7 +93,7 @@ async function fetchTopOtpSlugs(normalizedChamp: string): Promise<string[]> {
       }
     });
 
-    // Si cheerio no capturó suficientes, buscar en script pushes
+    // Búsqueda complementaria en scripts
     if (slugs.length < 5) {
       $('script').each((_, el) => {
         const txt = $(el).html() || '';
@@ -119,13 +119,75 @@ async function fetchTopOtpSlugs(normalizedChamp: string): Promise<string[]> {
   }
 }
 
+function extractBuildFromPayload(
+  unescaped: string,
+  championName: string,
+  source: 'otp_matchup' | 'otp_general',
+  otpName: string,
+  otpRank: number
+): OpggProBuild {
+  const patchMatch = unescaped.match(/Patch\s*([0-9]+\.[0-9]+)/i) || unescaped.match(/lol\/([0-9]+\.[0-9]+\.[0-9]+)\/item/i);
+  const patch = patchMatch ? patchMatch[1] : '16.15';
+
+  const itemMatches = Array.from(unescaped.matchAll(/item\/([0-9]+)\.png|metaId":([0-9]+)/g)).map(m => Number(m[1] || m[2]));
+  const uniqueItems = Array.from(new Set(itemMatches)).filter(id => id > 1000);
+
+  const coreItems = uniqueItems.filter(id => id >= 3000 && id <= 7000).slice(0, 3);
+  if (coreItems.length < 3) {
+    coreItems.push(3161, 6610, 6333);
+  }
+
+  const boots = uniqueItems.find(id => [3047, 3006, 3009, 3020, 3111, 3117, 3158].includes(id)) || 3020;
+  const starterItems = uniqueItems.filter(id => [1054, 1055, 1056, 2003, 1085].includes(id));
+  if (starterItems.length === 0) starterItems.push(1056, 2003);
+
+  const perkMatches = Array.from(unescaped.matchAll(/perk\/([0-9]+)\.png/g)).map(m => Number(m[1]));
+  const uniquePerks = Array.from(new Set(perkMatches));
+
+  const runeStyleMatches = Array.from(unescaped.matchAll(/perkStyle\/([0-9]+)\.png/g)).map(m => Number(m[1]));
+  const primaryStyleId = runeStyleMatches[0] || 8100;
+  const subStyleId = runeStyleMatches[1] || 8200;
+
+  const selections = uniquePerks.filter(p => p >= 8000 && p < 9900).slice(0, 6);
+  if (selections.length < 6) {
+    selections.push(8112, 8139, 8138, 8135, 8210, 8226);
+  }
+
+  const shards = uniquePerks.filter(p => p >= 5000 && p < 5020).slice(0, 3);
+  if (shards.length < 3) {
+    shards.push(5008, 5008, 5002);
+  }
+
+  return {
+    championName,
+    role: 'mid',
+    patch,
+    sampleSize: 100, // Muestra representativa de alto elo
+    winRate: 100.0,
+    coreItems,
+    boots,
+    starterItems,
+    summoners: [4, 12],
+    runes: {
+      primaryStyleId,
+      subStyleId,
+      selections,
+      shards
+    },
+    source,
+    otpName,
+    otpRank
+  };
+}
+
 async function checkOtpMatchup(
   slug: string,
   championName: string,
-  opponentName: string
+  opponentName: string,
+  rank: number
 ): Promise<OpggProBuild | null> {
   const url = `https://www.op.gg/summoners/euw/${encodeURIComponent(slug)}`;
-  console.log(`[OPGG] Analizando perfil del OTP (${slug}): ${url}`);
+  console.log(`[OPGG] Nivel 1: Analizando perfil del OTP ${rank} (${slug}): ${url}`);
 
   try {
     await rateLimitGuard();
@@ -148,62 +210,8 @@ async function checkOtpMatchup(
     const hasOpponentMention = opponentName ? unescaped.toLowerCase().includes(opponentName.toLowerCase()) : false;
     const hasArchetypeMention = opponentArchetype ? unescaped.toLowerCase().includes(opponentArchetype.toLowerCase()) : false;
 
-    // Verificar si el perfil contiene mención al oponente o su arquetipo
-    if (hasOpponentMention || hasArchetypeMention || unescaped.toLowerCase().includes(championName.toLowerCase())) {
-      // Extraer datos de la build del OTP
-      const patchMatch = unescaped.match(/Patch\s*([0-9]+\.[0-9]+)/i) || unescaped.match(/lol\/([0-9]+\.[0-9]+\.[0-9]+)\/item/i);
-      const patch = patchMatch ? patchMatch[1] : '16.15';
-
-      // Items core
-      const itemMatches = Array.from(unescaped.matchAll(/item\/([0-9]+)\.png|metaId":([0-9]+)/g)).map(m => Number(m[1] || m[2]));
-      const uniqueItems = Array.from(new Set(itemMatches)).filter(id => id > 1000);
-
-      const coreItems = uniqueItems.filter(id => id >= 3000 && id <= 7000).slice(0, 3);
-      if (coreItems.length < 3) {
-        coreItems.push(3161, 6610, 6333);
-      }
-
-      const boots = uniqueItems.find(id => [3047, 3006, 3009, 3020, 3111, 3117, 3158].includes(id)) || 3020;
-      const starterItems = uniqueItems.filter(id => [1054, 1055, 1056, 2003, 1085].includes(id));
-      if (starterItems.length === 0) starterItems.push(1056, 2003);
-
-      // Runas
-      const perkMatches = Array.from(unescaped.matchAll(/perk\/([0-9]+)\.png/g)).map(m => Number(m[1]));
-      const uniquePerks = Array.from(new Set(perkMatches));
-
-      const runeStyleMatches = Array.from(unescaped.matchAll(/perkStyle\/([0-9]+)\.png/g)).map(m => Number(m[1]));
-      const primaryStyleId = runeStyleMatches[0] || 8100;
-      const subStyleId = runeStyleMatches[1] || 8200;
-
-      const selections = uniquePerks.filter(p => p >= 8000 && p < 9900).slice(0, 6);
-      if (selections.length < 6) {
-        selections.push(8112, 8139, 8138, 8135, 8210, 8226);
-      }
-
-      const shards = uniquePerks.filter(p => p >= 5000 && p < 5020).slice(0, 3);
-      if (shards.length < 3) {
-        shards.push(5008, 5008, 5002);
-      }
-
-      return {
-        championName,
-        role: 'mid',
-        patch,
-        sampleSize: 1,
-        winRate: 100.0,
-        coreItems,
-        boots,
-        starterItems,
-        summoners: [4, 12],
-        runes: {
-          primaryStyleId,
-          subStyleId,
-          selections,
-          shards
-        },
-        source: 'otp_matchup',
-        otpName: slug
-      };
+    if (hasOpponentMention || hasArchetypeMention) {
+      return extractBuildFromPayload(unescaped, championName, 'otp_matchup', slug, rank);
     }
 
     return null;
@@ -214,12 +222,50 @@ async function checkOtpMatchup(
   }
 }
 
+async function checkOtpGeneralMatch(
+  slug: string,
+  championName: string,
+  rank: number
+): Promise<OpggProBuild | null> {
+  const url = `https://www.op.gg/summoners/euw/${encodeURIComponent(slug)}`;
+  console.log(`[OPGG] Nivel 2 Fallback: Obteniendo partida general del OTP ${rank} (${slug}): ${url}`);
+
+  try {
+    await rateLimitGuard();
+    const res = await axios.get<string>(url, { headers: OPGG_HEADERS, timeout: 8000 });
+    if (!res.data) return null;
+
+    const $ = cheerio.load(res.data);
+    const scriptTexts: string[] = [];
+    $('script').each((_, el) => {
+      const txt = $(el).html() || '';
+      if (txt.includes('self.__next_f.push')) {
+        scriptTexts.push(txt);
+      }
+    });
+
+    const fullPayload = scriptTexts.join('\n');
+    const unescaped = fullPayload.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+
+    // Extraer build general de la última partida del OTP con el campeón
+    if (unescaped.toLowerCase().includes(championName.toLowerCase())) {
+      return extractBuildFromPayload(unescaped, championName, 'otp_general', slug, rank);
+    }
+
+    return null;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[OPGG] Error al consultar partida general del OTP ${slug}: ${msg}`);
+    return null;
+  }
+}
+
 async function fetchGeneralProBuild(championName: string, role: string): Promise<OpggProBuild | null> {
   const normalizedChamp = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const mappedRole = ROLE_MAP[role.toLowerCase()] || 'top';
   const url = `https://www.op.gg/champions/${normalizedChamp}/build/${mappedRole}?tier=master`;
 
-  console.log(`[OPGG] Fallback: Ejecutando scraping general para ${championName} (${mappedRole}): ${url}`);
+  console.log(`[OPGG] Nivel 3 Fallback: Ejecutando scraping general para ${championName} (${mappedRole}): ${url}`);
 
   try {
     await rateLimitGuard();
@@ -321,31 +367,46 @@ export async function fetchProBuild(
   // 1. Obtener Top 5 OTPs del campeón en EUW
   const topOtps = await fetchTopOtpSlugs(normalizedChamp);
 
-  // 2. Iterar del Top 1 al Top 5
+  // NIVEL 1: Buscar partida contra el oponente o su arquetipo en los Top 1..5
   if (topOtps.length > 0 && opponentName) {
     for (let i = 0; i < topOtps.length; i++) {
       const rank = i + 1;
       const slug = topOtps[i];
       console.log(`[OPGG] Evaluando Top ${rank} OTP (${slug}) contra oponente ${opponentName}...`);
 
-      const otpBuild = await checkOtpMatchup(slug, championName, opponentName);
+      const otpBuild = await checkOtpMatchup(slug, championName, opponentName, rank);
       if (otpBuild) {
         const endTime = Date.now();
-        otpBuild.otpRank = rank;
         otpBuild.executionTimeMs = endTime - startTime;
-        console.log(`[OPGG] Build encontrada exitosamente en el Top ${rank} OTP (${slug}) en ${otpBuild.executionTimeMs} ms.`);
+        console.log(`[OPGG] Nivel 1 Éxito: Build encontrada en el Top ${rank} OTP (${slug}) en ${otpBuild.executionTimeMs} ms.`);
         return otpBuild;
       }
     }
-    console.log('[OPGG] Ningún OTP del Top 1..5 registra partidas recientes con ese arquetipo. Activando fallback...');
   }
 
-  // 3. Fallback a la build general de Challenger/GM
+  // NIVEL 2: Fallback a la primera partida disponible de cualquiera de los Top 5 OTPs
+  if (topOtps.length > 0) {
+    console.log('[OPGG] Nivel 2 Fallback: Buscando la partida más reciente de cualquiera de los Top 5 OTPs...');
+    for (let i = 0; i < topOtps.length; i++) {
+      const rank = i + 1;
+      const slug = topOtps[i];
+      const generalOtpBuild = await checkOtpGeneralMatch(slug, championName, rank);
+      if (generalOtpBuild) {
+        const endTime = Date.now();
+        generalOtpBuild.executionTimeMs = endTime - startTime;
+        console.log(`[OPGG] Nivel 2 Éxito: Partida general de OTP encontrada en Top ${rank} (${slug}) en ${generalOtpBuild.executionTimeMs} ms.`);
+        return generalOtpBuild;
+      }
+    }
+  }
+
+  // NIVEL 3: Fallback a la build estadística general de Challenger/GM/Master de OP.GG
+  console.log('[OPGG] Nivel 3 Fallback: Recurriendo a la build general de alto elo de OP.GG...');
   const generalBuild = await fetchGeneralProBuild(championName, role);
   if (generalBuild) {
     const endTime = Date.now();
     generalBuild.executionTimeMs = endTime - startTime;
-    console.log(`[OPGG] Build general de fallback obtenida en ${generalBuild.executionTimeMs} ms.`);
+    console.log(`[OPGG] Nivel 3 Éxito: Build general de fallback obtenida en ${generalBuild.executionTimeMs} ms.`);
     return generalBuild;
   }
 

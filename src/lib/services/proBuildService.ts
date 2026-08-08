@@ -80,8 +80,8 @@ export async function processProBuildRequest(
           return;
         }
 
-        if (buildResult.sampleSize < 5) {
-          console.warn(`[PRO-BUILD] Muestra insuficiente (${buildResult.sampleSize} < 5) para ${champion}`);
+        if (buildResult.sampleSize < 1 && buildResult.source !== 'otp_matchup' && buildResult.source !== 'otp_general') {
+          console.warn(`[PRO-BUILD] Muestra insuficiente (${buildResult.sampleSize} < 1) para ${champion}`);
           inFlightMap.set(key, {
             status: 'insufficient_data',
             timestamp: Date.now()

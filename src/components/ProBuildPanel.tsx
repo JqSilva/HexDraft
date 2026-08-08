@@ -56,7 +56,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
     patch
   );
 
-  if (!championName || !opponentName) {
+  if (!championName) {
     return null;
   }
 
@@ -66,7 +66,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
         <div className="h-4 w-48 bg-slate-800 rounded"></div>
         <div className="h-3 w-64 bg-slate-800/80 rounded"></div>
         <div className="text-slate-400 font-mono text-[11px] mt-2">
-          Consultando partidas de Challenger/GM en op.gg...
+          Consultando partidas de Top OTPs de EUW y Challenger/GM en op.gg...
         </div>
       </div>
     );
@@ -93,6 +93,12 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
   const primaryRunes = data.runes.selections.slice(0, 4);
   const secondaryRunes = data.runes.selections.slice(4, 6);
 
+  const badgeText = data.source === 'otp_matchup'
+    ? `Vista Pro — Matchup OTP (Top ${data.otpRank || 1} EUW: ${data.otpName || ''})`
+    : data.source === 'otp_general'
+    ? `Vista Pro — Build OTP (Top 1 EUW: ${data.otpName || ''})`
+    : 'Vista Pro — Challenger/GM';
+
   return (
     <div className="w-full rounded bg-panel-warm border border-border-warm/60 p-3.5 flex flex-col gap-3 text-slate-200">
       {/* Encabezado Pro Build */}
@@ -100,7 +106,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              Vista Pro — Challenger/GM
+              {badgeText}
             </span>
             <span className="text-[11px] font-mono text-slate-400">
               {freshnessText}

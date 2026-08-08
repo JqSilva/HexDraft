@@ -40,8 +40,8 @@ export function cleanOldBuildCache(currentPatch?: string): void {
 export function getTtlForSampleSize(sampleSize: number): number {
   if (sampleSize >= 30) return 345600; // 4 días
   if (sampleSize >= 15) return 259200; // 3 días
-  if (sampleSize >= 5) return 86400;   // 1 día
-  return 0;                            // Insuficiente (no guardar)
+  if (sampleSize >= 1) return 86400;   // 1 día (Válido para OTP o muestras iniciales)
+  return 0;                            // Insuficiente
 }
 
 export function getProBuildFromCache(championName: string, role: string, patch: string): DbProBuildRecord | null {
@@ -61,8 +61,8 @@ export function getProBuildFromCache(championName: string, role: string, patch: 
 }
 
 export function saveProBuildToCache(data: OpggProBuild): boolean {
-  if (data.sampleSize < 5) {
-    console.log(`[PRO-BUILD] Muestra insuficiente (${data.sampleSize} < 5) para ${data.championName}. No se guarda en cache.`);
+  if (data.sampleSize < 1 && data.source !== 'otp_matchup' && data.source !== 'otp_general') {
+    console.log(`[PRO-BUILD] Muestra insuficiente (${data.sampleSize} < 1) para ${data.championName}. No se guarda en cache.`);
     return false;
   }
 
