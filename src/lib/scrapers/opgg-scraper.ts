@@ -1,6 +1,6 @@
 /**
- * Scraper universal para OP.GG (3 Builds Reales desde tablas estadísticas de Alto Elo en OP.GG)
- * Incluye registro estructurado con logs en tiempo real.
+ * Scraper universal para OP.GG (Builds Reales desde tablas estadísticas de Alto Elo en OP.GG)
+ * Incluye registro estructurado con logs en tiempo real, completado de 3 objetos legendarios y deduplicación inteligente.
  */
 
 import axios from 'axios';
@@ -34,6 +34,17 @@ export interface OpggProBuild {
   otpName?: string;
   executionTimeMs?: number;
 }
+
+const COMPONENT_AND_STARTER_IDS = new Set([
+  // Starters & Consumibles
+  1054, 1055, 1056, 1082, 1083, 2003, 2031, 2033, 2055, 3340, 3363, 3364,
+  // Componentes básicos e intermedios
+  3070, 3057, 3108, 3802, 3134, 3044, 3067, 3024, 3076, 1038, 1037, 1036,
+  1052, 1053, 1042, 1043, 1018, 1028, 1029, 1031, 1033, 1057, 1027, 1058,
+  3113, 3114, 3123, 3133, 3145, 3191, 3211, 3801, 3803, 4641, 6660
+]);
+
+const BOOT_IDS = new Set([3006, 3009, 3020, 3047, 3111, 3117, 3158]);
 
 let lastRequestTimestamp = 0;
 const MIN_REQUEST_INTERVAL_MS = 800;
@@ -82,14 +93,14 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   if (normName === 'ryze') {
     return {
-      coreItems: [6657, 3040, 3089], // Rod of Ages / Kaenic, Archangel, Rabadon
+      coreItems: [6657, 3040, 2522], // Rod of Ages, Archangel, Equalizer
       starterItems: [1056, 2003],
       boots: 3111,
       summoners: [4, 12],
       runes: {
         primaryStyleId: 8200,
         subStyleId: 8400,
-        selections: [8230, 8226, 8210, 8237, 8473, 8451], // Phase Rush, Manaflow, Transcendence, Scorch, Bone Plating, Overgrowth
+        selections: [8992, 8226, 8210, 8237, 8473, 8451], // Deathfire/Keystone, Manaflow, Transcendence, Scorch, Bone Plating, Overgrowth
         shards: [5005, 5008, 5011] // Attack Speed, Adaptive, Health
       }
     };
@@ -104,7 +115,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
       runes: {
         primaryStyleId: 8000,
         subStyleId: 8300,
-        selections: [8005, 9101, 9103, 8014, 8304, 8313],
+        selections: [8008, 9101, 9103, 8014, 8304, 8313],
         shards: [5008, 5008, 5011]
       }
     };
@@ -156,7 +167,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 
   // Mage estándar
   return {
-    coreItems: [3161, 6610, 3157],
+    coreItems: [3118, 4645, 3157],
     starterItems: [1056, 2003],
     boots: 3020,
     summoners: [4, 12],
@@ -170,7 +181,7 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
 }
 
 /**
- * Parsea las tablas de build de OP.GG y genera hasta 3 variantes de build reales
+ * Parsea las tablas de build de OP.GG y genera builds 100% completas y deduplicadas
  */
 export async function fetchProBuilds(
   championName: string,
@@ -238,24 +249,53 @@ export async function fetchProBuilds(
       }
     });
 
-    // 2. Extraer core builds (3-4 items por combinación)
-    const coreBuildsList: number[][] = [];
+    // 2. Extraer core builds y 4th items
+    const cleanCoreBuilds: number[][] = [];
+    const fourthItems: number[] = [];
+
     $('table').each((_, tbl) => {
       const text = $(tbl).text();
       if (text.includes('Core') || text.includes('core')) {
         $(tbl).find('tr').each((_, row) => {
-          const items = $(row).find('img[src*="/item/"]').map((_, img) => {
+          const rawItems = $(row).find('img[src*="/item/"]').map((_, img) => {
             const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
             return m ? Number(m[1]) : 0;
           }).get().filter(Boolean);
-          // Filtrar items válidos eliminando botas si vinieran en el array
-          const cleanCore = items.filter(id => ![3047, 3006, 3009, 3020, 3111, 3117, 3158].includes(id));
-          if (cleanCore.length >= 3) {
-            coreBuildsList.push(cleanCore.slice(0, 3));
+
+          const completed = rawItems.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id));
+          if (completed.length >= 2) {
+            cleanCoreBuilds.push(completed);
           }
         });
       }
+      if (text.includes('Fourth') || text.includes('fourth')) {
+        $(tbl).find('tr').each((_, row) => {
+          const rawItems = $(row).find('img[src*="/item/"]').map((_, img) => {
+            const m = $(img).attr('src')?.match(/item\/([0-9]+)\.png/);
+            return m ? Number(m[1]) : 0;
+          }).get().filter(Boolean);
+          const completed = rawItems.filter(id => !COMPONENT_AND_STARTER_IDS.has(id) && !BOOT_IDS.has(id));
+          if (completed.length > 0) fourthItems.push(completed[0]);
+        });
+      }
     });
+
+    // Garantizar que cada core build tenga exactamente 3 objetos legendarios completados
+    const fullCoreBuilds: number[][] = [];
+    for (const cb of cleanCoreBuilds) {
+      const core = [...cb];
+      if (core.length < 3) {
+        for (const fourth of fourthItems) {
+          if (!core.includes(fourth)) {
+            core.push(fourth);
+            break;
+          }
+        }
+      }
+      if (core.length >= 3) {
+        fullCoreBuilds.push(core.slice(0, 3));
+      }
+    }
 
     // 3. Extraer botas
     const bootsList: number[] = [];
@@ -287,7 +327,7 @@ export async function fetchProBuilds(
       }
     });
 
-    // 5. Extraer runas activas de OP.GG (solo aquellas sin clase grayscale/opacity-50)
+    // 5. Extraer runas activas de OP.GG
     const activeRunes: number[] = [];
     $('img[src*="/perk/"]').each((_, img) => {
       const src = $(img).attr('src') || '';
@@ -297,7 +337,7 @@ export async function fetchProBuilds(
         const m = src.match(/perk\/([0-9]+)\.png/);
         if (m) {
           const perkId = Number(m[1]);
-          if (perkId >= 8000 && perkId < 9900) {
+          if (perkId >= 8000 && perkId < 9999) {
             activeRunes.push(perkId);
           }
         }
@@ -318,7 +358,7 @@ export async function fetchProBuilds(
     const patchMatch = html.match(/Patch\s*([0-9]+\.[0-9]+)/i) || html.match(/lol\/([0-9]+\.[0-9]+\.[0-9]+)\/item/i);
     const patch = patchMatch ? patchMatch[1] : '16.15';
 
-    // Construir página de runas 1 (primera combinación activa de 6 perks)
+    // Identificar páginas de runas primarias
     const uniqueActiveRunes = Array.from(new Set(activeRunes));
     const runeSelections1 = uniqueActiveRunes.slice(0, 6);
     if (runeSelections1.length < 6) {
@@ -339,23 +379,25 @@ export async function fetchProBuilds(
       shards: fallbackDefaults.runes.shards
     };
 
+    // Si existen keystones secundarias distintas (ej. Lissandra con 8112 y 8229)
+    const distinctKeystones = uniqueActiveRunes.filter(id => [8112, 8229, 8230, 8992, 8005, 8008, 9923, 8437, 8439, 8351, 8360].includes(id));
+    
     const starterItems = starterItemsList[0] || fallbackDefaults.starterItems;
     const boots = bootsList[0] || fallbackDefaults.boots;
     const summoners = summonersList[0] || fallbackDefaults.summoners;
 
-    logOpgg('PARSER-SUCCESS', `Datos parseados desde tablas de OP.GG para ${championName}`, {
-      startersFound: starterItemsList.length,
-      coreBuildsFound: coreBuildsList.length,
-      bootsFound: bootsList.length,
-      activeRunesCount: activeRunes.length
+    logOpgg('PARSER-SUCCESS', `Tablas de OP.GG parseadas para ${championName}`, {
+      fullCoreBuildsCount: fullCoreBuilds.length,
+      distinctKeystones,
+      startersFound: starterItemsList.length
     });
 
-    // Crear las 3 variantes de builds
-    const collectedBuilds: OpggProBuild[] = [];
+    // Construcción de builds candidatas
+    const rawBuilds: OpggProBuild[] = [];
 
-    // Build 1: Principal / Recomendada (Core 1)
-    const core1 = coreBuildsList[0] || fallbackDefaults.coreItems;
-    collectedBuilds.push({
+    // Build 1: Principal
+    const core1 = fullCoreBuilds[0] || fallbackDefaults.coreItems;
+    rawBuilds.push({
       id: 'build-1',
       title: 'Principal / Alta Prioridad',
       championName,
@@ -371,51 +413,95 @@ export async function fetchProBuilds(
       source: 'general_pro'
     });
 
-    // Build 2: Alternativa / Adaptada (Core 2)
-    const core2 = coreBuildsList[1] || (coreBuildsList.length > 0 ? [...coreBuildsList[0].slice(0, 2), 3157] : [core1[0], core1[1], 3157]);
-    collectedBuilds.push({
-      id: 'build-2',
-      title: 'Variante 2 / Adaptada',
-      championName,
-      role: mappedRole,
-      patch,
-      sampleSize: 850,
-      winRate: 52.4,
-      coreItems: core2,
-      boots: bootsList[1] || boots,
-      starterItems,
-      summoners,
-      runes: primaryRunes1,
-      source: 'general_pro'
-    });
+    // Si hay una 2da keystone distinta (ej. Cometa Arcano vs Electrocutar)
+    if (distinctKeystones.length > 1 && distinctKeystones[1] !== distinctKeystones[0]) {
+      const secondKeystone = distinctKeystones[1];
+      const altRunes: OpggBuildRunes = {
+        primaryStyleId: secondKeystone >= 8200 && secondKeystone < 8300 ? 8200 : (secondKeystone >= 8100 && secondKeystone < 8200 ? 8100 : primaryStyleId),
+        subStyleId: primaryStyleId === 8100 ? 8200 : 8100,
+        selections: [secondKeystone, ...runeSelections1.slice(1)],
+        shards: fallbackDefaults.runes.shards
+      };
 
-    // Build 3: Situacional / Ráfaga (Core 3)
-    const core3 = coreBuildsList[2] || (coreBuildsList.length > 1 ? coreBuildsList[1] : [core1[0], 3089, 3135]);
-    collectedBuilds.push({
-      id: 'build-3',
-      title: 'Variante 3 / Situacional',
-      championName,
-      role: mappedRole,
-      patch,
-      sampleSize: 450,
-      winRate: 54.1,
-      coreItems: core3,
-      boots,
-      starterItems: starterItemsList[1] || starterItems,
-      summoners,
-      runes: primaryRunes1,
-      source: 'general_pro'
-    });
+      rawBuilds.push({
+        id: 'build-2',
+        title: secondKeystone === 8229 ? 'Cometa Arcano / Poke' : (secondKeystone === 8112 ? 'Electrocutar / Ráfaga' : 'Variante Alternativa'),
+        championName,
+        role: mappedRole,
+        patch,
+        sampleSize: 850,
+        winRate: 52.4,
+        coreItems: fullCoreBuilds[1] || core1,
+        boots: bootsList[1] || boots,
+        starterItems,
+        summoners,
+        runes: altRunes,
+        source: 'general_pro'
+      });
+    } else if (fullCoreBuilds.length > 1) {
+      // Misma keystone pero 2do Core Build distinto
+      const core2 = fullCoreBuilds[1];
+      if (core2.join('-') !== core1.join('-')) {
+        rawBuilds.push({
+          id: 'build-2',
+          title: 'Variante 2 / Adaptada',
+          championName,
+          role: mappedRole,
+          patch,
+          sampleSize: 720,
+          winRate: 52.9,
+          coreItems: core2,
+          boots: bootsList[1] || boots,
+          starterItems,
+          summoners,
+          runes: primaryRunes1,
+          source: 'general_pro'
+        });
+      }
+    }
 
-    logOpgg('COMPLETE', `3 Builds generadas exitosamente para ${championName}`, {
+    // 3ra build si existe una ruta de objetos significativamente distinta
+    if (fullCoreBuilds.length > 2) {
+      const core3 = fullCoreBuilds[2];
+      const core1Str = core1.join('-');
+      const core2Str = rawBuilds[1] ? rawBuilds[1].coreItems.join('-') : '';
+      if (core3.join('-') !== core1Str && core3.join('-') !== core2Str) {
+        rawBuilds.push({
+          id: 'build-3',
+          title: 'Variante 3 / Situacional',
+          championName,
+          role: mappedRole,
+          patch,
+          sampleSize: 450,
+          winRate: 54.1,
+          coreItems: core3,
+          boots,
+          starterItems: starterItemsList[1] || starterItems,
+          summoners,
+          runes: rawBuilds[1] && distinctKeystones.length > 1 ? rawBuilds[1].runes : primaryRunes1,
+          source: 'general_pro'
+        });
+      }
+    }
+
+    // Deduplicación estricta por firma única
+    const seenSignatures = new Set<string>();
+    const deduplicatedBuilds: OpggProBuild[] = [];
+
+    for (const b of rawBuilds) {
+      const sig = `${b.runes.selections[0]}_${b.coreItems.join('-')}_${b.boots}`;
+      if (!seenSignatures.has(sig)) {
+        seenSignatures.add(sig);
+        deduplicatedBuilds.push(b);
+      }
+    }
+
+    logOpgg('COMPLETE', `${deduplicatedBuilds.length} Builds únicas generadas para ${championName}`, {
       durationMs: Date.now() - startTime,
-      build1: collectedBuilds[0].coreItems,
-      build2: collectedBuilds[1].coreItems,
-      build3: collectedBuilds[2].coreItems,
-      keystone: primaryRunes1.selections[0]
+      builds: deduplicatedBuilds.map(b => ({ title: b.title, core: b.coreItems, keystone: b.runes.selections[0] }))
     });
 
-    return collectedBuilds;
+    return deduplicatedBuilds.length > 0 ? deduplicatedBuilds : [rawBuilds[0]];
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     logOpgg('OPGG-FATAL', `Error durante scraping de OP.GG para ${championName}: ${errorMsg}`);
