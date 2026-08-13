@@ -1019,6 +1019,8 @@ export const DraftPage = () => {
                                                 opponentName={inferredOpponent || enemyNames[0] || null}
                                                 role={myRole}
                                                 isCompact={isCompact}
+                                                allies={allyNames}
+                                                enemies={enemyNames}
                                             />
                                         </div>
 

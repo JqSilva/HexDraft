@@ -1,5 +1,6 @@
 // src/lib/engine/itemEngine.ts
 import { ENRICHED_DB, ITEMS_DB } from './dataProvider.js';
+import { CHAMPIONS_DB } from '../data/championdb.js';
 import { NAME_TO_ID } from './constants.js';
 import { hydrateAsset } from './hydrator.js';
 import { analyzeComposition } from './compositionAnalyzer.js';
@@ -2391,4 +2392,169 @@ filteredClusters.forEach((c, i) => {
     })),
     build
   };
+}
+
+export interface SituationalSwapResult {
+  originalItem?: number;
+  replacementItem: number;
+  trigger: 'anti_heal' | 'anti_tank' | 'anti_shield' | 'anti_burst' | 'boots_adapt';
+  title: string;
+  reason: string;
+}
+
+export function getSituationalSwapsForBuild(
+  championName: string,
+  coreItems: number[] = [],
+  boots: number = 0,
+  allyNames: string[] = [],
+  enemyNames: string[] = []
+): SituationalSwapResult[] {
+  if (!championName) return [];
+
+  const normName = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const baseChamp = Object.values(CHAMPIONS_DB).find(
+    c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normName
+  );
+  const champClass = baseChamp?.class || '';
+  const damageType = baseChamp?.damageType || 'AD';
+
+  const enemyComp = analyzeComposition(enemyNames);
+  const swaps: SituationalSwapResult[] = [];
+  const currentItems = new Set(coreItems);
+
+  // 1. CORTACURACIÓN (GRIEVOUS WOUNDS)
+  const HIGH_HEALING_CHAMPS = new Set([
+    'aatrox', 'soraka', 'warwick', 'briar', 'vladimir', 'sylas', 'swain', 'drmundo',
+    'olaf', 'illaoi', 'yuumi', 'kayn', 'fiora', 'irelia', 'hecarim', 'volibear', 'zac'
+  ]);
+  const hasHighHealers = enemyNames.some(name => HIGH_HEALING_CHAMPS.has(name.toLowerCase().replace(/[^a-z0-9]/g, '')));
+  const needsAntiHeal = enemyComp.healerCount >= 2 || hasHighHealers;
+  const hasAntiHealInCore = [3033, 3165, 3075, 6609, 3011].some(id => currentItems.has(id));
+
+  if (needsAntiHeal && !hasAntiHealInCore) {
+    let antiHealId = 3165;
+    let antiHealName = 'Morellonomicón';
+    if (damageType === 'AP') {
+      antiHealId = 3165;
+      antiHealName = 'Morellonomicón';
+    } else if (champClass === 'Marksman') {
+      antiHealId = 3033;
+      antiHealName = 'Recordatorio Mortal';
+    } else if (champClass === 'Tank') {
+      antiHealId = 3075;
+      antiHealName = 'Malla de Espinas';
+    } else {
+      antiHealId = 6609;
+      antiHealName = 'Espada Sierra Quimiopunk';
+    }
+
+    swaps.push({
+      originalItem: coreItems[coreItems.length - 1] || coreItems[3],
+      replacementItem: antiHealId,
+      trigger: 'anti_heal',
+      title: `Cortacuración (${antiHealName})`,
+      reason: `El equipo rival tiene alta regeneración/curación activa (${enemyComp.healerCount > 0 ? `${enemyComp.healerCount} curadores` : 'sustain crítico'}).`
+    });
+  }
+
+  // 2. ANTITANQUE / PENETRACIÓN PORCENTUAL
+  const TANK_CHAMPS = new Set([
+    'ornn', 'sion', 'malphite', 'shen', 'ksante', 'chogath', 'sejuani', 'rammus',
+    'leona', 'nautilus', 'braum', 'tahmkench', 'poppy', 'zac', 'mundo'
+  ]);
+  const tankCount = enemyNames.filter(name => TANK_CHAMPS.has(name.toLowerCase().replace(/[^a-z0-9]/g, ''))).length;
+  const hasPenetration = [3036, 6694, 3071, 3135, 2522, 3035].some(id => currentItems.has(id));
+
+  if (tankCount >= 2 && !hasPenetration) {
+    let penId = 3036;
+    let penName = 'Recuerdos de Lord Dominik';
+    if (damageType === 'AP') {
+      penId = 2522; // Criptoflora
+      penName = 'Criptoflora / Bastón del Vacío';
+    } else if (champClass === 'Marksman') {
+      penId = 3036;
+      penName = 'Recuerdos de Lord Dominik';
+    } else if (champClass === 'Assassin') {
+      penId = 6694;
+      penName = 'Rencor de Serylda';
+    } else {
+      penId = 3071;
+      penName = 'Cuchilla Oscura';
+    }
+
+    swaps.push({
+      originalItem: coreItems[coreItems.length - 1] || coreItems[2],
+      replacementItem: penId,
+      trigger: 'anti_tank',
+      title: `Antitanque (${penName})`,
+      reason: `Hay ${tankCount} tanques/colosos rivales. Se requiere penetración porcentual para mantener DPS.`
+    });
+  }
+
+  // 3. ANTIESCUDOS
+  const SHIELD_CHAMPS = new Set([
+    'sett', 'tahmkench', 'shen', 'karma', 'lulu', 'janna', 'ivern', 'sona', 'riven', 'skarner', 'milio'
+  ]);
+  const shieldCount = enemyNames.filter(name => SHIELD_CHAMPS.has(name.toLowerCase().replace(/[^a-z0-9]/g, ''))).length;
+  if (shieldCount >= 2) {
+    if (damageType === 'AD' && !currentItems.has(6695)) {
+      swaps.push({
+        replacementItem: 6695,
+        trigger: 'anti_shield',
+        title: 'Antiescudos (Colmillo de Serpiente)',
+        reason: `El rival cuenta con ${shieldCount} fuentes masivas de escudos.`
+      });
+    } else if (damageType === 'AP' && !currentItems.has(4645)) {
+      swaps.push({
+        replacementItem: 4645,
+        trigger: 'anti_shield',
+        title: 'Antiescudos (Llama Sombría)',
+        reason: `El rival cuenta con ${shieldCount} fuentes masivas de escudos.`
+      });
+    }
+  }
+
+  // 4. DEFENSIVO CONTRA BURST / ASESINOS
+  const ASSASSIN_CHAMPS = new Set([
+    'leblanc', 'syndra', 'fizz', 'zed', 'talon', 'rengar', 'evelynn', 'katarina', 'akali', 'qiyana', 'khazix', 'naafiri'
+  ]);
+  const assassinCount = enemyNames.filter(name => ASSASSIN_CHAMPS.has(name.toLowerCase().replace(/[^a-z0-9]/g, ''))).length;
+  if (assassinCount >= 2) {
+    if (damageType === 'AP' && !currentItems.has(3157)) {
+      swaps.push({
+        replacementItem: 3157,
+        trigger: 'anti_burst',
+        title: 'Supervivencia (Reloj de Arena de Zhonya)',
+        reason: `Múltiples fuentes de daño explosivo / asesinos (${assassinCount}) en el equipo rival.`
+      });
+    } else if (damageType === 'AD' && !currentItems.has(3026) && !currentItems.has(6333)) {
+      swaps.push({
+        replacementItem: 3026,
+        trigger: 'anti_burst',
+        title: 'Supervivencia (Ángel Guardián / Baile de la Muerte)',
+        reason: `Múltiples fuentes de daño explosivo / asesinos (${assassinCount}) en el equipo rival.`
+      });
+    }
+  }
+
+  // 5. BOTAS ADAPTADAS
+  if (boots && boots !== 3111 && enemyComp.ccCount >= 4) {
+    swaps.push({
+      originalItem: boots,
+      replacementItem: 3111,
+      trigger: 'boots_adapt',
+      title: 'Botas de Mercurio (Tenacidad)',
+      reason: `El rival cuenta con alto control de masas (${enemyComp.ccCount} fuentes de CC duro).`
+    });
+  } else if (boots && boots !== 3047 && enemyComp.adCount >= 4) {
+    swaps.push({
+      originalItem: boots,
+      replacementItem: 3047,
+      trigger: 'boots_adapt',
+      title: 'Punteras de Acero (Armadura)',
+      reason: `Composición enemiga mayormente de daño físico/autoataques (${enemyComp.adCount} campeones AD).`
+    });
+  }
+
+  return swaps.slice(0, 3);
 }

@@ -9,6 +9,14 @@ export interface ProBuildRunes {
   shards: number[];
 }
 
+export interface SituationalSwap {
+  originalItem?: number;
+  replacementItem: number;
+  trigger: 'anti_heal' | 'anti_tank' | 'anti_shield' | 'anti_burst' | 'boots_adapt';
+  title: string;
+  reason: string;
+}
+
 export interface ProBuildData {
   id?: string;
   title?: string;
@@ -20,11 +28,13 @@ export interface ProBuildData {
   coreItems: number[];
   boots: number;
   starterItems: number[];
+  earlyBuy?: number; // 3070 (Lágrima en 1er Back si aplica)
   summoners: number[];
   runes: ProBuildRunes;
   source?: 'otp_matchup' | 'otp_general' | 'general_pro';
   otpRank?: number;
   otpName?: string;
+  situationalSwaps?: SituationalSwap[];
 }
 
 export interface UseProBuildResult {
@@ -43,7 +53,9 @@ export function useProBuild(
   championName: string | null | undefined,
   opponentName: string | null | undefined,
   role: string | null | undefined,
-  patch: string = '16.15'
+  patch: string = '16.15',
+  allies: string[] = [],
+  enemies: string[] = []
 ): UseProBuildResult {
   const [loading, setLoading] = useState<boolean>(false);
   const [builds, setBuilds] = useState<ProBuildData[]>([]);
@@ -86,6 +98,9 @@ export function useProBuild(
     }
   };
 
+  const alliesKey = allies.join(',');
+  const enemiesKey = enemies.join(',');
+
   useEffect(() => {
     clearTimers();
 
@@ -97,7 +112,9 @@ export function useProBuild(
       champion: championName,
       opponent: opponentName || '',
       role: role,
-      patch: patch
+      patch: patch,
+      allies: alliesKey,
+      enemies: enemiesKey
     }).toString();
 
     const fetchInitial = async () => {
@@ -190,7 +207,7 @@ export function useProBuild(
     return () => {
       clearTimers();
     };
-  }, [championName, opponentName, role, patch]);
+  }, [championName, opponentName, role, patch, alliesKey, enemiesKey]);
 
   return {
     loading,

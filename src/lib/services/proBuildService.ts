@@ -1,5 +1,4 @@
-// src/lib/services/proBuildService.ts
-import { fetchProBuilds, type OpggProBuild } from '../scrapers/opgg-scraper.js';
+import { fetchProBuilds, resolveTearAndEvolutions, type OpggProBuild } from '../scrapers/opgg-scraper.js';
 import {
   getProBuildFromCache,
   saveProBuildToCache,
@@ -8,6 +7,7 @@ import {
 } from '../db/proBuild.repo.js';
 import { getOpponentArchetype } from '../engine/archetypes.js';
 import { logOpgg } from '../utils/opggLogger.js';
+import { getSituationalSwapsForBuild } from '../engine/itemEngine.js';
 
 export interface InFlightState {
   status: 'loading' | 'ready' | 'error' | 'insufficient_data';
@@ -24,17 +24,43 @@ function buildKey(champion: string, role: string, patch: string, archetype: stri
   return `${champion.toLowerCase()}_${role.toLowerCase()}_${patch}_${archetype.toLowerCase()}`;
 }
 
+function enrichBuildWithContext(
+  build: OpggProBuild,
+  allies: string[] = [],
+  enemies: string[] = []
+): OpggProBuild {
+  const resolved = resolveTearAndEvolutions(build.coreItems, build.championName);
+  const situationalSwaps = getSituationalSwapsForBuild(
+    build.championName,
+    resolved.completedCore,
+    build.boots,
+    allies,
+    enemies
+  );
+
+  return {
+    ...build,
+    earlyBuy: build.earlyBuy || resolved.earlyBuy,
+    coreItems: resolved.completedCore,
+    situationalSwaps
+  };
+}
+
 export async function processProBuildRequest(
   champion: string,
   opponent: string,
   role: string,
-  patch: string
+  patch: string,
+  allies: string[] = [],
+  enemies: string[] = []
 ) {
   cleanOldBuildCache(patch);
 
   const archetype = getOpponentArchetype(opponent) || 'generalist';
   const key = buildKey(champion, role, patch, archetype);
   const nowSeconds = Math.floor(Date.now() / 1000);
+
+  const resolvedEnemies = enemies.length > 0 ? enemies : (opponent ? [opponent] : []);
 
   logOpgg('API-REQ', `Petición recibida para ${champion} (${role}) vs ${opponent || 'ninguno'} (arquetipo: ${archetype})`, {
     champion,
@@ -43,18 +69,19 @@ export async function processProBuildRequest(
     archetype
   });
 
-  // 1. Buscar en memoria si ya tenemos las 3 builds listas para este arquetipo
+  // 1. Buscar en memoria si ya tenemos las builds listas para este arquetipo
   const inFlight = inFlightMap.get(key);
   if (inFlight && inFlight.status === 'ready' && inFlight.builds && inFlight.builds.length > 0) {
+    const enrichedBuilds = inFlight.builds.map(b => enrichBuildWithContext(b, allies, resolvedEnemies));
     logOpgg('CACHE-MEMORY-HIT', `Builds servidas desde memoria activa para ${champion} vs ${archetype}`, {
-      buildCount: inFlight.builds.length
+      buildCount: enrichedBuilds.length
     });
     return {
       status: 'ready',
       cachedAt: inFlight.cachedAt || nowSeconds,
       archetype,
-      builds: inFlight.builds,
-      data: inFlight.builds[0]
+      builds: enrichedBuilds,
+      data: enrichedBuilds[0]
     };
   }
 
@@ -86,12 +113,14 @@ export async function processProBuildRequest(
         source: 'general_pro'
       };
 
+      const enriched = enrichBuildWithContext(cachedData, allies, resolvedEnemies);
+
       return {
         status: 'ready',
         cachedAt: cachedRecord.cached_at,
         archetype,
-        builds: [cachedData],
-        data: cachedData
+        builds: [enriched],
+        data: enriched
       };
     }
   }
@@ -148,21 +177,25 @@ export function processProBuildStatus(
   champion: string,
   opponent: string,
   role: string,
-  patch: string
+  patch: string,
+  allies: string[] = [],
+  enemies: string[] = []
 ) {
   const archetype = getOpponentArchetype(opponent) || 'generalist';
   const key = buildKey(champion, role, patch, archetype);
   const nowSeconds = Math.floor(Date.now() / 1000);
+  const resolvedEnemies = enemies.length > 0 ? enemies : (opponent ? [opponent] : []);
 
   const inFlight = inFlightMap.get(key);
   if (inFlight) {
     if (inFlight.status === 'ready' && inFlight.builds && inFlight.builds.length > 0) {
+      const enrichedBuilds = inFlight.builds.map(b => enrichBuildWithContext(b, allies, resolvedEnemies));
       return {
         status: 'ready',
         cachedAt: inFlight.cachedAt || nowSeconds,
         archetype,
-        builds: inFlight.builds,
-        data: inFlight.builds[0]
+        builds: enrichedBuilds,
+        data: enrichedBuilds[0]
       };
     }
     return {

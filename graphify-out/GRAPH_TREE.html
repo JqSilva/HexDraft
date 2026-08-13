@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>/ — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>/ — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"/","total_count":640,"children":[{"name":"launcher","total_count":64,"children":[{"name":"app-hexdraft.py","total_count":11,"children":[{"name":"acquire_mutex()","total_count":1,"children":[]},{"name":"Busca ventanas cuyos t\u00edtulos coinciden con el patr\u00f3n regex indicado usando APIs\u2026","total_count":1,"children":[]},{"name":"Encuentra un navegador compatible y devuelve el comando para iniciarlo en modo\u2026","total_count":1,"children":[]},{"name":"Escribe un mensaje de log con marca de tiempo en la ruta segura de AppData.","total_count":1,"children":[]},{"name":"Garantiza que solo corra una instancia de esta versi\u00f3n directa a la vez.","total_count":1,"children":[]},{"name":"get_browser_command()","total_count":1,"children":[]},{"name":"is_window_active_by_title_pattern()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"start_services()","total_count":1,"children":[]},{"name":"stop_services()","total_count":1,"children":[]},{"name":"write_log()","total_count":1,"children":[]}]},{"name":"automatizador-hexdraft.py","total_count":16,"children":[{"name":"acquire_mutex()","total_count":1,"children":[]},{"name":"Busca ventanas cuyos t\u00edtulos coinciden con el patr\u00f3n regex indicado usando APIs\u2026","total_count":1,"children":[]},{"name":"close_window_by_title_pattern()","total_count":1,"children":[]},{"name":"Determina si el juego est\u00e1 activo mediante el archivo lockfile.","total_count":1,"children":[]},{"name":"Encuentra un navegador compatible y devuelve el comando para iniciarlo en modo\u2026","total_count":1,"children":[]},{"name":"Escribe un mensaje de log con marca de tiempo en la ruta segura de AppData.","total_count":1,"children":[]},{"name":"Garantiza que solo corra una instancia del monitor a la vez.","total_count":1,"children":[]},{"name":"get_browser_command()","total_count":1,"children":[]},{"name":"get_lol_path()","total_count":1,"children":[]},{"name":"is_lol_active()","total_count":1,"children":[]},{"name":"is_window_active_by_title_pattern()","total_count":1,"children":[]},{"name":"Lee la ruta de instalaci\u00f3n de League of Legends configurada o busca en rutas y\u2026","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"start_services()","total_count":1,"children":[]},{"name":"stop_services()","total_count":1,"children":[]},{"name":"write_log()","total_count":1,"children":[]}]},{"name":"compilar-hexdraft.py","total_count":22,"children":[{"name":"Actualiza la versi\u00f3n y el nombre del ejecutable de salida en un archivo .iss.","total_count":1,"children":[]},{"name":"actualizar_archivo_iss()","total_count":1,"children":[]},{"name":"build_python()","total_count":1,"children":[]},{"name":"Busca el ejecutable de Inno Setup (ISCC.exe).","total_count":1,"children":[]},{"name":"buscar_iscc()","total_count":1,"children":[]},{"name":"Carga variables de entorno de forma manual desde un archivo .env local.","total_count":1,"children":[]},{"name":"copiar_recursos_release()","total_count":1,"children":[]},{"name":"descargar_python_embed()","total_count":1,"children":[]},{"name":"Ejecuta el compilador de Inno Setup sobre el script indicado.","total_count":1,"children":[]},{"name":"ejecutar_iscc()","total_count":1,"children":[]},{"name":"Genera los instaladores seg\u00fan las opciones configuradas al inicio.","total_count":1,"children":[]},{"name":"Intenta extraer la versi\u00f3n configurada actualmente en HexDraftSetup.iss.","total_count":1,"children":[]},{"name":"load_env()","total_count":1,"children":[]},{"name":"obtener_configuracion_instaladores()","total_count":1,"children":[]},{"name":"obtener_version_actual()","total_count":1,"children":[]},{"name":"Pregunta los datos de configuraci\u00f3n al inicio del script.","total_count":1,"children":[]},{"name":"preparar_entorno_node()","total_count":1,"children":[]},{"name":"procesar_instaladores_inno()","total_count":1,"children":[]},{"name":"Sincroniza la nueva versi\u00f3n en src/config/version.ts antes del build de Node.","total_count":1,"children":[]},{"name":"sincronizar_version_proyecto()","total_count":1,"children":[]},{"name":"Verifica si Node est\u00e1 listo y compila de forma segura.","total_count":1,"children":[]},{"name":"verificar_dependencias_python()","total_count":1,"children":[]}]},{"name":"publish_installer.py","total_count":15,"children":[{"name":"Busca la versi\u00f3n configurada en los archivos Inno Setup y en los instaladores\u2026","total_count":1,"children":[]},{"name":"Carga variables de entorno de forma manual desde un archivo .env local.","total_count":1,"children":[]},{"name":"Consulta la lista de todas las releases en el repositorio de GitHub.","total_count":1,"children":[]},{"name":"delete_release()","total_count":1,"children":[]},{"name":"detect_version()","total_count":1,"children":[]},{"name":"Elimina permanentemente una release y su tag git asociado de GitHub.","total_count":1,"children":[]},{"name":"Filtra y retorna la lista de instaladores locales desactualizados (menores a\u2026","total_count":1,"children":[]},{"name":"get_outdated_local_installers()","total_count":1,"children":[]},{"name":"get_releases()","total_count":1,"children":[]},{"name":"list_local_installers()","total_count":1,"children":[]},{"name":"load_env()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"parse_version()","total_count":1,"children":[]},{"name":"Parsea una cadena de versi\u00f3n a una tupla de enteros para su comparaci\u00f3n l\u00f3gica.","total_count":1,"children":[]},{"name":"Retorna una lista ordenada de instaladores ejecutables encontrados localmente.","total_count":1,"children":[]}]}]},{"name":"package.json","total_count":56,"children":[{"name":"@astrojs/node","total_count":1,"children":[]},{"name":"@astrojs/node","total_count":1,"children":[]},{"name":"@astrojs/react","total_count":1,"children":[]},{"name":"@astrojs/react","total_count":1,"children":[]},{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@eslint/js","total_count":1,"children":[]},{"name":"@tailwindcss/vite","total_count":1,"children":[]},{"name":"@tailwindcss/vite","total_count":1,"children":[]},{"name":"@types/node","total_count":1,"children":[]},{"name":"@types/node","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"@types/react-dom","total_count":1,"children":[]},{"name":"astro","total_count":1,"children":[]},{"name":"astro","total_count":1,"children":[]},{"name":"astro","total_count":1,"children":[]},{"name":"axios","total_count":1,"children":[]},{"name":"axios","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"cheerio","total_count":1,"children":[]},{"name":"cheerio","total_count":1,"children":[]},{"name":"dependencies","total_count":1,"children":[]},{"name":"dev","total_count":1,"children":[]},{"name":"dev:app","total_count":1,"children":[]},{"name":"devDependencies","total_count":1,"children":[]},{"name":"engines","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint","total_count":1,"children":[]},{"name":"eslint-plugin-astro","total_count":1,"children":[]},{"name":"eslint-plugin-astro","total_count":1,"children":[]},{"name":"eslint-plugin-react","total_count":1,"children":[]},{"name":"eslint-plugin-react","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"eslint-plugin-react-hooks","total_count":1,"children":[]},{"name":"lint","total_count":1,"children":[]},{"name":"lint:fix","total_count":1,"children":[]},{"name":"name","total_count":1,"children":[]},{"name":"node","total_count":1,"children":[]},{"name":"pre-release","total_count":1,"children":[]},{"name":"preview","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"react-dom","total_count":1,"children":[]},{"name":"sandbox","total_count":1,"children":[]},{"name":"scripts","total_count":1,"children":[]},{"name":"sim","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"tailwindcss","total_count":1,"children":[]},{"name":"type","total_count":1,"children":[]},{"name":"typescript","total_count":1,"children":[]},{"name":"typescript","total_count":1,"children":[]},{"name":"typescript-eslint","total_count":1,"children":[]},{"name":"typescript-eslint","total_count":1,"children":[]},{"name":"version","total_count":1,"children":[]}]},{"name":"public","total_count":7,"children":[{"name":"manifest.json","total_count":7,"children":[{"name":"background_color","total_count":1,"children":[]},{"name":"display","total_count":1,"children":[]},{"name":"icons","total_count":1,"children":[]},{"name":"name","total_count":1,"children":[]},{"name":"short_name","total_count":1,"children":[]},{"name":"start_url","total_count":1,"children":[]},{"name":"theme_color","total_count":1,"children":[]}]}]},{"name":"publish_db.py","total_count":2,"children":[{"name":"Carga variables de entorno de forma manual desde un archivo .env local.","total_count":1,"children":[]},{"name":"load_env()","total_count":1,"children":[]}]},{"name":"pyproject.toml","total_count":1,"children":[{"name":"hexdraft","total_count":1,"children":[]}]},{"name":"sandbox","total_count":4,"children":[{"name":"vite.config.ts","total_count":3,"children":[{"name":"__dirname","total_count":1,"children":[]},{"name":"__filename","total_count":1,"children":[]},{"name":"projectRoot","total_count":1,"children":[]}]},{"name":"main.tsx","total_count":1,"children":[]}]},{"name":"scripts","total_count":30,"children":[{"name":"check-live-names.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"checkLiveNames()","total_count":1,"children":[]}]},{"name":"debug-lcu-ingame.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"debugInGame()","total_count":1,"children":[]}]},{"name":"debug-live-game-api.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"debugLiveGame()","total_count":1,"children":[]}]},{"name":"dev-app.js","total_count":3,"children":[{"name":"devServer","total_count":1,"children":[]},{"name":"getBrowserCommand()","total_count":1,"children":[]},{"name":"killProcess()","total_count":1,"children":[]}]},{"name":"find-players-in-gameflow.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"findPlayers()","total_count":1,"children":[]}]},{"name":"find-summoner-lcu.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"testSummoners()","total_count":1,"children":[]}]},{"name":"inspect-gameflow-json.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"inspectGameflow()","total_count":1,"children":[]}]},{"name":"inspect-opgg-html.ts","total_count":1,"children":[{"name":"inspectOpgg()","total_count":1,"children":[]}]},{"name":"parse-opgg-page.ts","total_count":1,"children":[{"name":"parseOpggProfile()","total_count":1,"children":[]}]},{"name":"scrape-opgg-test.ts","total_count":1,"children":[{"name":"scrapeOpggProfile()","total_count":1,"children":[]}]},{"name":"test-lcu-summoner-endpoints.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"testEndpoints()","total_count":1,"children":[]}]},{"name":"test-live-game-endpoint.ts","total_count":1,"children":[{"name":"testEndpoint()","total_count":1,"children":[]}]},{"name":"test-opgg-api.ts","total_count":1,"children":[{"name":"testOpggApi()","total_count":1,"children":[]}]},{"name":"test-player-selections.ts","total_count":2,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"testPlayerSelections()","total_count":1,"children":[]}]},{"name":"test-three-layers.ts","total_count":6,"children":[{"name":"agent","total_count":1,"children":[]},{"name":"executeSelection()","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]},{"name":"runLayer1()","total_count":1,"children":[]},{"name":"runLayer2()","total_count":1,"children":[]},{"name":"runLayer3()","total_count":1,"children":[]}]}]},{"name":"src","total_count":461,"children":[{"name":"components","total_count":137,"children":[{"name":"ProBuildPanel.tsx","total_count":7,"children":[{"name":"formatFreshness()","total_count":1,"children":[]},{"name":"getItemIcon()","total_count":1,"children":[]},{"name":"getRuneIcon()","total_count":1,"children":[]},{"name":"getRuneStyleIcon()","total_count":1,"children":[]},{"name":"getSpellIcon()","total_count":1,"children":[]},{"name":"ProBuildPanel()","total_count":1,"children":[]},{"name":"ProBuildPanelProps","total_count":1,"children":[]}]},{"name":"react","total_count":127,"children":[{"name":"AppUpdatePopup.tsx","total_count":2,"children":[{"name":"AppUpdatePopup()","total_count":1,"children":[]},{"name":"AppVersionResponse","total_count":1,"children":[]}]},{"name":"AutoUpdateGuard.tsx","total_count":1,"children":[{"name":"AutoUpdateGuard()","total_count":1,"children":[]}]},{"name":"ChampionPreviewModal.tsx","total_count":2,"children":[{"name":"ChampionPreviewModal","total_count":1,"children":[]},{"name":"ChampionPreviewModalProps","total_count":1,"children":[]}]},{"name":"champions","total_count":29,"children":[{"name":"ChampionDetail.tsx","total_count":2,"children":[{"name":"ChampionDetail()","total_count":1,"children":[]},{"name":"ChampionDetailProps","total_count":1,"children":[]}]},{"name":"ChampionList.tsx","total_count":2,"children":[{"name":"ChampionList()","total_count":1,"children":[]},{"name":"ChampionListProps","total_count":1,"children":[]}]},{"name":"RuneTree.tsx","total_count":2,"children":[{"name":"RuneTree()","total_count":1,"children":[]},{"name":"ShardsTree()","total_count":1,"children":[]}]},{"name":"types.ts","total_count":9,"children":[{"name":"Build","total_count":1,"children":[]},{"name":"BuildItems","total_count":1,"children":[]},{"name":"BuildSkills","total_count":1,"children":[]},{"name":"Champion","total_count":1,"children":[]},{"name":"ChampionMeta","total_count":1,"children":[]},{"name":"Counter","total_count":1,"children":[]},{"name":"LaneStats","total_count":1,"children":[]},{"name":"RuneSelections","total_count":1,"children":[]},{"name":"Synergy","total_count":1,"children":[]}]},{"name":"utils.ts","total_count":14,"children":[{"name":"formatTimeAgo()","total_count":1,"children":[]},{"name":"getEnrichedChampionsFromMeta()","total_count":1,"children":[]},{"name":"getRoleKey()","total_count":1,"children":[]},{"name":"getRuneAlias()","total_count":1,"children":[]},{"name":"getTierInfo()","total_count":1,"children":[]},{"name":"getTreeColors()","total_count":1,"children":[]},{"name":"laneToMetaKey()","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]},{"name":"normalizeShardIdForHighlight()","total_count":1,"children":[]},{"name":"POS_BASE","total_count":1,"children":[]},{"name":"posLabels","total_count":1,"children":[]},{"name":"posMapping","total_count":1,"children":[]},{"name":"RUNE_TREES","total_count":1,"children":[]},{"name":"SHARDS_ROWS","total_count":1,"children":[]}]}]},{"name":"ChampionsStats.tsx","total_count":1,"children":[{"name":"ChampionsStats()","total_count":1,"children":[]}]},{"name":"common","total_count":3,"children":[{"name":"RankBadge.tsx","total_count":3,"children":[{"name":"getTierColorClass()","total_count":1,"children":[]},{"name":"RankBadge()","total_count":1,"children":[]},{"name":"RankBadgeProps","total_count":1,"children":[]}]}]},{"name":"ConnectionStatus.tsx","total_count":2,"children":[{"name":"ConnectionStatus","total_count":1,"children":[]},{"name":"ConnectionStatusProps","total_count":1,"children":[]}]},{"name":"DashboardHome.tsx","total_count":8,"children":[{"name":"ChampionMastery","total_count":1,"children":[]},{"name":"DashboardHome()","total_count":1,"children":[]},{"name":"DEFAULT_SUMMONER","total_count":1,"children":[]},{"name":"getChampionGradient()","total_count":1,"children":[]},{"name":"getChampionRole()","total_count":1,"children":[]},{"name":"MatchData","total_count":1,"children":[]},{"name":"RankedStats","total_count":1,"children":[]},{"name":"SummonerData","total_count":1,"children":[]}]},{"name":"draft","total_count":12,"children":[{"name":"DraftDamageBalance.tsx","total_count":2,"children":[{"name":"DraftDamageBalance()","total_count":1,"children":[]},{"name":"DraftDamageBalanceProps","total_count":1,"children":[]}]},{"name":"utils.ts","total_count":10,"children":[{"name":"executeLcuAction()","total_count":1,"children":[]},{"name":"GAP_TRANSLATIONS","total_count":1,"children":[]},{"name":"getFriendlyRoleName()","total_count":1,"children":[]},{"name":"importToClient()","total_count":1,"children":[]},{"name":"PHASE_TRANSLATIONS","total_count":1,"children":[]},{"name":"POS_BASE","total_count":1,"children":[]},{"name":"posLabels","total_count":1,"children":[]},{"name":"posMapping","total_count":1,"children":[]},{"name":"ROLE_TRANSLATIONS","total_count":1,"children":[]},{"name":"WIN_COND_TRANSLATIONS","total_count":1,"children":[]}]}]},{"name":"DraftGrid.tsx","total_count":2,"children":[{"name":"DraftGrid","total_count":1,"children":[]},{"name":"DraftGridProps","total_count":1,"children":[]}]},{"name":"DraftLobby.tsx","total_count":1,"children":[{"name":"DraftLobby","total_count":1,"children":[]}]},{"name":"DraftPage.tsx","total_count":1,"children":[{"name":"DraftPage()","total_count":1,"children":[]}]},{"name":"DraftSettings.tsx","total_count":2,"children":[{"name":"DraftSettings","total_count":1,"children":[]},{"name":"DraftSettingsProps","total_count":1,"children":[]}]},{"name":"HistoryPage.tsx","total_count":9,"children":[{"name":"getAlliedLane()","total_count":1,"children":[]},{"name":"getPerformanceScore()","total_count":1,"children":[]},{"name":"getRankString()","total_count":1,"children":[]},{"name":"HistoryPage()","total_count":1,"children":[]},{"name":"Match","total_count":1,"children":[]},{"name":"now","total_count":1,"children":[]},{"name":"Participant","total_count":1,"children":[]},{"name":"QUEUE_MAP","total_count":1,"children":[]},{"name":"SUMMONER_SPELLS","total_count":1,"children":[]}]},{"name":"ItemBuild.tsx","total_count":6,"children":[{"name":"ClusterTab()","total_count":1,"children":[]},{"name":"COMMON_SITUATIONAL_ITEMS","total_count":1,"children":[]},{"name":"DAMAGE_COLORS","total_count":1,"children":[]},{"name":"ItemBuild","total_count":1,"children":[]},{"name":"ItemBuildProps","total_count":1,"children":[]},{"name":"ScoredCluster","total_count":1,"children":[]}]},{"name":"LiveGamePanel.tsx","total_count":4,"children":[{"name":"LiveGamePanel()","total_count":1,"children":[]},{"name":"LiveGamePanelProps","total_count":1,"children":[]},{"name":"ROLE_ORDER","total_count":1,"children":[]},{"name":"sortPlayersByRole()","total_count":1,"children":[]}]},{"name":"PlayerCard.tsx","total_count":5,"children":[{"name":"getTagInfo()","total_count":1,"children":[]},{"name":"PlayerCard()","total_count":1,"children":[]},{"name":"PlayerCardProps","total_count":1,"children":[]},{"name":"PlayerData","total_count":1,"children":[]},{"name":"renderWinrateRing()","total_count":1,"children":[]}]},{"name":"PlayerCardSandbox.tsx","total_count":5,"children":[{"name":"CHAMPIONS_LIST","total_count":1,"children":[]},{"name":"DIVISIONS","total_count":1,"children":[]},{"name":"PlayerCardSandbox()","total_count":1,"children":[]},{"name":"PRESET_TAGS","total_count":1,"children":[]},{"name":"TIERS","total_count":1,"children":[]}]},{"name":"PlayerSlot.tsx","total_count":3,"children":[{"name":"LcuPlayer","total_count":1,"children":[]},{"name":"PlayerProps","total_count":1,"children":[]},{"name":"PlayerSlot","total_count":1,"children":[]}]},{"name":"RecommendationCard.tsx","total_count":2,"children":[{"name":"Props","total_count":1,"children":[]},{"name":"RecommendationCard","total_count":1,"children":[]}]},{"name":"settings","total_count":1,"children":[{"name":"SettingsPage.tsx","total_count":1,"children":[{"name":"SettingsPage()","total_count":1,"children":[]}]}]},{"name":"SkillTimeline.tsx","total_count":2,"children":[{"name":"SkillTimeline","total_count":1,"children":[]},{"name":"SkillTimelineProps","total_count":1,"children":[]}]},{"name":"sync","total_count":8,"children":[{"name":"SyncConsole.tsx","total_count":2,"children":[{"name":"SyncConsole()","total_count":1,"children":[]},{"name":"SyncConsoleProps","total_count":1,"children":[]}]},{"name":"SyncToast.tsx","total_count":2,"children":[{"name":"SyncToast()","total_count":1,"children":[]},{"name":"SyncToastProps","total_count":1,"children":[]}]},{"name":"types.ts","total_count":3,"children":[{"name":"LogItem","total_count":1,"children":[]},{"name":"PublishStatus","total_count":1,"children":[]},{"name":"ToastState","total_count":1,"children":[]}]},{"name":"utils.ts","total_count":1,"children":[{"name":"formatTimestamp()","total_count":1,"children":[]}]}]},{"name":"SyncPanel.tsx","total_count":1,"children":[{"name":"SyncPanel()","total_count":1,"children":[]}]},{"name":"TacticalDirectives.tsx","total_count":9,"children":[{"name":"CombatDirectivesPanel","total_count":1,"children":[]},{"name":"CombatDirectivesPanelProps","total_count":1,"children":[]},{"name":"COMP_STYLE_LABELS","total_count":1,"children":[]},{"name":"ENEMY_WIN_COND_DETAILS","total_count":1,"children":[]},{"name":"getCompositionAdvice()","total_count":1,"children":[]},{"name":"MatchupAnalysisPanel","total_count":1,"children":[]},{"name":"MatchupAnalysisPanelProps","total_count":1,"children":[]},{"name":"TacticalDirectives","total_count":1,"children":[]},{"name":"TacticalDirectivesProps","total_count":1,"children":[]}]},{"name":"TeamSidebar.tsx","total_count":2,"children":[{"name":"TeamSidebar","total_count":1,"children":[]},{"name":"TeamSidebarProps","total_count":1,"children":[]}]},{"name":"UpdatePopup.tsx","total_count":1,"children":[{"name":"UpdatePopup()","total_count":1,"children":[]}]},{"name":"useAppMode.ts","total_count":2,"children":[{"name":"AppModeState","total_count":1,"children":[]},{"name":"useAppMode()","total_count":1,"children":[]}]},{"name":"useDbUpdate.ts","total_count":1,"children":[{"name":"useDbUpdate()","total_count":1,"children":[]}]}]},{"name":"Sidebar.astro","total_count":1,"children":[{"name":"if()","total_count":1,"children":[]}]},{"name":"Hero.astro","total_count":1,"children":[]},{"name":"HextechBackground.astro","total_count":1,"children":[]}]},{"name":"config","total_count":2,"children":[{"name":"version.ts","total_count":2,"children":[{"name":"APP_VERSION","total_count":1,"children":[]},{"name":"GITHUB_LAUNCHER_REPO","total_count":1,"children":[]}]}]},{"name":"hooks","total_count":4,"children":[{"name":"useProBuild.ts","total_count":4,"children":[{"name":"ProBuildData","total_count":1,"children":[]},{"name":"ProBuildRunes","total_count":1,"children":[]},{"name":"useProBuild()","total_count":1,"children":[]},{"name":"UseProBuildResult","total_count":1,"children":[]}]}]},{"name":"layouts","total_count":2,"children":[{"name":"Layout.astro","total_count":2,"children":[{"name":"hideLoader()","total_count":1,"children":[]},{"name":"showLoader()","total_count":1,"children":[]}]}]},{"name":"lib","total_count":254,"children":[{"name":"championMapper.ts","total_count":2,"children":[{"name":"getChampionCdnName()","total_count":1,"children":[]},{"name":"normalizeChampionName()","total_count":1,"children":[]}]},{"name":"db","total_count":26,"children":[{"name":"champions.repo.ts","total_count":6,"children":[{"name":"championsRepo","total_count":1,"children":[]},{"name":"DbBuild","total_count":1,"children":[]},{"name":"DbChampion","total_count":1,"children":[]},{"name":"DbMatchup","total_count":1,"children":[]},{"name":"DbSynergy","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]}]},{"name":"config.repo.ts","total_count":2,"children":[{"name":"configRepo","total_count":1,"children":[]},{"name":"isDev","total_count":1,"children":[]}]},{"name":"initial-populate.ts","total_count":4,"children":[{"name":"API_NAME_MAP","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]},{"name":"populateDatabase()","total_count":1,"children":[]},{"name":"resolveChampionId()","total_count":1,"children":[]}]},{"name":"migrate.ts","total_count":5,"children":[{"name":"API_NAME_MAP","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]},{"name":"resolveChampionId()","total_count":1,"children":[]},{"name":"roleToLaneMap","total_count":1,"children":[]},{"name":"runMigration()","total_count":1,"children":[]}]},{"name":"proBuild.repo.ts","total_count":5,"children":[{"name":"cleanOldBuildCache()","total_count":1,"children":[]},{"name":"DbProBuildRecord","total_count":1,"children":[]},{"name":"getProBuildFromCache()","total_count":1,"children":[]},{"name":"getTtlForSampleSize()","total_count":1,"children":[]},{"name":"saveProBuildToCache()","total_count":1,"children":[]}]},{"name":"sqlite.ts","total_count":4,"children":[{"name":"closeDb()","total_count":1,"children":[]},{"name":"defaultWeights","total_count":1,"children":[]},{"name":"reopenDb()","total_count":1,"children":[]},{"name":"setInitialConfig()","total_count":1,"children":[]}]}]},{"name":"engine","total_count":104,"children":[{"name":"archetypes.ts","total_count":7,"children":[{"name":"ChampInfo","total_count":1,"children":[]},{"name":"EXCLUSIVE_MID_CHAMPS","total_count":1,"children":[]},{"name":"FLEX_CHAMPS","total_count":1,"children":[]},{"name":"getArchetypeMembers()","total_count":1,"children":[]},{"name":"getOpponentArchetype()","total_count":1,"children":[]},{"name":"inferEnemyOpponent()","total_count":1,"children":[]},{"name":"ROLE_NORM_MAP","total_count":1,"children":[]}]},{"name":"bansEngine.ts","total_count":5,"children":[{"name":"BansRecommendation","total_count":1,"children":[]},{"name":"championMatchesArchetype()","total_count":1,"children":[]},{"name":"getBanRecommendations()","total_count":1,"children":[]},{"name":"getProcessedBans()","total_count":1,"children":[]},{"name":"isFlexChampion()","total_count":1,"children":[]}]},{"name":"compositionAnalyzer.ts","total_count":7,"children":[{"name":"AllyArchetype","total_count":1,"children":[]},{"name":"analyzeComposition()","total_count":1,"children":[]},{"name":"ArchetypeReading","total_count":1,"children":[]},{"name":"CompositionAnalysis","total_count":1,"children":[]},{"name":"detectAllyArchetype()","total_count":1,"children":[]},{"name":"detectEnemyArchetype()","total_count":1,"children":[]},{"name":"EnemyArchetype","total_count":1,"children":[]}]},{"name":"constants.ts","total_count":3,"children":[{"name":"getIdFromName()","total_count":1,"children":[]},{"name":"getNameFromId()","total_count":1,"children":[]},{"name":"NAME_TO_ID","total_count":1,"children":[]}]},{"name":"dataProvider.ts","total_count":13,"children":[{"name":"calculateScalingType()","total_count":1,"children":[]},{"name":"CHAMPION_ALIAS","total_count":1,"children":[]},{"name":"DATA_BY_LANE","total_count":1,"children":[]},{"name":"defaultCounterSynergies","total_count":1,"children":[]},{"name":"defaultMetaCache","total_count":1,"children":[]},{"name":"ENRICHED_DB","total_count":1,"children":[]},{"name":"EnrichedChampion","total_count":1,"children":[]},{"name":"findInMetaCache()","total_count":1,"children":[]},{"name":"initializeEngineData()","total_count":1,"children":[]},{"name":"initializeItemsData()","total_count":1,"children":[]},{"name":"ITEMS_DB","total_count":1,"children":[]},{"name":"MatchupData","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]}]},{"name":"engine.ts","total_count":11,"children":[{"name":"calcArchetypeCounterBonus()","total_count":1,"children":[]},{"name":"calculateScore()","total_count":1,"children":[]},{"name":"COUNTER_MAP","total_count":1,"children":[]},{"name":"engineWeights","total_count":1,"children":[]},{"name":"getNameFromId()","total_count":1,"children":[]},{"name":"getProcessedRecommendations()","total_count":1,"children":[]},{"name":"getSingleChampionBuild()","total_count":1,"children":[]},{"name":"initializePersonalStats()","total_count":1,"children":[]},{"name":"PERSONAL_STATS","total_count":1,"children":[]},{"name":"Recommendation","total_count":1,"children":[]},{"name":"setEngineWeights()","total_count":1,"children":[]}]},{"name":"hydrator.ts","total_count":1,"children":[{"name":"hydrateAsset()","total_count":1,"children":[]}]},{"name":"itemEngine.ts","total_count":49,"children":[{"name":"AD_ASSASSIN_FALLBACKS","total_count":1,"children":[]},{"name":"AD_FIGHTER_FALLBACKS","total_count":1,"children":[]},{"name":"ADAPTATION_THRESHOLDS","total_count":1,"children":[]},{"name":"AP_FALLBACKS","total_count":1,"children":[]},{"name":"BOOTS_BLACKLIST","total_count":1,"children":[]},{"name":"BuildCluster","total_count":1,"children":[]},{"name":"buildOutputForCluster()","total_count":1,"children":[]},{"name":"calcBootContextBonus()","total_count":1,"children":[]},{"name":"champUsesQuestItem()","total_count":1,"children":[]},{"name":"classifyItem()","total_count":1,"children":[]},{"name":"classifyItemsDamageType()","total_count":1,"children":[]},{"name":"CLUSTER_ITEM_BLACKLIST","total_count":1,"children":[]},{"name":"CoreItemSwap","total_count":1,"children":[]},{"name":"detectBuildClusters()","total_count":1,"children":[]},{"name":"EnrichedChampion","total_count":1,"children":[]},{"name":"filterKeystonesByCluster()","total_count":1,"children":[]},{"name":"filterPrimaryTreeByKeystone()","total_count":1,"children":[]},{"name":"getAdaptedBuild()","total_count":1,"children":[]},{"name":"getBestSecondaryRunesForCluster()","total_count":1,"children":[]},{"name":"getClusterTitle()","total_count":1,"children":[]},{"name":"getCoreItemSwaps()","total_count":1,"children":[]},{"name":"getDynamicPaths()","total_count":1,"children":[]},{"name":"getFallbackStaticBuild()","total_count":1,"children":[]},{"name":"getItemsByCategory()","total_count":1,"children":[]},{"name":"getNameFromId()","total_count":1,"children":[]},{"name":"getPathsForBuild()","total_count":1,"children":[]},{"name":"getPivotItemName()","total_count":1,"children":[]},{"name":"HARDCODED_CATEGORIES","total_count":1,"children":[]},{"name":"isItemCoherentWithCluster()","total_count":1,"children":[]},{"name":"isItemInGroup()","total_count":1,"children":[]},{"name":"isItemViableForChamp()","total_count":1,"children":[]},{"name":"ITEM_CATEGORIES","total_count":1,"children":[]},{"name":"KEYSTONE_DAMAGE_TYPE","total_count":1,"children":[]},{"name":"PLAYSTYLE_KEYSTONES","total_count":1,"children":[]},{"name":"PLAYSTYLE_SECONDARY_STYLES","total_count":1,"children":[]},{"name":"RUNE_TREE_DAMAGE_TYPE","total_count":1,"children":[]},{"name":"RuneOption","total_count":1,"children":[]},{"name":"RunesData","total_count":1,"children":[]},{"name":"scoreClusterInContext()","total_count":1,"children":[]},{"name":"selectBestRune()","total_count":1,"children":[]},{"name":"selectBootsForCluster()","total_count":1,"children":[]},{"name":"selectRunesForCluster()","total_count":1,"children":[]},{"name":"selectShardsForCluster()","total_count":1,"children":[]},{"name":"selectStarterForCluster()","total_count":1,"children":[]},{"name":"selectSummonersForCluster()","total_count":1,"children":[]},{"name":"selectSupportItemEvolution()","total_count":1,"children":[]},{"name":"SUPPORT_ITEM_IDS","total_count":1,"children":[]},{"name":"SUPPORT_ITEM_QUEST_IDS","total_count":1,"children":[]},{"name":"viabilityScore()","total_count":1,"children":[]}]},{"name":"streakEngine.ts","total_count":2,"children":[{"name":"computeTodayRecord()","total_count":1,"children":[]},{"name":"TodayRecordResult","total_count":1,"children":[]}]},{"name":"tacticalEngine.ts","total_count":6,"children":[{"name":"CombatStyle","total_count":1,"children":[]},{"name":"getTacticalDirectives()","total_count":1,"children":[]},{"name":"MatchupAdvice","total_count":1,"children":[]},{"name":"SynergyAdvice","total_count":1,"children":[]},{"name":"TacticalDirectivesData","total_count":1,"children":[]},{"name":"WinrateCurveAnalysis","total_count":1,"children":[]}]}]},{"name":"gameVersion.ts","total_count":3,"children":[{"name":"fetchLatestGameVersion()","total_count":1,"children":[]},{"name":"getDDragonUrl()","total_count":1,"children":[]},{"name":"getGameVersion()","total_count":1,"children":[]}]},{"name":"metaManager.ts","total_count":3,"children":[{"name":"CACHE_PATH","total_count":1,"children":[]},{"name":"getStoredMeta()","total_count":1,"children":[]},{"name":"saveMetaCache()","total_count":1,"children":[]}]},{"name":"scrapers","total_count":9,"children":[{"name":"opgg-scraper.ts","total_count":9,"children":[{"name":"checkOtpMatchup()","total_count":1,"children":[]},{"name":"fetchGeneralProBuild()","total_count":1,"children":[]},{"name":"fetchProBuild()","total_count":1,"children":[]},{"name":"fetchTopOtpSlugs()","total_count":1,"children":[]},{"name":"OPGG_HEADERS","total_count":1,"children":[]},{"name":"OpggBuildRunes","total_count":1,"children":[]},{"name":"OpggProBuild","total_count":1,"children":[]},{"name":"rateLimitGuard()","total_count":1,"children":[]},{"name":"ROLE_MAP","total_count":1,"children":[]}]}]},{"name":"scripts","total_count":25,"children":[{"name":"meta-map.ts","total_count":3,"children":[{"name":"extractJsonFromHtml()","total_count":1,"children":[]},{"name":"fetchWithFlareSolverr()","total_count":1,"children":[]},{"name":"SyncEstructuraLanes()","total_count":1,"children":[]}]},{"name":"sync-champions-cdrag.ts","total_count":14,"children":[{"name":"CHAMPS_WITH_SHIELDS","total_count":1,"children":[]},{"name":"CHAMPS_WITH_SUSTAIN","total_count":1,"children":[]},{"name":"HIGH_MOBILITY_CHAMPS","total_count":1,"children":[]},{"name":"HIGH_RESOURCE_CHAMPS","total_count":1,"children":[]},{"name":"inferLanePhase()","total_count":1,"children":[]},{"name":"inferMobility()","total_count":1,"children":[]},{"name":"inferResourceDependency()","total_count":1,"children":[]},{"name":"inferTacticRole()","total_count":1,"children":[]},{"name":"inferTargetPriority()","total_count":1,"children":[]},{"name":"inferTeamNeeds()","total_count":1,"children":[]},{"name":"inferTeamProvides()","total_count":1,"children":[]},{"name":"LOW_MOBILITY_CHAMPS","total_count":1,"children":[]},{"name":"LOW_RESOURCE_CHAMPS","total_count":1,"children":[]},{"name":"syncChampionsSemanticData()","total_count":1,"children":[]}]},{"name":"sync-items.ts","total_count":1,"children":[{"name":"syncItemsFromCommunityDragon()","total_count":1,"children":[]}]},{"name":"sync-runes.ts","total_count":7,"children":[{"name":"CdragPerk","total_count":1,"children":[]},{"name":"isShard()","total_count":1,"children":[]},{"name":"isStyle()","total_count":1,"children":[]},{"name":"normalizeIconPath()","total_count":1,"children":[]},{"name":"PerkStyle","total_count":1,"children":[]},{"name":"PerkStylesResponse","total_count":1,"children":[]},{"name":"syncRunesFromCommunityDragon()","total_count":1,"children":[]}]}]},{"name":"services","total_count":82,"children":[{"name":"config.service.ts","total_count":5,"children":[{"name":"AppConfig","total_count":1,"children":[]},{"name":"configDir","total_count":1,"children":[]},{"name":"configPath","total_count":1,"children":[]},{"name":"dbVersionPath","total_count":1,"children":[]},{"name":"getEnvToken()","total_count":1,"children":[]}]},{"name":"docker.service.ts","total_count":5,"children":[{"name":"execAsync","total_count":1,"children":[]},{"name":"isDockerDaemonRunning()","total_count":1,"children":[]},{"name":"isFlareSolverrRunning()","total_count":1,"children":[]},{"name":"startDockerAndFlareSolverr()","total_count":1,"children":[]},{"name":"stopDockerAndFlareSolverr()","total_count":1,"children":[]}]},{"name":"lcu.service.ts","total_count":9,"children":[{"name":"CACHE_FILE_PATH","total_count":1,"children":[]},{"name":"getLockfileData()","total_count":1,"children":[]},{"name":"getLolPath()","total_count":1,"children":[]},{"name":"LCUData","total_count":1,"children":[]},{"name":"readLcuCredentialsCache()","total_count":1,"children":[]},{"name":"readLcuProfileCache()","total_count":1,"children":[]},{"name":"saveLolPath()","total_count":1,"children":[]},{"name":"writeLcuCredentialsCache()","total_count":1,"children":[]},{"name":"writeLcuProfileCache()","total_count":1,"children":[]}]},{"name":"liveMatchCache.service.ts","total_count":5,"children":[{"name":"LiveMatchCache","total_count":1,"children":[]},{"name":"loadLiveMatchCache()","total_count":1,"children":[]},{"name":"MATCH_CACHE_FILE","total_count":1,"children":[]},{"name":"resetLiveMatchFlag()","total_count":1,"children":[]},{"name":"saveLiveMatchCache()","total_count":1,"children":[]}]},{"name":"opgg.service.ts","total_count":7,"children":[{"name":"CACHE_FILE_PATH","total_count":1,"children":[]},{"name":"CacheSchema","total_count":1,"children":[]},{"name":"checkIsStreamerMode()","total_count":1,"children":[]},{"name":"loadCache()","total_count":1,"children":[]},{"name":"OpggPlayerProfile","total_count":1,"children":[]},{"name":"saveCache()","total_count":1,"children":[]},{"name":"scrapeOpggProfile()","total_count":1,"children":[]}]},{"name":"proBuildExporter.ts","total_count":1,"children":[{"name":"exportProBuildToClient()","total_count":1,"children":[]}]},{"name":"proBuildService.ts","total_count":5,"children":[{"name":"buildKey()","total_count":1,"children":[]},{"name":"inFlightMap","total_count":1,"children":[]},{"name":"InFlightState","total_count":1,"children":[]},{"name":"processProBuildRequest()","total_count":1,"children":[]},{"name":"processProBuildStatus()","total_count":1,"children":[]}]},{"name":"riot-api.service.ts","total_count":14,"children":[{"name":"AccountInfo","total_count":1,"children":[]},{"name":"ChampionMastery","total_count":1,"children":[]},{"name":"getActiveGame()","total_count":1,"children":[]},{"name":"getMatchDetail()","total_count":1,"children":[]},{"name":"getMatchIdsToday()","total_count":1,"children":[]},{"name":"getMatchRegionFromPlatform()","total_count":1,"children":[]},{"name":"getPuuidByRiotId()","total_count":1,"children":[]},{"name":"getRankedEntries()","total_count":1,"children":[]},{"name":"getRiotApiKey()","total_count":1,"children":[]},{"name":"getTopMastery()","total_count":1,"children":[]},{"name":"MatchSummary","total_count":1,"children":[]},{"name":"RankedEntry","total_count":1,"children":[]},{"name":"riotFetch()","total_count":1,"children":[]},{"name":"SpectatorGameInfo","total_count":1,"children":[]}]},{"name":"riot-cache.service.ts","total_count":8,"children":[{"name":"CACHE_FILE_PATH","total_count":1,"children":[]},{"name":"CacheSchema","total_count":1,"children":[]},{"name":"getCachedMatch()","total_count":1,"children":[]},{"name":"getCachedPlayer()","total_count":1,"children":[]},{"name":"loadCache()","total_count":1,"children":[]},{"name":"saveCache()","total_count":1,"children":[]},{"name":"setCachedMatch()","total_count":1,"children":[]},{"name":"setCachedPlayer()","total_count":1,"children":[]}]},{"name":"sync.service.ts","total_count":22,"children":[{"name":"API_NAME_MAP","total_count":1,"children":[]},{"name":"checkAndRunMetaSync()","total_count":1,"children":[]},{"name":"classifyCoreBuild()","total_count":1,"children":[]},{"name":"extractJsonFromHtml()","total_count":1,"children":[]},{"name":"fetchWithFlareSolverr()","total_count":1,"children":[]},{"name":"getBestCoreBuild()","total_count":1,"children":[]},{"name":"getBestKeystoneForStyle()","total_count":1,"children":[]},{"name":"getBestRuneForStyleInSlot()","total_count":1,"children":[]},{"name":"getBestRuneSlot()","total_count":1,"children":[]},{"name":"getBestSecondaryRunes()","total_count":1,"children":[]},{"name":"getBestSecondaryRunesForStyle()","total_count":1,"children":[]},{"name":"getBestSummoners()","total_count":1,"children":[]},{"name":"getMostPopularItem()","total_count":1,"children":[]},{"name":"getStyleOfRune()","total_count":1,"children":[]},{"name":"isChampionBuildUpToDate()","total_count":1,"children":[]},{"name":"NORM_API_NAME_MAP","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]},{"name":"resolveChampionId()","total_count":1,"children":[]},{"name":"scrapeSingleChampion()","total_count":1,"children":[]},{"name":"startAutomaticMetaCacheScheduler()","total_count":1,"children":[]},{"name":"syncMetaAndBuilds()","total_count":1,"children":[]},{"name":"syncMetaCacheOnly()","total_count":1,"children":[]}]},{"name":"telegram.service.ts","total_count":1,"children":[{"name":"notifyTelegram()","total_count":1,"children":[]}]}]}]},{"name":"middleware.ts","total_count":1,"children":[{"name":"onRequest","total_count":1,"children":[]}]},{"name":"pages","total_count":58,"children":[{"name":"api","total_count":49,"children":[{"name":"app-version.ts","total_count":3,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"isNewerVersion()","total_count":1,"children":[]},{"name":"parseVersion()","total_count":1,"children":[]}]},{"name":"champ-select.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"champions.ts","total_count":2,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"normalizeKey()","total_count":1,"children":[]}]},{"name":"config","total_count":1,"children":[{"name":"mode.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]}]},{"name":"config.ts","total_count":2,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"POST()","total_count":1,"children":[]}]},{"name":"db","total_count":2,"children":[{"name":"manifest.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"update.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]}]},{"name":"draft-recommendations.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]},{"name":"execute-action.ts","total_count":3,"children":[{"name":"getLastExecutedChampionId()","total_count":1,"children":[]},{"name":"POST()","total_count":1,"children":[]},{"name":"resetLastExecutedChampionId()","total_count":1,"children":[]}]},{"name":"game-status.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"game-version.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"history.ts","total_count":4,"children":[{"name":"assignLanesToTeam()","total_count":1,"children":[]},{"name":"GET()","total_count":1,"children":[]},{"name":"getFormattedMocks()","total_count":1,"children":[]},{"name":"MOCK_HISTORY","total_count":1,"children":[]}]},{"name":"items.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"live-game.ts","total_count":2,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"ROLES_ORDER","total_count":1,"children":[]}]},{"name":"me.ts","total_count":4,"children":[{"name":"checkIfSyncRecommended()","total_count":1,"children":[]},{"name":"fetchAllProfileData()","total_count":1,"children":[]},{"name":"GET()","total_count":1,"children":[]},{"name":"updateProfileCacheInBackground()","total_count":1,"children":[]}]},{"name":"meta.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"personal-stats.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"pro-build","total_count":1,"children":[{"name":"status.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]}]},{"name":"pro-build.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"ready-check.ts","total_count":2,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"POST()","total_count":1,"children":[]}]},{"name":"set-items.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]},{"name":"set-runes.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]},{"name":"set-spells.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]},{"name":"sync","total_count":2,"children":[{"name":"publish.ts","total_count":1,"children":[{"name":"POST()","total_count":1,"children":[]}]},{"name":"status.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]}]},{"name":"sync-meta.ts","total_count":2,"children":[{"name":"POST()","total_count":1,"children":[]},{"name":"scrapeRoleData()","total_count":1,"children":[]}]},{"name":"sync.ts","total_count":4,"children":[{"name":"GET()","total_count":1,"children":[]},{"name":"syncLogs","total_count":1,"children":[]},{"name":"updateProgress()","total_count":1,"children":[]},{"name":"writeLog()","total_count":1,"children":[]}]},{"name":"tactical-data.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]},{"name":"telegram-notify.ts","total_count":2,"children":[{"name":"lastSentMessages","total_count":1,"children":[]},{"name":"POST()","total_count":1,"children":[]}]},{"name":"test-spectator.ts","total_count":1,"children":[{"name":"GET()","total_count":1,"children":[]}]}]},{"name":"champion","total_count":2,"children":[{"name":"[champion]","total_count":2,"children":[{"name":"buildbuild.astro","total_count":2,"children":[{"name":"nameMap","total_count":1,"children":[]},{"name":"normalizedParam","total_count":1,"children":[]}]}]}]},{"name":"actualizar.astro","total_count":1,"children":[]},{"name":"champions.astro","total_count":1,"children":[]},{"name":"dashboard.astro","total_count":1,"children":[]},{"name":"draft.astro","total_count":1,"children":[]},{"name":"history.astro","total_count":1,"children":[]},{"name":"index.astro","total_count":1,"children":[]},{"name":"settings.astro","total_count":1,"children":[]}]},{"name":"scripts","total_count":3,"children":[{"name":"migrate-matchups.ts","total_count":3,"children":[{"name":"ChampionRow","total_count":1,"children":[]},{"name":"MatchupRow","total_count":1,"children":[]},{"name":"migrateMatchups()","total_count":1,"children":[]}]}]}]},{"name":"tests","total_count":2,"children":[{"name":"streakEngine.test.ts","total_count":2,"children":[{"name":"assertEqual()","total_count":1,"children":[]},{"name":"makeMatch()","total_count":1,"children":[]}]}]},{"name":"tsconfig.json","total_count":10,"children":[{"name":"**/*","total_count":1,"children":[]},{"name":".astro/types.d.ts","total_count":1,"children":[]},{"name":"astro/tsconfigs/strict","total_count":1,"children":[]},{"name":"compilerOptions","total_count":1,"children":[]},{"name":"dist","total_count":1,"children":[]},{"name":"exclude","total_count":1,"children":[]},{"name":"extends","total_count":1,"children":[]},{"name":"include","total_count":1,"children":[]},{"name":"jsx","total_count":1,"children":[]},{"name":"jsxImportSource","total_count":1,"children":[]}]},{"name":"astro.config.mjs","total_count":1,"children":[]},{"name":"astro:transitions","total_count":1,"children":[]},{"name":"eslint.config.js","total_count":1,"children":[]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>

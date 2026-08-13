@@ -9,6 +9,8 @@ interface ProBuildPanelProps {
   role: string | null;
   patch?: string;
   isCompact?: boolean;
+  allies?: string[];
+  enemies?: string[];
 }
 
 function formatFreshness(cachedAt: number | null): string {
@@ -32,7 +34,9 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
   opponentName,
   role,
   patch = '16.15',
-  isCompact = false
+  isCompact = false,
+  allies = [],
+  enemies = []
 }) => {
   const {
     loading,
@@ -48,7 +52,9 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
     championName,
     opponentName,
     role || 'top',
-    patch
+    patch,
+    allies,
+    enemies
   );
 
   if (!championName) {
@@ -121,7 +127,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
         {loading ? (
           <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400 font-mono text-[11px] text-center">
             <div className="w-6 h-6 border-2 border-amber-400/40 border-t-amber-400 rounded-full animate-spin"></div>
-            <span>Consultando perfiles Top OTPs de EUW y Challenger/GM en OP.GG...</span>
+            <span>Consultando datos estadísticos de OP.GG...</span>
           </div>
         ) : insufficientData ? (
           <div className="h-full w-full flex items-center justify-center text-slate-400 font-mono text-[11px] text-center">
@@ -141,8 +147,7 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
               <span>Parche {data.patch}</span>
             </div>
 
-            {/* Grid 2x2 Limpio de Componentes */}
-            {/* Grid Limpio de Componentes */}
+            {/* Grid Principal */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {/* Bloque 1: Runas y Shards */}
               <div className="flex flex-col gap-1.5 min-w-0">
@@ -217,10 +222,10 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                 </div>
               </div>
 
-              {/* Bloque 2: Inicio, Invocadores y Botas */}
+              {/* Bloque 2: Inicio, Compras Tempranas, Invocadores y Botas */}
               <div className="flex flex-col gap-1.5 min-w-0">
                 <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block border-b border-border-warm/20 pb-1">
-                  Inicio, Invocadores y Botas
+                  Inicio, Temprano, Invocadores y Botas
                 </span>
                 <div className="flex items-center gap-2.5 pt-1 flex-wrap">
                   {/* Starter Items */}
@@ -238,6 +243,25 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                       );
                     })}
                   </div>
+
+                  {/* Compra Temprana (Lágrima en 1er Back) */}
+                  {data.earlyBuy && (
+                    <>
+                      <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
+                      <div className="flex items-center gap-1" title="1er Back: Lágrima de la Diosa">
+                        <div className="relative flex flex-col items-center">
+                          <img
+                            src={hydrateAsset('items', data.earlyBuy)?.icon || ''}
+                            alt="1er Back"
+                            className="w-7 h-7 rounded-sm border border-cyan-400/90 bg-slate-900 shrink-0"
+                          />
+                          <span className="absolute -top-1.5 -right-1 bg-cyan-950 text-cyan-300 border border-cyan-400/60 text-[6.5px] font-black px-1 rounded-xs uppercase tracking-tighter">
+                            1er Back
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <div className="h-7 w-px bg-border-warm/30 shrink-0"></div>
 
@@ -272,32 +296,25 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                 </div>
               </div>
 
-              {/* Bloque 3: Ruta Completa de Objetos (Secuencia de Compra de hasta 6 Ítems) */}
+              {/* Bloque 3: Ruta Completa de Objetos Completados */}
               <div className="flex flex-col gap-1.5 min-w-0 md:col-span-2 border-t border-border-warm/20 pt-2.5">
                 <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block">
-                  Ruta de Objetos (Orden de Compra Completo)
+                  Ruta de Objetos Completados (Orden Cronológico)
                 </span>
                 <div className="flex items-center gap-1.5 pt-1 overflow-x-auto scrollbar-tactical pb-1 flex-wrap">
                   {data.coreItems?.map((itemId, idx) => {
                     const asset = hydrateAsset('items', itemId);
-                    const isTear = itemId === 3070;
                     return (
                       <div key={idx} className="flex items-center gap-1.5 shrink-0" title={asset?.name || 'Item'}>
                         <div className="relative flex flex-col items-center">
                           <img
                             src={asset?.icon || ''}
                             alt={asset?.name || 'Item'}
-                            className={`w-8 h-8 rounded-sm bg-slate-900 ${
-                              isTear 
-                                ? 'border border-cyan-400/90 shadow-[0_0_8px_rgba(34,211,238,0.25)]' 
-                                : 'border border-amber-400/60'
-                            }`}
+                            className="w-8 h-8 rounded-sm bg-slate-900 border border-amber-400/70"
                           />
-                          {isTear && (
-                            <span className="absolute -top-1.5 -right-1.5 bg-cyan-950 text-cyan-300 border border-cyan-400/60 text-[6.5px] font-black px-1 rounded-xs uppercase tracking-tighter">
-                              1er Back
-                            </span>
-                          )}
+                          <span className="absolute -bottom-1 -right-1 bg-black/90 text-amber-300/90 text-[7px] font-mono font-bold px-1 rounded-xs">
+                            #{idx + 1}
+                          </span>
                         </div>
                         {idx < data.coreItems.length - 1 && (
                           <span className="text-slate-600 font-bold text-xs">→</span>
@@ -307,6 +324,41 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
                   })}
                 </div>
               </div>
+
+              {/* Bloque 4: Adaptaciones y Contramedidas Situacionales frente al rival */}
+              {data.situationalSwaps && data.situationalSwaps.length > 0 && (
+                <div className="flex flex-col gap-1.5 min-w-0 md:col-span-2 border-t border-border-warm/20 pt-2.5">
+                  <span className="text-[9.5px] text-slate-400 font-extrabold uppercase tracking-wider block">
+                    Opciones Situacionales (Frente al Equipo Rival)
+                  </span>
+                  <div className="flex flex-col gap-1.5 pt-0.5">
+                    {data.situationalSwaps.map((swap, idx) => {
+                      const asset = hydrateAsset('items', swap.replacementItem);
+                      return (
+                        <div
+                          key={`swap-${idx}`}
+                          className="flex items-center gap-2 p-1.5 bg-[#0a0a0e]/60 border border-border-warm/30 rounded-sm text-[10.5px]"
+                        >
+                          <img
+                            src={asset?.icon || ''}
+                            alt={swap.title}
+                            title={asset?.name || swap.title}
+                            className="w-6 h-6 rounded-sm bg-slate-900 border border-border-warm shrink-0"
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-amber-300 text-[10px] leading-tight">
+                              {swap.title}
+                            </span>
+                            <span className="text-slate-400 text-[9.5px] leading-tight truncate">
+                              {swap.reason}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -314,3 +366,4 @@ export const ProBuildPanel: React.FC<ProBuildPanelProps> = ({
     </div>
   );
 };
+

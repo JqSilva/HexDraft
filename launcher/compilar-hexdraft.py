@@ -279,13 +279,13 @@ def copiar_recursos_release(release_dir):
             
             # Cargar token desde .env
             env_vars = load_env(".env")
-            token = env_vars.get("GITHUB_LAUNCHER_TOKEN", "")
+            token = env_vars.get("GITHUB_LAUNCHER_TOKEN") or env_vars.get("GITHUB_TOKEN", "")
             
             if token:
                 config_admin["github_token"] = token
-                print("  [OK] Token GITHUB_LAUNCHER_TOKEN de .env inyectado en config-admin.json de release.")
+                print("  [OK] Token GITHUB_TOKEN de .env inyectado en config-admin.json de release.")
             else:
-                print("  [WARN] No se encontró GITHUB_LAUNCHER_TOKEN en .env. Compilando con token vacío.")
+                print("  [WARN] No se encontró GITHUB_LAUNCHER_TOKEN ni GITHUB_TOKEN en .env. Compilando con token vacío.")
                 
             with open(admin_config_dest, "w", encoding="utf-8") as f:
                 json.dump(config_admin, f, indent=2)
@@ -297,17 +297,29 @@ def copiar_recursos_release(release_dir):
 
 
 def obtener_version_actual():
-    """Intenta extraer la versión configurada actualmente en HexDraftSetup.iss."""
-    iss_path = os.path.join("launcher", "HexDraftSetup.iss")
-    if os.path.exists(iss_path):
+    """Intenta extraer la versión configurada actualmente en version.ts o en los scripts .iss."""
+    version_ts = os.path.join(PROYECTO_DIR, "src", "config", "version.ts")
+    if os.path.exists(version_ts):
         try:
-            with open(iss_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip().startswith("AppVersion="):
-                        return line.split("=")[1].strip()
+            with open(version_ts, "r", encoding="utf-8") as f:
+                content = f.read()
+                match = re.search(r"APP_VERSION\s*=\s*['\"]([^'\"]+)['\"]", content)
+                if match:
+                    return match.group(1)
         except Exception:
             pass
-    return "2.1.0"
+
+    for filename in ["HexDraftSetupAdmin.iss", "HexDraftSetup.iss"]:
+        iss_path = os.path.join("launcher", filename)
+        if os.path.exists(iss_path):
+            try:
+                with open(iss_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip().startswith("AppVersion="):
+                            return line.split("=")[1].strip()
+            except Exception:
+                pass
+    return "2.5.0"
 
 
 def actualizar_archivo_iss(ruta_iss, nueva_version, es_admin=False):
@@ -390,22 +402,37 @@ def ejecutar_iscc(ruta_iss):
 
 
 def obtener_configuracion_instaladores():
-    """Pregunta los datos de configuración al inicio del script."""
+    """Pregunta los datos de configuración al inicio del script o lee argumentos CLI."""
     print("\n=============================================")
     print("      CONFIGURACIÓN DE INSTALADORES INNO      ")
     print("=============================================")
     
     version_sugerida = obtener_version_actual()
-    version_input = input(f"Ingresa la versión para los instaladores [{version_sugerida}]: ").strip()
-    nueva_version = version_input if version_input else version_sugerida
+    nueva_version = None
+    opcion = None
+
+    # Soporte para argumentos de línea de comandos: --version X.Y.Z --option [1-4]
+    for i, arg in enumerate(sys.argv):
+        if arg == "--version" and i + 1 < len(sys.argv):
+            nueva_version = sys.argv[i + 1].strip()
+        elif arg == "--option" and i + 1 < len(sys.argv):
+            opcion = sys.argv[i + 1].strip()
+
+    if not nueva_version:
+        version_input = input(f"Ingresa la versión para los instaladores [{version_sugerida}]: ").strip()
+        nueva_version = version_input if version_input else version_sugerida
+    else:
+        print(f"Versión especificada por argumento: {nueva_version}")
     
-    print("\nSelecciona qué instalador deseas compilar al finalizar el build:")
-    print("1) Solo instalador Normal")
-    print("2) Solo instalador Administrador (Admin)")
-    print("3) Ambos instaladores (Normal y Admin)")
-    print("4) Ninguno / Omitir creación de instaladores")
-    
-    opcion = input("Elige una opción [1-4]: ").strip()
+    if not opcion:
+        print("\nSelecciona qué instalador deseas compilar al finalizar el build:")
+        print("1) Solo instalador Normal")
+        print("2) Solo instalador Administrador (Admin)")
+        print("3) Ambos instaladores (Normal y Admin)")
+        print("4) Ninguno / Omitir creación de instaladores")
+        opcion = input("Elige una opción [1-4]: ").strip()
+    else:
+        print(f"Opción de instalador especificada por argumento: {opcion}")
     
     if opcion not in ["1", "2", "3"]:
         return None, None
@@ -453,12 +480,12 @@ def procesar_instaladores_inno(nueva_version, opciones):
                 ejecutar_iscc(iss_admin)
 
 def sincronizar_version_proyecto(version):
-    """Sincroniza la nueva versión en src/config/version.ts antes del build de Node."""
+    """Sincroniza la nueva versión en src/config/version.ts y package.json antes del build de Node."""
     if not version:
         return
-    print(f"\n>>> Sincronizando versión ({version}) en src/config/version.ts...")
+    print(f"\n>>> Sincronizando versión ({version}) en src/config/version.ts y package.json...")
     
-    # Actualizar únicamente src/config/version.ts
+    # 1. Actualizar src/config/version.ts
     version_ts = os.path.join(PROYECTO_DIR, "src", "config", "version.ts")
     if os.path.exists(version_ts):
         try:
@@ -474,6 +501,19 @@ def sincronizar_version_proyecto(version):
             print(f"  [OK] Actualizado src/config/version.ts -> '{version}'")
         except Exception as e:
             print(f"  [WARN] Error al actualizar src/config/version.ts: {e}")
+
+    # 2. Actualizar package.json
+    pkg_json = os.path.join(PROYECTO_DIR, "package.json")
+    if os.path.exists(pkg_json):
+        try:
+            with open(pkg_json, "r", encoding="utf-8") as f:
+                pkg_data = json.load(f)
+            pkg_data["version"] = version
+            with open(pkg_json, "w", encoding="utf-8") as f:
+                json.dump(pkg_data, f, indent=2)
+            print(f"  [OK] Actualizado package.json -> '{version}'")
+        except Exception as e:
+            print(f"  [WARN] Error al actualizar package.json: {e}")
 
 
 if __name__ == "__main__":

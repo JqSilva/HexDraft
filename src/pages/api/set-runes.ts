@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { validateAndSanitizeRunePage } from '../../lib/engine/runeValidator.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -26,13 +27,24 @@ export const POST: APIRoute = async ({ request }) => {
             return new Response(JSON.stringify({ error: "No se encontró una página de runas editable. Crea una nueva en el cliente." }), { status: 400 });
         }
 
-        // 3. Preparamos el payload con los IDs forzados a números
+        // 3. Preparamos el payload validado canónicamente
+        const rawSelections = Array.isArray(body.selectedPerkIds) ? body.selectedPerkIds.map(Number) : [];
+        const rawShards = rawSelections.length > 6 ? rawSelections.slice(6) : (body.shards || []);
+        const cleanRunes = rawSelections.slice(0, 6);
+
+        const sanitized = validateAndSanitizeRunePage(
+            cleanRunes,
+            rawShards,
+            Number(body.primaryStyleId) || undefined,
+            Number(body.subStyleId) || undefined
+        );
+
         const updatedPage = {
             ...editablePage,
             name: body.name || "HexDraft Build",
-            primaryStyleId: Number(body.primaryStyleId),
-            subStyleId: Number(body.subStyleId),
-            selectedPerkIds: body.selectedPerkIds.map((id: any) => Number(id)),
+            primaryStyleId: sanitized.primaryStyleId,
+            subStyleId: sanitized.subStyleId,
+            selectedPerkIds: [...sanitized.selections, ...sanitized.shards],
             current: true // Esto hace que el cliente la seleccione automáticamente
         };
 

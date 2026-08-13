@@ -1,4 +1,5 @@
 import type { ProBuildData } from '../../hooks/useProBuild.js';
+import { validateAndSanitizeRunePage } from '../engine/runeValidator.js';
 
 export async function exportProBuildToClient(data: ProBuildData): Promise<boolean> {
   if (!data) return false;
@@ -25,30 +26,33 @@ export async function exportProBuildToClient(data: ProBuildData): Promise<boolea
       }
     }
 
-    const selections = data.runes.selections.slice(0, 6);
-    const shards = data.runes.shards.slice(0, 3);
-    while (shards.length < 3) {
-      if (shards.length === 0) shards.push(5008);
-      else if (shards.length === 1) shards.push(5008);
-      else shards.push(5011);
-    }
+    const sanitizedRunes = validateAndSanitizeRunePage(
+      data.runes.selections,
+      data.runes.shards,
+      data.runes.primaryStyleId,
+      data.runes.subStyleId
+    );
 
     const runePayload = {
       name: `HexDraft Pro: ${data.championName}`,
-      primaryStyleId: data.runes.primaryStyleId,
-      subStyleId: data.runes.subStyleId,
+      primaryStyleId: sanitizedRunes.primaryStyleId,
+      subStyleId: sanitizedRunes.subStyleId,
       selectedPerkIds: [
-        ...selections,
-        ...shards
+        ...sanitizedRunes.selections,
+        ...sanitizedRunes.shards
       ]
     };
+
+    const starterList = (data.starterItems || []).map((id: number) => ({ id }));
+    const earlyList = data.earlyBuy ? [{ id: data.earlyBuy }] : [];
+    const coreList = (data.coreItems || []).map((id: number) => ({ id }));
 
     const itemPayload = {
       championName: data.championName,
       items: {
-        starter: data.starterItems.map((id: number) => ({ id })),
+        starter: [...starterList, ...earlyList],
         boots: { id: data.boots },
-        core: data.coreItems.map((id: number) => ({ id }))
+        core: coreList
       }
     };
 

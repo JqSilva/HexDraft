@@ -8,6 +8,11 @@ export const GET: APIRoute = async ({ request }) => {
   const opponent = url.searchParams.get('opponent') || '';
   const role = url.searchParams.get('role') || 'top';
   const patch = url.searchParams.get('patch') || '16.15';
+  const alliesParam = url.searchParams.get('allies') || '';
+  const enemiesParam = url.searchParams.get('enemies') || '';
+
+  const allies = alliesParam ? alliesParam.split(',').filter(Boolean) : [];
+  const enemies = enemiesParam ? enemiesParam.split(',').filter(Boolean) : [];
 
   if (!champion) {
     return new Response(
@@ -16,7 +21,7 @@ export const GET: APIRoute = async ({ request }) => {
     );
   }
 
-  const result = await processProBuildRequest(champion, opponent, role, patch);
+  const result = await processProBuildRequest(champion, opponent, role, patch, allies, enemies);
 
   return new Response(
     JSON.stringify(result),

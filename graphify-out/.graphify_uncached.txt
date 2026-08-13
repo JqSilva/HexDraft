@@ -1,0 +1,14 @@
+D:\Documentos\HexDraft\README.md
+D:\Documentos\HexDraft\docs\README.md
+D:\Documentos\HexDraft\docs\build-engine.md
+D:\Documentos\HexDraft\docs\draft-engine.md
+D:\Documentos\HexDraft\docs\loading-screen-panel.md
+D:\Documentos\HexDraft\requirements.txt
+D:\Documentos\HexDraft\sandbox\index.html
+D:\Documentos\HexDraft\public\app-icon.png
+D:\Documentos\HexDraft\public\app-icon.svg
+D:\Documentos\HexDraft\public\favicon.svg
+D:\Documentos\HexDraft\public\favicon_backup.svg
+D:\Documentos\HexDraft\src\assets\astro.svg
+D:\Documentos\HexDraft\src\assets\background.svg
+D:\Documentos\HexDraft\src\assets\champions.svg

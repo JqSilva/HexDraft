@@ -8,12 +8,21 @@ import * as cheerio from 'cheerio';
 import { getOpponentArchetype } from '../engine/archetypes.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import { logOpgg } from '../utils/opggLogger.js';
+import { validateAndSanitizeRunePage } from '../engine/runeValidator.js';
 
 export interface OpggBuildRunes {
   primaryStyleId: number;
   subStyleId: number;
   selections: number[];
   shards: number[];
+}
+
+export interface SituationalSwap {
+  originalItem?: number;
+  replacementItem: number;
+  trigger: 'anti_heal' | 'anti_tank' | 'anti_shield' | 'anti_burst' | 'boots_adapt';
+  title: string;
+  reason: string;
 }
 
 export interface OpggProBuild {
@@ -27,12 +36,14 @@ export interface OpggProBuild {
   coreItems: number[];
   boots: number;
   starterItems: number[];
+  earlyBuy?: number; // 3070 (Lágrima en 1er Back si aplica)
   summoners: number[];
   runes: OpggBuildRunes;
   source: 'otp_matchup' | 'otp_general' | 'general_pro';
   otpRank?: number;
   otpName?: string;
   executionTimeMs?: number;
+  situationalSwaps?: SituationalSwap[];
 }
 
 const COMPONENT_AND_STARTER_IDS = new Set([
@@ -76,10 +87,72 @@ const OPGG_HEADERS = {
   'Referer': 'https://www.op.gg/'
 };
 
+const TEAR_ID = 3070;
+const MANAMUNE_ID = 3004;
+const ARCHANGEL_ID = 3003;
+const FIMBULWINTER_ID = 3119;
+
+// Normalizador de items acumulativos/legendarios completados a su versión comprable en tienda
+const EVOLUTION_NORMALIZER: Record<number, number> = {
+  3040: ARCHANGEL_ID, // Seraph's Embrace -> Archangel's Staff
+  3042: MANAMUNE_ID,  // Muramana -> Manamune
+  3121: FIMBULWINTER_ID // Fimbulwinter -> Winter's Approach
+};
+
+const TEAR_USERS_AP = new Set(['ryze', 'cassiopeia', 'anivia', 'kassadin', 'aurelionsol', 'swain', 'taric', 'hwei', 'orianna']);
+const TEAR_USERS_AD = new Set(['ezreal', 'jayce', 'smolder', 'hecarim', 'varus', 'urgot']);
+const TEAR_USERS_TANK = new Set(['blitzcrank', 'ksante', 'sion', 'udyr', 'poppy', 'singed']);
+
+export function resolveTearAndEvolutions(
+  rawItems: number[],
+  championName: string,
+  damageType: string = 'AD'
+): { earlyBuy?: number; completedCore: number[] } {
+  const norm = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const hasTearScraped = rawItems.includes(TEAR_ID);
+  const isKnownTearUser = TEAR_USERS_AP.has(norm) || TEAR_USERS_AD.has(norm) || TEAR_USERS_TANK.has(norm);
+
+  const shouldHaveTear = hasTearScraped || isKnownTearUser;
+  let targetEvolution = ARCHANGEL_ID;
+  if (TEAR_USERS_AD.has(norm) || (damageType === 'AD' && !TEAR_USERS_AP.has(norm))) {
+    targetEvolution = MANAMUNE_ID;
+  } else if (TEAR_USERS_TANK.has(norm)) {
+    targetEvolution = FIMBULWINTER_ID;
+  }
+
+  // 1. Normalizar IDs evolucionados de Riot a IDs comprables en tienda
+  let clean = rawItems.map(id => EVOLUTION_NORMALIZER[id] || id);
+
+  if (shouldHaveTear) {
+    const earlyBuy = TEAR_ID;
+
+    // Si la lista de compras tenía la Lágrima básica (3070), reemplazarla por su evolución legendaria
+    if (clean.includes(TEAR_ID)) {
+      clean = clean.map(id => (id === TEAR_ID ? targetEvolution : id));
+    } else if (!clean.includes(targetEvolution)) {
+      // Si el campeón usa Lágrima (ej. Ryze/Ezreal) y la evolución no vino en los primeros slots scrapeados,
+      // ubicar la evolución en el 2do slot (después del 1er ítem core como RoA o Trinidad)
+      if (clean.length > 1) {
+        clean.splice(1, 0, targetEvolution);
+      } else {
+        clean.push(targetEvolution);
+      }
+    }
+
+    // Filtrar cualquier 3070 remanente de los objetos completados y deduplicar manteniendo el orden
+    const finalCompleted = Array.from(new Set(clean.filter(id => id !== TEAR_ID && !COMPONENT_AND_STARTER_IDS.has(id))));
+    return { earlyBuy, completedCore: finalCompleted };
+  }
+
+  const finalCompleted = Array.from(new Set(clean.filter(id => id !== TEAR_ID && !COMPONENT_AND_STARTER_IDS.has(id))));
+  return { completedCore: finalCompleted };
+}
+
 export function getDefaultItemsForChampion(championName: string, role: string): {
   coreItems: number[];
   starterItems: number[];
   boots: number;
+  earlyBuy?: number;
   runes: OpggBuildRunes;
   summoners: number[];
 } {
@@ -92,91 +165,108 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
   const damageType = baseChamp?.damageType || 'AD';
 
   if (normName === 'ryze') {
+    const runes = validateAndSanitizeRunePage(
+      [8230, 8226, 8210, 8237, 8473, 8451], // Phase Rush, Manaflow, Transcendence, Scorch, Bone Plating, Overgrowth
+      [5005, 5008, 5011],
+      8200,
+      8400
+    );
     return {
-      coreItems: [3070, 6657, 3040, 2522, 3089, 3157], // Tear, RoA, Seraph's, Equalizer, Rabadon, Zhonya
+      earlyBuy: 3070, // Lágrima en 1er Back
+      coreItems: [6657, 3003, 3089, 3157, 2522, 3135], // RoA, Bastón del Arcángel, Rabadon, Zhonya, Criptoflora, Vacío
       starterItems: [1056, 2003],
       boots: 3111,
       summoners: [4, 12],
-      runes: {
-        primaryStyleId: 8200,
-        subStyleId: 8400,
-        selections: [8992, 8226, 8210, 8237, 8473, 8451], // Deathfire/Keystone, Manaflow, Transcendence, Scorch, Bone Plating, Overgrowth
-        shards: [5005, 5008, 5011] // Attack Speed, Adaptive, Health
-      }
+      runes
     };
   }
 
   if (champClass === 'Marksman' || role.toLowerCase() === 'adc' || role.toLowerCase() === 'bottom') {
+    const runes = validateAndSanitizeRunePage(
+      [8008, 9101, 9103, 8014, 8304, 8313],
+      [5008, 5008, 5011],
+      8000,
+      8300
+    );
+    const resolved = resolveTearAndEvolutions([6672, 3124, 3115, 3157, 3089, 3026], championName, damageType);
     return {
-      coreItems: [6672, 3124, 3115, 3157, 3089, 3026], // Kraken, Guinsoo, Nashor, Zhonya, Rabadon, GA
+      earlyBuy: resolved.earlyBuy,
+      coreItems: resolved.completedCore,
       starterItems: [1055, 2003],
       boots: 3006, // Berserker's Greaves
       summoners: [4, 7], // Flash + Heal
-      runes: {
-        primaryStyleId: 8000,
-        subStyleId: 8300,
-        selections: [8008, 9101, 9103, 8014, 8304, 8313],
-        shards: [5008, 5008, 5011]
-      }
+      runes
     };
   }
 
   if (champClass === 'Assassin') {
     if (damageType === 'AP') {
+      const runes = validateAndSanitizeRunePage(
+        [8112, 8139, 8138, 8135, 8210, 8226],
+        [5008, 5008, 5011],
+        8100,
+        8200
+      );
+      const resolved = resolveTearAndEvolutions([3157, 3165, 3089, 3135, 4645], championName, 'AP');
       return {
-        coreItems: [3157, 3165, 3089, 3135, 4645],
+        earlyBuy: resolved.earlyBuy,
+        coreItems: resolved.completedCore,
         starterItems: [1056, 2003],
         boots: 3020,
         summoners: [4, 14],
-        runes: {
-          primaryStyleId: 8100,
-          subStyleId: 8200,
-          selections: [8112, 8139, 8138, 8135, 8210, 8226],
-          shards: [5008, 5008, 5011]
-        }
+        runes
       };
     }
+    const runes = validateAndSanitizeRunePage(
+      [8112, 8139, 8138, 8135, 8009, 8014],
+      [5008, 5008, 5011],
+      8100,
+      8000
+    );
+    const resolved = resolveTearAndEvolutions([3142, 6692, 3814, 3156, 3036], championName, 'AD');
     return {
-      coreItems: [3142, 6692, 3814, 3156, 3036],
+      earlyBuy: resolved.earlyBuy,
+      coreItems: resolved.completedCore,
       starterItems: [1055, 2003],
       boots: 3158,
       summoners: [4, 14],
-      runes: {
-        primaryStyleId: 8100,
-        subStyleId: 8000,
-        selections: [8112, 8139, 8138, 8135, 8009, 8014],
-        shards: [5008, 5008, 5011]
-      }
+      runes
     };
   }
 
   if (champClass === 'Tank') {
+    const runes = validateAndSanitizeRunePage(
+      [8437, 8446, 8429, 8451, 9111, 8009],
+      [5007, 5002, 5011],
+      8400,
+      8000
+    );
+    const resolved = resolveTearAndEvolutions([3068, 3075, 6665, 3083, 3110], championName, damageType);
     return {
-      coreItems: [3068, 3075, 6665, 3083, 3110],
+      earlyBuy: resolved.earlyBuy,
+      coreItems: resolved.completedCore,
       starterItems: [1054, 2003],
       boots: 3047,
       summoners: [4, 12],
-      runes: {
-        primaryStyleId: 8400,
-        subStyleId: 8000,
-        selections: [8437, 8446, 8429, 8451, 9111, 8009],
-        shards: [5007, 5002, 5011]
-      }
+      runes
     };
   }
 
   // Mage estándar
+  const runes = validateAndSanitizeRunePage(
+    [8229, 8226, 8210, 8237, 8304, 8313],
+    [5008, 5008, 5011],
+    8200,
+    8300
+  );
+  const resolved = resolveTearAndEvolutions([3118, 4645, 3157, 3089, 3135, 4646], championName, damageType);
   return {
-    coreItems: [3118, 4645, 3157, 3089, 3135, 4646],
+    earlyBuy: resolved.earlyBuy,
+    coreItems: resolved.completedCore,
     starterItems: [1056, 2003],
     boots: 3020,
     summoners: [4, 12],
-    runes: {
-      primaryStyleId: 8200,
-      subStyleId: 8300,
-      selections: [8229, 8226, 8210, 8237, 8304, 8313],
-      shards: [5008, 5008, 5011]
-    }
+    runes
   };
 }
 
@@ -393,29 +483,20 @@ export async function fetchProBuilds(
     const patchMatch = html.match(/Patch\s*([0-9]+\.[0-9]+)/i) || html.match(/lol\/([0-9]+\.[0-9]+\.[0-9]+)\/item/i);
     const patch = patchMatch ? patchMatch[1] : '16.15';
 
-    // Identificar páginas de runas primarias
+    // Identificar páginas de runas primarias con validador canónico estricto
     const uniqueActiveRunes = Array.from(new Set(activeRunes));
-    const runeSelections1 = uniqueActiveRunes.slice(0, 6);
-    if (runeSelections1.length < 6) {
-      fallbackDefaults.runes.selections.forEach(p => {
-        if (runeSelections1.length < 6 && !runeSelections1.includes(p)) {
-          runeSelections1.push(p);
-        }
-      });
-    }
-
     const primaryStyleId = activeStyles[0] || fallbackDefaults.runes.primaryStyleId;
     const subStyleId = activeStyles[1] || fallbackDefaults.runes.subStyleId;
 
-    const primaryRunes1: OpggBuildRunes = {
+    const primaryRunes1 = validateAndSanitizeRunePage(
+      uniqueActiveRunes,
+      fallbackDefaults.runes.shards,
       primaryStyleId,
-      subStyleId,
-      selections: runeSelections1,
-      shards: fallbackDefaults.runes.shards
-    };
+      subStyleId
+    );
 
-    // Keystones distintas
-    const distinctKeystones = uniqueActiveRunes.filter(id => [8112, 8229, 8230, 8992, 8005, 8008, 9923, 8437, 8439, 8351, 8360].includes(id));
+    // Keystones distintas detectadas en tablas de OP.GG
+    const distinctKeystones = uniqueActiveRunes.filter(id => [8112, 8229, 8230, 8992, 8005, 8008, 9923, 8437, 8439, 8351, 8360, 8010, 8021].includes(id));
     
     const starterItems = starterItemsList[0] || fallbackDefaults.starterItems;
     const boots = bootsList[0] || fallbackDefaults.boots;
@@ -427,11 +508,18 @@ export async function fetchProBuilds(
       startersFound: starterItemsList.length
     });
 
+    const baseChamp = Object.values(CHAMPIONS_DB).find(
+      c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedChamp
+    );
+    const damageType = baseChamp?.damageType || 'AD';
+
     // Construcción de builds candidatas
     const rawBuilds: OpggProBuild[] = [];
 
     // Build 1: Principal
-    const core1 = fullBuildPaths[0] || fallbackDefaults.coreItems;
+    const rawCore1 = fullBuildPaths[0] || fallbackDefaults.coreItems;
+    const resolvedCore1 = resolveTearAndEvolutions(rawCore1, championName, damageType);
+
     rawBuilds.push({
       id: 'build-1',
       title: 'Principal / Alta Prioridad',
@@ -440,7 +528,8 @@ export async function fetchProBuilds(
       patch,
       sampleSize: 1200,
       winRate: 53.8,
-      coreItems: core1,
+      earlyBuy: resolvedCore1.earlyBuy,
+      coreItems: resolvedCore1.completedCore,
       boots,
       starterItems,
       summoners,
@@ -451,12 +540,13 @@ export async function fetchProBuilds(
     // Si hay una 2da keystone distinta (ej. Cometa Arcano vs Electrocutar)
     if (distinctKeystones.length > 1 && distinctKeystones[1] !== distinctKeystones[0]) {
       const secondKeystone = distinctKeystones[1];
-      const altRunes: OpggBuildRunes = {
-        primaryStyleId: secondKeystone >= 8200 && secondKeystone < 8300 ? 8200 : (secondKeystone >= 8100 && secondKeystone < 8200 ? 8100 : primaryStyleId),
-        subStyleId: primaryStyleId === 8100 ? 8200 : 8100,
-        selections: [secondKeystone, ...runeSelections1.slice(1)],
-        shards: fallbackDefaults.runes.shards
-      };
+      const altRunes = validateAndSanitizeRunePage(
+        [secondKeystone, ...uniqueActiveRunes.filter(id => id !== distinctKeystones[0])],
+        fallbackDefaults.runes.shards
+      );
+
+      const rawCore2 = fullBuildPaths[1] || rawCore1;
+      const resolvedCore2 = resolveTearAndEvolutions(rawCore2, championName, damageType);
 
       rawBuilds.push({
         id: 'build-2',
@@ -466,7 +556,8 @@ export async function fetchProBuilds(
         patch,
         sampleSize: 850,
         winRate: 52.4,
-        coreItems: fullBuildPaths[1] || core1,
+        earlyBuy: resolvedCore2.earlyBuy,
+        coreItems: resolvedCore2.completedCore,
         boots: bootsList[1] || boots,
         starterItems,
         summoners,
@@ -474,8 +565,9 @@ export async function fetchProBuilds(
         source: 'general_pro'
       });
     } else if (fullBuildPaths.length > 1) {
-      const core2 = fullBuildPaths[1];
-      if (core2.join('-') !== core1.join('-')) {
+      const rawCore2 = fullBuildPaths[1];
+      if (rawCore2.join('-') !== rawCore1.join('-')) {
+        const resolvedCore2 = resolveTearAndEvolutions(rawCore2, championName, damageType);
         rawBuilds.push({
           id: 'build-2',
           title: 'Variante 2 / Adaptada',
@@ -484,7 +576,8 @@ export async function fetchProBuilds(
           patch,
           sampleSize: 720,
           winRate: 52.9,
-          coreItems: core2,
+          earlyBuy: resolvedCore2.earlyBuy,
+          coreItems: resolvedCore2.completedCore,
           boots: bootsList[1] || boots,
           starterItems,
           summoners,
@@ -496,10 +589,11 @@ export async function fetchProBuilds(
 
     // 3ra build si existe una ruta de objetos significativamente distinta
     if (fullBuildPaths.length > 2) {
-      const core3 = fullBuildPaths[2];
-      const core1Str = core1.join('-');
-      const core2Str = rawBuilds[1] ? rawBuilds[1].coreItems.join('-') : '';
-      if (core3.join('-') !== core1Str && core3.join('-') !== core2Str) {
+      const rawCore3 = fullBuildPaths[2];
+      const core1Str = rawCore1.join('-');
+      const core2Str = fullBuildPaths[1] ? fullBuildPaths[1].join('-') : '';
+      if (rawCore3.join('-') !== core1Str && rawCore3.join('-') !== core2Str) {
+        const resolvedCore3 = resolveTearAndEvolutions(rawCore3, championName, damageType);
         rawBuilds.push({
           id: 'build-3',
           title: 'Variante 3 / Situacional',
@@ -508,7 +602,8 @@ export async function fetchProBuilds(
           patch,
           sampleSize: 450,
           winRate: 54.1,
-          coreItems: core3,
+          earlyBuy: resolvedCore3.earlyBuy,
+          coreItems: resolvedCore3.completedCore,
           boots,
           starterItems: starterItemsList[1] || starterItems,
           summoners,
