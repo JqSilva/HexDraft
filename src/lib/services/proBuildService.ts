@@ -8,6 +8,7 @@ import {
 import { getOpponentArchetype } from '../engine/archetypes.js';
 import { logOpgg } from '../utils/opggLogger.js';
 import { getSituationalSwapsForBuild } from '../engine/itemEngine.js';
+import { getIdFromName, getNameFromId } from '../engine/constants.js';
 
 export interface InFlightState {
   status: 'loading' | 'ready' | 'error' | 'insufficient_data';
@@ -47,7 +48,7 @@ function enrichBuildWithContext(
 }
 
 export async function processProBuildRequest(
-  champion: string,
+  rawChampion: string,
   opponent: string,
   role: string,
   patch: string,
@@ -55,6 +56,9 @@ export async function processProBuildRequest(
   enemies: string[] = []
 ) {
   cleanOldBuildCache(patch);
+
+  const champId = getIdFromName(rawChampion);
+  const champion = champId > 0 ? (getNameFromId(champId) || rawChampion) : rawChampion;
 
   const archetype = getOpponentArchetype(opponent) || 'generalist';
   const key = buildKey(champion, role, patch, archetype);
@@ -174,13 +178,16 @@ export async function processProBuildRequest(
 }
 
 export function processProBuildStatus(
-  champion: string,
+  rawChampion: string,
   opponent: string,
   role: string,
   patch: string,
   allies: string[] = [],
   enemies: string[] = []
 ) {
+  const champId = getIdFromName(rawChampion);
+  const champion = champId > 0 ? (getNameFromId(champId) || rawChampion) : rawChampion;
+
   const archetype = getOpponentArchetype(opponent) || 'generalist';
   const key = buildKey(champion, role, patch, archetype);
   const nowSeconds = Math.floor(Date.now() / 1000);

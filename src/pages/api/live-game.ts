@@ -1,7 +1,7 @@
 // src/pages/api/live-game.ts
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
-import { scrapeOpggProfile } from '../../lib/services/opgg.service.js';
+import { scrapeOpggProfile, getPlayerProfileFromLcu } from '../../lib/services/opgg.service.js';
 import { getNameFromId, getIdFromName } from '../../lib/engine/engine.js';
 import { getActiveGame } from '../../lib/services/riot-api.service.js';
 import { loadLiveMatchCache, saveLiveMatchCache } from '../../lib/services/liveMatchCache.service.js';
@@ -203,12 +203,29 @@ export const GET: APIRoute = async ({ request }) => {
       ? p.assignedPosition.toUpperCase()
       : ROLES_ORDER[indexInTeam % 5];
 
-    // Extraer perfil y etiquetas vía OP.GG Scraper Service v2
-    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId, forceRefresh);
+    let profile: any = null;
+    if (lcu && p.puuid) {
+      try {
+        profile = await getPlayerProfileFromLcu(p.puuid, lcu, championId, rawName, rawTag);
+      } catch (e) {
+        console.warn(`[LiveGame] Falló consulta LCU para ${rawName}:`, e);
+      }
+    }
+
+    // Fallback a OP.GG si LCU no devolvió perfil o faltan datos
+    if (!profile || (profile.ranked?.tier === 'UNRANKED' && profile.rankedFlex?.tier === 'UNRANKED' && profile.todayRecord?.wins + profile.todayRecord?.losses === 0)) {
+      const opggProfile = await scrapeOpggProfile(rawName, rawTag, platform, championId, forceRefresh);
+      // Si OP.GG tiene datos de ranked válidos, combinarlos o utilizarlos
+      if (opggProfile && opggProfile.ranked?.tier !== 'UNRANKED') {
+        profile = opggProfile;
+      } else if (!profile) {
+        profile = opggProfile;
+      }
+    }
 
     return {
       ...profile,
-      profileIconId: lcuProfileIconId || profile.profileIconId || 29,
+      profileIconId: lcuProfileIconId || profile?.profileIconId || 29,
       teamId: p.teamId,
       championId,
       championName,

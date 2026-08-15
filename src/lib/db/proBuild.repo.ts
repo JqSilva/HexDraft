@@ -32,6 +32,13 @@ export function cleanOldBuildCache(currentPatch?: string): void {
         WHERE patch != ?
       `).run(currentPatch);
     }
+
+    // Purgar entradas erróneas conocidas (ej. builds AP en Wukong / MonkeyKing)
+    db.prepare(`
+      DELETE FROM pro_build_cache 
+      WHERE LOWER(champion_name) IN ('wukong', 'monkeyking') 
+        AND (core_items LIKE '%3118%' OR core_items LIKE '%3089%' OR core_items LIKE '%4645%')
+    `).run();
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[PRO-BUILD] Error al limpiar cache de builds: ${msg}`);

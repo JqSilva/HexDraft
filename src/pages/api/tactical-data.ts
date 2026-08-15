@@ -1,9 +1,11 @@
 import type { APIRoute } from 'astro';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { toOpggChampionSlug } from '../../lib/championMapper.js';
 
 export const GET: APIRoute = async ({ url }) => {
-    const champion = url.searchParams.get('champion')?.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const rawChampion = url.searchParams.get('champion') || '';
+    const champion = toOpggChampionSlug(rawChampion);
     let role = (url.searchParams.get('role') || 'jungle').toLowerCase();
 
     if (!champion) return new Response(null, { status: 400 });

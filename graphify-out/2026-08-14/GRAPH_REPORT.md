@@ -1,16 +1,16 @@
-# Graph Report - HexDraft  (2026-08-14)
+# Graph Report - HexDraft  (2026-08-12)
 
 ## Corpus Check
-- 157 files · ~117,334 words
+- 157 files · ~115,428 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 842 nodes · 1566 edges · 52 communities (47 shown, 5 thin omitted)
+- 838 nodes · 1546 edges · 53 communities (47 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.57)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `08995593`
+- Built from commit: `02362791`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -33,7 +33,7 @@
 - riot-api.service.ts
 - dataProvider.ts
 - automatizador-hexdraft.py
-- liveMatchCache.service.ts
+- live-game.ts
 - publish_installer.py
 - DashboardHome.tsx
 - app-hexdraft.py
@@ -41,7 +41,7 @@
 - tsconfig.json
 - TacticalDirectives.tsx
 - getNameFromId
-- history.ts
+- execute-action.ts
 - riot-cache.service.ts
 - manifest.json
 - PlayerCardSandbox.tsx
@@ -60,11 +60,12 @@
 - package.json
 - Documentación de Arquitectura de HexDraft
 - opgg-logs.ts
+- @types/react
 - @types/react-dom
 
 ## God Nodes (most connected - your core abstractions)
 1. `getLockfileData()` - 46 edges
-2. `getNameFromId()` - 21 edges
+2. `getNameFromId()` - 20 edges
 3. `hydrateAsset()` - 20 edges
 4. `DraftPage()` - 17 edges
 5. `scrapeSingleChampion()` - 16 edges
@@ -72,9 +73,11 @@
 7. `getAdaptedBuild()` - 15 edges
 8. `getChampionCdnName()` - 14 edges
 9. `syncChampionsSemanticData()` - 14 edges
-10. `processProBuildRequest()` - 14 edges
+10. `fetchProBuilds()` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `AutoUpdateGuard()` --references--> `react`  [EXTRACTED]
+  src/components/react/AutoUpdateGuard.tsx → package.json
 - `checkLiveNames()` --calls--> `getLockfileData()`  [EXTRACTED]
   scripts/check-live-names.ts → src/lib/services/lcu.service.ts
 - `debugInGame()` --calls--> `getLockfileData()`  [EXTRACTED]
@@ -83,17 +86,15 @@
   scripts/debug-live-game-api.ts → src/lib/services/lcu.service.ts
 - `findPlayers()` --calls--> `getLockfileData()`  [EXTRACTED]
   scripts/find-players-in-gameflow.ts → src/lib/services/lcu.service.ts
-- `testSummoners()` --calls--> `getLockfileData()`  [EXTRACTED]
-  scripts/find-summoner-lcu.ts → src/lib/services/lcu.service.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (52 total, 5 thin omitted)
+## Communities (53 total, 6 thin omitted)
 
 ### Community 0 - "Layout.astro"
-Cohesion: 0.07
-Nodes (24): react, react, AppUpdatePopup(), AppVersionResponse, AutoUpdateGuard(), SettingsPage(), SyncConsole(), SyncConsoleProps (+16 more)
+Cohesion: 0.08
+Nodes (22): AppUpdatePopup(), AppVersionResponse, AutoUpdateGuard(), SettingsPage(), SyncConsole(), SyncConsoleProps, SyncToast(), SyncToastProps (+14 more)
 
 ### Community 1 - "itemEngine.ts"
 Cohesion: 0.07
@@ -101,7 +102,7 @@ Nodes (49): getSingleChampionBuild(), AD_ASSASSIN_FALLBACKS, AD_FIGHTER_FALLBACK
 
 ### Community 2 - "sync.service.ts"
 Cohesion: 0.08
-Nodes (42): getPathsForBuild(), extractJsonFromHtml(), fetchWithFlareSolverr(), SyncEstructuraLanes(), syncItemsFromCommunityDragon(), CdragPerk, isShard(), isStyle() (+34 more)
+Nodes (41): extractJsonFromHtml(), fetchWithFlareSolverr(), SyncEstructuraLanes(), syncItemsFromCommunityDragon(), CdragPerk, isShard(), isStyle(), normalizeIconPath() (+33 more)
 
 ### Community 3 - "sqlite.ts"
 Cohesion: 0.07
@@ -109,23 +110,23 @@ Nodes (13): configRepo, isDev, closeDb(), defaultWeights, reopenDb(), AppConfig,
 
 ### Community 4 - "ChampionDetail.tsx"
 Cohesion: 0.07
-Nodes (51): formatFreshness(), ProBuildPanel(), ProBuildPanelProps, ChampionDetail(), ChampionDetailProps, ChampionList(), ChampionListProps, RuneTree() (+43 more)
+Nodes (52): formatFreshness(), ProBuildPanel(), ProBuildPanelProps, ChampionDetail(), ChampionDetailProps, ChampionList(), ChampionListProps, RuneTree() (+44 more)
 
 ### Community 5 - "getLockfileData"
 Cohesion: 0.09
 Nodes (24): agent, debugInGame(), agent, debugLiveGame(), agent, findPlayers(), agent, testSummoners() (+16 more)
 
 ### Community 6 - "DraftPage.tsx"
-Cohesion: 0.08
-Nodes (27): ChampionPreviewModal, ChampionPreviewModalProps, ConnectionStatus, ConnectionStatusProps, DraftDamageBalance(), DraftDamageBalanceProps, executeLcuAction(), GAP_TRANSLATIONS (+19 more)
+Cohesion: 0.09
+Nodes (25): ChampionPreviewModal, ChampionPreviewModalProps, ConnectionStatus, ConnectionStatusProps, DraftDamageBalance(), DraftDamageBalanceProps, executeLcuAction(), GAP_TRANSLATIONS (+17 more)
 
 ### Community 7 - "devDependencies"
 Cohesion: 0.12
 Nodes (17): eslint, @eslint/js, eslint-plugin-astro, eslint-plugin-react, eslint-plugin-react-hooks, devDependencies, eslint, @eslint/js (+9 more)
 
 ### Community 8 - "opgg-scraper.ts"
-Cohesion: 0.05
-Nodes (60): ProBuildData, ProBuildRunes, SituationalSwap, UseProBuildResult, toOpggChampionSlug(), cleanOldBuildCache(), DbProBuildRecord, getProBuildFromCache() (+52 more)
+Cohesion: 0.06
+Nodes (56): ProBuildData, ProBuildRunes, SituationalSwap, UseProBuildResult, cleanOldBuildCache(), DbProBuildRecord, getProBuildFromCache(), getTtlForSampleSize() (+48 more)
 
 ### Community 9 - "README.md"
 Cohesion: 0.15
@@ -133,15 +134,15 @@ Nodes (12): 1. Instalación de Dependencias, 2. Modo Desarrollo, 3. Compilación
 
 ### Community 10 - "engine.ts"
 Cohesion: 0.19
-Nodes (22): BansRecommendation, championMatchesArchetype(), getBanRecommendations(), getProcessedBans(), isFlexChampion(), AllyArchetype, analyzeComposition(), ArchetypeReading (+14 more)
+Nodes (21): BansRecommendation, championMatchesArchetype(), getBanRecommendations(), getProcessedBans(), isFlexChampion(), AllyArchetype, analyzeComposition(), ArchetypeReading (+13 more)
 
 ### Community 11 - "sync-champions-cdrag.ts"
 Cohesion: 0.14
 Nodes (23): API_NAME_MAP, normalizeKey(), populateDatabase(), resolveChampionId(), API_NAME_MAP, normalizeKey(), resolveChampionId(), roleToLaneMap (+15 more)
 
 ### Community 12 - "champions.repo.ts"
-Cohesion: 0.13
-Nodes (17): normalizeChampionName(), championsRepo, DbBuild, DbChampion, DbMatchup, DbSynergy, normalizeKey(), CACHE_PATH (+9 more)
+Cohesion: 0.12
+Nodes (18): normalizeChampionName(), championsRepo, DbBuild, DbChampion, DbMatchup, DbSynergy, normalizeKey(), CACHE_PATH (+10 more)
 
 ### Community 13 - "dependencies"
 Cohesion: 0.11
@@ -152,20 +153,20 @@ Cohesion: 0.12
 Nodes (21): actualizar_archivo_iss(), build_python(), buscar_iscc(), copiar_recursos_release(), descargar_python_embed(), ejecutar_iscc(), load_env(), obtener_configuracion_instaladores() (+13 more)
 
 ### Community 15 - "riot-api.service.ts"
-Cohesion: 0.15
-Nodes (17): computeTodayRecord(), TodayRecordResult, AccountInfo, ChampionMastery, getActiveGame(), getMatchDetail(), getMatchIdsToday(), getMatchRegionFromPlatform() (+9 more)
+Cohesion: 0.14
+Nodes (18): computeTodayRecord(), TodayRecordResult, readLcuProfileCache(), AccountInfo, ChampionMastery, getActiveGame(), getMatchDetail(), getMatchIdsToday() (+10 more)
 
 ### Community 16 - "dataProvider.ts"
-Cohesion: 0.15
-Nodes (16): calculateScalingType(), CHAMPION_ALIAS, DATA_BY_LANE, defaultCounterSynergies, defaultMetaCache, ENRICHED_DB, findInMetaCache(), initializeEngineData() (+8 more)
+Cohesion: 0.14
+Nodes (18): calculateScalingType(), CHAMPION_ALIAS, DATA_BY_LANE, defaultCounterSynergies, defaultMetaCache, ENRICHED_DB, EnrichedChampion, findInMetaCache() (+10 more)
 
 ### Community 17 - "automatizador-hexdraft.py"
 Cohesion: 0.22
 Nodes (17): acquire_mutex(), close_window_by_title_pattern(), get_browser_command(), get_lol_path(), is_lol_active(), is_window_active_by_title_pattern(), main(), Determina si el juego está activo mediante el archivo lockfile. (+9 more)
 
-### Community 18 - "liveMatchCache.service.ts"
-Cohesion: 0.26
-Nodes (8): LiveMatchCache, MATCH_CACHE_FILE, resetLiveMatchFlag(), GET(), getLastExecutedChampionId(), POST(), resetLastExecutedChampionId(), GET()
+### Community 18 - "live-game.ts"
+Cohesion: 0.27
+Nodes (10): getIdFromName(), LiveMatchCache, loadLiveMatchCache(), MATCH_CACHE_FILE, resetLiveMatchFlag(), saveLiveMatchCache(), resetLastExecutedChampionId(), GET() (+2 more)
 
 ### Community 19 - "publish_installer.py"
 Cohesion: 0.21
@@ -192,12 +193,12 @@ Cohesion: 0.20
 Nodes (8): CombatDirectivesPanel, CombatDirectivesPanelProps, COMP_STYLE_LABELS, ENEMY_WIN_COND_DETAILS, MatchupAnalysisPanel, MatchupAnalysisPanelProps, TacticalDirectives, TacticalDirectivesProps
 
 ### Community 25 - "getNameFromId"
-Cohesion: 0.22
-Nodes (15): agent, checkLiveNames(), getNameFromId(), loadLiveMatchCache(), saveLiveMatchCache(), CACHE_FILE_PATH, CacheSchema, checkIsStreamerMode() (+7 more)
+Cohesion: 0.21
+Nodes (14): agent, checkLiveNames(), getNameFromId(), CACHE_FILE_PATH, CacheSchema, checkIsStreamerMode(), loadCache(), OpggPlayerProfile (+6 more)
 
-### Community 26 - "history.ts"
+### Community 26 - "execute-action.ts"
 Cohesion: 0.60
-Nodes (4): assignLanesToTeam(), GET(), getFormattedMocks(), MOCK_HISTORY
+Nodes (3): GET(), getLastExecutedChampionId(), POST()
 
 ### Community 27 - "riot-cache.service.ts"
 Cohesion: 0.44
@@ -220,8 +221,8 @@ Cohesion: 0.43
 Nodes (5): LcuPlayer, PlayerProps, PlayerSlot, TeamSidebar, TeamSidebarProps
 
 ### Community 32 - "me.ts"
-Cohesion: 0.62
-Nodes (6): readLcuProfileCache(), writeLcuProfileCache(), checkIfSyncRecommended(), fetchAllProfileData(), GET(), updateProfileCacheInBackground()
+Cohesion: 0.73
+Nodes (5): writeLcuProfileCache(), checkIfSyncRecommended(), fetchAllProfileData(), GET(), updateProfileCacheInBackground()
 
 ### Community 33 - "DraftGrid.tsx"
 Cohesion: 0.40
@@ -256,24 +257,24 @@ Cohesion: 0.50
 Nodes (3): Documentación de Arquitectura de HexDraft, Interacción entre Motores, Índice de Documentos
 
 ## Knowledge Gaps
-- **235 isolated node(s):** `name`, `type`, `version`, `node`, `dev` (+230 more)
+- **233 isolated node(s):** `name`, `type`, `version`, `node`, `dev` (+228 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `Layout.astro` to `dependencies`?**
+- **Why does `AutoUpdateGuard()` connect `Layout.astro` to `dependencies`?**
+  _High betweenness centrality (0.101) - this node is a cross-community bridge._
+- **Why does `react` connect `dependencies` to `Layout.astro`?**
   _High betweenness centrality (0.099) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `package.json`, `Layout.astro`, `@types/react-dom`?**
+- **Why does `dependencies` connect `dependencies` to `package.json`, `@types/react`, `@types/react-dom`?**
   _High betweenness centrality (0.098) - this node is a cross-community bridge._
 - **What connects `name`, `type`, `version` to the rest of the system?**
-  _235 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _233 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Layout.astro` be split into smaller, more focused modules?**
-  _Cohesion score 0.0730804810360777 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.080338266384778 - nodes in this community are weakly interconnected._
 - **Should `itemEngine.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.06980392156862746 - nodes in this community are weakly interconnected._
 - **Should `sync.service.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.0824829931972789 - nodes in this community are weakly interconnected._
-- **Should `sqlite.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06620209059233449 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08421985815602837 - nodes in this community are weakly interconnected._

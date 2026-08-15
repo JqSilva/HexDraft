@@ -273,6 +273,7 @@ export async function scrapeOpggProfile(
     let validOpScoreCount = 0;
 
     const streakMatches: boolean[] = [];
+    const todayMatches: boolean[] = [];
 
     let lastMatchKda = '';
     let lastMatchResult = '';
@@ -332,6 +333,7 @@ export async function scrapeOpggProfile(
         }
 
         if (isGameToday) {
+          todayMatches.push(isWin);
           if (isWin) todayWins++;
           if (isLose) todayLosses++;
         }
@@ -358,12 +360,12 @@ export async function scrapeOpggProfile(
 
     const opScoreAvg = validOpScoreCount > 0 ? Math.round((totalOpScoreSum / validOpScoreCount) * 10) / 10 : undefined;
 
-    // Calcular Racha Actual
+    // Calcular Racha Actual basada exclusivamente en la sesión de hoy
     let streakType: 'win' | 'loss' | null = null;
     let streakCount = 0;
-    if (streakMatches.length > 0) {
-      const firstResult = streakMatches[0];
-      for (const res of streakMatches) {
+    if (todayMatches.length > 0) {
+      const firstResult = todayMatches[0];
+      for (const res of todayMatches) {
         if (res === firstResult) {
           streakCount++;
         } else {
@@ -512,5 +514,241 @@ export async function scrapeOpggProfile(
       isMain: false,
       tags: ['STABLE']
     };
+  }
+}
+
+/**
+ * Consulta las estadísticas clasificatorias y el historial de partidas directamente desde el cliente local de LoL (LCU).
+ * Retorna datos en tiempo real (0ms de retraso) sin depender de scraping externo.
+ */
+export async function getPlayerProfileFromLcu(
+  puuid: string,
+  lcu: { port: string; token: string; protocol: string },
+  currentChampionId: number = 0,
+  fallbackName?: string,
+  fallbackTag?: string
+): Promise<OpggPlayerProfile | null> {
+  if (!puuid || !lcu) return null;
+
+  const auth = btoa(`riot:${lcu.token}`);
+  const baseUrl = `https://127.0.0.1:${lcu.port}`;
+
+  try {
+    // 1. Obtener datos básicos de Invocador si faltan
+    let gameName = fallbackName || '';
+    let tagLine = fallbackTag || 'LAS';
+    let profileIconId = 29;
+
+    const sumRes = await fetch(`${baseUrl}/lol-summoner/v2/summoners/puuid/${puuid}`, {
+      headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(2000)
+    }).catch(() => null);
+
+    if (sumRes && sumRes.ok) {
+      const sumData = await sumRes.json();
+      if (sumData.gameName) gameName = sumData.gameName;
+      if (sumData.tagLine) tagLine = sumData.tagLine;
+      if (sumData.profileIconId) profileIconId = sumData.profileIconId;
+      if (!gameName && sumData.displayName) gameName = sumData.displayName;
+    }
+
+    if (!gameName) gameName = 'Invocador';
+
+    // 2. Obtener Estadísticas Clasificatorias en tiempo real
+    const rankedRes = await fetch(`${baseUrl}/lol-ranked/v1/ranked-stats/${puuid}`, {
+      headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(2000)
+    }).catch(() => null);
+
+    let soloRank = { tier: 'UNRANKED', division: '', rank: '', lp: 0, wins: 0, losses: 0, winrate: 0 };
+    let flexRank = { tier: 'UNRANKED', division: '', rank: '', lp: 0, wins: 0, losses: 0, winrate: 0 };
+
+    if (rankedRes && rankedRes.ok) {
+      const rankedData = await rankedRes.json();
+      const queues = rankedData.queues || rankedData.queueMap || [];
+      const queueList = Array.isArray(queues) ? queues : Object.values(queues);
+
+      const solo = queueList.find((q: any) => q.queueType === 'RANKED_SOLO_5x5');
+      if (solo && solo.tier && solo.tier !== 'NONE' && solo.tier !== 'UNRANKED') {
+        const wins = solo.wins || 0;
+        const losses = solo.losses || 0;
+        const total = wins + losses;
+        soloRank = {
+          tier: solo.tier.toUpperCase(),
+          division: solo.division || solo.rank || '',
+          rank: solo.division || solo.rank || '',
+          lp: solo.leaguePoints || 0,
+          wins,
+          losses,
+          winrate: total > 0 ? Math.round((wins / total) * 100) : 0
+        };
+      }
+
+      const flex = queueList.find((q: any) => q.queueType === 'RANKED_FLEX_SR');
+      if (flex && flex.tier && flex.tier !== 'NONE' && flex.tier !== 'UNRANKED') {
+        const wins = flex.wins || 0;
+        const losses = flex.losses || 0;
+        const total = wins + losses;
+        flexRank = {
+          tier: flex.tier.toUpperCase(),
+          division: flex.division || flex.rank || '',
+          rank: flex.division || flex.rank || '',
+          lp: flex.leaguePoints || 0,
+          wins,
+          losses,
+          winrate: total > 0 ? Math.round((wins / total) * 100) : 0
+        };
+      }
+    }
+
+    // 3. Obtener Historial de Partidas Recientes (hasta 15 partidas)
+    const matchRes = await fetch(`${baseUrl}/lol-match-history/v1/products/lol/${puuid}/matches?begIndex=0&endIndex=15`, {
+      headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(2500)
+    }).catch(() => null);
+
+    let todayWins = 0;
+    let todayLosses = 0;
+    const todayMatches: boolean[] = [];
+    const champStatsMap: Record<number, { wins: number; losses: number }> = {};
+    let lastMatchKda = '';
+    let lastMatchResult = '';
+
+    if (matchRes && matchRes.ok) {
+      const matchData = await matchRes.json();
+      const rawGames = matchData.games?.games || matchData.games || [];
+      const games = Array.isArray(rawGames) ? rawGames : [];
+
+      if (games.length > 0) {
+        const firstP = games[0]?.participants?.[0];
+        if (firstP && firstP.stats) {
+          lastMatchKda = `${firstP.stats.kills || 0}/${firstP.stats.deaths || 0}/${firstP.stats.assists || 0}`;
+          lastMatchResult = firstP.stats.win ? 'Victoria' : 'Derrota';
+        }
+      }
+
+      const now = Date.now();
+      const todayDate = new Date();
+
+      for (const game of games) {
+        const p = game.participants?.[0];
+        if (!p || !p.stats) continue;
+
+        const isWin = Boolean(p.stats.win);
+        const champId = p.championId || 0;
+
+        if (champId > 0) {
+          if (!champStatsMap[champId]) {
+            champStatsMap[champId] = { wins: 0, losses: 0 };
+          }
+          if (isWin) champStatsMap[champId].wins++;
+          else champStatsMap[champId].losses++;
+        }
+
+        // Verificar si la partida fue hoy (mismo día calendario o últimas 18h)
+        const gameTimeMs = game.gameCreation || 0;
+        let isToday = false;
+        if (gameTimeMs > 0) {
+          const gameDate = new Date(gameTimeMs);
+          const sameDay = gameDate.getFullYear() === todayDate.getFullYear() &&
+                          gameDate.getMonth() === todayDate.getMonth() &&
+                          gameDate.getDate() === todayDate.getDate();
+          const diffHours = (now - gameTimeMs) / (1000 * 60 * 60);
+          if (sameDay || (diffHours >= 0 && diffHours <= 18)) {
+            isToday = true;
+          }
+        }
+
+        if (isToday) {
+          todayMatches.push(isWin);
+          if (isWin) todayWins++;
+          else todayLosses++;
+        }
+      }
+    }
+
+    // 4. Calcular Racha Actual basada exclusivamente en las partidas de hoy
+    let streakType: 'win' | 'loss' | null = null;
+    let streakCount = 0;
+    if (todayMatches.length > 0) {
+      const firstResult = todayMatches[0];
+      for (const res of todayMatches) {
+        if (res === firstResult) {
+          streakCount++;
+        } else {
+          break;
+        }
+      }
+      streakType = firstResult ? 'win' : 'loss';
+    }
+
+    // 5. Campeones más jugados
+    const topChampions: Array<{ name: string; wins: number; losses: number; winrate: number }> = [];
+    for (const [cIdStr, stats] of Object.entries(champStatsMap)) {
+      const cId = Number(cIdStr);
+      const name = getNameFromId(cId) || `Champion_${cId}`;
+      const total = stats.wins + stats.losses;
+      const winrate = total > 0 ? Math.round((stats.wins / total) * 100) : 0;
+      topChampions.push({ name, wins: stats.wins, losses: stats.losses, winrate });
+    }
+    topChampions.sort((a, b) => (b.wins + b.losses) - (a.wins + a.losses));
+
+    const currentChampName = currentChampionId > 0 ? getNameFromId(currentChampionId) : null;
+    const isMain = currentChampName
+      ? topChampions.some(c => c.name.toLowerCase() === currentChampName.toLowerCase())
+      : false;
+
+    // 6. Generar etiquetas
+    const tags: string[] = [];
+    if (isMain && currentChampName) {
+      tags.push(`MAIN ${currentChampName.toUpperCase()}`);
+    }
+    if (streakCount >= 3 && streakType === 'win') {
+      tags.push(`WIN STREAK ${streakCount}W`);
+    } else if (streakCount >= 3 && streakType === 'loss') {
+      tags.push(`LOSS STREAK ${streakCount}L`);
+      tags.push('TILTEADO');
+    }
+
+    if (todayWins + todayLosses === 0) {
+      tags.push('1ª PARTIDA');
+    }
+
+    if (soloRank.winrate >= 60 && (soloRank.wins + soloRank.losses) >= 15) {
+      tags.push('HIGH WR');
+    }
+
+    const riotId = `${gameName}#${tagLine}`;
+    const profileIconUrl = profileIconId > 0
+      ? `https://ddragon.leagueoflegends.com/cdn/14.15.1/img/profileicon/${profileIconId}.png`
+      : undefined;
+
+    return {
+      puuid,
+      riotId,
+      summonerName: gameName,
+      profileIconId,
+      profileIconUrl,
+      isStreamerMode: false,
+      ranked: soloRank,
+      rankedFlex: flexRank,
+      todayRecord: {
+        wins: todayWins,
+        losses: todayLosses,
+        winrate: (todayWins + todayLosses) > 0 ? Math.round((todayWins / (todayWins + todayLosses)) * 100) : null,
+        streak: {
+          type: streakType,
+          count: streakCount
+        }
+      },
+      topChampions,
+      isMain,
+      tags: tags.length > 0 ? tags : ['STABLE'],
+      lastMatchKda,
+      lastMatchResult
+    };
+  } catch (e) {
+    console.warn(`[LCU Player Profile] Error consultando LCU para puuid ${puuid}:`, e);
+    return null;
   }
 }

@@ -20,12 +20,9 @@ export const POST: APIRoute = async ({ request }) => {
         });
         const pages = await resPages.json();
 
-        // 2. Buscamos la primera página que el usuario pueda editar (que no sea una predeterminada de Riot)
-        const editablePage = pages.find((p: any) => p.isEditable);
-
-        if (!editablePage) {
-            return new Response(JSON.stringify({ error: "No se encontró una página de runas editable. Crea una nueva en el cliente." }), { status: 400 });
-        }
+        // 2. Buscamos la página de runas más adecuada (la actualmente seleccionada, una de HexDraft, o la primera editable)
+        const editablePage = pages.find((p: any) => p.isEditable && (p.current || p.isActive || (p.name && p.name.includes('HexDraft')))) ||
+                             pages.find((p: any) => p.isEditable);
 
         // 3. Preparamos el payload validado canónicamente
         const rawSelections = Array.isArray(body.selectedPerkIds) ? body.selectedPerkIds.map(Number) : [];
@@ -39,28 +36,50 @@ export const POST: APIRoute = async ({ request }) => {
             Number(body.subStyleId) || undefined
         );
 
-        const updatedPage = {
-            ...editablePage,
-            name: body.name || "HexDraft Build",
-            primaryStyleId: sanitized.primaryStyleId,
-            subStyleId: sanitized.subStyleId,
-            selectedPerkIds: [...sanitized.selections, ...sanitized.shards],
-            current: true // Esto hace que el cliente la seleccione automáticamente
-        };
+        if (!editablePage) {
+            // Intentar crear una nueva página si el cliente no tiene una editable
+            const createRes = await fetch(`${baseUrl}/lol-perks/v1/pages`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Basic ${auth}`, 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: body.name || "HexDraft Build",
+                    primaryStyleId: sanitized.primaryStyleId,
+                    subStyleId: sanitized.subStyleId,
+                    selectedPerkIds: [...sanitized.selections, ...sanitized.shards],
+                    current: true
+                })
+            });
 
-        // 4. Enviamos el PUT para actualizar esa página específica
-        const response = await fetch(`${baseUrl}/lol-perks/v1/pages/${editablePage.id}`, {
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Basic ${auth}`, 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updatedPage)
-        });
+            if (!createRes.ok) {
+                return new Response(JSON.stringify({ error: "No se encontró una página de runas editable. Por favor crea o vacía una página en el cliente." }), { status: 400 });
+            }
+        } else {
+            const updatedPage = {
+                ...editablePage,
+                name: body.name || "HexDraft Build",
+                primaryStyleId: sanitized.primaryStyleId,
+                subStyleId: sanitized.subStyleId,
+                selectedPerkIds: [...sanitized.selections, ...sanitized.shards],
+                current: true
+            };
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            return new Response(JSON.stringify({ error: "Error al actualizar", details: errorText }), { status: 400 });
+            // 4. Enviamos el PUT para actualizar esa página específica
+            const response = await fetch(`${baseUrl}/lol-perks/v1/pages/${editablePage.id}`, {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Basic ${auth}`, 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedPage)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                return new Response(JSON.stringify({ error: "Error al actualizar", details: errorText }), { status: 400 });
+            }
         }
 
         console.log(`📤 [LCU EXPORT RUNES] ${body.name || "HexDraft Build"}`);

@@ -1,8 +1,50 @@
-// src/lib/championMapper.ts
+/**
+ * Mapeo de slugs específicos requeridos por la web de OP.GG.
+ */
+export const OPGG_CHAMPION_SLUGS: Record<string, string> = {
+  "monkeyking": "wukong",
+  "wukong": "wukong",
+  "nunuywillump": "nunu",
+  "nunuwillump": "nunu",
+  "nunu": "nunu",
+  "renataglasc": "renata",
+  "renata": "renata",
+  "bardo": "bard",
+  "bard": "bard",
+  "drmundo": "dr-mundo",
+  "doctormundo": "dr-mundo",
+  "jarvaniv": "jarvan-iv",
+  "jarvan": "jarvan-iv",
+  "leesin": "lee-sin",
+  "masteryi": "master-yi",
+  "maestroyi": "master-yi",
+  "missfortune": "miss-fortune",
+  "tahmkench": "tahm-kench",
+  "twistedfate": "twisted-fate",
+  "xinzhao": "xin-zhao",
+  "aurelionsol": "aurelion-sol",
+  "kogmaw": "kog-maw",
+  "reksai": "rek-sai",
+  "velkoz": "vel-koz",
+  "ksante": "k-sante",
+  "belveth": "bel-veth",
+  "chogath": "cho-gath",
+  "kaisa": "kai-sa",
+  "khazix": "kha-zix"
+};
+
+/**
+ * Convierte cualquier nombre o alias de campeón al slug exacto que utiliza OP.GG en sus URLs.
+ */
+export function toOpggChampionSlug(name: string): string {
+  if (!name) return "";
+  const norm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return OPGG_CHAMPION_SLUGS[norm] || norm;
+}
 
 /**
  * Normaliza nombres de campeones y resuelve casos especiales de Riot para nombres de archivos de DDragon.
- * Soporta múltiples variaciones (ej: "Nunu y Willump", "Nunu & Willump", "Nunu" -> "Nunu").
+ * Soporta múltiples variaciones (ej: "Nunu y Willump", "Nunu & Willump", "Nunu" -> "Nunu", "Wukong" -> "MonkeyKing").
  */
 export function getChampionCdnName(name: string): string {
   if (!name) return "Garen";
@@ -33,6 +75,11 @@ export function getChampionCdnName(name: string): string {
     "chogath": "Chogath",
     "bardo": "Bard",
     "bard": "Bard",
+    "missfortune": "MissFortune",
+    "twistedfate": "TwistedFate",
+    "xinzhao": "XinZhao",
+    "reksai": "RekSai",
+    "kogmaw": "KogMaw"
   };
   
   if (mapping[norm]) return mapping[norm];

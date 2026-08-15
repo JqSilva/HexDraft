@@ -9,6 +9,7 @@ import { getOpponentArchetype } from '../engine/archetypes.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import { logOpgg } from '../utils/opggLogger.js';
 import { validateAndSanitizeRunePage } from '../engine/runeValidator.js';
+import { toOpggChampionSlug } from '../championMapper.js';
 
 export interface OpggBuildRunes {
   primaryStyleId: number;
@@ -157,12 +158,17 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
   summoners: number[];
 } {
   const normName = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const canonicalName = (normName === 'monkeyking' || normName === 'wukong') ? 'wukong' : normName;
+
   const baseChamp = Object.values(CHAMPIONS_DB).find(
-    c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normName
+    c => {
+      const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return cNorm === normName || cNorm === canonicalName;
+    }
   );
 
   const champClass = baseChamp?.class || '';
-  const damageType = baseChamp?.damageType || 'AD';
+  const damageType = baseChamp?.damageType || (canonicalName === 'wukong' ? 'AD' : 'AD');
 
   if (normName === 'ryze') {
     const runes = validateAndSanitizeRunePage(
@@ -195,6 +201,24 @@ export function getDefaultItemsForChampion(championName: string, role: string): 
       starterItems: [1055, 2003],
       boots: 3006, // Berserker's Greaves
       summoners: [4, 7], // Flash + Heal
+      runes
+    };
+  }
+
+  if (canonicalName === 'wukong' || champClass === 'Fighter' || (damageType === 'AD' && champClass !== 'Marksman' && champClass !== 'Assassin' && champClass !== 'Tank' && champClass !== 'Mage')) {
+    const runes = validateAndSanitizeRunePage(
+      [8010, 9111, 9104, 8299, 8473, 8451], // Conquistador, Triunfo, Celeridad, Último Esfuerzo, Revestimiento de Huesos, Crecimiento Excesivo
+      [5008, 5008, 5011],
+      8000,
+      8400
+    );
+    const resolved = resolveTearAndEvolutions([3078, 6631, 3053, 3156, 3026], championName, 'AD'); // Trinidad, Firmamento/Cortasendas, Sterak, Fauces, GA
+    return {
+      earlyBuy: resolved.earlyBuy,
+      coreItems: resolved.completedCore,
+      starterItems: [1055, 2003],
+      boots: 3047, // Botas Blindadas
+      summoners: role.toLowerCase() === 'jungle' ? [4, 11] : [4, 14],
       runes
     };
   }
@@ -281,19 +305,20 @@ export async function fetchProBuilds(
   if (!championName) return [];
 
   const startTime = Date.now();
-  const normalizedChamp = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const opggSlug = toOpggChampionSlug(championName);
   const mappedRole = ROLE_MAP[role.toLowerCase()] || 'mid';
   const opponentArchetype = getOpponentArchetype(opponentName || '');
 
-  logOpgg('START', `Iniciando consulta de builds para ${championName} en rol ${role}`, {
+  logOpgg('START', `Iniciando consulta de builds para ${championName} (slug: ${opggSlug}) en rol ${role}`, {
     championName,
+    opggSlug,
     role: mappedRole,
     opponentName: opponentName || 'ninguno',
     opponentArchetype
   });
 
   const fallbackDefaults = getDefaultItemsForChampion(championName, mappedRole);
-  const url = `https://www.op.gg/champions/${normalizedChamp}/build/${mappedRole}?tier=master`;
+  const url = `https://www.op.gg/champions/${opggSlug}/build/${mappedRole}?tier=master`;
 
   logOpgg('OPGG-FETCH', `Descargando página de builds de OP.GG: ${url}`);
 
@@ -508,10 +533,16 @@ export async function fetchProBuilds(
       startersFound: starterItemsList.length
     });
 
+    const normName = championName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const canonicalName = (normName === 'monkeyking' || normName === 'wukong') ? 'wukong' : normName;
+
     const baseChamp = Object.values(CHAMPIONS_DB).find(
-      c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedChamp
+      c => {
+        const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return cNorm === normName || cNorm === canonicalName;
+      }
     );
-    const damageType = baseChamp?.damageType || 'AD';
+    const damageType = baseChamp?.damageType || (canonicalName === 'wukong' ? 'AD' : 'AD');
 
     // Construcción de builds candidatas
     const rawBuilds: OpggProBuild[] = [];

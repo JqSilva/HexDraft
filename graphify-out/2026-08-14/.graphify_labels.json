@@ -17,7 +17,7 @@
   "15": "riot-api.service.ts",
   "16": "dataProvider.ts",
   "17": "automatizador-hexdraft.py",
-  "18": "liveMatchCache.service.ts",
+  "18": "live-game.ts",
   "19": "publish_installer.py",
   "20": "DashboardHome.tsx",
   "21": "app-hexdraft.py",
@@ -25,7 +25,7 @@
   "23": "tsconfig.json",
   "24": "TacticalDirectives.tsx",
   "25": "getNameFromId",
-  "26": "history.ts",
+  "26": "execute-action.ts",
   "27": "riot-cache.service.ts",
   "28": "manifest.json",
   "29": "PlayerCardSandbox.tsx",
@@ -50,5 +50,6 @@
   "48": "package.json",
   "49": "Documentación de Arquitectura de HexDraft",
   "50": "opgg-logs.ts",
+  "51": "@types/react",
   "52": "@types/react-dom"
 }

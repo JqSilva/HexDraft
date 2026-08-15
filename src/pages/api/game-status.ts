@@ -41,11 +41,19 @@ export const GET: APIRoute = async () => {
 
     if (phase === 'InProgress') {
       try {
-        const activePlayerRes = await fetch('https://127.0.0.1:2999/liveclientdata/activeplayer', {
+        const statsRes = await fetch('https://127.0.0.1:2999/liveclientdata/gamestats', {
           signal: AbortSignal.timeout(1500)
         });
-        isGameReady = activePlayerRes.ok;
-        isLoadingScreen = !activePlayerRes.ok;
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          const gameTime = Number(stats.gameTime) || 0;
+          // En pantalla de carga gameTime es 0.0. La partida in-game empieza cuando los campeones spawnean (gameTime > 0)
+          isGameReady = gameTime > 0;
+          isLoadingScreen = gameTime <= 0;
+        } else {
+          isGameReady = false;
+          isLoadingScreen = true;
+        }
       } catch (e) {
         // Conexión rechazada o timeout en puerto 2999 -> aún en pantalla de carga
         isGameReady = false;

@@ -174,14 +174,68 @@ export const NAME_TO_ID: Record<string, number> = {
   "Zyra": 143
 };
 
+export const CHAMPION_ALIASES: Record<string, string> = {
+  "monkeyking": "wukong",
+  "wukong": "wukong",
+  "nunuywillump": "nunu y willump",
+  "nunuwillump": "nunu y willump",
+  "nunu": "nunu y willump",
+  "maestroyi": "maestro yi",
+  "masteryi": "maestro yi",
+  "renataglasc": "renata glasc",
+  "renata": "renata glasc",
+  "bardo": "bardo",
+  "bard": "bardo",
+  "drmundo": "dr. mundo",
+  "doctormundo": "dr. mundo",
+  "jarvaniv": "jarvan iv",
+  "jarvan": "jarvan iv",
+  "leesin": "lee sin",
+  "aurelionsol": "aurelion sol",
+  "ksante": "k'sante",
+  "kaisa": "kai'sa",
+  "khazix": "kha'zix",
+  "velkoz": "vel'koz",
+  "chogath": "cho'gath",
+  "reksai": "rek'sai",
+  "kogmaw": "kog'maw",
+  "missfortune": "miss fortune",
+  "twistedfate": "twisted fate",
+  "xinzhao": "xin zhao",
+  "belveth": "bel'veth",
+  "tahmkench": "tahm kench"
+};
+
 export function getIdFromName(name: string): number {
   if (!name) return 0;
   const clean = name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+  // 1. Revisar alias comunes (MonkeyKing -> Wukong, etc.)
+  const aliased = CHAMPION_ALIASES[clean];
+  if (aliased) {
+    const aliasClean = aliased.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    for (const [key, id] of Object.entries(NAME_TO_ID)) {
+      if (key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === aliasClean) {
+        return id;
+      }
+    }
+  }
+
+  // 2. Búsqueda exacta
   for (const [key, id] of Object.entries(NAME_TO_ID)) {
     if (key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === clean) {
       return id;
     }
   }
+
+  // 3. Búsqueda por inclusión
+  for (const [key, id] of Object.entries(NAME_TO_ID)) {
+    const keyClean = key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    if (keyClean.includes(clean) || clean.includes(keyClean)) {
+      return id;
+    }
+  }
+
   return 0;
 }
 
