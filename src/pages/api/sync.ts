@@ -5,6 +5,7 @@ import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
 import { initializeEngineData } from '../../lib/engine/dataProvider.js';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
+import { fetchLatestPatchVersion } from '../../lib/sources/cdragon/cdragon-patch-version.source.js';
 
 let isGlobalSyncing = false;
 let shouldAbort = false;
@@ -108,10 +109,8 @@ export const GET: APIRoute = async ({ url }) => {
 
             if (!fetched) {
                 try {
-                    const ddragonRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-                    if (ddragonRes.ok) {
-                        const versions = await ddragonRes.json();
-                        const latestFull = versions[0];
+                    const latestFull = await fetchLatestPatchVersion();
+                    if (latestFull) {
                         const parts = latestFull.split('.');
                         shortVersion = `${parts[0]}.${parts[1]}`;
                         fetched = true;

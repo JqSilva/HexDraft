@@ -2,18 +2,14 @@
 import { db } from '../db/sqlite.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fetchRawItems } from '../sources/cdragon/cdragon-items.source.js';
 
 export async function syncItemsFromCommunityDragon(): Promise<number> {
   console.log("Sincronizando items desde Community Dragon (ES)...");
-  const url = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/es_ar/v1/items.json';
   const ASSETS_MAP_PATH = './src/lib/data/assets-map.json';
   
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Fallo al descargar items: ${response.statusText}`);
-    }
-    const items = await response.json() as Record<string, any>;
+    const items = await fetchRawItems();
     
     // Iniciar transacción
     db.exec('BEGIN TRANSACTION;');

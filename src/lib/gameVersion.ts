@@ -1,4 +1,5 @@
 // src/lib/gameVersion.ts
+import { fetchLatestPatchVersion } from './sources/cdragon/cdragon-patch-version.source.js';
 
 let cachedGameVersion = '16.1.1';
 let isFetching = false;
@@ -61,15 +62,12 @@ export async function fetchLatestGameVersion(): Promise<string> {
 
   // 3. Fallback directo a la API de DataDragon para obtener la versión oficial más reciente
   try {
-    const ddragonRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
-    if (ddragonRes.ok) {
-      const versions = await ddragonRes.json();
-      if (Array.isArray(versions) && versions.length > 0) {
-        cachedGameVersion = versions[0];
-        hasInitialized = true;
-        isFetching = false;
-        return cachedGameVersion;
-      }
+    const latestVersion = await fetchLatestPatchVersion();
+    if (latestVersion) {
+      cachedGameVersion = latestVersion;
+      hasInitialized = true;
+      isFetching = false;
+      return cachedGameVersion;
     }
   } catch (_e) {
     // DataDragon fallback
