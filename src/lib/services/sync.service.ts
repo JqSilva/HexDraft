@@ -1,6 +1,4 @@
 // src/lib/services/sync.service.ts
-import axios from 'axios';
-import * as cheerio from 'cheerio';
 import fs from 'node:fs';
 import path from 'node:path';
 import { db as dbInstance } from '../db/sqlite.js';
@@ -13,42 +11,8 @@ import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 import { API_NAME_MAP, NORM_API_NAME_MAP, normalizeKey, resolveChampionId } from '../domain/champion-name-resolver.js';
 import { getStyleOfRune } from '../domain/rune-style-map.js';
-
-const FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
-
-function extractJsonFromHtml(htmlOrJson: string | any): any {
-  if (typeof htmlOrJson === 'object') return htmlOrJson;
-  try {
-    return JSON.parse(htmlOrJson);
-  } catch (e) {
-    const preMatch = htmlOrJson.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
-    if (preMatch && preMatch[1]) {
-      return JSON.parse(preMatch[1].trim());
-    }
-    const bodyMatch = htmlOrJson.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (bodyMatch && bodyMatch[1]) {
-      const text = bodyMatch[1].replace(/<[^>]*>/g, '').trim();
-      return JSON.parse(text);
-    }
-    throw new Error("No se pudo extraer JSON puro de la respuesta de FlareSolverr.");
-  }
-}
-
-async function fetchWithFlareSolverr(url: string): Promise<any> {
-  const response = await axios.post(FLARESOLVERR_URL, {
-    cmd: "request.get",
-    url: url,
-    maxTimeout: 60000
-  }, {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: 70000
-  });
-
-  if (response.data && response.data.status === 'ok') {
-    return response.data.solution.response;
-  }
-  throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
-}
+import { fetchDpmChampionStats } from '../sources/dpm-champion-stats.source.js';
+import { fetchOpggMetaByPosition } from '../sources/opgg-meta.source.js';
 
 // --- UTILIDADES DEL SCRAPER ---
 const getBestSummoners = (arr: any[]) => {
@@ -374,24 +338,20 @@ export async function scrapeSingleChampion(
     if (lane === "UNKNOWN") continue;
     writeLog(`   > Procesando carril: ${lane} para ${name}`);
     
-    const internalName = API_NAME_MAP[name] || name;
-    const urlName = internalName.replace(/[^a-zA-Z0-9]/g, "");
-    
-    // El endpoint de dpm.lol usa 'utility' para UTILITY
-    const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'utility' : lane.toLowerCase();
-    const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=diamond&timeframe=${version}&gameMode=ranked`;
-    
     try {
-      const responseHtml = await fetchWithFlareSolverr(url);
-      const data = extractJsonFromHtml(responseHtml);
+      const data = await fetchDpmChampionStats(name, lane, version);
 
       if (!data || data.error || !data.runes) {
         writeLog(`   [WARN] dpm.lol no tiene builds para ${name} en ${lane}`);
         continue;
       }
 
+      const laneUpper = lane.toUpperCase();
+      const laneLower = lane.toLowerCase();
+      const dpmLane = laneUpper === 'UTILITY' ? 'utility' : laneLower;
+
       // 1. Extraer God Matchups para este carril
-      const laneGodMatchups = (data.enemyMatchups?.[lane.toUpperCase()] || data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+      const laneGodMatchups = (data.enemyMatchups?.[laneUpper] || data.enemyMatchups?.[laneLower] || data.enemyMatchups?.[dpmLane] || [])
         .filter((m: any) => m.count > 160)
         .map((m: any) => {
           const goldValue = m.goldDiffAt15 || 0;
@@ -419,7 +379,7 @@ export async function scrapeSingleChampion(
         .slice(0, 15);
 
       // 2. Extraer Counters para este carril
-      const laneCounters = (data.enemyMatchups?.[lane.toUpperCase()] || data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+      const laneCounters = (data.enemyMatchups?.[laneUpper] || data.enemyMatchups?.[laneLower] || data.enemyMatchups?.[dpmLane] || [])
         .filter((m: any) => m.count > 160)
         .map((m: any) => {
           const goldValue = m.goldDiffAt15 || 0;
@@ -778,28 +738,8 @@ export async function syncMetaCacheOnly(writeLog: (msg: string) => void): Promis
 
   for (const role of roles) {
     writeLog(`[OPGG-SYNC] Scrapeando: ${role}`);
-    const pos = role;
     try {
-      const { data: html } = await axios.get(`https://www.op.gg/champions?region=global&tier=diamond&position=${pos}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      const $ = cheerio.load(html);
-      const list: any[] = [];
-
-      $('table tbody tr').each((_, el) => {
-        const row = $(el);
-        if (row.hasClass('ad')) return;
-        const rank = row.find('td:first-child span.w-5').first().text().trim();
-
-        list.push({
-          rank: rank,
-          name: row.find('td:nth-child(2) strong').text().trim(),
-          winRate: row.find('td:nth-child(5)').text().trim(),
-          pickRate: row.find('td:nth-child(6)').text().trim(),
-          counters: row.find('td:nth-child(8) img').map((_, img) => $(img).attr('alt')).get()
-        });
-      });
-      metaCache[role] = list;
+      metaCache[role] = await fetchOpggMetaByPosition(role);
     } catch (e: any) {
       writeLog(`Error OP.GG ${role}: ${e.message || e}`);
     }
