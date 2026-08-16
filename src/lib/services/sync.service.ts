@@ -445,7 +445,7 @@ export async function scrapeSingleChampion(
       }
 
       // 1. Extraer God Matchups para este carril
-      const laneGodMatchups = (data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+      const laneGodMatchups = (data.enemyMatchups?.[lane.toUpperCase()] || data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
         .filter((m: any) => m.count > 160)
         .map((m: any) => {
           const goldValue = m.goldDiffAt15 || 0;
@@ -473,7 +473,7 @@ export async function scrapeSingleChampion(
         .slice(0, 15);
 
       // 2. Extraer Counters para este carril
-      const laneCounters = (data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
+      const laneCounters = (data.enemyMatchups?.[lane.toUpperCase()] || data.enemyMatchups?.[lane.toLowerCase()] || data.enemyMatchups?.[dpmLane] || [])
         .filter((m: any) => m.count > 160)
         .map((m: any) => {
           const goldValue = m.goldDiffAt15 || 0;
