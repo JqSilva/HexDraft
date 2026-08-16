@@ -4,8 +4,7 @@ import { syncMetaAndBuilds } from '../../lib/services/sync.service.js';
 import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
 import { initializeEngineData } from '../../lib/engine/dataProvider.js';
-import { getLockfileData } from '../../lib/services/lcu.service.js';
-import { fetchLatestPatchVersion } from '../../lib/sources/cdragon/cdragon-patch-version.source.js';
+import { resolveCurrentPatchVersion } from '../../lib/domain/patch-version-resolver.js';
 
 let isGlobalSyncing = false;
 let shouldAbort = false;
@@ -50,8 +49,19 @@ const updateProgress = (current: number, total: number, phase: 'opgg' | 'puppete
 
 export const GET: APIRoute = async ({ url }) => {
     const type = url.searchParams.get('type');
-    const version = url.searchParams.get('version') || '16.9';
     const force = url.searchParams.get('force') === 'true';
+
+    let version = url.searchParams.get('version');
+    if (!version) {
+        try {
+            version = (await resolveCurrentPatchVersion()).version;
+        } catch (e: any) {
+            return new Response(JSON.stringify({ 
+                error: "No se pudo determinar la versión del parche para la sincronización", 
+                details: e.message 
+            }), { status: 500 });
+        }
+    }
 
     if (type === 'status') {
         return new Response(JSON.stringify({ 
@@ -83,42 +93,9 @@ export const GET: APIRoute = async ({ url }) => {
             const lastLaneSyncTimestamp = configs.last_lane_sync_timestamp || '-';
             const lastSyncVersion = configs.last_sync_version || '-';
 
-            // Obtener versión de LoL (LCU o fallback a DDragon)
-            let shortVersion = '16.12'; // Fallback por defecto si todo falla
-            let fetched = false;
-            try {
-                const lcu = getLockfileData();
-                if (lcu) {
-                    const auth = btoa(`riot:${lcu.token}`);
-                    const response = await fetch(
-                        `https://127.0.0.1:${lcu.port}/lol-patch/v1/game-version`,
-                        {
-                            headers: { 'Authorization': `Basic ${auth}` }
-                        }
-                    );
-                    if (response.ok) {
-                        const fullVersion = await response.json();
-                        const parts = fullVersion.split('.');
-                        shortVersion = `${parts[0]}.${parts[1]}`;
-                        fetched = true;
-                    }
-                }
-            } catch (e) {
-                console.warn("No se pudo obtener la versión de LoL desde LCU para el check:", e);
-            }
-
-            if (!fetched) {
-                try {
-                    const latestFull = await fetchLatestPatchVersion();
-                    if (latestFull) {
-                        const parts = latestFull.split('.');
-                        shortVersion = `${parts[0]}.${parts[1]}`;
-                        fetched = true;
-                    }
-                } catch (e) {
-                    console.warn("No se pudo obtener la versión de LoL desde DDragon para el check:", e);
-                }
-            }
+            // Obtener versión de LoL resolviendo con el resolver de dominio
+            const patchResolution = await resolveCurrentPatchVersion();
+            const shortVersion = patchResolution.version;
 
             const isOutdated = (timestampStr: string, limitDays: number): boolean => {
                 if (timestampStr === '-' || !timestampStr) return true;
@@ -146,6 +123,7 @@ export const GET: APIRoute = async ({ url }) => {
                 sync_period_days: syncPeriodDays,
                 lane_sync_period_days: laneSyncPeriodDays,
                 version: shortVersion,
+                version_source: patchResolution.source,
                 is_new_patch: isNewPatch
             }), { 
                 status: 200,
