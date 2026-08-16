@@ -2,27 +2,13 @@
 // Sincroniza runas, shards y runeToStyle desde Community Dragon
 import fs from 'fs';
 import path from 'path';
+import { fetchRawPerks, type RawCdragPerk, type RawPerkStyle, type RawPerkStylesResponse } from '../sources/cdragon/cdragon-runes.source.js';
 
-const PERKS_URL_ES = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/es_ar/v1/perks.json';
-const PERKSTYLES_URL = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json';
 const ASSETS_MAP_PATH = './src/lib/data/assets-map.json';
 
-interface CdragPerk {
-  id: number;
-  name: string;
-  iconPath: string;
-}
-
-interface PerkStyle {
-  id: number;
-  name: string;
-  iconPath: string;
-  slots: { type: string; perks: number[] }[];
-}
-
-interface PerkStylesResponse {
-  styles: PerkStyle[];
-}
+type CdragPerk = RawCdragPerk;
+type PerkStyle = RawPerkStyle;
+type PerkStylesResponse = RawPerkStylesResponse;
 
 /**
  * Normaliza un iconPath de CDragon a una ruta relativa limpia para usar en el frontend.
@@ -52,17 +38,9 @@ function isStyle(id: number): boolean {
 export async function syncRunesFromCommunityDragon(): Promise<{ runesCount: number; shardsCount: number; runeToStyleCount: number }> {
   console.log("Sincronizando runas desde Community Dragon...");
 
-  // 1. Descargar perks (en español) y perkstyles
-  const [perksRes, stylesRes] = await Promise.all([
-    fetch(PERKS_URL_ES),
-    fetch(PERKSTYLES_URL)
-  ]);
-
-  if (!perksRes.ok) throw new Error(`Fallo al descargar perks: ${perksRes.statusText}`);
-  if (!stylesRes.ok) throw new Error(`Fallo al descargar perkstyles: ${stylesRes.statusText}`);
-
-  const perks: CdragPerk[] = await perksRes.json();
-  const perkStyles: PerkStylesResponse = await stylesRes.json();
+  // 1. Descargar perks (en español) y perkstyles vía sources
+  const { perks, styles } = await fetchRawPerks();
+  const perkStyles = { styles };
 
   // 2. Construir mapas
   const runesMap: Record<string, any> = {};
