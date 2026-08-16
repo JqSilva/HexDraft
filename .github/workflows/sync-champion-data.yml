@@ -1,0 +1,41 @@
+name: Sync champion data
+
+on:
+  schedule:
+    - cron: '0 4 * * 1,4'   # lunes y jueves, 4am UTC
+  workflow_dispatch: {}       # te permite correrlo a mano desde la pestaña Actions
+
+jobs:
+  sync-and-publish:
+    runs-on: ubuntu-latest
+
+    services:
+      flaresolverr:
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        ports:
+          - 8191:8191
+
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Correr sync completo
+        run: npm run sync:cli
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Publicar base de datos a HexDraft-Releases
+        run: python publish_db.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_PAT }}
