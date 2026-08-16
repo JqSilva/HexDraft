@@ -12,6 +12,7 @@
     "preview": "node --experimental-sqlite node_modules/astro/bin/astro.mjs preview",
     "astro": "node --experimental-sqlite node_modules/astro/bin/astro.mjs",
     "sim": "node scripts/simulate-draft.js",
+    "sync:cli": "tsx scripts/run-sync-cli.ts",
     "sandbox": "vite --config sandbox/vite.config.ts",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
