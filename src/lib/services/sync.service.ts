@@ -3,7 +3,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import fs from 'node:fs';
 import path from 'node:path';
-import assetsMap from '../data/assets-map.json' with { type: 'json' };
 import { db as dbInstance } from '../db/sqlite.js';
 import { championsRepo } from '../db/champions.repo.js';
 import { configRepo } from '../db/config.repo.js';
@@ -12,38 +11,10 @@ import { getPathsForBuild } from '../engine/itemEngine.js';
 import { syncItemsFromCommunityDragon } from '../scripts/sync-items.js';
 import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
+import { API_NAME_MAP, NORM_API_NAME_MAP, normalizeKey, resolveChampionId } from '../domain/champion-name-resolver.js';
+import { getStyleOfRune } from '../domain/rune-style-map.js';
 
 const FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
-
-const API_NAME_MAP: Record<string, string> = {
-  "Wukong": "MonkeyKing",
-  "Maestro Yi": "MasterYi",
-  "Nunu y Willump": "Nunu",
-  "Renata Glasc": "Renata",
-  "Bardo": "Bard",
-  "Kha'Zix": "Khazix",
-  "Kai'Sa": "Kaisa",
-  "Bel'Veth": "Belveth",
-  "Rek'Sai": "RekSai",
-  "Vel'Koz": "Velkoz",
-  "Cho'Gath": "Chogath",
-  "Dr. Mundo": "DrMundo",
-  "K'Sante": "KSante",
-  "Kog'Maw": "KogMaw",
-  "Jarvan IV": "JarvanIV",
-  "Lee Sin": "LeeSin",
-  "Miss Fortune": "MissFortune",
-  "Twisted Fate": "TwistedFate",
-  "Xin Zhao": "XinZhao"
-};
-
-const NORM_API_NAME_MAP: Record<string, string> = {
-  "monkeyking": "wukong",
-  "masteryi": "maestroyi",
-  "nunu": "nunuywillump",
-  "renata": "renataglasc",
-  "bard": "bardo"
-};
 
 function extractJsonFromHtml(htmlOrJson: string | any): any {
   if (typeof htmlOrJson === 'object') return htmlOrJson;
@@ -79,27 +50,6 @@ async function fetchWithFlareSolverr(url: string): Promise<any> {
   throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
 }
 
-const normalizeKey = (name: string) => name.toLowerCase()
-  .replace(/\s+&\s+/g, ' y ')
-  .replace(/\s+and\s+/g, ' y ')
-  .replace(/[^a-z0-9]/g, "");
-
-function resolveChampionId(name: string, nameIdMap: Record<string, number>): number | null {
-  const norm = normalizeKey(name);
-  if (nameIdMap[norm]) return nameIdMap[norm];
-  
-  const alias = NORM_API_NAME_MAP[norm];
-  if (alias && nameIdMap[alias]) return nameIdMap[alias];
-
-  for (const [key, id] of Object.entries(nameIdMap)) {
-    if (key.includes(norm) || norm.includes(key)) {
-      return id;
-    }
-  }
-
-  return null;
-}
-
 // --- UTILIDADES DEL SCRAPER ---
 const getBestSummoners = (arr: any[]) => {
   if (!arr || arr.length === 0) return [4, 11]; // Flash y Smite o similar
@@ -108,10 +58,6 @@ const getBestSummoners = (arr: any[]) => {
   const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
   return [sorted[0].summonerId1, sorted[0].summonerId2];
 };
-
-function getStyleOfRune(runeId: number) {
-  return (assetsMap.runeToStyle as Record<string | number, number>)[runeId] || 0;
-}
 
 const getBestRuneSlot = (arr: any[]) => {
   if (!arr || arr.length === 0) return 0;
