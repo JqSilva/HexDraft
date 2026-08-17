@@ -85,14 +85,40 @@ export const GET: APIRoute = async () => {
         });
         const elapsedMs = Date.now() - attemptStart;
 
-        isGameReady = activePlayerRes.ok;
-        isLoadingScreen = !activePlayerRes.ok;
+        let moveSpeed = 0;
+        let maxHealth = 0;
+        let attackDamage = 0;
+        let currentGold = 0;
+
+        if (activePlayerRes.ok) {
+          try {
+            const activePlayerData = await activePlayerRes.json();
+            moveSpeed = Number(activePlayerData?.championStats?.moveSpeed || 0);
+            maxHealth = Number(activePlayerData?.championStats?.maxHealth || 0);
+            attackDamage = Number(activePlayerData?.championStats?.attackDamage || 0);
+            currentGold = Number(activePlayerData?.currentGold || 0);
+          } catch (_parseErr) {
+            // JSON parse fallback
+          }
+        }
+
+        // Condición para partida real iniciada:
+        // activePlayerRes.ok debe ser true Y championStats.moveSpeed debe ser > 0
+        // (durante el placeholder de loading screen, moveSpeed, maxHealth y attackDamage vienen en 0)
+        const isActuallyInGame = activePlayerRes.ok && moveSpeed > 0;
+
+        isGameReady = isActuallyInGame;
+        isLoadingScreen = !isActuallyInGame;
 
         logPoll({
           phase,
           outcome: 'response_received',
           httpStatus: activePlayerRes.status,
           ok: activePlayerRes.ok,
+          moveSpeed,
+          maxHealth,
+          attackDamage,
+          currentGold,
           elapsedMs,
           resultIsLoadingScreen: isLoadingScreen,
           resultIsGameReady: isGameReady
