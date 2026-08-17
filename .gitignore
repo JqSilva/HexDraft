@@ -36,6 +36,7 @@ dist-exe/
 *.spec
 
 # --- Logs & Outputs del Proyecto ---
+logs/
 *.log
 hexdraft_log.txt
 guard_status.log
@@ -48,6 +49,7 @@ guard_status.log
 .agents/
 .agent/
 skills-lock.json
+graphify-out/
 
 # --- Binaries ---
 node.exe

@@ -577454,7 +577454,7 @@
     }
   },
   "Trundle": {
-    "lane": "JUNGLE",
+    "lane": "TOP",
     "tags": [
       "Fighter",
       "Tank"
@@ -664538,7 +664538,7 @@
     }
   },
   "Xerath": {
-    "lane": "BOTTOM",
+    "lane": "MIDDLE",
     "tags": [
       "Mage"
     ],

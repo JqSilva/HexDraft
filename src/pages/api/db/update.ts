@@ -3,8 +3,52 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import axios from 'axios';
-import { dbPath, closeDb, reopenDb } from '../../../lib/db/sqlite.js';
+import { dbPath, closeDb, reopenDb, checkpointDb } from '../../../lib/db/sqlite.js';
 import { appConfig } from '../../../lib/services/config.service.js';
+
+const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+async function swapDbFilesWithRetry(tempPath: string, targetPath: string, maxRetries = 3, delayMs = 200) {
+  let lastError: any = null;
+  const backupPath = `${targetPath}.bak`;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Limpiar backup anterior si existe
+      if (fs.existsSync(backupPath)) {
+        try { fs.unlinkSync(backupPath); } catch {}
+      }
+
+      // Si el archivo destino existe, intentar eliminarlo o moverlo a backup
+      if (fs.existsSync(targetPath)) {
+        try {
+          fs.unlinkSync(targetPath);
+        } catch {
+          fs.renameSync(targetPath, backupPath);
+        }
+      }
+
+      // Mover archivo temporal a la ruta destino
+      fs.renameSync(tempPath, targetPath);
+
+      // Limpiar archivos WAL/SHM satélite del destino
+      const targetWal = `${targetPath}-wal`;
+      const targetShm = `${targetPath}-shm`;
+      if (fs.existsSync(targetWal)) { try { fs.unlinkSync(targetWal); } catch {} }
+      if (fs.existsSync(targetShm)) { try { fs.unlinkSync(targetShm); } catch {} }
+
+      return; // Swap exitoso
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[DB-UPDATE] Intento ${attempt}/${maxRetries} de swap falló con error ${err?.code || err?.name}: ${err?.message}`);
+      if (attempt < maxRetries) {
+        await sleep(delayMs);
+      }
+    }
+  }
+
+  throw lastError || new Error('Fallo al reemplazar el archivo de base de datos tras reintentos');
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -34,14 +78,12 @@ export const POST: APIRoute = async ({ request }) => {
         try {
           sendEvent({ status: 'starting', progress: 0, message: 'Iniciando descarga de la base de datos...' });
 
-          // Asegurar que no quede un archivo temporal corrupto anterior
-          if (fs.existsSync(tempDbPath)) {
-            try {
-              fs.unlinkSync(tempDbPath);
-            } catch {
-              // Ignorado de forma segura si el archivo temporal no existe o está bloqueado
-            }
-          }
+          // Asegurar que no quede un archivo temporal corrupto anterior ni sus satélites
+          const initialTempWal = `${tempDbPath}-wal`;
+          const initialTempShm = `${tempDbPath}-shm`;
+          if (fs.existsSync(tempDbPath)) { try { fs.unlinkSync(tempDbPath); } catch {} }
+          if (fs.existsSync(initialTempWal)) { try { fs.unlinkSync(initialTempWal); } catch {} }
+          if (fs.existsSync(initialTempShm)) { try { fs.unlinkSync(initialTempShm); } catch {} }
 
           // Descargar usando Axios
           writer = fs.createWriteStream(tempDbPath);
@@ -93,36 +135,37 @@ export const POST: APIRoute = async ({ request }) => {
           });
           const calculatedChecksum = hash.digest('hex');
 
+          const actualFileSizeOnDisk = fs.existsSync(tempDbPath) ? fs.statSync(tempDbPath).size : 0;
+          console.log('[UPDATE-DEBUG]', JSON.stringify({
+            downloadUrl,
+            contentLengthHeader: totalBytes,
+            downloadedBytesAccumulated: downloadedBytes,
+            actualFileSizeOnDisk,
+            expectedChecksum,
+            calculatedChecksum,
+            sizesMatch: totalBytes === downloadedBytes && downloadedBytes === actualFileSizeOnDisk,
+            checksumMatch: calculatedChecksum.toLowerCase() === expectedChecksum.toLowerCase()
+          }, null, 2));
+
           if (calculatedChecksum.toLowerCase() !== expectedChecksum.toLowerCase()) {
             throw new Error(`El checksum SHA256 no coincide. Esperado: ${expectedChecksum}, Calculado: ${calculatedChecksum}`);
           }
 
           sendEvent({ status: 'installing', progress: 100, message: 'Checksum correcto. Instalando base de datos...' });
 
-          // 1. Cerrar conexión SQLite actual
-          closeDb();
+          // 1. Ejecutar checkpoint WAL para persistir transacciones y vaciar buffers satélite
+          checkpointDb();
 
-          // 2. Reemplazar archivo .db atómicamente
-          if (fs.existsSync(dbPath)) {
-            try {
-              fs.unlinkSync(dbPath);
-            } catch (err) {
-              // Si falla eliminar por bloqueo en Windows, intentaremos renombrar el original
-              const backupPath = `${dbPath}.bak`;
-              if (fs.existsSync(backupPath)) {
-                try { fs.unlinkSync(backupPath); } catch {
-                  // Ignorado de forma segura si el backup está bloqueado
-                }
-              }
-              fs.renameSync(dbPath, backupPath);
-            }
+          // 2. Cerrar y reemplazar con reintentos y reapertura garantizada
+          try {
+            closeDb();
+            await swapDbFilesWithRetry(tempDbPath, dbPath, 3, 200);
+          } finally {
+            // CRÍTICO: Garantizar SIEMPRE que la base de datos se reabre, incluso si el swap falló
+            reopenDb();
           }
-          fs.renameSync(tempDbPath, dbPath);
 
-          // 3. Reabrir conexión SQLite
-          reopenDb();
-
-          // 4. Guardar manifest en data/db-version.json
+          // 3. Guardar manifest en data/db-version.json
           fs.writeFileSync(appConfig.dbVersionPath, JSON.stringify(manifest, null, 2), 'utf-8');
 
           sendEvent({ status: 'done', message: '¡Base de datos actualizada con éxito!' });
@@ -131,15 +174,33 @@ export const POST: APIRoute = async ({ request }) => {
         } catch (error: any) {
           console.error('❌ Error durante la actualización de la base de datos:', error);
           
-          // Limpiar archivo temporal en caso de error
+          // Limpiar archivo temporal y sus archivos satélite en caso de error
           if (writer) {
             try { writer.close(); } catch {
               // Ignorado si el flujo ya está cerrado
             }
           }
+          const tempWal = `${tempDbPath}-wal`;
+          const tempShm = `${tempDbPath}-shm`;
+          const dbBak = `${dbPath}.bak`;
+
           if (fs.existsSync(tempDbPath)) {
-            try { fs.unlinkSync(tempDbPath); } catch {
-              // Ignorado si falla la eliminación del temporal
+            try { fs.unlinkSync(tempDbPath); } catch {}
+          }
+          if (fs.existsSync(tempWal)) {
+            try { fs.unlinkSync(tempWal); } catch {}
+          }
+          if (fs.existsSync(tempShm)) {
+            try { fs.unlinkSync(tempShm); } catch {}
+          }
+
+          // Si dbPath principal quedó ausente pero existe el .bak tras un fallo en swap, restaurarlo
+          if (!fs.existsSync(dbPath) && fs.existsSync(dbBak)) {
+            try {
+              fs.renameSync(dbBak, dbPath);
+              console.log('[DB-UPDATE] Se restauró hexdraft.db desde backup tras fallo de instalación.');
+            } catch (restoreErr) {
+              console.error('[DB-UPDATE] Error al restaurar backup:', restoreErr);
             }
           }
 

@@ -199,7 +199,66 @@ except Exception as e:
     print(f"  [ERROR] al subir asset: {e}")
     sys.exit(1)
 
-# 7. Guardar el manifest en data/db-version.json local
+# 7. Eliminar releases anteriores y sus tags para mantener solo la última release activa
+print("Limpiando releases y tags anteriores en GitHub...")
+current_release_id = release_data.get("id")
+
+list_releases_url = f"https://api.github.com/repos/{github_repo}/releases"
+req_list = urllib.request.Request(list_releases_url)
+req_list.add_header("Authorization", f"token {github_token}")
+req_list.add_header("Accept", "application/vnd.github.v3+json")
+req_list.add_header("User-Agent", "HexDraft-Publisher-Python")
+
+try:
+    with urllib.request.urlopen(req_list) as response:
+        all_releases = json.loads(response.read().decode("utf-8"))
+
+    if isinstance(all_releases, list):
+        old_releases = [r for r in all_releases if r.get("id") != current_release_id]
+        print(f"  [INFO] Se encontraron {len(old_releases)} releases anteriores para eliminar.")
+
+        for old in old_releases:
+            old_id = old.get("id")
+            old_tag = old.get("tag_name")
+            old_name = old.get("name", f"ID {old_id}")
+
+            # a. Eliminar release
+            if old_id:
+                try:
+                    del_rel_url = f"https://api.github.com/repos/{github_repo}/releases/{old_id}"
+                    req_del_rel = urllib.request.Request(del_rel_url, method="DELETE")
+                    req_del_rel.add_header("Authorization", f"token {github_token}")
+                    req_del_rel.add_header("Accept", "application/vnd.github.v3+json")
+                    req_del_rel.add_header("User-Agent", "HexDraft-Publisher-Python")
+                    with urllib.request.urlopen(req_del_rel) as _:
+                        pass
+                    print(f"  [OK] Release '{old_name}' (ID: {old_id}) eliminada.")
+                except urllib.error.HTTPError as e:
+                    print(f"  [WARN] No se pudo eliminar release '{old_name}' ({e.code}): {e}")
+                except Exception as e:
+                    print(f"  [WARN] Error eliminando release '{old_name}': {e}")
+
+            # b. Eliminar tag asociado
+            if old_tag:
+                try:
+                    del_tag_url = f"https://api.github.com/repos/{github_repo}/git/refs/tags/{old_tag}"
+                    req_del_tag = urllib.request.Request(del_tag_url, method="DELETE")
+                    req_del_tag.add_header("Authorization", f"token {github_token}")
+                    req_del_tag.add_header("Accept", "application/vnd.github.v3+json")
+                    req_del_tag.add_header("User-Agent", "HexDraft-Publisher-Python")
+                    with urllib.request.urlopen(req_del_tag) as _:
+                        pass
+                    print(f"  [OK] Tag '{old_tag}' eliminado.")
+                except urllib.error.HTTPError as e:
+                    print(f"  [WARN] No se pudo eliminar tag '{old_tag}' ({e.code}): {e}")
+                except Exception as e:
+                    print(f"  [WARN] Error eliminando tag '{old_tag}': {e}")
+except urllib.error.HTTPError as e:
+    print(f"  [WARN] Error al listar releases para limpieza ({e.code}): {e}")
+except Exception as e:
+    print(f"  [WARN] Error durante el proceso de limpieza de releases anteriores: {e}")
+
+# 8. Guardar el manifest en data/db-version.json local
 try:
     db_version_dir = os.path.dirname(config_path)
     if not os.path.exists(db_version_dir):

@@ -36,6 +36,17 @@ if (typeof window === 'undefined') {
 
 export { dbPath, db };
 
+export function checkpointDb() {
+  try {
+    if (db && typeof db.exec === 'function') {
+      db.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+      console.log(`🧹 WAL Checkpoint (TRUNCATE) ejecutado.`);
+    }
+  } catch (e) {
+    console.warn('⚠️ Error al ejecutar WAL checkpoint:', e);
+  }
+}
+
 export function closeDb() {
   try {
     if (db && typeof db.close === 'function') {
