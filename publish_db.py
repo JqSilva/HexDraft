@@ -66,18 +66,6 @@ if not os.path.exists(db_path):
     print(f"[ERROR] No se encontró el archivo de base de datos local en: {db_path}")
     sys.exit(1)
 
-# Calcular SHA256 y tamaño
-print("Calculando SHA256 y tamaño de hexdraft.db...")
-sha256 = hashlib.sha256()
-size_bytes = os.path.getsize(db_path)
-
-with open(db_path, "rb") as f:
-    for chunk in iter(lambda: f.read(4096), b""):
-        sha256.update(chunk)
-checksum = sha256.hexdigest()
-print(f"Checksum SHA256: {checksum}")
-print(f"Tamaño: {size_bytes / 1024 / 1024:.2f} MB")
-
 # 3. Leer versión del parche actual (patch)
 patch = "-"
 meta_path = os.path.join(PROYECTO_DIR, "src", "lib", "data", "meta-cache.json")
@@ -139,6 +127,20 @@ except Exception as e:
 new_version = latest_version + 1
 last_update = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+# 5. Cargar archivo hexdraft.db en memoria y calcular SHA256 único
+print("Cargando hexdraft.db en memoria y calculando SHA256...")
+try:
+    with open(db_path, "rb") as f:
+        file_data = f.read()
+except Exception as e:
+    print(f"[ERROR] al leer archivo hexdraft.db: {e}")
+    sys.exit(1)
+
+checksum = hashlib.sha256(file_data).hexdigest()
+size_bytes = len(file_data)
+print(f"Checksum SHA256: {checksum}")
+print(f"Tamaño: {size_bytes / 1024 / 1024:.2f} MB")
+
 manifest = {
     "patch": patch,
     "lastUpdate": last_update,
@@ -147,7 +149,7 @@ manifest = {
     "size": size_bytes
 }
 
-# 5. Crear la nueva GitHub Release
+# 6. Crear la nueva GitHub Release
 print(f"Creando nueva release en GitHub: v{new_version} (Parche {patch})...")
 create_url = f"https://api.github.com/repos/{github_repo}/releases"
 create_data = json.dumps({
@@ -176,14 +178,11 @@ except Exception as e:
     print(f"  [ERROR] al crear release en GitHub: {e}")
     sys.exit(1)
 
-# 6. Subir hexdraft.db como asset binario
+# 7. Subir hexdraft.db como asset binario (usando los mismos bytes leídos en memoria)
 upload_url = upload_url_template.split("{")[0] + "?name=hexdraft.db"
 print("Subiendo hexdraft.db a la release de GitHub (esto puede tomar un momento)...")
 
 try:
-    with open(db_path, "rb") as f:
-        file_data = f.read()
-
     req_upload = urllib.request.Request(upload_url, data=file_data, method="POST")
     req_upload.add_header("Authorization", f"token {github_token}")
     req_upload.add_header("Content-Type", "application/octet-stream")
@@ -199,7 +198,7 @@ except Exception as e:
     print(f"  [ERROR] al subir asset: {e}")
     sys.exit(1)
 
-# 7. Eliminar releases anteriores y sus tags para mantener solo la última release activa
+# 8. Eliminar releases anteriores y sus tags para mantener solo la última release activa
 print("Limpiando releases y tags anteriores en GitHub...")
 current_release_id = release_data.get("id")
 
@@ -258,7 +257,7 @@ except urllib.error.HTTPError as e:
 except Exception as e:
     print(f"  [WARN] Error durante el proceso de limpieza de releases anteriores: {e}")
 
-# 8. Guardar el manifest en data/db-version.json local
+# 9. Guardar el manifest en data/db-version.json local
 try:
     db_version_dir = os.path.dirname(config_path)
     if not os.path.exists(db_version_dir):
