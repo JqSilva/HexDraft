@@ -1,8 +1,9 @@
 // src/lib/engine/itemEngine.ts
-import { ENRICHED_DB, ITEMS_DB } from './dataProvider.js';
-import { NAME_TO_ID } from './constants.js';
-import { hydrateAsset } from './hydrator.js';
-import { analyzeComposition } from './compositionAnalyzer.js';
+import { ENRICHED_DB, ITEMS_DB } from './core/dataProvider.js';
+import { NAME_TO_ID } from './core/constants.js';
+import { hydrateAsset } from './core/hydrator.js';
+import { analyzeComposition } from './picks/compositionAnalyzer.js';
+import type { EnrichedChampion } from './core/types.js';
 import assetsMap from '../data/assets-map.json' with { type: 'json' };
 
 export interface RuneOption {
@@ -30,17 +31,6 @@ export interface BuildCluster {
   totalPickrate: number;
   weightedWinrate: number;
   damageType: 'AD' | 'AP' | 'Hybrid';
-}
-
-export interface EnrichedChampion {
-  name: string;
-  class: string;
-  tacticRole: string;
-  damageType: 'AD' | 'AP' | 'Hybrid';
-  builds?: any[];
-  buildData?: any;
-  dpmData?: any;
-  [key: string]: any;
 }
 
 // Categorías de respaldo si ITEMS_DB no está cargado aún en el cliente
@@ -1039,7 +1029,7 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
   const tacticRole = champ.tacticRole;
   const damageType = champ.damageType;
   
-  if (tacticRole === 'peel' || champ.teamProvides?.includes('healing') || champ.teamProvides?.includes('shields') || champ.class === 'Enchanter')
+  if (tacticRole === 'peel' || champ.teamProvides?.includes('healing') || champ.teamProvides?.includes('shielding') || champ.class === 'Enchanter')
     return { itemId: 3869, reason: "Encantadora con heal/shield — Hoja Zelote maximiza el uptime de protección" };
   
   if (tacticRole === 'engage' || champ.isFrontline || champ.class === 'Tank')
@@ -1337,7 +1327,7 @@ export function calcBootContextBonus(
   const realTanks = enemies.filter(name => {
     const e = ENRICHED_DB[name];
     if (!e) return false;
-    const isFrontline = e.isFrontline === true || e.isFrontline === 1;
+    const isFrontline = Boolean(e.isFrontline || e.is_frontline);
     const isTank = e.class === 'Tank';
     const physicalDmg = e.combat?.damageComposition?.physical !== undefined 
       ? e.combat.damageComposition.physical 
@@ -2187,7 +2177,7 @@ export function getAdaptedBuild(
   const realTanks = enemyNames.filter(name => {
     const e = ENRICHED_DB[name];
     if (!e) return false;
-    const isFrontline = e.isFrontline === true || e.isFrontline === 1;
+    const isFrontline = Boolean(e.isFrontline || e.is_frontline);
     const isTank = e.class === 'Tank';
     const physicalDmg = e.combat?.damageComposition?.physical !== undefined 
       ? e.combat.damageComposition.physical 

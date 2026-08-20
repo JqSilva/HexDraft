@@ -1,5 +1,6 @@
 // src/lib/engine/tacticalEngine.ts
-import { ENRICHED_DB, normalizeKey } from './dataProvider';
+import { ENRICHED_DB } from './core/dataProvider.js';
+import { normalizeKey } from './core/constants.js';
 
 export interface CombatStyle {
     physicalPct: number;
@@ -110,13 +111,13 @@ export function getTacticalDirectives(
     let valleyWinrate = 50.0;
 
     if (curve.length > 0) {
-        let maxPt = curve[0];
-        let minPt = curve[0];
+        let maxPt: any = curve[0];
+        let minPt: any = curve[0];
 
         curve.forEach((pt: any) => {
-            const val = typeof pt === 'object' ? pt.value : pt;
-            const maxVal = typeof maxPt === 'object' ? maxPt.value : maxPt;
-            const minVal = typeof minPt === 'object' ? minPt.value : minPt;
+            const val = typeof pt === 'object' && pt !== null ? pt.value : pt;
+            const maxVal = typeof maxPt === 'object' && maxPt !== null ? maxPt.value : maxPt;
+            const minVal = typeof minPt === 'object' && minPt !== null ? minPt.value : minPt;
 
             if (val > maxVal) maxPt = pt;
             if (val < minVal) minPt = pt;
@@ -128,10 +129,15 @@ export function getTacticalDirectives(
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         };
 
-        peakTime = formatTime(maxPt.time || 1200);
-        peakWinrate = parseFloat((maxPt.value || 50.0).toFixed(1));
-        valleyTime = formatTime(minPt.time || 1800);
-        valleyWinrate = parseFloat((minPt.value || 50.0).toFixed(1));
+        const maxTimeSec = typeof maxPt === 'object' && maxPt?.time !== undefined ? maxPt.time : 1200;
+        const maxVal = typeof maxPt === 'object' && maxPt?.value !== undefined ? maxPt.value : (Number(maxPt) || 50.0);
+        const minTimeSec = typeof minPt === 'object' && minPt?.time !== undefined ? minPt.time : 1800;
+        const minVal = typeof minPt === 'object' && minPt?.value !== undefined ? minPt.value : (Number(minPt) || 50.0);
+
+        peakTime = formatTime(maxTimeSec);
+        peakWinrate = parseFloat(maxVal.toFixed(1));
+        valleyTime = formatTime(minTimeSec);
+        valleyWinrate = parseFloat(minVal.toFixed(1));
     }
 
     let trendDesc = '';

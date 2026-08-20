@@ -4,7 +4,7 @@ import axios from 'axios';
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
 import { scrapeOpggProfile } from '../../lib/services/opgg.service.js';
-import { getNameFromId, getIdFromName } from '../../lib/engine/engine.js';
+import { getNameFromId, getIdFromName } from '../../lib/engine/core/constants.js';
 import { getActiveGame } from '../../lib/services/riot-api.service.js';
 import { resolveSkinNumber } from '../../lib/services/skinResolver.service.js';
 import { assignTeamRoles } from '../../lib/services/roleAssignment.service.js';

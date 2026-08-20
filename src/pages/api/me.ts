@@ -1,7 +1,7 @@
 // src/pages/api/me.ts
 import type { APIRoute } from 'astro';
 import { getLockfileData, readLcuProfileCache, writeLcuProfileCache } from '../../lib/services/lcu.service.js';
-import { getNameFromId } from '../../lib/engine/engine.js';
+import { getNameFromId } from '../../lib/engine/core/constants.js';
 import { configRepo } from '../../lib/db/config.repo.js';
 
 // Desactivar validación de certificados SSL autofirmados para el cliente local de Riot

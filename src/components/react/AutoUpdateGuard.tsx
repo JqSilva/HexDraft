@@ -1,4 +1,13 @@
-import React, { useState, useEffect } from 'react';
+// src/components/react/AutoUpdateGuard.tsx
+import React, { useState, useEffect, useRef } from 'react';
+
+// Constantes de sondeo y temporización autónoma
+const POLL_INTERVAL_IDLE_MS = 3000;         // Reposo / fuera de partida
+const POLL_INTERVAL_MATCHMAKING_MS = 200;   // Búsqueda de partida (sondeo rápido)
+const POLL_INTERVAL_CHAMP_SELECT_MS = 1500; // Fase de selección de campeón
+const READY_CHECK_TOTAL_SECONDS = 10.0;     // Duración nominal del cartel de aceptación
+const READY_CHECK_TICK_MS = 50;             // Tick del cronómetro interno
+const READY_CHECK_SAFETY_MARGIN_SEC = 1.0;  // Disparo de seguridad si se acerca al límite
 
 export const AutoUpdateGuard = () => {
   const [showNotification, setShowNotification] = useState<boolean>(false);
@@ -6,10 +15,16 @@ export const AutoUpdateGuard = () => {
 
   // 1. Cargar configuraciones del auto-aceptar al montar
   const [configs, setConfigs] = useState({ autoAcceptEnabled: false, autoAcceptDelayPct: 80 });
-  const readyCheckMaxRef = React.useRef<number>(10);
-  const lastNotifiedReadyCheckRef = React.useRef<boolean>(false);
-  const readyCheckStartTimeRef = React.useRef<number>(0);
-  const isAcceptingRef = React.useRef<boolean>(false);
+  const configsRef = useRef({ autoAcceptEnabled: false, autoAcceptDelayPct: 80 });
+
+  const lastNotifiedReadyCheckRef = useRef<boolean>(false);
+  const readyCheckStartTimeRef = useRef<number>(0);
+  const isAcceptingRef = useRef<boolean>(false);
+  const readyCheckIntervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    configsRef.current = configs;
+  }, [configs]);
 
   useEffect(() => {
     const fetchConfigs = async () => {
@@ -17,10 +32,12 @@ export const AutoUpdateGuard = () => {
         const res = await fetch('/api/config');
         if (res.ok) {
           const data = await res.json();
-          setConfigs({
+          const loaded = {
             autoAcceptEnabled: data.auto_accept_enabled === true,
-            autoAcceptDelayPct: data.auto_accept_delay_pct || 80
-          });
+            autoAcceptDelayPct: typeof data.auto_accept_delay_pct === 'number' ? data.auto_accept_delay_pct : 80
+          };
+          setConfigs(loaded);
+          configsRef.current = loaded;
         }
       } catch (e) {
         console.error('[AutoUpdateGuard] Error cargando configs:', e);
@@ -42,6 +59,13 @@ export const AutoUpdateGuard = () => {
     }
   };
 
+  const clearReadyCheckTimer = () => {
+    if (readyCheckIntervalRef.current) {
+      clearInterval(readyCheckIntervalRef.current);
+      readyCheckIntervalRef.current = null;
+    }
+  };
+
   // 2. Polling dinámico de alta frecuencia para monitorear matchmaking, auto-aceptar de forma iterativa y redirigir a /draft
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -49,7 +73,7 @@ export const AutoUpdateGuard = () => {
     let pollingTimeout: any = null;
 
     const checkDraftPhase = async () => {
-      let nextInterval = 3000;
+      let nextInterval = POLL_INTERVAL_IDLE_MS;
       try {
         const res = await fetch('/api/game-status');
         if (!res.ok) return;
@@ -57,8 +81,8 @@ export const AutoUpdateGuard = () => {
         const { phase } = await res.json();
 
         if (phase === 'Matchmaking') {
-          nextInterval = 500; // Polling rápido buscando partida
-          readyCheckMaxRef.current = 10;
+          nextInterval = POLL_INTERVAL_MATCHMAKING_MS; // Sondeo rápido buscando partida
+          clearReadyCheckTimer();
           readyCheckStartTimeRef.current = 0;
           isAcceptingRef.current = false;
           if (lastNotifiedReadyCheckRef.current) {
@@ -66,44 +90,34 @@ export const AutoUpdateGuard = () => {
           }
         } 
         else if (phase === 'ReadyCheck') {
-          nextInterval = 300; // Sondeo continuo de alta velocidad durante ReadyCheck
+          nextInterval = 300; // Sondeo continuo de fase durante ReadyCheck
 
           if (!lastNotifiedReadyCheckRef.current) {
             lastNotifiedReadyCheckRef.current = true;
-            readyCheckStartTimeRef.current = Date.now();
-            console.log('[AutoUpdateGuard] ¡Partida encontrada! Monitoreando cartel de aceptación...');
+            readyCheckStartTimeRef.current = performance.now();
+            console.log('[AutoUpdateGuard] ¡Partida encontrada! Iniciando cronómetro autónomo de aceptación...');
             
             if (sessionStorage.getItem('hexdraft_telegram_notified_readycheck') !== 'true') {
               sessionStorage.setItem('hexdraft_telegram_notified_readycheck', 'true');
               notifyTelegram('¡Partida encontrada! Preparando fase de selección.');
             }
-          }
 
-          // LÓGICA DE AUTO-ACEPTACIÓN CON RESPETO AL DELAY CONFIGURADO
-          if (configs.autoAcceptEnabled) {
-            try {
-              const rcRes = await fetch('/api/ready-check');
-              if (rcRes.ok) {
-                const rcData = await rcRes.json();
-                
-                // Si la partida está activa en ReadyCheck y el jugador aún no ha respondido
-                if (rcData.active && rcData.playerResponse !== 'Accepted' && rcData.playerResponse !== 'Declined') {
-                  const timerSeconds = typeof rcData.timer === 'number' && rcData.timer > 0 ? rcData.timer : 10;
-                  if (timerSeconds > readyCheckMaxRef.current || readyCheckMaxRef.current === 10) {
-                    readyCheckMaxRef.current = timerSeconds;
-                  }
+            // Iniciar cronómetro interno autónomo si Auto-Accept está activado
+            if (configsRef.current.autoAcceptEnabled && !readyCheckIntervalRef.current) {
+              const targetDelayMs = (configsRef.current.autoAcceptDelayPct / 100) * (READY_CHECK_TOTAL_SECONDS * 1000);
+              const safetyMs = (READY_CHECK_TOTAL_SECONDS - READY_CHECK_SAFETY_MARGIN_SEC) * 1000;
 
-                  const realElapsedSeconds = readyCheckStartTimeRef.current > 0 ? (Date.now() - readyCheckStartTimeRef.current) / 1000 : 0;
-                  const delayPct = configs.autoAcceptDelayPct || 80;
-                  const targetDelaySeconds = (delayPct / 100) * readyCheckMaxRef.current;
+              readyCheckIntervalRef.current = setInterval(async () => {
+                if (readyCheckStartTimeRef.current === 0) return;
+                const elapsedMs = performance.now() - readyCheckStartTimeRef.current;
+
+                if ((elapsedMs >= targetDelayMs || elapsedMs >= safetyMs) && !isAcceptingRef.current) {
+                  isAcceptingRef.current = true;
+                  clearReadyCheckTimer();
+
+                  console.log(`[AutoUpdateGuard] Ejecutando auto-aceptar al alcanzar ${(elapsedMs / 1000).toFixed(2)}s (Meta: ${(targetDelayMs / 1000).toFixed(2)}s)...`);
                   
-                  // Forzar solo si queda muy poco tiempo (<= 1.5s) y ya transcurrieron al menos 2s reales
-                  const forceSafety = timerSeconds <= 1.5 && realElapsedSeconds >= 2.0;
-
-                  if ((realElapsedSeconds >= targetDelaySeconds || forceSafety) && !isAcceptingRef.current) {
-                    isAcceptingRef.current = true;
-                    console.log(`[AutoUpdateGuard] Ejecutando auto-aceptar al alcanzar ${delayPct}% del cartel... (Transcurrido: ${realElapsedSeconds.toFixed(1)}s / Meta: ${targetDelaySeconds.toFixed(1)}s, Restante: ${timerSeconds.toFixed(1)}s)`);
-                    
+                  try {
                     const acceptRes = await fetch('/api/ready-check', { method: 'POST' });
                     if (acceptRes.ok) {
                       console.log('[AutoUpdateGuard] Partida aceptada con éxito en LCU.');
@@ -112,20 +126,21 @@ export const AutoUpdateGuard = () => {
                         notifyTelegram('Partida aceptada. Entrando al lobby de draft.');
                       }
                     } else {
-                      console.error('[AutoUpdateGuard] Error respondiendo POST /api/ready-check (se reintentará en 300ms).');
+                      console.error('[AutoUpdateGuard] Error respondiendo POST /api/ready-check.');
                       isAcceptingRef.current = false;
                     }
+                  } catch (err) {
+                    console.error('[AutoUpdateGuard] Excepción enviando POST /api/ready-check:', err);
+                    isAcceptingRef.current = false;
                   }
                 }
-              }
-            } catch (err) {
-              console.error('[AutoUpdateGuard] Error al consultar /api/ready-check:', err);
-              isAcceptingRef.current = false;
+              }, READY_CHECK_TICK_MS);
             }
           }
         } 
         else if (phase === 'ChampSelect') {
-          nextInterval = 3000;
+          nextInterval = POLL_INTERVAL_CHAMP_SELECT_MS;
+          clearReadyCheckTimer();
           readyCheckStartTimeRef.current = 0;
           isAcceptingRef.current = false;
           const hasRedirected = sessionStorage.getItem('hexdraft_draft_redirected') === 'true';
@@ -138,10 +153,10 @@ export const AutoUpdateGuard = () => {
           }
         } 
         else {
+          clearReadyCheckTimer();
           sessionStorage.removeItem('hexdraft_draft_redirected');
           sessionStorage.removeItem('hexdraft_telegram_notified_readycheck');
           sessionStorage.removeItem('hexdraft_telegram_notified_accepted');
-          readyCheckMaxRef.current = 10;
           readyCheckStartTimeRef.current = 0;
           isAcceptingRef.current = false;
           if (lastNotifiedReadyCheckRef.current) {
@@ -160,6 +175,7 @@ export const AutoUpdateGuard = () => {
 
     return () => {
       if (pollingTimeout) clearTimeout(pollingTimeout);
+      clearReadyCheckTimer();
     };
   }, [configs]);
 

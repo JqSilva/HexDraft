@@ -1,7 +1,7 @@
 // src/pages/api/history.ts
 import type { APIRoute } from 'astro';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
-import { getNameFromId } from '../../lib/engine/engine.js';
+import { getNameFromId } from '../../lib/engine/core/constants.js';
 import { db } from '../../lib/db/sqlite.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';

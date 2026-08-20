@@ -1,6 +1,6 @@
 // src/components/react/HistoryPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { getNameFromId } from '../../lib/engine/engine';
+import { getNameFromId } from '../../lib/engine/core/constants';
 import assetsMap from '../../lib/data/assets-map.json';
 import { getChampionCdnName } from '../../lib/championMapper';
 

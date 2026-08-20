@@ -1,3 +1,55 @@
+// src/lib/engine/core/constants.ts
+import { normalizeChampionName } from '../../championMapper.js';
+import type { EngineWeights, EnrichedChampion, PersonalStats, ChampionLane } from './types.js';
+
+export const normalizeKey = (name: string): string => normalizeChampionName(name);
+
+export const ROLE_TO_LANE_MAP: Record<string, ChampionLane> = {
+  // TOP
+  'top': 'TOP',
+  'solo': 'TOP',
+  
+  // JUNGLE
+  'jungle': 'JUNGLE',
+  'jng': 'JUNGLE',
+  
+  // MID
+  'mid': 'MIDDLE',
+  'middle': 'MIDDLE',
+  
+  // ADC / BOT
+  'adc': 'BOTTOM',
+  'bot': 'BOTTOM',
+  'bottom': 'BOTTOM',
+  'duo_carry': 'BOTTOM',
+  'carry': 'BOTTOM',
+  
+  // SUPPORT / UTILITY
+  'support': 'UTILITY',
+  'supp': 'UTILITY',
+  'sup': 'UTILITY',
+  'utility': 'UTILITY',
+  'duo_support': 'UTILITY'
+};
+
+/**
+ * Mapea cualquier variante de nombre de carril o rol a su formato canónico ('TOP' | 'JUNGLE' | 'MIDDLE' | 'BOTTOM' | 'UTILITY').
+ */
+export function normalizeRole(roleOrLane?: string | null, fallback: ChampionLane = 'MIDDLE'): ChampionLane {
+  if (!roleOrLane || typeof roleOrLane !== 'string') return fallback;
+  const clean = roleOrLane.trim().toLowerCase().replace(/[^a-z_]/g, '');
+  if (ROLE_TO_LANE_MAP[clean]) {
+    return ROLE_TO_LANE_MAP[clean];
+  }
+  const upper = roleOrLane.trim().toUpperCase() as ChampionLane;
+  if (['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'].includes(upper)) {
+    return upper;
+  }
+  return fallback;
+}
+
+export const normalizeLane = normalizeRole;
+
 export const NAME_TO_ID: Record<string, number> = {
   "Aatrox": 266,
   "Ahri": 103,
@@ -73,7 +125,6 @@ export const NAME_TO_ID: Record<string, number> = {
   "Leona": 89,
   "Lillia": 876,
   "Lissandra": 127,
-  "Locke": 805,
   "Lucian": 236,
   "Lulu": 117,
   "Lux": 99,
@@ -81,13 +132,11 @@ export const NAME_TO_ID: Record<string, number> = {
   "Malzahar": 90,
   "Maokai": 57,
   "Maestro Yi": 11,
-  "Mel": 800,
   "Milio": 902,
   "Miss Fortune": 21,
-  "Wukong": 62,
   "Mordekaiser": 82,
   "Morgana": 25,
-  "Naafiri": 950,
+  "Naafiri": 895,
   "Nami": 267,
   "Nasus": 75,
   "Nautilus": 111,
@@ -156,6 +205,7 @@ export const NAME_TO_ID: Record<string, number> = {
   "Vladimir": 8,
   "Volibear": 106,
   "Warwick": 19,
+  "Wukong": 62,
   "Xayah": 498,
   "Xerath": 101,
   "Xin Zhao": 5,
@@ -192,4 +242,48 @@ export function getNameFromId(id: number | string): string {
     if (champId === numId) return name;
   }
   return '';
+}
+
+export function isFlexChampion(champ: EnrichedChampion | { name: string }): boolean {
+  const flexList = new Set([
+    "Gragas", "Pantheon", "Karma", "Yasuo", "Yone", "Nautilus", "Swain", "Brand", 
+    "Morgana", "Tahm Kench", "Jayce", "Twisted Fate", "Sylas", "K'Sante", "Volibear",
+    "Rumble", "Maokai", "Poppy", "Graves", "Lucian", "Talon", "Quinn"
+  ]);
+  return flexList.has(champ.name);
+}
+
+export let engineWeights: EngineWeights = {
+  meta_base: 0.4,
+  synergy: 0.8,
+  matchup: 0.45,
+  counter: 0.35,
+  composition: 0.8,
+  utility: 0.5,
+  scaling: 1.0,
+  tactic_role_bonus: 1.2,
+  personal_mastery: 0.8,
+  flex_value: 0.6,
+  phase_multiplier_pick5: 1.4
+};
+
+export function setEngineWeights(weights: Partial<EngineWeights>) {
+  if (weights) {
+    engineWeights = { ...engineWeights, ...weights };
+  }
+}
+
+export const PERSONAL_STATS: Record<number, PersonalStats> = {};
+
+export function initializePersonalStats(stats: Array<{ championId: number; gamesPlayed: number; winRate: number }>) {
+  Object.keys(PERSONAL_STATS).forEach(k => delete PERSONAL_STATS[Number(k)]);
+  if (stats && Array.isArray(stats)) {
+    stats.forEach(s => {
+      PERSONAL_STATS[s.championId] = {
+        gamesPlayed: s.gamesPlayed,
+        winRate: s.winRate
+      };
+    });
+    console.log(`[CORE] PersonalStats listo: ${Object.keys(PERSONAL_STATS).length} campeones con historial.`);
+  }
 }

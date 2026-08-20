@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 import { syncMetaAndBuilds } from '../../lib/services/sync.service.js';
 import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
-import { initializeEngineData } from '../../lib/engine/dataProvider.js';
+import { initializeEngineData } from '../../lib/engine/core/dataProvider.js';
 import { resolveCurrentPatchVersion } from '../../lib/domain/patch-version-resolver.js';
 
 let isGlobalSyncing = false;

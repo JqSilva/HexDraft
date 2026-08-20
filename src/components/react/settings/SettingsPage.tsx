@@ -266,6 +266,34 @@ export const SettingsPage = () => {
                                     </label>
                                 </div>
 
+                                {/* Tiempo de Bloqueo Automático (Auto-Pick / Auto-Ban) */}
+                                {(autoPick || autoBan) && (
+                                    <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Tiempo de Bloqueo Automático</span>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Segundos restantes en el reloj para fijar pick/ban</span>
+                                        </div>
+                                        <div className="w-full sm:w-1/2 space-y-3 px-2">
+                                            <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
+                                                <label className="text-purple-accent tracking-widest font-black">Segundos restantes</label>
+                                                <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoExecuteSeconds}s</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="1.0"
+                                                max="6.0"
+                                                step="0.5"
+                                                value={autoExecuteSeconds}
+                                                onChange={(e) => setAutoExecuteSeconds(parseFloat(e.target.value))}
+                                                className="w-full h-1 bg-[#15151e] rounded-sm appearance-none cursor-pointer accent-purple-accent"
+                                            />
+                                            <p className="text-[9px] text-slate-500 font-bold tracking-wider leading-relaxed uppercase">
+                                                Margen de tiempo antes de finalizar tu turno para enviar la acción al LCU (1.0s a 6.0s). Por defecto 3.5s.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Auto-Aceptar Partida */}
                                 <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                     <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99] w-full sm:w-1/2

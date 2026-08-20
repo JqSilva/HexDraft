@@ -1,7 +1,7 @@
 // scripts/check-live-names.ts
 import { getLockfileData } from '../src/lib/services/lcu.service.js';
 import { scrapeOpggProfile } from '../src/lib/services/opgg.service.js';
-import { getNameFromId } from '../src/lib/engine/engine.js';
+import { getNameFromId } from '../src/lib/engine/core/constants.js';
 import https from 'node:https';
 import axios from 'axios';
 

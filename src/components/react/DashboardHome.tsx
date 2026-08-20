@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getNameFromId } from '../../lib/engine/engine';
+import { getNameFromId } from '../../lib/engine/core/constants';
 import metaCache from '../../lib/data/meta-cache.json';
 import { getChampionCdnName } from '../../lib/championMapper';
 import { RankBadge } from './common/RankBadge';

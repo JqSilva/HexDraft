@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Champion, Build } from './types';
 import { getTierInfo, getRoleKey, posMapping, posLabels, POS_BASE, RUNE_TREES } from './utils';
-import { hydrateAsset } from '../../../lib/engine/hydrator';
+import { hydrateAsset } from '../../../lib/engine/core/hydrator';
 import { getPathsForBuild } from '../../../lib/engine/itemEngine';
 import { getChampionCdnName } from '../../../lib/championMapper';
 import { RuneTree, ShardsTree } from './RuneTree';

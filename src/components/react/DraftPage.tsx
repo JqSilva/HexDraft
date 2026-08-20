@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { LcuPlayer } from './PlayerSlot';
-import type { Recommendation, BansRecommendation } from '../../lib/engine/engine';
-import { getProcessedRecommendations, getProcessedBans, getSingleChampionBuild, getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/engine';
-import { ENRICHED_DB, initializeEngineData, initializeItemsData } from '../../lib/engine/dataProvider';
+import type { Recommendation } from '../../lib/engine/picks/types';
+import type { BansRecommendation } from '../../lib/engine/bans/types';
+import { getProcessedRecommendations, getSingleChampionBuild } from '../../lib/engine/picks/index';
+import { getProcessedBans } from '../../lib/engine/bans/index';
+import { getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/core/constants';
+import { ENRICHED_DB, initializeEngineData, initializeItemsData } from '../../lib/engine/core/dataProvider';
 import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
-import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
+import { analyzeComposition } from '../../lib/engine/picks/compositionAnalyzer';
 import { getChampionCdnName } from '../../lib/championMapper';
 import { notifyTelegram } from '../../lib/services/telegram.service';
 
@@ -57,6 +60,35 @@ export const DraftPage = () => {
     // --- CONFIGURACIÓN ---
     const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick:v1') === 'true' : false));
     const [autoBan, setAutoBan] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoBan:v1') === 'true' : false));
+    const [autoExecuteSeconds, setAutoExecuteSeconds] = useState<number>(3.5);
+
+    const handleToggleAutoPick = useCallback(async (val: boolean) => {
+        setAutoPick(val);
+        localStorage.setItem('autoPick:v1', String(val));
+        try {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ auto_pick: val })
+            });
+        } catch (e) {
+            console.error('Error sincronizando auto_pick con la API:', e);
+        }
+    }, []);
+
+    const handleToggleAutoBan = useCallback(async (val: boolean) => {
+        setAutoBan(val);
+        localStorage.setItem('autoBan:v1', String(val));
+        try {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ auto_ban: val })
+            });
+        } catch (e) {
+            console.error('Error sincronizando auto_ban con la API:', e);
+        }
+    }, []);
 
     // --- REFERENCIAS ---
     const activeActionRef = useRef<any>(null);
@@ -152,13 +184,24 @@ export const DraftPage = () => {
             try {
                 console.log("🔌 Sincronizando motor HexDraft con bases de datos locales...");
 
-                // 1. Obtener y configurar Pesos del Motor
+                // 1. Obtener y configurar Pesos del Motor y Ajustes de Automatización
                 const configRes = await fetch('/api/config');
                 if (configRes.ok) {
                     const config = await configRes.json();
                     if (config.engine_weights) {
                         setEngineWeights(config.engine_weights);
                         console.log("⚖️ Pesos del motor sincronizados.");
+                    }
+                    if (typeof config.auto_pick === 'boolean') {
+                        setAutoPick(config.auto_pick);
+                        localStorage.setItem('autoPick:v1', String(config.auto_pick));
+                    }
+                    if (typeof config.auto_ban === 'boolean') {
+                        setAutoBan(config.auto_ban);
+                        localStorage.setItem('autoBan:v1', String(config.auto_ban));
+                    }
+                    if (typeof config.auto_execute_seconds === 'number' && !isNaN(config.auto_execute_seconds)) {
+                        setAutoExecuteSeconds(config.auto_execute_seconds);
                     }
                 }
 
@@ -359,8 +402,9 @@ export const DraftPage = () => {
 
                 setLocalTimeLeft(Math.floor(remaining));
 
-                // Lógica de ejecución automática (3.5s)
-                if (remaining <= 3500 && remaining > 500 && !activeActionRef.current.completed) {
+                // Lógica de ejecución automática dinámica
+                const thresholdMs = (autoExecuteSeconds || 3.5) * 1000;
+                if (remaining <= thresholdMs && remaining > 500 && !activeActionRef.current.completed) {
                     if ((activeActionRef.current.type === 'pick' && autoPick) ||
                         (activeActionRef.current.type === 'ban' && autoBan)) {
                         if (handleAutoExecutionRef.current) {
@@ -371,7 +415,7 @@ export const DraftPage = () => {
             }
         }, 100);
         return () => clearInterval(interval);
-    }, [autoPick, autoBan]);
+    }, [autoPick, autoBan, autoExecuteSeconds]);
 
     const handleTimerSync = (data: any) => {
         const myCellId = data.localPlayerCellId;
@@ -995,7 +1039,7 @@ export const DraftPage = () => {
                                                 {/* Badges de Clase y Daño */}
                                                 <div className="text-center md:text-center">
                                                     <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
-                                                        {champData.name}
+                                                        {champData?.name || currentBuild.name}
                                                     </h2>
                                                     <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
                                                         <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
@@ -1196,9 +1240,9 @@ export const DraftPage = () => {
                         {!isPlaying && !hasPicked && (
                             <DraftSettings
                                 autoPick={autoPick}
-                                setAutoPick={setAutoPick}
+                                setAutoPick={handleToggleAutoPick}
                                 autoBan={autoBan}
-                                setAutoBan={setAutoBan}
+                                setAutoBan={handleToggleAutoBan}
                             />
                         )}
 

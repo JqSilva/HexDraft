@@ -1,5 +1,5 @@
 import React from 'react';
-import { hydrateAsset } from '../../../lib/engine/hydrator';
+import { hydrateAsset } from '../../../lib/engine/core/hydrator';
 import { 
   RUNE_TREES, 
   getTreeColors, 

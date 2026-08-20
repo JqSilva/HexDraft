@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
-import { analyzeComposition } from '../../lib/engine/compositionAnalyzer';
+import { analyzeComposition } from '../../lib/engine/picks/compositionAnalyzer';
 import { getChampionCdnName } from '../../lib/championMapper';
 
 // =========================================================

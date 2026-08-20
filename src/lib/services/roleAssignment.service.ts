@@ -1,6 +1,6 @@
 // src/lib/services/roleAssignment.service.ts
 import metaPositionsJson from '../data/meta-positions.json';
-import { getNameFromId } from '../engine/engine.js';
+import { getNameFromId } from '../engine/core/constants.js';
 
 export type RoleName = 'TOP' | 'JNG' | 'MID' | 'ADC' | 'SUPP';
 

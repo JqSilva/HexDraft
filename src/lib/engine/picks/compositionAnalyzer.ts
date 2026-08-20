@@ -1,5 +1,6 @@
-// src/lib/engine/compositionAnalyzer.ts
-import { ENRICHED_DB, type EnrichedChampion } from './dataProvider.js';
+// src/lib/engine/picks/compositionAnalyzer.ts
+import { ENRICHED_DB } from '../core/dataProvider.js';
+import type { EnrichedChampion } from '../core/types.js';
 
 export type EnemyArchetype = 
   | 'siege'

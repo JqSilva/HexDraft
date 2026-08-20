@@ -2,7 +2,7 @@
 import { resolveCurrentPatchVersion } from '../src/lib/domain/patch-version-resolver.js';
 import { syncMetaAndBuilds } from '../src/lib/services/sync.service.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../src/lib/services/docker.service.js';
-import { initializeEngineData } from '../src/lib/engine/dataProvider.js';
+import { initializeEngineData } from '../src/lib/engine/core/dataProvider.js';
 
 async function main() {
   console.log("=== INICIANDO SYNC CLI (STANDALONE) ===");

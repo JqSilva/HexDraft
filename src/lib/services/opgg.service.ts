@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getNameFromId } from '../engine/engine.js';
+import { getNameFromId } from '../engine/core/constants.js';
 
 const CACHE_FILE_PATH = path.resolve(process.cwd(), 'src/lib/data/opgg-cache.json');
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora de caché por jugador

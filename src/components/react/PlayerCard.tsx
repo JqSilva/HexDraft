@@ -1,8 +1,8 @@
 // src/components/react/PlayerCard.tsx
 import React from 'react';
 import { getChampionCdnName } from '../../lib/championMapper.js';
-import { hydrateAsset } from '../../lib/engine/hydrator.js';
-import { getNameFromId } from '../../lib/engine/constants.js';
+import { hydrateAsset } from '../../lib/engine/core/hydrator.js';
+import { getNameFromId } from '../../lib/engine/core/constants.js';
 import { getDDragonUrl } from '../../lib/gameVersion.js';
 import {
   generatePlayerTags,

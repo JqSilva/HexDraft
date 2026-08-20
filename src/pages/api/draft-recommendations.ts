@@ -1,41 +1,59 @@
 // src/pages/api/draft-recommendations.ts
 import type { APIRoute } from 'astro';
-import { getProcessedRecommendations, getBanRecommendations } from '../../lib/engine/engine.js';
-import { analyzeComposition } from '../../lib/engine/compositionAnalyzer.js';
-import { NAME_TO_ID } from '../../lib/engine/constants.js';
+import { getProcessedRecommendations, analyzeComposition } from '../../lib/engine/picks/index.js';
+import { getBanRecommendations } from '../../lib/engine/bans/index.js';
+import { NAME_TO_ID, normalizeRole } from '../../lib/engine/core/constants.js';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, url }) => {
   try {
     const body = await request.json();
+    const phaseParam = url.searchParams.get('phase') || body.phase || 'all';
+    
+    // Captura tolerante de carril/rol en body o query params
+    const rawLane = body.assignedLane || 
+                    body.lane || 
+                    body.assignedPosition || 
+                    body.role || 
+                    url.searchParams.get('lane') || 
+                    url.searchParams.get('assignedLane') || 
+                    url.searchParams.get('assignedPosition') || 
+                    url.searchParams.get('role') || 
+                    'MIDDLE';
+    
+    const normalizedLane = normalizeRole(rawLane, 'MIDDLE');
+
     const {
       myChampion = null,
-      myRole = 'jungle',
       alliedPicks = [],
       enemyPicks = [],
       bannedChamps = [],
       allAvailableChamps = Object.keys(NAME_TO_ID)
     } = body;
     
-    // Convertir nombres a IDs para el motor
+    // Convertir nombres a IDs para el motor de picks
     const myTeamIds = alliedPicks.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
     const theirTeamIds = enemyPicks.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
     const bannedIds = bannedChamps.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
     
-    // Obtener recomendación de pick para mí/el rol
-    const myChampId = myChampion ? NAME_TO_ID[myChampion] : undefined;
-    const picks = getProcessedRecommendations(myTeamIds, theirTeamIds, bannedIds, myRole, myChampId);
+    const responsePayload: Record<string, any> = {};
+
+    // 1. Fase de PICKS (sin claves duplicadas)
+    if (phaseParam === 'pick' || phaseParam === 'all') {
+      const myChampId = myChampion ? NAME_TO_ID[myChampion] : undefined;
+      const picks = getProcessedRecommendations(myTeamIds, theirTeamIds, bannedIds, normalizedLane, myChampId);
+      responsePayload.picks = picks;
+    }
     
-    // Obtener recomendaciones de ban
-    const bans = getBanRecommendations(myChampion, myRole, alliedPicks, enemyPicks, bannedChamps, allAvailableChamps);
+    // 2. Fase de BANS (sin claves duplicadas)
+    if (phaseParam === 'ban' || phaseParam === 'all') {
+      const bans = getBanRecommendations(myChampion, normalizedLane, alliedPicks, enemyPicks, bannedChamps, allAvailableChamps);
+      responsePayload.bans = bans;
+    }
     
-    // Análisis de equipo
-    const teamAnalysis = analyzeComposition(alliedPicks);
+    // 3. Análisis de equipo
+    responsePayload.teamAnalysis = analyzeComposition(alliedPicks);
     
-    return new Response(JSON.stringify({
-      topPicks: picks.slice(0, 10),
-      topBans: bans,
-      teamAnalysis
-    }), {
+    return new Response(JSON.stringify(responsePayload), {
       status: 200,
       headers: { 
         'Content-Type': 'application/json'
