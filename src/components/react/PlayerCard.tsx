@@ -4,6 +4,13 @@ import { getChampionCdnName } from '../../lib/championMapper.js';
 import { hydrateAsset } from '../../lib/engine/hydrator.js';
 import { getNameFromId } from '../../lib/engine/constants.js';
 import { getDDragonUrl } from '../../lib/gameVersion.js';
+import {
+  generatePlayerTags,
+  filterTagsByMode,
+  TAG_CONFIG,
+  type PlayerTagItem,
+  type PlayerTagContext
+} from '../../lib/services/playerTags.service.js';
 
 export interface PlayerData {
   puuid: string;
@@ -12,6 +19,9 @@ export interface PlayerData {
   teamId: number;
   championId: number;
   championName: string;
+  skinId?: number;
+  selectedSkinId?: number;
+  skinNum?: number;
   profileIconId?: number;
   profileIconUrl?: string;
   spell1Id?: number;
@@ -20,6 +30,7 @@ export interface PlayerData {
   secondaryStyleId?: number;
   role?: string;
   isMain?: boolean;
+  isStreamerMode?: boolean;
   ranked?: {
     tier: string;
     division?: string;
@@ -45,7 +56,7 @@ export interface PlayerData {
     losses: number;
     totalGames?: number;
     winrate: number | null;
-    streak: {
+    streak?: {
       type: 'win' | 'loss' | null;
       count: number;
     };
@@ -59,6 +70,28 @@ export interface PlayerData {
   lastMatchKda?: string;
   lastMatchResult?: string;
   opScoreAvg?: number;
+  recentMatches?: Array<{
+    championId: number;
+    championName?: string;
+    win: boolean;
+    kills: number;
+    deaths: number;
+    assists: number;
+    cs: number;
+    gameDurationMinutes: number;
+    visionScore: number;
+    visionWardsBought: number;
+    damageShare?: number;
+    turretDamage?: number;
+    firstBlood?: boolean;
+    role?: string;
+  }>;
+  duoPartner?: {
+    name: string;
+    gamesTogether: number;
+    winrate: number;
+  };
+  tags?: string[];
 }
 
 interface PlayerCardProps {
@@ -66,6 +99,8 @@ interface PlayerCardProps {
   index?: number;
   isAlly?: boolean;
   customTags?: string[];
+  mode?: 'normal' | 'compact';
+  maxTags?: number;
 }
 
 const renderWinrateRing = (winrate: number | null) => {
@@ -104,118 +139,30 @@ const renderWinrateRing = (winrate: number | null) => {
   );
 };
 
-function getTagInfo(tag: string, p: PlayerData): { label: string; tooltip: string; style: string } {
-  const upper = tag.toUpperCase().trim();
-  const kdaText = p.lastMatchKda ? ` (${p.lastMatchKda})` : '';
-
-  if (upper.includes('TILTEADO')) {
-    const streak = p.todayRecord?.streak?.count || 3;
-    const kdaMsg = p.lastMatchKda ? `Este jugador salió ${p.lastMatchKda} la partida anterior` : 'Este jugador tiene una racha negativa';
-    return {
-      label: 'TILTEADO',
-      tooltip: `${kdaMsg} y acumula ${streak} derrotas seguidas.`,
-      style: 'border-red-500/50 text-red-300'
-    };
-  }
-
-  if (upper.includes('WIN STREAK')) {
-    const streak = p.todayRecord?.streak?.count || 0;
-    return {
-      label: tag,
-      tooltip: `Este jugador lleva una racha de ${streak > 0 ? streak : 'varias'} partidas ganadas seguidas.`,
-      style: 'border-amber-400/50 text-amber-300'
-    };
-  }
-
-  if (upper.includes('LOSS STREAK')) {
-    const streak = p.todayRecord?.streak?.count || 0;
-    return {
-      label: tag,
-      tooltip: `Este jugador lleva una racha de ${streak > 0 ? streak : 'varias'} partidas perdidas seguidas${kdaText}.`,
-      style: 'border-cyan-400/50 text-cyan-300'
-    };
-  }
-
-  if (upper === 'MVP') {
-    return {
-      label: 'MVP',
-      tooltip: `Este jugador obtuvo el mejor puntaje de la partida anterior${kdaText}.`,
-      style: 'border-amber-400/50 text-amber-300'
-    };
-  }
-
-  if (upper === 'ACE') {
-    return {
-      label: 'ACE',
-      tooltip: `Este jugador fue el mejor de su equipo${kdaText} a pesar de perder la partida anterior.`,
-      style: 'border-purple-400/50 text-purple-200'
-    };
-  }
-
-  if (upper.startsWith('MAIN')) {
-    const mainChamp = p.topChampions?.find(c => upper.includes(c.name.toUpperCase()));
-    const detail = mainChamp ? ` (${mainChamp.wins}V - ${mainChamp.losses}D, ${mainChamp.winrate}% WR)` : '';
-    return {
-      label: tag,
-      tooltip: `Invocador frecuente con este campeón${detail}.`,
-      style: 'border-purple-400/50 text-purple-200'
-    };
-  }
-
-  if (upper === '1ª PARTIDA') {
-    return {
-      label: '1ª PARTIDA',
-      tooltip: 'Este jugador aún no registra partidas hoy.',
-      style: 'border-slate-400/50 text-slate-300'
-    };
-  }
-
-  if (upper === 'CONSISTENTE') {
-    const scoreText = p.opScoreAvg ? ` de ${p.opScoreAvg}` : '';
-    return {
-      label: 'CONSISTENTE',
-      tooltip: `Mantiene un puntaje promedio${scoreText} alto en sus últimas partidas.`,
-      style: 'border-emerald-400/50 text-emerald-300'
-    };
-  }
-
-  if (upper === 'HIGH WR') {
-    const wr = p.ranked?.winrate || 0;
-    const wins = p.ranked?.wins || 0;
-    const losses = p.ranked?.losses || 0;
-    return {
-      label: 'HIGH WR',
-      tooltip: `Invocador con ${wr}% de victorias (${wins}V - ${losses}D en partidas clasificatorias).`,
-      style: 'border-emerald-400/50 text-emerald-300'
-    };
-  }
-
-  if (upper.includes('STREAMER') || upper.includes('ANÓNIMO')) {
-    return {
-      label: 'MODO STREAMER',
-      tooltip: 'Nombre de invocador e información ocultos por modo streamer.',
-      style: 'border-slate-500/50 text-slate-300'
-    };
-  }
-
-  return {
-    label: tag,
-    tooltip: 'Etiqueta de rendimiento del jugador.',
-    style: 'border-purple-400/50 text-purple-200'
-  };
-}
-
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player: p, index = 0, customTags }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({
+  player: p,
+  index = 0,
+  isAlly,
+  customTags,
+  mode = 'normal',
+  maxTags
+}) => {
   const todayWins = p.todayRecord?.wins || 0;
   const todayLosses = p.todayRecord?.losses || 0;
-  const hasTodayGames = (todayWins + todayLosses) > 0;
   const displayWinrate = p.todayRecord?.winrate !== undefined && p.todayRecord?.winrate !== null ? p.todayRecord.winrate : 0;
 
   const rawChampName = (p.championId && getNameFromId(p.championId)) || p.championName || 'Champion';
   const cdnName = getChampionCdnName(rawChampName);
-  const loadingUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cdnName}_0.jpg`;
+
+  // Extracción del número de skin de la partida en vivo (o resuelto desde croma)
+  const rawSkinId = p.skinId !== undefined ? p.skinId : (p.selectedSkinId !== undefined ? p.selectedSkinId : 0);
+  const skinNum = p.skinNum !== undefined ? p.skinNum : (rawSkinId > 0 ? (rawSkinId % 1000) : 0);
+
+  // URLs de carga del splash art (específico de skin o base)
+  const skinLoadingUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cdnName}_${skinNum}.jpg`;
+  const baseLoadingUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cdnName}_0.jpg`;
+
   const displayName = p.summonerName || p.riotId || 'Invocador';
-  
   const summonerName = displayName.includes('#') ? displayName.split('#')[0] : displayName;
   const summonerTag = displayName.includes('#') ? displayName.split('#')[1] : '';
 
@@ -232,48 +179,107 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player: p, index = 0, cu
   const spell1 = p.spell1Id ? hydrateAsset('summoners', p.spell1Id) : null;
   const spell2 = p.spell2Id ? hydrateAsset('summoners', p.spell2Id) : null;
 
-  // Dynamic or Custom tags in Spanglish
-  let tags: string[] = [];
-  if (customTags && customTags.length > 0) {
-    tags = customTags;
-  } else {
-    if (p.isMain) tags.push('MAIN');
-    if (p.todayRecord?.streak?.type === 'win' && p.todayRecord.streak.count >= 3) {
-      tags.push(`WIN STREAK ${p.todayRecord.streak.count}W`);
-    } else if (p.todayRecord?.streak?.type === 'loss' && p.todayRecord.streak.count >= 3) {
-      tags.push(`LOSS STREAK ${p.todayRecord.streak.count}L`);
-      tags.push('TILTEADO');
-    } else if (!hasTodayGames) {
-      tags.push('1ª PARTIDA');
-    } else {
-      tags.push('STABLE');
+  React.useEffect(() => {
+    if (skinNum > 0) {
+      console.log(`[PlayerCard] Invocador: ${displayName} | Campeón: ${rawChampName} | Skin activa: #${skinNum} (${skinLoadingUrl})`);
     }
+  }, [skinNum, rawChampName, displayName, skinLoadingUrl]);
+
+  // Generación de etiquetas con el nuevo motor
+  let computedTagItems: PlayerTagItem[] = [];
+
+  if (customTags && customTags.length > 0) {
+    computedTagItems = customTags.map((tagText, idx) => ({
+      id: `custom_${idx}`,
+      label: tagText,
+      category: 'general',
+      priority: 50,
+      style: 'border-purple-400/50 text-purple-200 bg-purple-950/30',
+      tooltip: 'Etiqueta personalizada del invocador.'
+    }));
+  } else {
+    const ctx: PlayerTagContext = {
+      puuid: p.puuid,
+      summonerName: displayName,
+      championId: p.championId,
+      championName: rawChampName,
+      role: p.role,
+      isMain: p.isMain,
+      isStreamerMode: p.isStreamerMode,
+      todayRecord: p.todayRecord,
+      ranked: p.ranked ? {
+        tier: p.ranked.tier,
+        wins: p.ranked.wins,
+        losses: p.ranked.losses,
+        winrate: p.ranked.winrate
+      } : undefined,
+      topChampions: p.topChampions,
+      opScoreAvg: p.opScoreAvg,
+      recentMatches: p.recentMatches,
+      duoPartner: p.duoPartner
+    };
+
+    computedTagItems = generatePlayerTags(ctx);
   }
+
+  // Filtrar según modo (Normal: 3-6 tags, Compacto: 2-3 tags prioritarios)
+  const displayTags = filterTagsByMode(computedTagItems, maxTags ?? mode);
+
+  const [imageLoaded, setImageLoaded] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    setImageLoaded(false);
+  }, [skinLoadingUrl]);
 
   return (
     <div
       key={p.puuid || `${displayName}-${index}`}
-      className="h-full min-h-[230px] max-h-[380px] w-full max-w-[288px] min-w-0 flex flex-col justify-between rounded-lg p-2.5 xl:p-3.5 transition-all duration-200 relative overflow-hidden group shadow-md bg-[#08070e]"
+      className="h-full min-h-[230px] max-h-[390px] w-full max-w-[288px] min-w-0 flex flex-col justify-between rounded-lg p-2.5 xl:p-3.5 transition-all duration-200 relative overflow-hidden group shadow-md bg-[#08070e]"
     >
-      {/* FONDO: SPLASH ART DEL CAMPEÓN + MÁSCARA OSCURA DE CONTRASTE */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      {/* FONDO: SPLASH ART DE LA SKIN SELECCIONADA + MÁSCARA OSCURA DE CONTRASTE */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#07060c]">
+        {!imageLoaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#07060c] text-purple-400/70 z-1">
+            <svg className="w-6 h-6 animate-spin text-purple-500/60" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" />
+              <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          </div>
+        )}
         <img
-          src={loadingUrl}
+          src={skinLoadingUrl}
           alt={rawChampName}
-          className="w-full h-full object-cover object-top opacity-55 group-hover:scale-105 transition-transform duration-500"
+          className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-55' : 'opacity-0'
+          }`}
+          onLoad={() => {
+            setImageLoaded(true);
+            if (skinNum > 0) {
+              console.log(`%c[PlayerCard Skin]%c Cargada exitosamente skin #${skinNum} para ${rawChampName} (${displayName})`, 'color: #a855f7; font-weight: bold;', 'color: #e2e8f0;');
+            }
+          }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            if (!target.dataset.triedCdrag && p.championId > 0) {
+            // 1. Si falló la skin específica, intentar cargar la skin base (_0.jpg)
+            if (!target.dataset.triedBase && target.src !== baseLoadingUrl) {
+              target.dataset.triedBase = 'true';
+              console.warn(`[PlayerCard Fallback] Falló la imagen de skin #${skinNum} para ${rawChampName} (${displayName}). Aplicando fallback a skin base.`);
+              target.src = baseLoadingUrl;
+            } else if (!target.dataset.triedCdrag && p.championId > 0) {
+              // 2. Intentar CommunityDragon
               target.dataset.triedCdrag = 'true';
+              console.warn(`[PlayerCard Fallback] Falló skin base en DDragon para ${rawChampName}. Aplicando fallback a CommunityDragon.`);
               target.src = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-tiles/${p.championId}/${p.championId}000.jpg`;
             } else if (!target.dataset.triedFallback) {
+              // 3. Fallback genérico final
               target.dataset.triedFallback = 'true';
+              console.error(`[PlayerCard Fallback] Error total al cargar splash art de ${rawChampName}. Usando fallback genérico Garen_0.jpg`);
               target.src = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Garen_0.jpg`;
             }
           }}
         />
-        {/* Gradiente más suave arriba (deja ver más splash) y fuerte abajo (contraste para el footer) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#06050b]/70 via-transparent to-[#06050b]/95" />
+        {/* Gradiente vertical para asegurar legibilidad total sin desenfoques */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#06050b]/75 via-transparent to-[#06050b]/95" />
       </div>
 
       {/* CONTENIDO */}
@@ -323,7 +329,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player: p, index = 0, cu
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5">
+            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5 border border-purple-950/40">
               <span className="text-[8px] xl:text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">
                 SOLO Q
               </span>
@@ -335,7 +341,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player: p, index = 0, cu
               </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5">
+            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5 border border-purple-950/40">
               <span className="text-[8px] xl:text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">
                 FLEX
               </span>
@@ -347,24 +353,23 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player: p, index = 0, cu
               </span>
             </div>
           </div>
-          {tags.length > 0 && (
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              {tags.map((t, i) => {
-                const info = getTagInfo(t, p);
-                return (
-                  <span
-                    key={i}
-                    title={info.tooltip}
-                    className={`
-                      px-2 py-0.5 rounded-md text-[9px] xl:text-[8.5px] font-mono font-semibold uppercase tracking-wider
-                      bg-black/80 border flex items-center shadow-sm cursor-help transition-colors duration-150
-                      ${info.style}
-                    `}
-                  >
-                    {info.label}
-                  </span>
-                );
-              })}
+
+          {/* ETIQUETAS DINÁMICAS (MODO RESPONSIVE) */}
+          {displayTags.length > 0 && (
+            <div className="flex items-center justify-center gap-1 flex-wrap pt-0.5">
+              {displayTags.map((tagItem, i) => (
+                <span
+                  key={`${tagItem.id}_${i}`}
+                  title={tagItem.tooltip}
+                  className={`
+                    px-1.5 py-0.5 rounded text-[8px] xl:text-[8.5px] font-mono font-bold uppercase tracking-wider
+                    border flex items-center shadow-xs cursor-help transition-colors select-none
+                    ${tagItem.style}
+                  `}
+                >
+                  {tagItem.label}
+                </span>
+              ))}
             </div>
           )}
 

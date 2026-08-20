@@ -1064,8 +1064,10 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
  * @modifica Para ajustar la curva de confianza estadística según el pickrate, editar la lógica del cálculo de `confidence`.
  */
 export function viabilityScore(winrate: number, pickrate: number): number {
-  const confidence = pickrate < 2 ? pickrate / 2 : Math.min(pickrate / 10, 1.0);
-  return (winrate - 50) * 2 * confidence;
+  const pr = Math.max(0, pickrate || 0);
+  const wr = winrate || 50.0;
+  // Ponderación principal en popularidad/partidas (80%) con calibración secundaria de winrate
+  return (pr * 0.8) + ((wr - 50.0) * 1.5);
 }
 
 /**
@@ -1118,44 +1120,43 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
  * Analiza el DPM del campeón y detecta clusters de builds distintas basándose en la coincidencia del segundo ítem terminado (`coreItem2`).
  * 
  * @param dpmData - Datos de DPM del scraper/base de datos para el campeón.
- * @returns Lista de clusters de builds encontrados, ordenados por pickrate general.
+ * @returns Lista de clusters ordenados por porcentaje de popularidad.
  * 
- * @modifica Para ajustar el filtro de pares de ítems irrelevantes, editar el umbral de pickrate mínimo (actualmente `3.0`).
+ * @modifica Para cambiar el umbral de filtrado de ítems de poco pickrate o el número de clusters generados, editar esta función.
  */
 export function detectBuildClusters(dpmData: any): BuildCluster[] {
-  const coreItem2 = dpmData?.coreBuilds?.coreItem2;
-  if (!Array.isArray(coreItem2) || coreItem2.length === 0) {
-    return [];
-  }
+  if (!dpmData || !dpmData.coreBuilds) return [];
 
-  const relevantPairs = coreItem2.filter((c: any) => c.itemIds && c.itemIds.length >= 1 && (c.pickrate || 0) >= 3.0);
+  const coreItem2 = dpmData.coreBuilds.coreItem2 || [];
+  if (!Array.isArray(coreItem2) || coreItem2.length === 0) return [];
 
-  const groups: Record<number, any[]> = {};
-  relevantPairs.forEach((pair: any) => {
-    const pivot = pair.itemIds[0];
-    if (!groups[pivot]) {
-      groups[pivot] = [];
+  const clustersByPivot: Record<number, any[]> = {};
+
+  coreItem2.forEach((pair: any) => {
+    const items = pair.itemIds || [];
+    if (items.length < 2) return;
+    const pivot = items[1];
+
+    if (!clustersByPivot[pivot]) {
+      clustersByPivot[pivot] = [];
     }
-    groups[pivot].push(pair);
+    clustersByPivot[pivot].push(pair);
   });
 
   const clusters: BuildCluster[] = [];
 
-  Object.keys(groups).forEach(pivotKey => {
-    const pivotItem = Number(pivotKey);
-    const clusterItems = groups[pivotItem];
-
+  Object.entries(clustersByPivot).forEach(([pivotStr, clusterItems]) => {
+    const pivotItem = Number(pivotStr);
     let totalPickrate = 0;
-    let totalGames = 0;
     let weightedWinrateSum = 0;
+    let totalGames = 0;
 
-    clusterItems.forEach((pair: any) => {
-      const pr = pair.pickrate || 0;
-      const wr = pair.winrate || 50.0;
-      const games = pair.games || 0;
+    clusterItems.forEach(item => {
+      const pr = item.pickrate || 0;
+      const wr = item.winrate || 50.0;
+      const weight = pr;
+
       totalPickrate += pr;
-      
-      const weight = games > 0 ? games : (pr > 0 ? pr : 1);
       totalGames += weight;
       weightedWinrateSum += wr * weight;
     });
@@ -1206,9 +1207,13 @@ export function scoreClusterInContext(
   enemies: string[],
   champData: any
 ): number {
-  const wrContrib = (cluster.weightedWinrate - 50) * 2;
-  const prContrib = Math.log10(cluster.totalPickrate || 1) * 2;
-  const baseScore = wrContrib + prContrib;
+  const pr = Math.max(0, cluster.totalPickrate || 0);
+  const wr = cluster.weightedWinrate || 50.0;
+
+  // Pesa prioritariamente la cantidad de partidas (pickrate) con influencia del winrate
+  const prContrib = pr * 0.8;
+  const wrContrib = (wr - 50.0) * 1.5;
+  const baseScore = prContrib + wrContrib;
   let score = baseScore;
 
   const bonuses: { label: string; value: number }[] = [];

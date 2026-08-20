@@ -1,31 +1,20 @@
 // src/pages/api/live-game.ts
+import https from 'https';
+import axios from 'axios';
 import type { APIRoute } from 'astro';
-import fs from 'node:fs';
-import path from 'node:path';
 import { getLockfileData } from '../../lib/services/lcu.service.js';
 import { scrapeOpggProfile } from '../../lib/services/opgg.service.js';
 import { getNameFromId, getIdFromName } from '../../lib/engine/engine.js';
 import { getActiveGame } from '../../lib/services/riot-api.service.js';
+import { resolveSkinNumber } from '../../lib/services/skinResolver.service.js';
+import { assignTeamRoles } from '../../lib/services/roleAssignment.service.js';
 import { loadLiveMatchCache, saveLiveMatchCache } from '../../lib/services/liveMatchCache.service.js';
 
-// TODO DEBUG: remover este logging una vez diagnosticado el bug de loading screen
-const LOG_PATH = path.resolve(process.cwd(), 'logs', 'loading-screen-debug.log');
-
-function ensureLogDir() {
-  const dir = path.dirname(LOG_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function logPoll(entry: Record<string, any>) {
-  try {
-    ensureLogDir();
-    const line = JSON.stringify({ ts: new Date().toISOString(), source: 'live-game', ...entry });
-    fs.appendFileSync(LOG_PATH, line + '\n');
-    console.log('[LIVE-GAME-DEBUG]', line);
-  } catch (err) {
-    console.error('[LIVE-GAME-DEBUG-ERROR]', err);
-  }
-}
+const liveClient = axios.create({
+  baseURL: 'https://127.0.0.1:2999/liveclientdata',
+  httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+  timeout: 1500
+});
 
 function buildMatchFingerprint(participants: any[], localPuuid?: string): string {
   const getChampId = (p: any): number => {
@@ -63,108 +52,54 @@ export const GET: APIRoute = async ({ request }) => {
   let gameMode = 'RANKED SOLO/DUO';
 
   // 1. Intentar consultar el Puerto Local 2999 (Live Client Data directo de League of Legends.exe)
-  const p2999Start = Date.now();
   try {
-    const p2999Res = await fetch('https://127.0.0.1:2999/liveclientdata/playerlist');
-    const elapsedMs = Date.now() - p2999Start;
-    if (p2999Res.ok) {
-      const players = await p2999Res.json();
-      if (Array.isArray(players) && players.length > 0) {
-        participantsRaw = players.map(p => {
-          const champId = getIdFromName(p.championName) || 0;
-          return {
-            summonerName: p.summonerName,
-            gameName: p.summonerName.includes('#') ? p.summonerName.split('#')[0].trim() : p.summonerName,
-            tagLine: p.summonerName.includes('#') ? p.summonerName.split('#')[1].trim() : 'LAS',
-            championName: p.championName,
-            championId: champId,
-            teamId: p.team === 'ORDER' ? 100 : 200,
-            assignedPosition: p.position || ''
-          };
-        });
-
-        logPoll({
-          step: 'port_2999',
-          outcome: 'success',
-          httpStatus: p2999Res.status,
-          elapsedMs,
-          participantsCount: participantsRaw.length,
-          championNames: participantsRaw.map(p => p.championName).filter(Boolean)
-        });
-      } else {
-        logPoll({
-          step: 'port_2999',
-          outcome: 'empty_players_array',
-          httpStatus: p2999Res.status,
-          elapsedMs
-        });
-      }
-    } else {
-      logPoll({
-        step: 'port_2999',
-        outcome: 'http_error',
-        httpStatus: p2999Res.status,
-        elapsedMs
+    const p2999Res = await liveClient.get('/playerlist');
+    if (p2999Res.status === 200 && Array.isArray(p2999Res.data) && p2999Res.data.length > 0) {
+      participantsRaw = p2999Res.data.map((p: any) => {
+        const champId = getIdFromName(p.championName) || 0;
+        return {
+          summonerName: p.summonerName,
+          gameName: p.summonerName.includes('#') ? p.summonerName.split('#')[0].trim() : p.summonerName,
+          tagLine: p.summonerName.includes('#') ? p.summonerName.split('#')[1].trim() : 'LAS',
+          championName: p.championName,
+          championId: champId,
+          skinId: p.skinID || p.skinId || 0,
+          selectedSkinId: p.skinID || p.skinId || 0,
+          teamId: p.team === 'ORDER' ? 100 : 200,
+          assignedPosition: p.position || ''
+        };
       });
     }
-  } catch (e: any) {
-    const elapsedMs = Date.now() - p2999Start;
-    logPoll({
-      step: 'port_2999',
-      outcome: 'fetch_failed_falling_back',
-      errorName: e?.name,
-      errorMessage: e?.message,
-      elapsedMs
-    });
+  } catch (_e) {
+    // 2999 port fallback
   }
 
-  // 2. Si el puerto 2999 no devolvió datos, intentar obtener datos vía LCU lockfile (Gameflow/ChampSelect)
-  if (participantsRaw.length === 0 && lcu) {
-    const lcuStart = Date.now();
+  // 2. Consultar LCU lockfile para enriquecer o complementar participantes y skins
+  if (lcu) {
     try {
       const auth = btoa(`riot:${lcu.token}`);
 
       // Obtener invocador local para puuid de fallback si no se pasó
       if (!puuid) {
-        const sumStart = Date.now();
         const sumRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-summoner/v1/current-summoner`, {
           headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
         });
-        const sumElapsedMs = Date.now() - sumStart;
         if (sumRes.ok) {
           const sumData = await sumRes.json();
           puuid = sumData.puuid || '';
-          logPoll({
-            step: 'lcu_current_summoner',
-            outcome: 'success',
-            elapsedMs: sumElapsedMs,
-            puuidFound: Boolean(puuid),
-            displayName: sumData.displayName || sumData.gameName
-          });
-        } else {
-          logPoll({
-            step: 'lcu_current_summoner',
-            outcome: 'http_error',
-            httpStatus: sumRes.status,
-            elapsedMs: sumElapsedMs
-          });
         }
       }
 
-      let gameflowPhase = 'unknown';
       let gameflowParticipants: any[] = [];
       let champSelectParticipants: any[] = [];
 
       // Intentar obtener sesión de Gameflow (Pantalla de Carga / In-Game)
-      const gfStart = Date.now();
       const gfRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-gameflow/v1/session`, {
         headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
       });
-      const gfElapsedMs = Date.now() - gfStart;
 
       if (gfRes.ok) {
         const gfData = await gfRes.json();
-        gameflowPhase = gfData.phase || 'None';
         gameMode = gfData.gameData?.queue?.gameMode || 'RANKED';
         const teamOne = gfData.gameData?.teamOne || [];
         const teamTwo = gfData.gameData?.teamTwo || [];
@@ -181,35 +116,12 @@ export const GET: APIRoute = async ({ request }) => {
             teamId: idx < 5 ? 100 : 200
           }));
         }
-
-        logPoll({
-          step: 'lcu_gameflow_session',
-          outcome: gameflowParticipants.length > 0 ? 'success' : 'no_participants_in_gameflow',
-          phase: gameflowPhase,
-          gameMode,
-          elapsedMs: gfElapsedMs,
-          participantsCount: gameflowParticipants.length,
-          championIds: gameflowParticipants.map((p: any) => p.championId || 0)
-        });
-
-        if (gameflowParticipants.length > 0) {
-          participantsRaw = gameflowParticipants;
-        }
-      } else {
-        logPoll({
-          step: 'lcu_gameflow_session',
-          outcome: 'http_error',
-          httpStatus: gfRes.status,
-          elapsedMs: gfElapsedMs
-        });
       }
 
-      // Si no hay datos en Gameflow o para verificar coherencia
-      const csStart = Date.now();
+      // Si no hay datos en Gameflow, intentar Selección de Campeones (ChampSelect)
       const draftRes = await fetch(`https://127.0.0.1:${lcu.port}/lol-champ-select/v1/session`, {
         headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/json' }
       });
-      const csElapsedMs = Date.now() - csStart;
 
       if (draftRes.ok) {
         const draftData = await draftRes.json();
@@ -217,93 +129,53 @@ export const GET: APIRoute = async ({ request }) => {
           const myTeam = (draftData.myTeam || []).map((p: any) => ({ ...p, teamId: 100 }));
           const theirTeam = (draftData.theirTeam || []).map((p: any) => ({ ...p, teamId: 200 }));
           champSelectParticipants = [...myTeam, ...theirTeam];
+        }
+      }
 
-          logPoll({
-            step: 'lcu_champ_select_session',
-            outcome: 'success',
-            elapsedMs: csElapsedMs,
-            participantsCount: champSelectParticipants.length,
-            championIds: champSelectParticipants.map((p: any) => p.championId || p.championPickIntent || 0)
-          });
+      if (participantsRaw.length === 0) {
+        if (gameflowParticipants.length > 0) {
+          participantsRaw = gameflowParticipants;
+        } else if (champSelectParticipants.length > 0) {
+          participantsRaw = champSelectParticipants;
         }
       } else {
-        logPoll({
-          step: 'lcu_champ_select_session',
-          outcome: 'http_error',
-          httpStatus: draftRes.status,
-          elapsedMs: csElapsedMs
+        // Enriquecer participantes de port 2999 con skins confirmadas de LCU Gameflow / Champ Select
+        const lcuSources = [...gameflowParticipants, ...champSelectParticipants];
+        participantsRaw = participantsRaw.map(p => {
+          if (!p.skinId || p.skinId === 0) {
+            const match = lcuSources.find((g: any) =>
+              (g.puuid && p.puuid && g.puuid === p.puuid) ||
+              (g.championId && p.championId && g.championId === p.championId) ||
+              (g.summonerName && p.summonerName && g.summonerName === p.summonerName) ||
+              (g.gameName && p.gameName && g.gameName === p.gameName)
+            );
+            if (match && (match.selectedSkinId || match.skinId)) {
+              const sid = match.selectedSkinId || match.skinId;
+              return { ...p, skinId: sid, selectedSkinId: sid };
+            }
+          }
+          return p;
         });
       }
-
-      // Verificar si hay discrepancias entre los fallbacks (mismatch)
-      if (gameflowParticipants.length > 0 && champSelectParticipants.length > 0) {
-        const gfChamps = gameflowParticipants.map((p: any) => p.championId || 0).sort().join(',');
-        const csChamps = champSelectParticipants.map((p: any) => p.championId || p.championPickIntent || 0).sort().join(',');
-        if (gfChamps !== csChamps) {
-          logPoll({
-            outcome: 'fallback_data_mismatch',
-            sourceA: 'gameflow_session',
-            sourceB: 'champ_select_session',
-            gameflowPhase,
-            gameflowChampionIds: gfChamps,
-            champSelectChampionIds: csChamps
-          });
-        }
-      }
-
-      if (participantsRaw.length === 0 && champSelectParticipants.length > 0) {
-        participantsRaw = champSelectParticipants;
-      }
-    } catch (e: any) {
-      logPoll({
-        step: 'lcu_fallbacks',
-        outcome: 'error',
-        errorName: e?.name,
-        errorMessage: e?.message,
-        elapsedMs: Date.now() - lcuStart
-      });
+    } catch (e) {
       console.warn('[LiveGame API] Error al obtener participantes del LCU local:', e);
     }
   }
 
   // 3. Fallback a Spectator API si LCU local no retornó participantes pero tenemos puuid
   if (participantsRaw.length === 0 && puuid) {
-    const specStart = Date.now();
     try {
       const spectatorGame = await getActiveGame(puuid, platform);
-      const specElapsedMs = Date.now() - specStart;
       if (spectatorGame && spectatorGame.participants) {
         participantsRaw = spectatorGame.participants;
         gameMode = spectatorGame.gameMode || 'RANKED';
-        logPoll({
-          step: 'spectator_api',
-          outcome: 'success',
-          elapsedMs: specElapsedMs,
-          participantsCount: participantsRaw.length
-        });
-      } else {
-        logPoll({
-          step: 'spectator_api',
-          outcome: 'no_game_found',
-          elapsedMs: specElapsedMs
-        });
       }
-    } catch (e: any) {
-      logPoll({
-        step: 'spectator_api',
-        outcome: 'error',
-        errorName: e?.name,
-        errorMessage: e?.message,
-        elapsedMs: Date.now() - specStart
-      });
+    } catch (_e) {
+      // Spectator API fallback
     }
   }
 
   if (participantsRaw.length === 0) {
-    logPoll({
-      outcome: 'no_participants_found_final',
-      active: false
-    });
     return new Response(
       JSON.stringify({
         active: false,
@@ -317,21 +189,46 @@ export const GET: APIRoute = async ({ request }) => {
   const matchFingerprint = buildMatchFingerprint(participantsRaw, puuid);
 
   // 1. Si los datos ya fueron scrapeados para esta partida (isScraped === 1), retornar directo desde JSON
+  // actualizando en tiempo real la skin seleccionada si el jugador la cambió
   const cachedMatch = loadLiveMatchCache();
   if (cachedMatch && cachedMatch.isScraped === 1 && cachedMatch.matchFingerprint === matchFingerprint) {
-    logPoll({
-      outcome: 'served_from_cache',
-      matchFingerprint,
-      gameMode: cachedMatch.gameMode
-    });
+    let hasSkinUpdates = false;
+
+    const updateSkinInCachedTeam = async (team: any[]) => {
+      return Promise.all(team.map(async (p) => {
+        const liveP = participantsRaw.find(raw => 
+          (raw.puuid && p.puuid && raw.puuid === p.puuid) || 
+          (raw.championId && p.championId && raw.championId === p.championId) ||
+          (raw.summonerName && p.summonerName && raw.summonerName === p.summonerName)
+        );
+        const sid = liveP ? (liveP.selectedSkinId || liveP.skinId || liveP.skinID || 0) : (p.selectedSkinId || p.skinId || 0);
+        const skinNum = await resolveSkinNumber(p.championId, sid);
+        if (sid !== p.skinId || skinNum !== p.skinNum) {
+          hasSkinUpdates = true;
+        }
+        return { ...p, skinId: sid, selectedSkinId: sid, skinNum };
+      }));
+    };
+
+    const blueTeam = await updateSkinInCachedTeam(cachedMatch.blueTeam || []);
+    const redTeam = await updateSkinInCachedTeam(cachedMatch.redTeam || []);
+
+    if (hasSkinUpdates) {
+      saveLiveMatchCache({
+        ...cachedMatch,
+        blueTeam,
+        redTeam
+      });
+    }
+
     return new Response(
       JSON.stringify({
         active: true,
         gameMode: cachedMatch.gameMode,
-        blueTeam: cachedMatch.blueTeam,
-        redTeam: cachedMatch.redTeam,
-        myTeam: cachedMatch.blueTeam,
-        theirTeam: cachedMatch.redTeam,
+        blueTeam,
+        redTeam,
+        myTeam: blueTeam,
+        theirTeam: redTeam,
         fromCache: true,
         isPartial: false
       }),
@@ -398,12 +295,22 @@ export const GET: APIRoute = async ({ request }) => {
     }
     const championName = getNameFromId(championId) || p.championName || `Champion_${championId}`;
 
-    const role = p.assignedPosition && p.assignedPosition.trim() !== '' && p.assignedPosition !== 'none'
+    const role = p.role || (p.assignedPosition && p.assignedPosition.trim() !== '' && p.assignedPosition !== 'none'
       ? p.assignedPosition.toUpperCase()
-      : ROLES_ORDER[indexInTeam % 5];
+      : ROLES_ORDER[indexInTeam % 5]);
 
-    // Extraer perfil y etiquetas vía OP.GG Scraper Service v2
-    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId);
+    const isSelf = Boolean(
+      (puuid && p.puuid && p.puuid === puuid) ||
+      (rawName.toLowerCase() === 'frikz') ||
+      p.isLocalPlayer
+    );
+
+    // Extraer perfil y etiquetas vía OP.GG Scraper Service v2 (sin caché para el usuario local)
+    const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId, isSelf);
+    const skinId = p.selectedSkinId || p.skinId || p.skinID || 0;
+    const skinNum = await resolveSkinNumber(championId, skinId);
+
+    console.log(`[LiveGame API] Invocador: ${rawName || 'Anónimo'}${isSelf ? ' (TÚ)' : ''} | Campeón: ${championName} (ID: ${championId}) | Rol: ${role} | SkinId/Chroma: ${skinId} -> Skin #${skinNum}`);
 
     return {
       ...profile,
@@ -411,7 +318,12 @@ export const GET: APIRoute = async ({ request }) => {
       teamId: p.teamId,
       championId,
       championName,
-      role
+      role,
+      skinId,
+      selectedSkinId: skinId,
+      skinNum,
+      spell1Id: p.spell1Id || (p.spells && p.spells[0]) || undefined,
+      spell2Id: p.spell2Id || (p.spells && p.spells[1]) || undefined
     };
   };
 
@@ -427,9 +339,12 @@ export const GET: APIRoute = async ({ request }) => {
     });
   };
 
+  const blueTeamWithRoles = assignTeamRoles(blueTeamRaw);
+  const redTeamWithRoles = assignTeamRoles(redTeamRaw);
+
   const [blueTeamUnsorted, redTeamUnsorted] = await Promise.all([
-    Promise.all(blueTeamRaw.map((p, idx) => processParticipant(p, idx))),
-    Promise.all(redTeamRaw.map((p, idx) => processParticipant(p, idx)))
+    Promise.all(blueTeamWithRoles.map((p, idx) => processParticipant(p, idx))),
+    Promise.all(redTeamWithRoles.map((p, idx) => processParticipant(p, idx)))
   ]);
 
   const blueTeam = sortByRole(blueTeamUnsorted);
@@ -452,24 +367,6 @@ export const GET: APIRoute = async ({ request }) => {
       gameMode,
       blueTeam,
       redTeam
-    });
-
-    logPoll({
-      outcome: 'scraped_and_ready',
-      matchFingerprint,
-      gameMode,
-      blueCount: blueTeam.length,
-      redCount: redTeam.length
-    });
-  } else {
-    // Datos preliminares (ej. solo IDs de campeones desde Gameflow sin nombres de invocador).
-    // No bloqueamos la caché con isScraped = 1 para permitir que en el siguiente poll del puerto 2999 se haga el scraping completo.
-    logPoll({
-      outcome: 'partial_ready_not_cached',
-      matchFingerprint,
-      gameMode,
-      blueCount: blueTeam.length,
-      redCount: redTeam.length
     });
   }
 

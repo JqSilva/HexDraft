@@ -3,25 +3,38 @@ import React, { useState } from 'react';
 import { PlayerCard, type PlayerData } from './PlayerCard.js';
 
 const CHAMPIONS_LIST = [
-  { id: 517, name: 'Sylas' },
-  { id: 92, name: 'Riven' },
-  { id: 157, name: 'Yasuo' },
-  { id: 122, name: 'Darius' },
-  { id: 238, name: 'Zed' },
-  { id: 222, name: 'Jinx' },
-  { id: 103, name: 'Ahri' },
-  { id: 64, name: 'LeeSin' },
-  { id: 412, name: 'Thresh' },
-  { id: 89, name: 'Leona' },
-  { id: 81, name: 'Ezreal' },
-  { id: 234, name: 'Viego' },
-  { id: 268, name: 'Azir' }
+  { id: 517, name: 'Sylas', skins: [0, 1, 6, 8, 13] },
+  { id: 92, name: 'Riven', skins: [0, 1, 2, 3, 4, 5, 6, 16] },
+  { id: 157, name: 'Yasuo', skins: [0, 1, 2, 3, 9, 10, 17] },
+  { id: 122, name: 'Darius', skins: [0, 1, 2, 3, 4, 8, 14] },
+  { id: 238, name: 'Zed', skins: [0, 1, 2, 3, 10, 11, 13] },
+  { id: 222, name: 'Jinx', skins: [0, 1, 2, 3, 4, 12, 20] },
+  { id: 103, name: 'Ahri', skins: [0, 1, 2, 3, 4, 5, 6, 7, 14, 15, 17, 27] },
+  { id: 64, name: 'LeeSin', skins: [0, 1, 2, 3, 4, 5, 10, 11, 27] },
+  { id: 412, name: 'Thresh', skins: [0, 1, 2, 3, 4, 5, 6, 13] },
+  { id: 89, name: 'Leona', skins: [0, 1, 2, 3, 4, 8, 9, 10] },
+  { id: 81, name: 'Ezreal', skins: [0, 1, 2, 3, 5, 7, 8, 9, 19, 20] },
+  { id: 234, name: 'Viego', skins: [0, 1, 10, 19] },
+  { id: 268, name: 'Azir', skins: [0, 1, 2, 3, 4, 5] }
 ];
 
 const TIERS = ['DIAMOND', 'EMERALD', 'PLATINUM', 'GOLD', 'SILVER', 'BRONZE', 'MASTER', 'CHALLENGER', 'UNRANKED'];
 const DIVISIONS = ['I', 'II', 'III', 'IV'];
 
-const PRESET_TAGS = ['MVP', 'OTP SYLAS', 'SMURF 90% WR', 'TILTEADO', 'FIRST TIME', 'PENTA KILL', 'WIN STREAK', 'FIRST BLOOD'];
+const PRESET_TAGS = [
+  'DESPERTANDO',
+  'RACHA HOY 3W',
+  'TILTEADO (3L)',
+  'OTP SYLAS',
+  'EXPERTO SYLAS',
+  'BUEN CS (8.4/m)',
+  'BAJO CS (4.2/m)',
+  'GRAN KDA (4.5)',
+  'DÚO CON FAKER',
+  'VULNERABLE A GANKS',
+  'DESTRUCTOR TORRES',
+  'FUERA DE ROL (MID)'
+];
 
 export const PlayerCardSandbox: React.FC = () => {
   // Estado para Ocultar/Mostrar Sidebar
@@ -34,6 +47,7 @@ export const PlayerCardSandbox: React.FC = () => {
   const [summonerName, setSummonerName] = useState<string>('Frikz#xoro');
   const [profileIconId, setProfileIconId] = useState<number>(3182);
   const [championId, setChampionId] = useState<number>(517);
+  const [skinNum, setSkinNum] = useState<number>(1); // Skin de prueba
   const [role, setRole] = useState<string>('MID');
 
   // Estado SoloQ
@@ -58,7 +72,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
   // Tags Personalizados
   const [useCustomTags, setUseCustomTags] = useState<boolean>(false);
-  const [customTagsList, setCustomTagsList] = useState<string[]>(['OTP SYLAS', 'MVP', 'WIN STREAK 3W']);
+  const [customTagsList, setCustomTagsList] = useState<string[]>(['OTP SYLAS', 'RACHA HOY 3W', 'BUEN CS (8.4/m)']);
   const [newTagInput, setNewTagInput] = useState<string>('');
 
   // Hechizos de invocador
@@ -84,6 +98,8 @@ export const PlayerCardSandbox: React.FC = () => {
     teamId: 100,
     championId: activeChamp.id,
     championName: activeChamp.name,
+    skinId: activeChamp.id * 1000 + skinNum,
+    selectedSkinId: activeChamp.id * 1000 + skinNum,
     profileIconId,
     role,
     isMain,
@@ -115,8 +131,8 @@ export const PlayerCardSandbox: React.FC = () => {
       totalGames: todayGames,
       winrate: todayWr,
       streak: {
-        type: streakType,
-        count: streakCount
+        type: hasPlayedToday ? streakType : null,
+        count: hasPlayedToday ? streakCount : 0
       }
     }
   };
@@ -130,6 +146,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 100,
       championId: 92,
       championName: 'Riven',
+      skinId: 92004,
       profileIconId: 4890,
       role: 'TOP',
       isMain: true,
@@ -146,6 +163,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 100,
       championId: 64,
       championName: 'LeeSin',
+      skinId: 64011,
       profileIconId: 1420,
       role: 'JNG',
       isMain: false,
@@ -163,6 +181,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 100,
       championId: 222,
       championName: 'Jinx',
+      skinId: 222012,
       profileIconId: 5390,
       role: 'ADC',
       isMain: true,
@@ -179,6 +198,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 100,
       championId: 412,
       championName: 'Thresh',
+      skinId: 412005,
       profileIconId: 29,
       role: 'SUPP',
       isMain: false,
@@ -198,6 +218,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 200,
       championId: 122,
       championName: 'Darius',
+      skinId: 122004,
       profileIconId: 3500,
       role: 'TOP',
       isMain: false,
@@ -214,6 +235,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 200,
       championId: 234,
       championName: 'Viego',
+      skinId: 234001,
       profileIconId: 4210,
       role: 'JNG',
       isMain: true,
@@ -230,6 +252,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 200,
       championId: 238,
       championName: 'Zed',
+      skinId: 238011,
       profileIconId: 5880,
       role: 'MID',
       isMain: true,
@@ -246,6 +269,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 200,
       championId: 81,
       championName: 'Ezreal',
+      skinId: 81019,
       profileIconId: 2080,
       role: 'ADC',
       isMain: false,
@@ -262,6 +286,7 @@ export const PlayerCardSandbox: React.FC = () => {
       teamId: 200,
       championId: 89,
       championName: 'Leona',
+      skinId: 89008,
       profileIconId: 1200,
       role: 'SUPP',
       isMain: false,
@@ -318,66 +343,56 @@ export const PlayerCardSandbox: React.FC = () => {
           <button
             onClick={() => setSidebarOpen(false)}
             className="px-2 py-0.5 bg-purple-950/80 hover:bg-purple-900 text-purple-300 font-mono text-[10px] rounded border border-purple-800/40 cursor-pointer"
-            title="Ocultar Panel Lateral"
           >
-            Ocultar [X]
+            Ocultar
           </button>
         </div>
 
-        {/* MODOS DE VISTA (SINGLE vs 5v5) */}
-        <div className="flex flex-col gap-1.5 bg-[#141221] p-2.5 rounded border border-purple-900/40">
+        {/* MODO DE VISTA */}
+        <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
           <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Modo de Vista</label>
-          <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={() => setViewMode('single')}
-              className={`py-1.5 text-[10.5px] font-mono uppercase font-bold rounded border cursor-pointer ${viewMode === 'single' ? 'bg-purple-900 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
+              className={`py-1.5 px-2 rounded font-mono font-bold text-xs uppercase cursor-pointer border ${viewMode === 'single' ? 'bg-black/90 text-purple-300 border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-purple-800'}`}
             >
-              1 Card Aislada
+              1 Tarjeta
             </button>
             <button
               onClick={() => setViewMode('5v5')}
-              className={`py-1.5 text-[10.5px] font-mono uppercase font-bold rounded border cursor-pointer ${viewMode === '5v5' ? 'bg-purple-900 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
+              className={`py-1.5 px-2 rounded font-mono font-bold text-xs uppercase cursor-pointer border ${viewMode === '5v5' ? 'bg-black/90 text-purple-300 border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-purple-800'}`}
             >
-              Vista 5v5 Completa
+              5 vs 5 Completo
             </button>
           </div>
         </div>
 
-        {/* MODO DE FONDO Y ANCHO */}
-        <div className="flex flex-col gap-1.5 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-slate-300 uppercase tracking-wider text-[10px] font-mono">Fondo del Lienzo</label>
-          <div className="grid grid-cols-3 gap-1">
-            <button
-              onClick={() => setBgMode('blank')}
-              className={`py-1 text-[10px] font-mono uppercase font-bold rounded border cursor-pointer ${bgMode === 'blank' ? 'bg-white text-black border-white' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
-            >
-              Blanco
-            </button>
-            <button
-              onClick={() => setBgMode('dark')}
-              className={`py-1 text-[10px] font-mono uppercase font-bold rounded border cursor-pointer ${bgMode === 'dark' ? 'bg-purple-950 text-purple-200 border-purple-600' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
-            >
-              Oscuro
-            </button>
-            <button
-              onClick={() => setBgMode('grid')}
-              className={`py-1 text-[10px] font-mono uppercase font-bold rounded border cursor-pointer ${bgMode === 'grid' ? 'bg-purple-900 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
-            >
-              Táctico
-            </button>
+        {/* ENTORNO Y TAMAÑO */}
+        <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
+          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Fondo del Entorno</label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(['blank', 'dark', 'grid'] as const).map(b => (
+              <button
+                key={b}
+                onClick={() => setBgMode(b)}
+                className={`py-1 px-1.5 rounded font-mono text-[10px] uppercase cursor-pointer border ${bgMode === b ? 'bg-black/90 text-purple-300 border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
+              >
+                {b}
+              </button>
+            ))}
           </div>
 
           {viewMode === 'single' && (
             <>
-              <label className="font-bold text-slate-300 uppercase tracking-wider text-[10px] font-mono mt-2">Ancho de tarjeta</label>
-              <div className="grid grid-cols-5 gap-1">
-                {(['288', 'sm', 'md', 'lg', 'full'] as const).map(w => (
+              <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono mt-1">Ancho de Tarjeta</label>
+              <div className="grid grid-cols-4 gap-1">
+                {(['sm', 'md', 'lg', 'full'] as const).map(w => (
                   <button
                     key={w}
-                    onClick={() => setCardWidth(w as any)}
-                    className={`py-1 text-[9px] font-mono uppercase font-bold rounded border cursor-pointer ${cardWidth === (w as any) ? 'bg-purple-900 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
+                    onClick={() => setCardWidth(w)}
+                    className={`py-1 rounded font-mono text-[10px] uppercase cursor-pointer border ${cardWidth === w ? 'bg-black/90 text-purple-300 border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-800'}`}
                   >
-                    {w === '288' ? '288px' : w}
+                    {w}
                   </button>
                 ))}
               </div>
@@ -388,9 +403,9 @@ export const PlayerCardSandbox: React.FC = () => {
         {/* ADMINISTRADOR DE TAGS PERSONALIZADOS */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
           <div className="flex justify-between items-center">
-            <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Tags Personalizados</label>
+            <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Tags y Prioridades</label>
             <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-slate-400 font-mono">{useCustomTags ? 'Personalizados' : 'Calculados'}</span>
+              <span className="text-[9px] text-slate-400 font-mono">{useCustomTags ? 'Manuales' : 'Calculados'}</span>
               <input
                 type="checkbox"
                 checked={useCustomTags}
@@ -407,7 +422,7 @@ export const PlayerCardSandbox: React.FC = () => {
               value={newTagInput}
               onChange={(e) => setNewTagInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-              placeholder="Escribe un tag personalizado..."
+              placeholder="Escribe un tag..."
               className="flex-1 bg-black/60 border border-purple-900/50 rounded px-2 py-1 text-white font-mono text-xs focus:outline-none focus:border-purple-500"
             />
             <button
@@ -440,7 +455,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
           {/* TAGS PREDEFINIDOS DE RÁPIDA SELECCIÓN */}
           <div className="mt-1">
-            <span className="text-[9px] text-slate-400 font-mono">Tags Rápido:</span>
+            <span className="text-[9px] text-slate-400 font-mono">Presets del nuevo motor:</span>
             <div className="flex flex-wrap gap-1 mt-1">
               {PRESET_TAGS.map(preset => {
                 const isSelected = customTagsList.includes(preset);
@@ -458,9 +473,9 @@ export const PlayerCardSandbox: React.FC = () => {
           </div>
         </div>
 
-        {/* INVOCADOR Y CAMPEÓN */}
+        {/* INVOCADOR, CAMPEÓN Y SKIN */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Invocador y Campeón ({viewMode === '5v5' ? 'Ally MID' : 'Modo 1'})</label>
+          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Invocador, Campeón y Skin ({viewMode === '5v5' ? 'Ally MID' : 'Modo 1'})</label>
           
           <div className="flex flex-col gap-1">
             <span className="text-[10px] text-slate-400">Nombre / Riot ID</span>
@@ -494,92 +509,52 @@ export const PlayerCardSandbox: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-slate-400">Campeón</span>
-            <select
-              value={championId}
-              onChange={(e) => setChampionId(Number(e.target.value))}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-xs focus:outline-none focus:border-purple-500"
-            >
-              {CHAMPIONS_LIST.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-slate-400">Campeón</span>
+              <select
+                value={championId}
+                onChange={(e) => {
+                  setChampionId(Number(e.target.value));
+                  setSkinNum(0);
+                }}
+                className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-xs focus:outline-none focus:border-purple-500"
+              >
+                {CHAMPIONS_LIST.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-slate-400">Skin Index (Splash)</span>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={skinNum}
+                onChange={(e) => setSkinNum(Math.max(0, Number(e.target.value)))}
+                className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-xs focus:outline-none focus:border-purple-500"
+              />
+            </div>
           </div>
         </div>
 
-        {/* SOLO Q */}
+        {/* SESIÓN DEL DÍA / RACHAS */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Solo Q Elo</label>
-          <div className="grid grid-cols-3 gap-1.5">
-            <select
-              value={soloTier}
-              onChange={(e) => setSoloTier(e.target.value)}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select
-              value={soloDivision}
-              onChange={(e) => setSoloDivision(e.target.value)}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            <input
-              type="number"
-              value={soloLp}
-              onChange={(e) => setSoloLp(Number(e.target.value))}
-              placeholder="LP"
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            />
-          </div>
-        </div>
-
-        {/* FLEX */}
-        <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Flex Elo</label>
-          <div className="grid grid-cols-3 gap-1.5">
-            <select
-              value={flexTier}
-              onChange={(e) => setFlexTier(e.target.value)}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select
-              value={flexDivision}
-              onChange={(e) => setFlexDivision(e.target.value)}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            <input
-              type="number"
-              value={flexLp}
-              onChange={(e) => setFlexLp(Number(e.target.value))}
-              placeholder="LP"
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            />
-          </div>
-        </div>
-
-        {/* RACHAS Y HOY */}
-        <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Rachas y Tags Calculados</label>
-          
+          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Sesión Hoy & Racha</label>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-slate-300">¿Jugó hoy?</span>
+            <span className="text-[10px] text-slate-300">¿Ha jugado hoy?</span>
             <input
               type="checkbox"
               checked={hasPlayedToday}
               onChange={(e) => setHasPlayedToday(e.target.checked)}
-              className="accent-purple-600"
+              className="accent-purple-600 cursor-pointer"
             />
           </div>
 
-          {hasPlayedToday && (
+          {hasPlayedToday ? (
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Wins Hoy</span>
+                <span className="text-[9px] text-slate-400">Wins Hoy</span>
                 <input
                   type="number"
                   value={todayWins}
@@ -588,7 +563,7 @@ export const PlayerCardSandbox: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Losses Hoy</span>
+                <span className="text-[9px] text-slate-400">Losses Hoy</span>
                 <input
                   type="number"
                   value={todayLosses}
@@ -597,125 +572,57 @@ export const PlayerCardSandbox: React.FC = () => {
                 />
               </div>
             </div>
+          ) : (
+            <div className="text-[10px] text-amber-300/80 font-mono bg-amber-950/30 p-1.5 rounded border border-amber-800/40">
+              Estado: 0W - 0L (Despertando / Frío)
+            </div>
           )}
-
-          <div className="grid grid-cols-2 gap-2 mt-1">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-slate-400">Tipo Racha</span>
-              <select
-                value={streakType || 'none'}
-                onChange={(e) => setStreakType(e.target.value === 'none' ? null : e.target.value as any)}
-                className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-              >
-                <option value="none">Sin racha</option>
-                <option value="win">Victorias (Win)</option>
-                <option value="loss">Derrotas (Loss)</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-slate-400">Cant. Racha</span>
-              <input
-                type="number"
-                value={streakCount}
-                onChange={(e) => setStreakCount(Number(e.target.value))}
-                className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-xs"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-1 pt-1 border-t border-purple-950/40">
-            <span className="text-[10px] text-slate-300">Es Campeón MAIN</span>
-            <input
-              type="checkbox"
-              checked={isMain}
-              onChange={(e) => setIsMain(e.target.checked)}
-              className="accent-purple-600"
-            />
-          </div>
-        </div>
-
-        {/* HECHIZOS */}
-        <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Summoner Spells</label>
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              value={spell1Id}
-              onChange={(e) => setSpell1Id(Number(e.target.value))}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              <option value={4}>Flash (4)</option>
-              <option value={14}>Ignite (14)</option>
-              <option value={12}>Teleport (12)</option>
-              <option value={11}>Smite (11)</option>
-              <option value={7}>Heal (7)</option>
-            </select>
-            <select
-              value={spell2Id}
-              onChange={(e) => setSpell2Id(Number(e.target.value))}
-              className="bg-black/60 border border-purple-900/50 rounded p-1 text-white font-mono text-[10px]"
-            >
-              <option value={14}>Ignite (14)</option>
-              <option value={4}>Flash (4)</option>
-              <option value={12}>Teleport (12)</option>
-              <option value={11}>Smite (11)</option>
-              <option value={7}>Heal (7)</option>
-            </select>
-          </div>
         </div>
       </div>
 
-      {/* ÁREA DE RENDERIZADO DEL COMPONENTE EN AISLAMIENTO */}
-      <div className={`flex-1 flex flex-col justify-between p-4 md:p-6 overflow-y-auto transition-colors duration-300 ${getBgClass()}`}>
-        {/* ENCABEZADO DE LA VISTA CON BOTÓN DE CONTROLES */}
-        <div className="w-full flex justify-between items-center text-xs font-mono opacity-80 pb-2 border-b border-purple-900/30 shrink-0 mb-2 gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="px-2.5 py-1 text-[10.5px] font-mono font-bold uppercase tracking-wider bg-purple-950/80 hover:bg-purple-900 text-purple-200 rounded border border-purple-700/50 shadow cursor-pointer transition-colors"
-            >
-              {sidebarOpen ? 'Ocultar Controles' : 'Mostrar Controles'}
-            </button>
-            <span className="font-bold uppercase tracking-wider text-purple-400 hidden sm:inline">
-              [VISTA DE PRUEBA: {viewMode === '5v5' ? 'PANTALLA DE CARGA 5V5 COMPLETA' : '1 CARD AISLADA'}]
-            </span>
-          </div>
+      {/* CONTENEDOR PRINCIPAL */}
+      <div className={`flex-1 flex flex-col items-center justify-center p-4 min-h-0 overflow-y-auto ${getBgClass()}`}>
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="absolute top-4 left-4 z-40 px-3 py-1.5 bg-[#0f0e17] hover:bg-[#191629] text-purple-300 font-mono text-xs rounded border border-purple-800/50 shadow-lg cursor-pointer flex items-center gap-1.5"
+          >
+            <span>[Panel de Ajustes]</span>
+          </button>
+        )}
 
-          <span className="text-[11px] text-slate-300 truncate">
-            CONTROLADO: <strong className="text-white">{summonerName}</strong> ({activeChamp.name})
-          </span>
-        </div>
-
-        {/* VISTA 1 CARD AISLADA */}
         {viewMode === 'single' ? (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            <div className={`transition-all duration-300 ${
-              (cardWidth as string) === '288' ? 'w-[288px] h-[380px]' :
-              cardWidth === 'sm' ? 'w-[280px]' :
-              cardWidth === 'md' ? 'w-[340px]' :
-              cardWidth === 'lg' ? 'w-[420px]' :
-              'w-full max-w-2xl'
-            }`}>
+          <div className="w-full flex flex-col items-center justify-center gap-4">
+            <div className="text-center">
+              <h1 className="text-base font-black text-purple-400 uppercase font-mono tracking-wider">
+                Preview Individual
+              </h1>
+              <p className="text-[11px] text-slate-400 font-mono">
+                Skin: {activeChamp.name} #{skinNum} | Tags: {useCustomTags ? 'Manuales' : 'Dinámicos'}
+              </p>
+            </div>
+
+            <div className={`
+              flex justify-center items-center transition-all duration-300
+              ${cardWidth === 'sm' ? 'w-[200px]' : cardWidth === 'md' ? 'w-[240px]' : cardWidth === 'lg' ? 'w-[270px]' : 'w-full max-w-[288px]'}
+            `}>
               <PlayerCard
                 player={mainPlayerObj}
-                index={0}
-                isAlly={true}
                 customTags={useCustomTags ? customTagsList : undefined}
+                mode={cardWidth === 'sm' ? 'compact' : 'normal'}
               />
             </div>
           </div>
         ) : (
-          /* VISTA 5V5 COMPLETA (PANTALLA DE CARGA 10 CARDS) */
-          <div className="w-full h-full flex flex-col justify-between select-none overflow-hidden min-h-0">
-            {/* FILA SUPERIOR: 5 JUGADORES ALIADOS */}
-            <div className="flex-1 min-h-0 flex flex-col justify-center">
-              <h4 className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest mb-1">
-                TEAM AZUL (ALIADOS)
-              </h4>
-              <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch">
+          <div className="w-full max-w-[1400px] flex flex-col justify-between h-full min-h-[580px] p-2 xl:p-4 text-slate-200">
+            {/* EQUIPO AZUL */}
+            <div className="flex-1 min-h-0 py-1">
+              <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase mb-1">Equipo Aliado (Ordenado por Rol)</div>
+              <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
                 {mockAllyTeam.map((p, idx) => (
                   <PlayerCard
-                    key={p.puuid}
-                    player={p}
+                    key={p.puuid || `ally_${idx}`}
+                    player={idx === 2 ? mainPlayerObj : p}
                     index={idx}
                     isAlly={true}
                     customTags={idx === 2 && useCustomTags ? customTagsList : undefined}
@@ -724,7 +631,7 @@ export const PlayerCardSandbox: React.FC = () => {
               </div>
             </div>
 
-            {/* SEPARADOR CENTRAL 'VS' ESTILIZADO */}
+            {/* SEPARADOR VS */}
             <div className="relative my-2 flex items-center justify-center shrink-0">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-purple-900/60" />
@@ -734,15 +641,13 @@ export const PlayerCardSandbox: React.FC = () => {
               </div>
             </div>
 
-            {/* FILA INFERIOR: 5 JUGADORES ENEMIGOS */}
-            <div className="flex-1 min-h-0 flex flex-col justify-center">
-              <h4 className="text-[10px] font-mono font-bold text-rose-400 uppercase tracking-widest mb-1">
-                TEAM ROJO (ENEMIGOS)
-              </h4>
-              <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch">
+            {/* EQUIPO ROJO */}
+            <div className="flex-1 min-h-0 py-1">
+              <div className="text-[10px] font-mono text-rose-400 font-bold uppercase mb-1">Equipo Enemigo</div>
+              <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
                 {mockEnemyTeam.map((p, idx) => (
                   <PlayerCard
-                    key={p.puuid}
+                    key={p.puuid || `enemy_${idx}`}
                     player={p}
                     index={idx}
                     isAlly={false}

@@ -49,6 +49,8 @@ export interface OpggPlayerProfile {
     winrate: number;
   }>;
   isMain: boolean;
+  skinId?: number;
+  selectedSkinId?: number;
   tags: string[];
   lastMatchKda?: string;
   lastMatchResult?: string;
@@ -116,7 +118,8 @@ export async function scrapeOpggProfile(
   gameName: string,
   tagLine: string,
   region: string = 'las',
-  currentChampionId: number = 0
+  currentChampionId: number = 0,
+  bypassCache: boolean = false
 ): Promise<OpggPlayerProfile> {
   const riotId = `${gameName}#${tagLine}`;
   const cleanTag = tagLine.replace(/^#/, '');
@@ -139,13 +142,17 @@ export async function scrapeOpggProfile(
     };
   }
 
-  // 2. Verificar Caché Local
+  // 2. Verificar Caché Local (si no se solicita bypass)
   const cacheKey = `${region}_${gameName.toLowerCase()}_${cleanTag.toLowerCase()}`;
   const cache = loadCache();
   const cachedEntry = cache.players[cacheKey];
-  if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
+  if (!bypassCache && cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
     console.log(`[OPGG Service] Usando datos de caché para: ${riotId}`);
     return cachedEntry.data;
+  }
+
+  if (bypassCache) {
+    console.log(`[OPGG Service] Bypass de caché activo (datos en vivo sin caché para usuario local): ${riotId}`);
   }
 
   const profileSlug = `${encodeURIComponent(gameName)}-${encodeURIComponent(cleanTag)}`;
@@ -262,17 +269,6 @@ export async function scrapeOpggProfile(
     const recentMatchesNode = graph.find((n: any) => n['@type'] === 'ItemList' && n['@id']?.includes('recent-games'));
     const itemList = recentMatchesNode?.itemListElement || [];
 
-    let todayWins = 0;
-    let todayLosses = 0;
-    let recentWins = 0;
-    let recentLosses = 0;
-    let hasMvp = false;
-    let hasAce = false;
-    let totalOpScoreSum = 0;
-    let validOpScoreCount = 0;
-
-    const streakMatches: boolean[] = [];
-
     let lastMatchKda = '';
     let lastMatchResult = '';
 
@@ -291,6 +287,17 @@ export async function scrapeOpggProfile(
       if (firstName.toUpperCase().includes('WIN')) lastMatchResult = 'Victoria';
       else if (firstName.toUpperCase().includes('LOSE')) lastMatchResult = 'Derrota';
     }
+
+    const streakMatches: boolean[] = [];
+    const todayStreakMatches: boolean[] = [];
+    let recentWins = 0;
+    let recentLosses = 0;
+    let todayWins = 0;
+    let todayLosses = 0;
+    let hasMvp = false;
+    let hasAce = false;
+    let totalOpScoreSum = 0;
+    let validOpScoreCount = 0;
 
     itemList.forEach((item: any) => {
       const gameAction = item.item || {};
@@ -331,6 +338,7 @@ export async function scrapeOpggProfile(
         }
 
         if (isGameToday) {
+          todayStreakMatches.push(isWin);
           if (isWin) todayWins++;
           if (isLose) todayLosses++;
         }
@@ -357,19 +365,19 @@ export async function scrapeOpggProfile(
 
     const opScoreAvg = validOpScoreCount > 0 ? Math.round((totalOpScoreSum / validOpScoreCount) * 10) / 10 : undefined;
 
-    // Calcular Racha Actual
-    let streakType: 'win' | 'loss' | null = null;
-    let streakCount = 0;
-    if (streakMatches.length > 0) {
-      const firstResult = streakMatches[0];
-      for (const res of streakMatches) {
+    // Calcular Racha de la Sesión de Hoy
+    let sessionStreakType: 'win' | 'loss' | null = null;
+    let sessionStreakCount = 0;
+    if (todayWins + todayLosses > 0 && todayStreakMatches.length > 0) {
+      const firstResult = todayStreakMatches[0];
+      for (const res of todayStreakMatches) {
         if (res === firstResult) {
-          streakCount++;
+          sessionStreakCount++;
         } else {
           break;
         }
       }
-      streakType = firstResult ? 'win' : 'loss';
+      sessionStreakType = firstResult ? 'win' : 'loss';
     }
 
     // Extraer Campeones Principales del Resumen Meta
@@ -403,15 +411,14 @@ export async function scrapeOpggProfile(
       tags.push('ACE');
     }
 
-    if (streakCount >= 3 && streakType === 'win') {
-      tags.push(`WIN STREAK ${streakCount}W`);
-    } else if (streakCount >= 3 && streakType === 'loss') {
-      tags.push(`LOSS STREAK ${streakCount}L`);
-      tags.push('TILTEADO');
+    if (sessionStreakCount >= 3 && sessionStreakType === 'win') {
+      tags.push(`RACHA HOY ${sessionStreakCount}W`);
+    } else if (sessionStreakCount >= 3 && sessionStreakType === 'loss') {
+      tags.push(`TILTEADO (${sessionStreakCount}L)`);
     }
 
     if (todayWins + todayLosses === 0) {
-      tags.push('1ª PARTIDA');
+      tags.push('DESPERTANDO');
     }
 
     if (validOpScoreCount > 0 && totalOpScoreSum / validOpScoreCount >= 7.5) {
@@ -473,8 +480,8 @@ export async function scrapeOpggProfile(
         losses: todayLosses,
         winrate: (todayWins + todayLosses) > 0 ? Math.round((todayWins / (todayWins + todayLosses)) * 100) : null,
         streak: {
-          type: streakType,
-          count: streakCount
+          type: sessionStreakType,
+          count: sessionStreakCount
         }
       },
       topChampions,

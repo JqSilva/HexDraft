@@ -82,6 +82,20 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
   const blueTeam = sortPlayersByRole(rawBlue);
   const redTeam = sortPlayersByRole(rawRed);
 
+  if (loading || !gameData?.active || (blueTeam.length === 0 && redTeam.length === 0)) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-slate-200">
+        <svg className="w-8 h-8 animate-spin text-purple-500/70 mb-3" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+        <span className="font-mono text-xs text-purple-300 font-bold uppercase tracking-widest">
+          Cargando...
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full flex flex-col justify-between p-2.5 xl:p-4 text-slate-200 select-none overflow-hidden min-h-0">
       {/* BARRA SUPERIOR DE ACCIONES */}
@@ -116,7 +130,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
         
         <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
           {blueTeam.map((p, idx) => (
-            <PlayerCard key={p.puuid || `blue_${idx}`} player={p} index={idx} isAlly={true} />
+            <PlayerCard key={`${p.puuid || `blue_${idx}`}_${p.championId}_${p.skinNum || p.skinId || 0}`} player={p} index={idx} isAlly={true} />
           ))}
         </div>
       </div>
@@ -136,7 +150,7 @@ export const LiveGamePanel: React.FC<LiveGamePanelProps> = ({ onCloseManual }) =
         
         <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
           {redTeam.map((p, idx) => (
-            <PlayerCard key={p.puuid || `red_${idx}`} player={p} index={idx} isAlly={false} />
+            <PlayerCard key={`${p.puuid || `red_${idx}`}_${p.championId}_${p.skinNum || p.skinId || 0}`} player={p} index={idx} isAlly={false} />
           ))}
         </div>
       </div>

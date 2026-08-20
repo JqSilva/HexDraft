@@ -135,19 +135,9 @@ export const POST: APIRoute = async ({ request }) => {
           });
           const calculatedChecksum = hash.digest('hex');
 
-          const actualFileSizeOnDisk = fs.existsSync(tempDbPath) ? fs.statSync(tempDbPath).size : 0;
-          console.log('[UPDATE-DEBUG]', JSON.stringify({
-            downloadUrl,
-            contentLengthHeader: totalBytes,
-            downloadedBytesAccumulated: downloadedBytes,
-            actualFileSizeOnDisk,
-            expectedChecksum,
-            calculatedChecksum,
-            sizesMatch: totalBytes === downloadedBytes && downloadedBytes === actualFileSizeOnDisk,
-            checksumMatch: calculatedChecksum.toLowerCase() === expectedChecksum.toLowerCase()
-          }, null, 2));
-
           if (calculatedChecksum.toLowerCase() !== expectedChecksum.toLowerCase()) {
+            const actualFileSizeOnDisk = fs.existsSync(tempDbPath) ? fs.statSync(tempDbPath).size : 0;
+            console.error(`[DB-UPDATE-ERROR] Checksum SHA256 mismatch. URL: ${downloadUrl} | Esperado: ${expectedChecksum} | Calculado: ${calculatedChecksum} | Tamaño: ${actualFileSizeOnDisk} bytes (Header: ${totalBytes})`);
             throw new Error(`El checksum SHA256 no coincide. Esperado: ${expectedChecksum}, Calculado: ${calculatedChecksum}`);
           }
 
