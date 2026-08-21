@@ -1,7 +1,7 @@
 // src/lib/db/config.repo.ts
-import { db } from './sqlite.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { db } from './sqlite.js';
 
 const isDev = fs.existsSync(path.join(process.cwd(), 'tsconfig.json'));
 let CONFIG_FILE: string;
@@ -13,17 +13,75 @@ if (isDev) {
   CONFIG_FILE = path.join(localAppData, 'HexDraft', 'hexdraft-config.json');
 }
 
-export const configRepo = {
-  // Obtener un valor de configuración individual
-  getConfig(key: string): string | null {
-    try {
-      const stmt = db.prepare('SELECT value FROM config WHERE key = ? LIMIT 1');
-      const row = stmt.get(key) as { value: string } | undefined;
-      return row ? row.value : null;
-    } catch (e) {
-      console.error(`❌ Error leyendo configuración para key "${key}":`, e);
-      return null;
+let memoryCache: Record<string, string> | null = null;
+
+function loadConfigFile(): Record<string, string> {
+  if (memoryCache) return memoryCache;
+
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      memoryCache = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        memoryCache[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      }
+      // Asegurar sincronización de lol_path y lolPath
+      if (parsed.lolPath && !memoryCache.lol_path) {
+        memoryCache.lol_path = parsed.lolPath;
+      }
+      return memoryCache;
     }
+  } catch (e) {
+    console.error('[Config Repo] Error leyendo archivo hexdraft-config.json:', e);
+  }
+
+  // Si no existe el archivo JSON, intentar migrar las configuraciones existentes de SQLite por unica vez
+  memoryCache = {};
+  try {
+    const stmt = db.prepare('SELECT key, value FROM config');
+    const rows = stmt.all() as { key: string; value: string }[];
+    rows.forEach(r => {
+      memoryCache![r.key] = r.value;
+    });
+    if (rows.length > 0) {
+      console.log(`[Config Repo] Migradas ${rows.length} configuraciones de SQLite hacia hexdraft-config.json.`);
+      saveConfigFile(memoryCache);
+    }
+  } catch (_e) {
+    // Si la tabla config de SQLite no existe o falla, continuar con defaults
+  }
+
+  return memoryCache;
+}
+
+function saveConfigFile(cache: Record<string, string>): void {
+  try {
+    fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
+    
+    // Preparar objeto limpio para guardar en disco
+    const output: Record<string, any> = { ...cache };
+    
+    // Mantener lolPath para el lanzador de Python
+    if (cache.lol_path) {
+      let cleanPath = cache.lol_path.trim();
+      if (cleanPath && !cleanPath.toLowerCase().endsWith('lockfile')) {
+        cleanPath = path.join(cleanPath, 'lockfile');
+      }
+      output.lolPath = cleanPath;
+    }
+
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(output, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('[Config Repo] Error guardando archivo hexdraft-config.json:', e);
+  }
+}
+
+export const configRepo = {
+  // Obtener un valor de configuración individual desde el archivo local
+  getConfig(key: string): string | null {
+    const cache = loadConfigFile();
+    return cache[key] !== undefined ? cache[key] : null;
   },
 
   // Obtener un valor parseado como objeto JSON
@@ -33,77 +91,36 @@ export const configRepo = {
     try {
       return JSON.parse(val) as T;
     } catch (e) {
-      console.error(`❌ Error parseando JSON de configuración para key "${key}":`, e);
+      console.error(`[Config Repo] Error parseando JSON de configuración para key "${key}":`, e);
       return null;
     }
   },
 
-  // Guardar un valor individual
+  // Guardar un valor individual en el archivo local
   setConfig(key: string, value: string): void {
-    try {
-      const stmt = db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)');
-      stmt.run(key, value);
-
-      // Si actualizamos lol_path, debemos sincronizar con hexdraft-config.json
-      if (key === 'lol_path') {
-        this.syncLolPathToDisk(value);
-      }
-    } catch (e) {
-      console.error(`❌ Error guardando configuración para key "${key}":`, e);
-    }
+    const cache = loadConfigFile();
+    cache[key] = value;
+    saveConfigFile(cache);
   },
 
-  // Obtener todas las configuraciones
+  // Obtener todas las configuraciones del usuario
   getAllConfigs(): Record<string, string> {
-    try {
-      const stmt = db.prepare('SELECT key, value FROM config');
-      const rows = stmt.all() as { key: string; value: string }[];
-      const configMap: Record<string, string> = {};
-      rows.forEach(r => {
-        configMap[r.key] = r.value;
-      });
-      return configMap;
-    } catch (e) {
-      console.error('❌ Error obteniendo todas las configuraciones:', e);
-      return {};
-    }
+    const cache = loadConfigFile();
+    return { ...cache };
   },
 
-  // Guardar múltiples configuraciones en lote
+  // Guardar múltiples configuraciones en lote en el archivo local
   saveAllConfigs(configs: Record<string, string>): void {
-    const transaction = () => {
-      const stmt = db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)');
-      for (const [key, value] of Object.entries(configs)) {
-        stmt.run(key, value);
-        if (key === 'lol_path') {
-          this.syncLolPathToDisk(value);
-        }
-      }
-    };
-
-    try {
-      // Usar exec para iniciar transacciones en SQLite
-      db.exec('BEGIN TRANSACTION;');
-      transaction();
-      db.exec('COMMIT;');
-      console.log('✅ Configuraciones de SQLite actualizadas correctamente.');
-    } catch (e) {
-      db.exec('ROLLBACK;');
-      console.error('❌ Error guardando configuraciones en lote:', e);
+    const cache = loadConfigFile();
+    for (const [key, value] of Object.entries(configs)) {
+      cache[key] = value;
     }
+    saveConfigFile(cache);
+    console.log('[Config Repo] Configuraciones locales guardadas exitosamente en hexdraft-config.json.');
   },
 
   // Sincronizar ruta a disco para compatibilidad con el lanzador de Python
   syncLolPathToDisk(lolPath: string): void {
-    let cleanPath = lolPath.trim();
-    if (cleanPath && !cleanPath.toLowerCase().endsWith('lockfile')) {
-      cleanPath = path.join(cleanPath, 'lockfile');
-    }
-    try {
-      fs.writeFileSync(CONFIG_FILE, JSON.stringify({ lolPath: cleanPath }, null, 2), 'utf8');
-      console.log(`💾 Archivo hexdraft-config.json sincronizado en disco: ${cleanPath}`);
-    } catch (error) {
-      console.error("❌ Error sincronizando hexdraft-config.json:", error);
-    }
+    this.setConfig('lol_path', lolPath);
   }
 };

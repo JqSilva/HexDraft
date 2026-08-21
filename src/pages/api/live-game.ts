@@ -16,6 +16,110 @@ const liveClient = axios.create({
   timeout: 1500
 });
 
+/**
+ * Consulta el historial reciente del invocador local en el LCU y calcula el record
+ * de victorias/derrotas y la racha activa UNICAMENTE para las partidas jugadas hoy.
+ */
+async function fetchLocalSessionRecord(lcu: any, localPuuid?: string): Promise<{
+  wins: number;
+  losses: number;
+  totalGames: number;
+  winrate: number | null;
+  streak: {
+    type: 'win' | 'loss' | null;
+    count: number;
+  };
+} | null> {
+  if (!lcu) return null;
+  const auth = btoa(`riot:${lcu.token}`);
+
+  try {
+    const res = await fetch(`https://127.0.0.1:${lcu.port}/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=15`, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) return null;
+    const mhData = await res.json();
+    const games = mhData?.games?.games;
+    if (!Array.isArray(games) || games.length === 0) return null;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayEpoch = startOfDay.getTime();
+
+    // Filtrar partidas jugadas hoy (hora local)
+    const todayGames = games.filter((g: any) => {
+      const creation = typeof g.gameCreation === 'number' ? g.gameCreation : (new Date(g.gameCreationDate || 0)).getTime();
+      return creation >= startOfDayEpoch;
+    });
+
+    if (todayGames.length === 0) {
+      return {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        winrate: null,
+        streak: { type: null, count: 0 }
+      };
+    }
+
+    let todayWins = 0;
+    let todayLosses = 0;
+    const todayOutcomes: boolean[] = [];
+
+    todayGames.forEach((g: any) => {
+      let participantId = 1;
+      if (localPuuid && Array.isArray(g.participantIdentities)) {
+        const idObj = g.participantIdentities.find((pid: any) => pid.player?.puuid === localPuuid);
+        if (idObj) participantId = idObj.participantId;
+      }
+
+      const participant = Array.isArray(g.participants)
+        ? g.participants.find((p: any) => p.participantId === participantId) || g.participants[0]
+        : null;
+
+      const isWin = Boolean(participant?.stats?.win);
+      todayOutcomes.push(isWin);
+      if (isWin) todayWins++;
+      else todayLosses++;
+    });
+
+    const totalGames = todayWins + todayLosses;
+    const todayWinrate = totalGames > 0 ? Math.round((todayWins / totalGames) * 100) : null;
+
+    let streakType: 'win' | 'loss' | null = null;
+    let streakCount = 0;
+    if (todayOutcomes.length > 0) {
+      const firstOutcome = todayOutcomes[0];
+      for (const outcome of todayOutcomes) {
+        if (outcome === firstOutcome) {
+          streakCount++;
+        } else {
+          break;
+        }
+      }
+      streakType = firstOutcome ? 'win' : 'loss';
+    }
+
+    return {
+      wins: todayWins,
+      losses: todayLosses,
+      totalGames,
+      winrate: todayWinrate,
+      streak: {
+        type: streakType,
+        count: streakCount
+      }
+    };
+  } catch (e) {
+    console.warn('[LiveGame API] Error al calcular racha de sesión local vía LCU:', e);
+    return null;
+  }
+}
+
 function buildMatchFingerprint(participants: any[], localPuuid?: string): string {
   const getChampId = (p: any): number => {
     if (p.championId && p.championId > 0) return p.championId;
@@ -40,6 +144,48 @@ function buildMatchFingerprint(participants: any[], localPuuid?: string): string
   return `${prefix}b[${blueChamps}]_r[${redChamps}]`;
 }
 
+const SPELL_NAME_TO_ID: Record<string, number> = {
+  "summonerboost": 1,
+  "cleanse": 1,
+  "summonerexhaust": 3,
+  "exhaust": 3,
+  "summonerflash": 4,
+  "flash": 4,
+  "summonerhaste": 6,
+  "ghost": 6,
+  "summonerheal": 7,
+  "heal": 7,
+  "summonersmite": 11,
+  "smite": 11,
+  "summonerteleport": 12,
+  "teleport": 12,
+  "summonerclarity": 13,
+  "clarity": 13,
+  "summonerdot": 14,
+  "ignite": 14,
+  "summonerbarrier": 21,
+  "barrier": 21,
+  "summonersnowball": 32,
+  "snowball": 32,
+  "mark": 32
+};
+
+function parseLiveClientSpellId(spellData: any): number | undefined {
+  if (!spellData) return undefined;
+  if (typeof spellData === 'number') return spellData;
+  const raw = (
+    spellData.rawDisplayName ||
+    spellData.displayName ||
+    spellData.rawDescription ||
+    (typeof spellData === 'string' ? spellData : '')
+  ).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  for (const [key, id] of Object.entries(SPELL_NAME_TO_ID)) {
+    if (raw.includes(key)) return id;
+  }
+  return undefined;
+}
+
 const ROLES_ORDER = ['TOP', 'JNG', 'MID', 'ADC', 'SUPP'];
 
 export const GET: APIRoute = async ({ request }) => {
@@ -57,6 +203,11 @@ export const GET: APIRoute = async ({ request }) => {
     if (p2999Res.status === 200 && Array.isArray(p2999Res.data) && p2999Res.data.length > 0) {
       participantsRaw = p2999Res.data.map((p: any) => {
         const champId = getIdFromName(p.championName) || 0;
+        const spell1Id = parseLiveClientSpellId(p.summonerSpells?.summonerSpellOne);
+        const spell2Id = parseLiveClientSpellId(p.summonerSpells?.summonerSpellTwo);
+        const keystoneId = p.runes?.keystone?.id || undefined;
+        const secondaryStyleId = p.runes?.secondaryRuneTree?.id || undefined;
+
         return {
           summonerName: p.summonerName,
           gameName: p.summonerName.includes('#') ? p.summonerName.split('#')[0].trim() : p.summonerName,
@@ -66,7 +217,11 @@ export const GET: APIRoute = async ({ request }) => {
           skinId: p.skinID || p.skinId || 0,
           selectedSkinId: p.skinID || p.skinId || 0,
           teamId: p.team === 'ORDER' ? 100 : 200,
-          assignedPosition: p.position || ''
+          assignedPosition: p.position || '',
+          spell1Id,
+          spell2Id,
+          keystoneId,
+          secondaryStyleId
         };
       });
     }
@@ -105,16 +260,24 @@ export const GET: APIRoute = async ({ request }) => {
         const teamTwo = gfData.gameData?.teamTwo || [];
         const selections = gfData.gameData?.playerChampionSelections || [];
 
+        const mapGf = (p: any, teamId: number) => ({
+          ...p,
+          teamId,
+          championId: p.championId || getIdFromName(p.championName || p.championInternalName),
+          spell1Id: p.spell1Id || p.spellOneId || p.summoner1Id,
+          spell2Id: p.spell2Id || p.spellTwoId || p.summoner2Id,
+          selectedSkinId: p.selectedSkinId || p.skinId,
+          keystoneId: p.perk0 || p.perks?.perkIds?.[0] || p.keystoneId,
+          secondaryStyleId: p.perkSubStyle || p.perks?.perkSubStyle || p.secondaryStyleId
+        });
+
         if (teamOne.length > 0 || teamTwo.length > 0) {
           gameflowParticipants = [
-            ...teamOne.map((p: any) => ({ ...p, teamId: 100 })),
-            ...teamTwo.map((p: any) => ({ ...p, teamId: 200 }))
+            ...teamOne.map((p: any) => mapGf(p, 100)),
+            ...teamTwo.map((p: any) => mapGf(p, 200))
           ];
         } else if (selections.length > 0) {
-          gameflowParticipants = selections.map((p: any, idx: number) => ({
-            ...p,
-            teamId: idx < 5 ? 100 : 200
-          }));
+          gameflowParticipants = selections.map((p: any, idx: number) => mapGf(p, idx < 5 ? 100 : 200));
         }
       }
 
@@ -139,20 +302,30 @@ export const GET: APIRoute = async ({ request }) => {
           participantsRaw = champSelectParticipants;
         }
       } else {
-        // Enriquecer participantes de port 2999 con skins confirmadas de LCU Gameflow / Champ Select
+        // Enriquecer participantes de port 2999 con skins, spells y runas de LCU Gameflow / Champ Select
         const lcuSources = [...gameflowParticipants, ...champSelectParticipants];
         participantsRaw = participantsRaw.map(p => {
-          if (!p.skinId || p.skinId === 0) {
-            const match = lcuSources.find((g: any) =>
-              (g.puuid && p.puuid && g.puuid === p.puuid) ||
-              (g.championId && p.championId && g.championId === p.championId) ||
-              (g.summonerName && p.summonerName && g.summonerName === p.summonerName) ||
-              (g.gameName && p.gameName && g.gameName === p.gameName)
-            );
-            if (match && (match.selectedSkinId || match.skinId)) {
-              const sid = match.selectedSkinId || match.skinId;
-              return { ...p, skinId: sid, selectedSkinId: sid };
-            }
+          const match = lcuSources.find((g: any) =>
+            (g.puuid && p.puuid && g.puuid === p.puuid) ||
+            (g.championId && p.championId && g.championId === p.championId) ||
+            (g.summonerName && p.summonerName && g.summonerName === p.summonerName) ||
+            (g.gameName && p.gameName && g.gameName === p.gameName)
+          );
+          if (match) {
+            const sid = (!p.skinId || p.skinId === 0) ? (match.selectedSkinId || match.skinId || p.skinId) : p.skinId;
+            const spell1Id = p.spell1Id || match.spell1Id || match.spellOneId || match.summoner1Id || (match.spells && match.spells[0]);
+            const spell2Id = p.spell2Id || match.spell2Id || match.spellTwoId || match.summoner2Id || (match.spells && match.spells[1]);
+            const keystoneId = p.keystoneId || match.keystoneId || match.perk0 || (match.perks?.perkIds?.[0]);
+            const secondaryStyleId = p.secondaryStyleId || match.secondaryStyleId || match.perkSubStyle || (match.perks?.perkSubStyle);
+            return {
+              ...p,
+              skinId: sid,
+              selectedSkinId: sid,
+              spell1Id,
+              spell2Id,
+              keystoneId,
+              secondaryStyleId
+            };
           }
           return p;
         });
@@ -307,10 +480,25 @@ export const GET: APIRoute = async ({ request }) => {
 
     // Extraer perfil y etiquetas vía OP.GG Scraper Service v2 (sin caché para el usuario local)
     const profile = await scrapeOpggProfile(rawName, rawTag, platform, championId, isSelf);
+
+    // Si el usuario es local y tenemos LCU activo, calcular el record exacto de la sesion del dia
+    if (isSelf && lcu) {
+      const localSession = await fetchLocalSessionRecord(lcu, puuid);
+      if (localSession) {
+        profile.todayRecord = localSession;
+        console.log(`[LiveGame API] Sesión de hoy calculada vía LCU para ${rawName}: ${localSession.wins}W - ${localSession.losses}L (Racha: ${localSession.streak.count}${localSession.streak.type || ''})`);
+      }
+    }
+
     const skinId = p.selectedSkinId || p.skinId || p.skinID || 0;
     const skinNum = await resolveSkinNumber(championId, skinId);
 
-    console.log(`[LiveGame API] Invocador: ${rawName || 'Anónimo'}${isSelf ? ' (TÚ)' : ''} | Campeón: ${championName} (ID: ${championId}) | Rol: ${role} | SkinId/Chroma: ${skinId} -> Skin #${skinNum}`);
+    const spell1Id = p.spell1Id || (p.spells && p.spells[0]) || (p.summoner1Id) || undefined;
+    const spell2Id = p.spell2Id || (p.spells && p.spells[1]) || (p.summoner2Id) || undefined;
+    const keystoneId = p.keystoneId || (p.runes?.keystone?.id) || (p.perks?.perkIds?.[0]) || p.perk0 || undefined;
+    const secondaryStyleId = p.secondaryStyleId || (p.runes?.secondaryRuneTree?.id) || (p.perks?.perkSubStyle) || p.perkSubStyle || undefined;
+
+    console.log(`[LiveGame API] Invocador: ${rawName || 'Anónimo'}${isSelf ? ' (TÚ)' : ''} | Campeón: ${championName} (ID: ${championId}) | Rol: ${role} | SkinId: ${skinId} -> #${skinNum} | Spells: [${spell1Id}, ${spell2Id}] | Keystone: ${keystoneId} | SubStyle: ${secondaryStyleId}`);
 
     return {
       ...profile,
@@ -322,8 +510,10 @@ export const GET: APIRoute = async ({ request }) => {
       skinId,
       selectedSkinId: skinId,
       skinNum,
-      spell1Id: p.spell1Id || (p.spells && p.spells[0]) || undefined,
-      spell2Id: p.spell2Id || (p.spells && p.spells[1]) || undefined
+      spell1Id,
+      spell2Id,
+      keystoneId,
+      secondaryStyleId
     };
   };
 

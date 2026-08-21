@@ -105,6 +105,12 @@ export const PlayerCardSandbox: React.FC = () => {
     isMain,
     spell1Id,
     spell2Id,
+    keystoneId: 8010, // Conqueror
+    secondaryStyleId: 8400, // Resolve
+    topChampions: [
+      { name: activeChamp.name, wins: 142, losses: 86, winrate: 62 },
+      { name: 'Ahri', wins: 45, losses: 30, winrate: 60 }
+    ],
     ranked: {
       tier: soloTier,
       division: soloDivision,
@@ -152,6 +158,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: true,
       spell1Id: 12,
       spell2Id: 4,
+      keystoneId: 8010, // Conqueror
+      secondaryStyleId: 8200, // Sorcery
+      topChampions: [{ name: 'Riven', wins: 210, losses: 140, winrate: 60 }],
       ranked: { tier: 'GOLD', rank: 'I', wins: 45, losses: 35, winrate: 56, lp: 75 },
       rankedFlex: { tier: 'SILVER', rank: 'II', wins: 12, losses: 10, winrate: 55, lp: 20 },
       todayRecord: { wins: 3, losses: 0, totalGames: 3, winrate: 100, streak: { type: 'win', count: 3 } }
@@ -169,6 +178,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: false,
       spell1Id: 11,
       spell2Id: 4,
+      keystoneId: 8010, // Conqueror
+      secondaryStyleId: 8300, // Inspiration
+      topChampions: [{ name: 'LeeSin', wins: 95, losses: 85, winrate: 53 }],
       ranked: { tier: 'DIAMOND', rank: 'IV', wins: 120, losses: 110, winrate: 52, lp: 12 },
       rankedFlex: { tier: 'PLATINUM', rank: 'I', wins: 30, losses: 25, winrate: 54, lp: 88 },
       todayRecord: { wins: 1, losses: 1, totalGames: 2, winrate: 50, streak: { type: null, count: 0 } }
@@ -187,6 +199,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: true,
       spell1Id: 7,
       spell2Id: 4,
+      keystoneId: 8008, // Lethal Tempo
+      secondaryStyleId: 8200, // Sorcery
+      topChampions: [{ name: 'Jinx', wins: 340, losses: 220, winrate: 61 }],
       ranked: { tier: 'EMERALD', rank: 'II', wins: 85, losses: 60, winrate: 58, lp: 50 },
       rankedFlex: { tier: 'GOLD', rank: 'III', wins: 15, losses: 12, winrate: 55, lp: 40 },
       todayRecord: { wins: 5, losses: 0, totalGames: 5, winrate: 100, streak: { type: 'win', count: 5 } }
@@ -204,6 +219,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: false,
       spell1Id: 14,
       spell2Id: 4,
+      keystoneId: 8465, // Guardian
+      secondaryStyleId: 8300, // Inspiration
+      topChampions: [{ name: 'Thresh', wins: 80, losses: 75, winrate: 52 }],
       ranked: { tier: 'PLATINUM', rank: 'III', wins: 40, losses: 38, winrate: 51, lp: 80 },
       rankedFlex: { tier: 'UNRANKED', rank: '', wins: 0, losses: 0, winrate: 0, lp: 0 },
       todayRecord: { wins: 0, losses: 0, totalGames: 0, winrate: null, streak: { type: null, count: 0 } }
@@ -224,6 +242,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: false,
       spell1Id: 12,
       spell2Id: 4,
+      keystoneId: 8010, // Conqueror
+      secondaryStyleId: 8200, // Sorcery
+      topChampions: [{ name: 'Darius', wins: 180, losses: 160, winrate: 53 }],
       ranked: { tier: 'EMERALD', rank: 'I', wins: 95, losses: 90, winrate: 51, lp: 45 },
       rankedFlex: { tier: 'GOLD', rank: 'I', wins: 20, losses: 18, winrate: 52, lp: 10 },
       todayRecord: { wins: 0, losses: 4, totalGames: 4, winrate: 0, streak: { type: 'loss', count: 4 } }
@@ -241,6 +262,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: true,
       spell1Id: 11,
       spell2Id: 4,
+      keystoneId: 8010, // Conqueror
+      secondaryStyleId: 8300, // Inspiration
+      topChampions: [{ name: 'Viego', wins: 220, losses: 170, winrate: 56 }],
       ranked: { tier: 'DIAMOND', rank: 'III', wins: 110, losses: 95, winrate: 53, lp: 90 },
       rankedFlex: { tier: 'EMERALD', rank: 'IV', wins: 40, losses: 35, winrate: 53, lp: 15 },
       todayRecord: { wins: 2, losses: 1, totalGames: 3, winrate: 66, streak: { type: 'win', count: 2 } }
@@ -258,6 +282,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: true,
       spell1Id: 14,
       spell2Id: 4,
+      keystoneId: 8112, // Electrocute
+      secondaryStyleId: 8200, // Sorcery
+      topChampions: [{ name: 'Zed', wins: 420, losses: 260, winrate: 62 }],
       ranked: { tier: 'CHALLENGER', rank: 'I', wins: 340, losses: 210, winrate: 61, lp: 1200 },
       rankedFlex: { tier: 'MASTER', rank: 'I', wins: 90, losses: 40, winrate: 69, lp: 450 },
       todayRecord: { wins: 8, losses: 0, totalGames: 8, winrate: 100, streak: { type: 'win', count: 8 } }
@@ -275,6 +302,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: false,
       spell1Id: 7,
       spell2Id: 4,
+      keystoneId: 8005, // Press the Attack
+      secondaryStyleId: 8300, // Inspiration
+      topChampions: [{ name: 'Ezreal', wins: 110, losses: 120, winrate: 48 }],
       ranked: { tier: 'GOLD', rank: 'II', wins: 50, losses: 55, winrate: 47, lp: 20 },
       rankedFlex: { tier: 'SILVER', rank: 'I', wins: 15, losses: 20, winrate: 42, lp: 5 },
       todayRecord: { wins: 0, losses: 3, totalGames: 3, winrate: 0, streak: { type: 'loss', count: 3 } }
@@ -292,6 +322,9 @@ export const PlayerCardSandbox: React.FC = () => {
       isMain: false,
       spell1Id: 14,
       spell2Id: 4,
+      keystoneId: 8439, // Aftershock
+      secondaryStyleId: 8300, // Inspiration
+      topChampions: [{ name: 'Leona', wins: 90, losses: 85, winrate: 51 }],
       ranked: { tier: 'EMERALD', rank: 'IV', wins: 60, losses: 58, winrate: 50, lp: 10 },
       rankedFlex: { tier: 'GOLD', rank: 'IV', wins: 10, losses: 10, winrate: 50, lp: 50 },
       todayRecord: { wins: 1, losses: 1, totalGames: 2, winrate: 50, streak: { type: null, count: 0 } }

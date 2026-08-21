@@ -224,9 +224,48 @@ export const NAME_TO_ID: Record<string, number> = {
   "Zyra": 143
 };
 
+const CHAMPION_ALIASES: Record<string, number> = {
+  "monkeyking": 62,
+  "wukong": 62,
+  "kaisa": 145,
+  "khazix": 121,
+  "velkoz": 161,
+  "chogath": 31,
+  "leblanc": 7,
+  "aurelionsol": 136,
+  "asol": 136,
+  "masteryi": 11,
+  "maestroyi": 11,
+  "yi": 11,
+  "twistedfate": 4,
+  "tf": 4,
+  "tahmkench": 223,
+  "xinzhao": 5,
+  "missfortune": 21,
+  "mf": 21,
+  "leesin": 64,
+  "belveth": 200,
+  "ksante": 897,
+  "nunu": 20,
+  "nunuwillump": 20,
+  "nunuywillump": 20,
+  "renata": 888,
+  "renataglasc": 888,
+  "bard": 432,
+  "bardo": 432,
+  "fiddlesticks": 9,
+  "drmundo": 36,
+  "doctormundo": 36,
+  "jarvaniv": 59,
+  "jarvan": 59
+};
+
 export function getIdFromName(name: string): number {
   if (!name) return 0;
   const clean = name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  if (CHAMPION_ALIASES[clean]) {
+    return CHAMPION_ALIASES[clean];
+  }
   for (const [key, id] of Object.entries(NAME_TO_ID)) {
     if (key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === clean) {
       return id;

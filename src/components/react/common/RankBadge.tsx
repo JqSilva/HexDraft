@@ -4,7 +4,7 @@ export interface RankBadgeProps {
   tier?: string;
   division?: string;
   className?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'xs';
 }
 
 /**
@@ -37,10 +37,12 @@ export const RankBadge: React.FC<RankBadgeProps> = ({
 }) => {
   const colorClass = getTierColorClass(tier);
   const sizeClass = size === 'sm' ? 'text-[9px] px-2 py-0.5' : 'text-[10px] px-2.5 py-0.5';
+  const isApex = ['MASTER', 'GRANDMASTER', 'GM', 'CHALLENGER'].includes(tier.toUpperCase());
+  const displayDivision = isApex ? '' : division;
 
   return (
     <span className={`inline-flex items-center font-black uppercase tracking-widest border rounded ${colorClass} ${sizeClass} ${className}`}>
-      {tier} {division ? division : ''}
+      {tier} {displayDivision ? displayDivision : ''}
     </span>
   );
 };

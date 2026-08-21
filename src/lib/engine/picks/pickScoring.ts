@@ -265,6 +265,23 @@ export function calculateScore(
     reasons.push("Safe Pick: Excelente opción a ciegas para abrir el Draft");
   }
 
+  // --- CAPA 1.1: PONDERACIÓN Y PENALIZACIÓN DE ROL SECUNDARIO / OFF-META ---
+  if (target.isSecondaryLane || target.is_secondary_lane) {
+    const lanePickRate = typeof target.lanePickRate === 'number' 
+      ? target.lanePickRate 
+      : (typeof target.lane_pick_rate === 'number' ? target.lane_pick_rate : 0);
+
+    if (lanePickRate >= 5 && lanePickRate < 15) {
+      score -= 1.8;
+      reasons.push(`Pick de Nicho: Rol secundario con baja presencia (${lanePickRate.toFixed(1)}%)`);
+    } else if (lanePickRate >= 15 && lanePickRate < 25) {
+      score -= 1.0;
+      reasons.push(`Pick Secundario: Presencia moderada en carril (${lanePickRate.toFixed(1)}%)`);
+    } else if (lanePickRate >= 25 && lanePickRate < 35) {
+      score -= 0.4;
+    }
+  }
+
   // --- CAPA 2: SINERGIAS CON PROXIMIDAD Y COMBO ---
   allies.forEach(allyName => {
     const allyData = ENRICHED_DB[allyName];

@@ -1,16 +1,47 @@
 // src/components/react/PlayerCard.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getChampionCdnName } from '../../lib/championMapper.js';
 import { hydrateAsset } from '../../lib/engine/core/hydrator.js';
 import { getNameFromId } from '../../lib/engine/core/constants.js';
-import { getDDragonUrl } from '../../lib/gameVersion.js';
 import {
   generatePlayerTags,
   filterTagsByMode,
-  TAG_CONFIG,
   type PlayerTagItem,
   type PlayerTagContext
 } from '../../lib/services/playerTags.service.js';
+
+const POS_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/";
+
+const posMapping: Record<string, string> = {
+  "TOP": "icon-position-top.png",
+  "JUNGLE": "icon-position-jungle.png",
+  "JNG": "icon-position-jungle.png",
+  "MIDDLE": "icon-position-middle.png",
+  "MID": "icon-position-middle.png",
+  "BOTTOM": "icon-position-bottom.png",
+  "BOT": "icon-position-bottom.png",
+  "ADC": "icon-position-bottom.png",
+  "UTILITY": "icon-position-utility.png",
+  "SUP": "icon-position-utility.png",
+  "SUPP": "icon-position-utility.png",
+  "SUPPORT": "icon-position-utility.png",
+  "DUO_SUPPORT": "icon-position-utility.png"
+};
+
+const SECONDARY_STYLE_ICONS: Record<number, string> = {
+  8000: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7201_precision.png",
+  8100: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7200_domination.png",
+  8200: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7202_sorcery.png",
+  8300: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7203_whimsy.png",
+  8400: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/7204_resolve.png"
+};
+
+const MINI_CREST_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/";
+
+const getRankIconUrl = (tier: string): string => {
+  const normalizedTier = (tier || 'unranked').toLowerCase().trim();
+  return `${MINI_CREST_BASE}${normalizedTier}.svg`;
+};
 
 export interface PlayerData {
   puuid: string;
@@ -103,42 +134,6 @@ interface PlayerCardProps {
   maxTags?: number;
 }
 
-const renderWinrateRing = (winrate: number | null) => {
-  const wr = winrate !== null && !isNaN(winrate) ? Math.min(Math.max(winrate, 0), 100) : 0;
-  const radius = 14;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (wr / 100) * circumference;
-
-  return (
-    <div className="relative w-9 h-9 xl:w-10 xl:h-10 flex items-center justify-center shrink-0">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-        <circle
-          cx="18"
-          cy="18"
-          r={radius}
-          stroke="#1d1630"
-          strokeWidth="3"
-          fill="none"
-        />
-        <circle
-          cx="18"
-          cy="18"
-          r={radius}
-          stroke="#a855f7"
-          strokeWidth="3"
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={isNaN(strokeDashoffset) ? circumference : strokeDashoffset}
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="absolute font-black font-mono text-[9px] xl:text-[10px] text-white">
-        {winrate !== null ? `${Math.round(winrate)}%` : '0%'}
-      </span>
-    </div>
-  );
-};
-
 export const PlayerCard: React.FC<PlayerCardProps> = ({
   player: p,
   index = 0,
@@ -147,54 +142,55 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   mode = 'normal',
   maxTags
 }) => {
-  const todayWins = p.todayRecord?.wins || 0;
-  const todayLosses = p.todayRecord?.losses || 0;
-  const displayWinrate = p.todayRecord?.winrate !== undefined && p.todayRecord?.winrate !== null ? p.todayRecord.winrate : 0;
+  const resolvedChampName = (p.championId && getNameFromId(p.championId)) || p.championName || 'Champion';
+  const cdnName = getChampionCdnName(resolvedChampName);
+  const displayChampName = (resolvedChampName === 'MonkeyKing' || resolvedChampName.toLowerCase() === 'monkeyking')
+    ? 'Wukong'
+    : (p.championId ? getNameFromId(p.championId) : resolvedChampName);
 
-  const rawChampName = (p.championId && getNameFromId(p.championId)) || p.championName || 'Champion';
-  const cdnName = getChampionCdnName(rawChampName);
-
-  // Extracción del número de skin de la partida en vivo (o resuelto desde croma)
   const rawSkinId = p.skinId !== undefined ? p.skinId : (p.selectedSkinId !== undefined ? p.selectedSkinId : 0);
   const skinNum = p.skinNum !== undefined ? p.skinNum : (rawSkinId > 0 ? (rawSkinId % 1000) : 0);
 
-  // URLs de carga del splash art (específico de skin o base)
   const skinLoadingUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cdnName}_${skinNum}.jpg`;
   const baseLoadingUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${cdnName}_0.jpg`;
 
   const displayName = p.summonerName || p.riotId || 'Invocador';
-  const summonerName = displayName.includes('#') ? displayName.split('#')[0] : displayName;
-  const summonerTag = displayName.includes('#') ? displayName.split('#')[1] : '';
+  const cleanSummonerName = displayName.includes('#') ? displayName.split('#')[0] : displayName;
 
-  // Solo Q & Flex
   const soloTier = p.ranked?.tier || 'UNRANKED';
   const soloRank = p.ranked?.division || p.ranked?.rank || '';
   const soloLp = p.ranked?.lp !== undefined ? p.ranked.lp : (p.ranked?.leaguePoints || 0);
+  const soloWins = p.ranked?.wins || 0;
+  const soloLosses = p.ranked?.losses || 0;
+  const soloWinrate = p.ranked?.winrate || 0;
 
-  const flexTier = p.rankedFlex?.tier || 'UNRANKED';
-  const flexRank = p.rankedFlex?.division || p.rankedFlex?.rank || '';
-  const flexLp = p.rankedFlex?.lp !== undefined ? p.rankedFlex.lp : (p.rankedFlex?.leaguePoints || 0);
+  const normSearchName = displayChampName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const champStat = p.topChampions?.find(c => {
+    const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return cNorm === normSearchName || (normSearchName === 'wukong' && cNorm === 'monkeyking') || (normSearchName === 'monkeyking' && cNorm === 'wukong');
+  });
+  const champGames = champStat ? (champStat.wins + champStat.losses) : 0;
+  const champWr = champStat ? champStat.winrate : null;
 
-  // Hechizos de invocador
   const spell1 = p.spell1Id ? hydrateAsset('summoners', p.spell1Id) : null;
   const spell2 = p.spell2Id ? hydrateAsset('summoners', p.spell2Id) : null;
 
-  React.useEffect(() => {
-    if (skinNum > 0) {
-      console.log(`[PlayerCard] Invocador: ${displayName} | Campeón: ${rawChampName} | Skin activa: #${skinNum} (${skinLoadingUrl})`);
-    }
-  }, [skinNum, rawChampName, displayName, skinLoadingUrl]);
+  const keystoneId = p.keystoneId || 0;
+  const secondaryStyleId = p.secondaryStyleId || 0;
+  const keystoneAsset = keystoneId ? hydrateAsset('runes', keystoneId) : null;
+  const secondaryStyleIconUrl = secondaryStyleId ? (SECONDARY_STYLE_ICONS[secondaryStyleId] || '') : '';
 
-  // Generación de etiquetas con el nuevo motor
+  const roleName = p.role?.toUpperCase() || 'MID';
+  const roleIconUrl = `${POS_BASE}${posMapping[roleName] || 'icon-position-middle.png'}`;
+
   let computedTagItems: PlayerTagItem[] = [];
-
   if (customTags && customTags.length > 0) {
     computedTagItems = customTags.map((tagText, idx) => ({
       id: `custom_${idx}`,
       label: tagText,
       category: 'general',
       priority: 50,
-      style: 'border-purple-400/50 text-purple-200 bg-purple-950/30',
+      style: 'border-white/20 text-slate-200 bg-black/60',
       tooltip: 'Etiqueta personalizada del invocador.'
     }));
   } else {
@@ -202,7 +198,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       puuid: p.puuid,
       summonerName: displayName,
       championId: p.championId,
-      championName: rawChampName,
+      championName: displayChampName,
       role: p.role,
       isMain: p.isMain,
       isStreamerMode: p.isStreamerMode,
@@ -218,169 +214,209 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       recentMatches: p.recentMatches,
       duoPartner: p.duoPartner
     };
-
     computedTagItems = generatePlayerTags(ctx);
   }
 
-  // Filtrar según modo (Normal: 3-6 tags, Compacto: 2-3 tags prioritarios)
   const displayTags = filterTagsByMode(computedTagItems, maxTags ?? mode);
+  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
-  const [imageLoaded, setImageLoaded] = React.useState<boolean>(false);
-
-  React.useEffect(() => {
+  useEffect(() => {
     setImageLoaded(false);
   }, [skinLoadingUrl]);
 
   return (
     <div
       key={p.puuid || `${displayName}-${index}`}
-      className="h-full min-h-[230px] max-h-[390px] w-full max-w-[288px] min-w-0 flex flex-col justify-between rounded-lg p-2.5 xl:p-3.5 transition-all duration-200 relative overflow-hidden group shadow-md bg-[#08070e]"
+      className="bg-[#0b0c10] overflow-hidden border border-white/10 py-3.5 px-3 rounded-lg w-full max-w-[280px] flex min-h-[380px] max-h-[460px] flex-col justify-between items-center relative select-none shadow-2xl group"
     >
-      {/* FONDO: SPLASH ART DE LA SKIN SELECCIONADA + MÁSCARA OSCURA DE CONTRASTE */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#07060c]">
+      {/* 1. FONDO SPLASH ART CON GRADIENTES EXACTOS */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#090a0f]">
         {!imageLoaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#07060c] text-purple-400/70 z-1">
-            <svg className="w-6 h-6 animate-spin text-purple-500/60" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090a0f] text-slate-500 z-1">
+            <svg className="w-6 h-6 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
               <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
           </div>
         )}
         <img
           src={skinLoadingUrl}
-          alt={rawChampName}
-          className={`w-full h-full object-cover object-top transition-opacity duration-300 ${
-            imageLoaded ? 'opacity-55' : 'opacity-0'
+          alt={displayChampName}
+          className={`h-full w-full object-cover object-top transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-85' : 'opacity-0'
           }`}
-          onLoad={() => {
-            setImageLoaded(true);
-            if (skinNum > 0) {
-              console.log(`%c[PlayerCard Skin]%c Cargada exitosamente skin #${skinNum} para ${rawChampName} (${displayName})`, 'color: #a855f7; font-weight: bold;', 'color: #e2e8f0;');
-            }
-          }}
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            // 1. Si falló la skin específica, intentar cargar la skin base (_0.jpg)
             if (!target.dataset.triedBase && target.src !== baseLoadingUrl) {
               target.dataset.triedBase = 'true';
-              console.warn(`[PlayerCard Fallback] Falló la imagen de skin #${skinNum} para ${rawChampName} (${displayName}). Aplicando fallback a skin base.`);
               target.src = baseLoadingUrl;
             } else if (!target.dataset.triedCdrag && p.championId > 0) {
-              // 2. Intentar CommunityDragon
               target.dataset.triedCdrag = 'true';
-              console.warn(`[PlayerCard Fallback] Falló skin base en DDragon para ${rawChampName}. Aplicando fallback a CommunityDragon.`);
               target.src = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-tiles/${p.championId}/${p.championId}000.jpg`;
             } else if (!target.dataset.triedFallback) {
-              // 3. Fallback genérico final
               target.dataset.triedFallback = 'true';
-              console.error(`[PlayerCard Fallback] Error total al cargar splash art de ${rawChampName}. Usando fallback genérico Garen_0.jpg`);
               target.src = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Garen_0.jpg`;
             }
           }}
         />
-        {/* Gradiente vertical para asegurar legibilidad total sin desenfoques */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#06050b]/75 via-transparent to-[#06050b]/95" />
+        <div className="absolute w-full bottom-0 h-full bg-gradient-to-t from-[#08090d]/95 via-[#08090d]/35 via-35% to-transparent pointer-events-none" />
+        <div className="absolute w-full top-0 h-full bg-gradient-to-b from-[#08090d]/80 via-transparent to-transparent pointer-events-none" />
       </div>
 
-      {/* CONTENIDO */}
-      <div className="relative z-10 flex flex-col justify-between h-full min-h-0">
-        {/* BLOQUE SUPERIOR: Icono + Nombre */}
-        <div className="flex items-center gap-1.5 xl:gap-2 shrink-0">
-          <div className="w-7 h-7 xl:w-9 xl:h-9 rounded-full overflow-hidden border-2 border-purple-400/60 bg-black shrink-0 shadow-md">
+      {/* 2. CABECERA SUPERIOR: NOMBRE CAMPEÓN + WR */}
+      <div className="flex flex-col items-center w-full pointer-events-none justify-start z-10 text-xs font-medium text-slate-300 pt-0.5">
+        {displayChampName}
+        <div className="flex flex-col items-center justify-center px-4 w-full text-xs mt-0.5">
+          <div className="flex gap-1.5 items-center font-normal text-slate-100 text-[11.5px]">
+            {champStat ? (
+              <>
+                {champGames} games - <span className="text-purple-400 font-bold">{champWr}% WR</span>
+              </>
+            ) : (
+              <>
+                0 games - <span className="text-purple-400 font-bold">0% WR</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECCIÓN MEDIA-INFERIOR: TAGS + SPELLS/RUNAS + JUGADOR + RANK */}
+      <div className="flex flex-col items-center justify-center w-full z-30 mt-auto">
+        
+        {/* TAGS INMEDIATAMENTE ARRIBA DE LA BARRA DE CONTROL */}
+        {displayTags.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1 mb-4 max-w-full z-30">
+            {displayTags.map((tagItem, i) => (
+              <span
+                key={`${tagItem.id}_${i}`}
+                title={tagItem.tooltip}
+                className={`
+                  px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-tight
+                  border shadow-sm cursor-help select-none backdrop-blur-xs
+                  ${tagItem.style || 'border-white/15 bg-black/60 text-slate-200'}
+                `}
+              >
+                {tagItem.label}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* BARRA HORIZONTAL (SPELLS • LÍNEA • RUNAS) */}
+        <div className="flex items-center justify-between px-2.5 z-30 gap-4 w-full relative mb-1">
+          <hr className="absolute left-0 w-full border-t border-white/10 pointer-events-none z-0" />
+          <div className="flex gap-1.5 items-center justify-center z-10">
+            <div
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700 flex items-center justify-center shadow-md"
+              title={spell1?.name || 'Hechizo 1'}
+            >
+              {spell1?.icon ? (
+                <img src={spell1.icon} alt="spell1" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[8px] font-bold text-slate-400">D</span>
+              )}
+            </div>
+            <div
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700 flex items-center justify-center shadow-md"
+              title={spell2?.name || 'Hechizo 2'}
+            >
+              {spell2?.icon ? (
+                <img src={spell2.icon} alt="spell2" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[8px] font-bold text-slate-400">F</span>
+              )}
+            </div>
+          </div>
+
+          {/* Posición / Línea central */}
+          <div
+            className="w-[32px] h-[32px] rounded-md bg-[#12131a]/90  flex items-center justify-center p-1 shadow-md z-10"
+            title={`Línea: ${roleName}`}
+          >
             <img
-              src={p.profileIconUrl || `https://opgg-static.akamaized.net/meta/images/profile_icons/profileIcon${p.profileIconId || 29}.jpg?image=q_auto:good,f_webp,w_200`}
-              alt="profile"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (!target.dataset.triedCdrag) {
-                  target.dataset.triedCdrag = 'true';
-                  target.src = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${p.profileIconId || 29}.png`;
-                } else if (!target.dataset.triedDdragon) {
-                  target.dataset.triedDdragon = 'true';
-                  target.src = getDDragonUrl('profileicon', p.profileIconId || 29);
-                } else if (!target.dataset.triedDefault) {
-                  target.dataset.triedDefault = 'true';
-                  target.src = getDDragonUrl('profileicon', 29);
-                }
-              }}
+              src={roleIconUrl}
+              alt={roleName}
+              className="w-8 h-8 object-contain brightness-125 opacity-90"
             />
           </div>
-          <span className="font-bold text-xs xl:text-sm truncate drop-shadow text-white/90" title={displayName}>
-            {summonerName} {summonerTag ? <span className="text-purple-400">#{summonerTag}</span> : null}
-          </span>
-        </div>
 
-        <div className="flex-1 min-h-0" />
-
-        <div className="space-y-1.5 xl:space-y-2 shrink-0">
-          {/* Nombre del campeón como caption, con indicador de línea/rol */}
-          <div className="flex items-center gap-1.5 xl:gap-2 justify-center">
-            <span className="h-px flex-1 max-w-[20px] bg-purple-400/30" />
-            <h3 className="text-[9px] xl:text-[11px] font-semibold text-white/70 uppercase tracking-[0.15em] drop-shadow-lg whitespace-nowrap flex items-center gap-1">
-              <span>{rawChampName}</span>
-              {p.role && (
-                <span className="text-purple-400 font-mono font-bold text-[8.5px] xl:text-[9.5px]">
-                  [{p.role}]
-                </span>
+          {/* Runas (Keystone + SubStyle) */}
+          <div className="flex items-center justify-center gap-1.5 z-10">
+            <div
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-amber-500/40 p-0.5 flex items-center justify-center shadow-md"
+              title={keystoneAsset?.name || 'Runa Principal'}
+            >
+              {keystoneAsset?.icon ? (
+                <img src={keystoneAsset.icon} alt="keystone" className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-[7.5px] font-mono text-amber-300 font-bold">R</span>
               )}
-            </h3>
-            <span className="h-px flex-1 max-w-[20px] bg-purple-400/30" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5 border border-purple-950/40">
-              <span className="text-[8px] xl:text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">
-                SOLO Q
-              </span>
-              <span className="text-[10px] xl:text-xs font-semibold text-white/80 uppercase tracking-wide">
-                {soloTier !== 'UNRANKED' ? `${soloTier} ${soloRank}` : 'UNRANKED'}
-              </span>
-              <span className="text-[8.5px] xl:text-[9.5px] font-mono text-purple-300/80 font-medium">
-                {soloTier !== 'UNRANKED' ? `${soloLp} LP` : '-'}
-              </span>
             </div>
-
-            <div className="flex flex-col items-center justify-center text-center bg-[#0f0e17]/70 rounded-xl py-1.5 border border-purple-950/40">
-              <span className="text-[8px] xl:text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">
-                FLEX
-              </span>
-              <span className="text-[10px] xl:text-xs font-semibold text-white/80 uppercase tracking-wide">
-                {flexTier !== 'UNRANKED' ? `${flexTier} ${flexRank}` : 'UNRANKED'}
-              </span>
-              <span className="text-[8.5px] xl:text-[9.5px] font-mono text-purple-300/80 font-medium">
-                {flexTier !== 'UNRANKED' ? `${flexLp} LP` : '-'}
-              </span>
+            <div
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700/80 p-0.5 flex items-center justify-center shadow-md"
+              title={`Árbol Secundario: ${secondaryStyleId || ''}`}
+            >
+              {secondaryStyleIconUrl ? (
+                <img src={secondaryStyleIconUrl} alt="substyle" className="w-full h-full object-contain brightness-110" />
+              ) : (
+                <span className="text-[7.5px] font-mono text-slate-400 font-bold">S</span>
+              )}
             </div>
-          </div>
-
-          {/* ETIQUETAS DINÁMICAS (MODO RESPONSIVE) */}
-          {displayTags.length > 0 && (
-            <div className="flex items-center justify-center gap-1 flex-wrap pt-0.5">
-              {displayTags.map((tagItem, i) => (
-                <span
-                  key={`${tagItem.id}_${i}`}
-                  title={tagItem.tooltip}
-                  className={`
-                    px-1.5 py-0.5 rounded text-[8px] xl:text-[8.5px] font-mono font-bold uppercase tracking-wider
-                    border flex items-center shadow-xs cursor-help transition-colors select-none
-                    ${tagItem.style}
-                  `}
-                >
-                  {tagItem.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-1.5 border-t border-purple-950/80">
-            <span className="text-xs xl:text-[11px] font-mono font-bold text-slate-300 drop-shadow">
-              {`${todayWins}W - ${todayLosses}L`}
-            </span>
-
-            {renderWinrateRing(displayWinrate)}
           </div>
         </div>
+
+        {/* NOMBRE DEL JUGADOR */}
+        <h3
+          className="flex items-center justify-center text-sm md:text-[15px] font-bold text-white text-center w-full my-1.5 z-20 truncate max-w-[95%] drop-shadow-md"
+          title={displayName}
+        >
+          {cleanSummonerName}
+        </h3>
+
+        {/* FOOTER SOLO Q CON ÍCONO DE DIVISIÓN */}
+        <div className="flex items-center gap-1.5 z-10 pointer-events-none whitespace-nowrap text-xs">
+          <img
+            alt={soloTier}
+            src={getRankIconUrl(soloTier)}
+            className="w-[18px] h-[18px] object-contain shrink-0"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              const normTier = (soloTier || 'unranked').toLowerCase().trim();
+              if (!target.dataset.triedShared) {
+                target.dataset.triedShared = 'true';
+                target.src = `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/${normTier}.png`;
+              } else if (!target.dataset.triedOpgg) {
+                target.dataset.triedOpgg = 'true';
+                target.src = `https://opgg-static.akamaized.net/images/medals_new/${normTier}.png`;
+              } else if (!target.dataset.triedFallback) {
+                target.dataset.triedFallback = 'true';
+                target.src = `${MINI_CREST_BASE}unranked.svg`;
+              }
+            }}
+          />
+          <span className="font-semibold text-[11px] lg:text-xs uppercase text-blue-400">
+            {soloTier !== 'UNRANKED' ? (
+              <>
+                {(!['MASTER', 'GRANDMASTER', 'GM', 'CHALLENGER'].includes(soloTier.toUpperCase()) && soloRank) ? `${soloRank} - ` : ''}{soloLp}
+                <span className="text-[8.5px] inline ml-0.5 font-bold">LP</span>
+              </>
+            ) : (
+              'UNRANKED'
+            )}
+          </span>
+          {soloTier !== 'UNRANKED' && (
+            <span className="text-[11px] font-medium ml-1.5 opacity-80 text-blue-400">
+              {soloWinrate}
+              <span className="text-[10px] inline">%</span> ({soloWins}
+              <span className="text-[8.5px] inline">w-</span>
+              {soloLosses}
+              <span className="text-[8.5px] inline">l</span>)
+            </span>
+          )}
+        </div>
+
       </div>
     </div>
   );

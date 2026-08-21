@@ -66,17 +66,46 @@ export function initializeEngineData(customChamps?: any[]) {
       ENRICHED_DB[champ.name] = champ;
       
       const primaryLane = normalizeRole(champ.lane, "MIDDLE");
+      const lanesStats: Record<string, { tier: number; winRate: number }> = champ.lanesStats || champ.lanes_stats || {};
+      const lanesPickrate: Record<string, number> = champ.lanesPickrate || champ.lanes_pickrate || {};
+
+      const primaryStat = lanesStats[primaryLane];
+      const primaryChamp: EnrichedChampion = {
+        ...champ,
+        lane: primaryLane,
+        isSecondaryLane: false,
+        lanePickRate: lanesPickrate[primaryLane] ?? 100,
+        meta: {
+          winRate: primaryStat?.winRate ?? champ.win_rate ?? champ.meta?.winRate ?? 50.0,
+          tier: primaryStat?.tier ?? champ.tier ?? champ.meta?.tier ?? 3
+        }
+      };
+
       if (DATA_BY_LANE[primaryLane]) {
-        DATA_BY_LANE[primaryLane].push(champ);
+        DATA_BY_LANE[primaryLane].push(primaryChamp);
       }
 
-      // Soportar play_lanes secundarios
+      // Soportar play_lanes secundarios con sus estadísticas de línea específicas
       const playLanes: string[] = champ.playLanes || champ.play_lanes || [];
       if (Array.isArray(playLanes)) {
         playLanes.forEach(l => {
           const normL = normalizeRole(l, "MIDDLE");
           if (normL !== primaryLane && DATA_BY_LANE[normL] && !DATA_BY_LANE[normL].some(c => c.name === champ.name)) {
-            DATA_BY_LANE[normL].push(champ);
+            const laneStat = lanesStats[normL];
+            const lanePr = typeof lanesPickrate[normL] === 'number' 
+              ? lanesPickrate[normL] 
+              : parseFloat(String(lanesPickrate[normL] || '0'));
+            const secondaryChamp: EnrichedChampion = {
+              ...champ,
+              lane: normL,
+              isSecondaryLane: true,
+              lanePickRate: lanePr,
+              meta: {
+                winRate: laneStat?.winRate ?? champ.win_rate ?? champ.meta?.winRate ?? 50.0,
+                tier: laneStat?.tier ?? (champ.tier ? Math.max(champ.tier + 10, 15) : 25)
+              }
+            };
+            DATA_BY_LANE[normL].push(secondaryChamp);
           }
         });
       }
