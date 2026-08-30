@@ -61,6 +61,16 @@ export const SyncPanel = () => {
   }, []);
 
   useEffect(() => {
+    const handleDatabaseUpdated = () => {
+      void fetchSyncStatus();
+      if (isAdmin) void fetchPublishStatus();
+    };
+
+    window.addEventListener('hexdraft-db-updated', handleDatabaseUpdated);
+    return () => window.removeEventListener('hexdraft-db-updated', handleDatabaseUpdated);
+  }, [isAdmin]);
+
+  useEffect(() => {
     if (!modeLoaded || !isAdmin) return;
     const initialLoad = window.setTimeout(() => void fetchPublishStatus(), 0);
     return () => window.clearTimeout(initialLoad);
