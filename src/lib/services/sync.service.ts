@@ -11,10 +11,10 @@ import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 import { API_NAME_MAP, NORM_API_NAME_MAP, normalizeKey, resolveChampionId } from '../domain/champion-name-resolver.js';
 import { getStyleOfRune } from '../domain/rune-style-map.js';
-import { fetchDpmChampionStats } from '../sources/dpm-champion-stats.source.js';
+import { createFlareSolverrSession, destroyFlareSolverrSession } from '../sources/dpm-champion-stats.source.js';
 import { fetchOpggMetaByPosition } from '../sources/opgg-meta.source.js';
 
-import { scrapeSingleChampion } from '../sync/scrape-champion.js';
+import { getChampionPlayLanes, scrapeSingleChampion, scrapeSingleChampionLane } from '../sync/scrape-champion.js';
 import { buildChampionRecord } from '../sync/build-champion-record.js';
 
 export { scrapeSingleChampion, buildChampionRecord };
@@ -294,8 +294,18 @@ export async function syncMetaAndBuilds(
     return "Sincronización al día";
   }
 
-  writeLog(`[FLARESOLVERR] Iniciando procesamiento de ${pendingChamps.length} campeones.`);
-  onProgress?.(0, pendingChamps.length, 'puppeteer');
+  const pendingTasks = pendingChamps.flatMap(name =>
+    getChampionPlayLanes(name, db, nameIdMap).map(lane => ({ name, lane }))
+  );
+
+  if (pendingTasks.length === 0) {
+    writeLog("[DONE] No se encontraron carriles válidos para sincronizar.");
+    onProgress?.(0, 0, 'done');
+    return "Sincronización finalizada sin carriles pendientes";
+  }
+
+  writeLog(`[FLARESOLVERR] Iniciando procesamiento de ${pendingChamps.length} campeones en ${pendingTasks.length} tareas campeón/carril.`);
+  onProgress?.(0, pendingTasks.length, 'puppeteer');
 
   // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA CON FLARESOLVERR) ---
   const concurrencySetting = parseInt(configRepo.getConfig('puppeteer_concurrency') || '3') || 3;
@@ -305,36 +315,49 @@ export async function syncMetaAndBuilds(
   writeLog(`[FLARESOLVERR] Concurrencia: ${concurrency} trabajadores simultáneos.`);
 
   let index = 0;
-  let savedCount = 0;
+  let completedTasks = 0;
 
   const worker = async (workerId: number) => {
-    while (index < pendingChamps.length) {
-      if (checkAbort()) break;
-      
-      const name = pendingChamps[index++];
-      if (!name) break;
+    const requestedSessionId = `hexdraft-sync-${Date.now()}-${workerId}`;
+    let sessionId: string | undefined;
 
-      writeLog(`[W-${workerId}] Descargando build y matchups: ${name} (${index}/${pendingChamps.length})`);
-      
-      try {
-        await scrapeSingleChampion(name, version, db, nameIdMap, writeLog);
-        savedCount++;
-        onProgress?.(savedCount, pendingChamps.length, 'puppeteer');
+    try {
+      sessionId = await createFlareSolverrSession(requestedSessionId);
+      writeLog(`[W-${workerId}] Sesión persistente de FlareSolverr creada.`);
+    } catch (e: any) {
+      writeLog(`[W-${workerId}] [WARN] No se pudo crear sesión persistente; se usarán solicitudes temporales: ${e.message || e}`);
+    }
 
-        // Guardar preventivamente cada 5 campeones en JSON (fallback opcional)
-        if (savedCount % 5 === 0) {
+    try {
+      while (index < pendingTasks.length) {
+        if (checkAbort()) break;
+
+        const task = pendingTasks[index++];
+        if (!task) break;
+
+        writeLog(`[W-${workerId}] Descargando build y matchups: ${task.name} / ${task.lane} (${index}/${pendingTasks.length})`);
+
+        await scrapeSingleChampionLane(task.name, task.lane, version, db, nameIdMap, writeLog, sessionId);
+        completedTasks++;
+        onProgress?.(completedTasks, pendingTasks.length, 'puppeteer');
+
+        // Guardar preventivamente cada 5 tareas en JSON (fallback opcional).
+        if (completedTasks % 5 === 0) {
           try {
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
           } catch (e) {
-            // Ignorado en producción si el sistema de archivos es de solo lectura (SQLite es la fuente primaria)
+            // Ignorado en producción si el sistema de archivos es de solo lectura (SQLite es la fuente primaria).
           }
         }
-      } catch (e: any) {
-        writeLog(`[ERROR] [W-${workerId}] Error procesando ${name}: ${e.message || e}`);
-      }
 
-      // Delay de cortesía para no sobrecargar el proxy/dpm.lol
-      await new Promise(r => setTimeout(r, 800));
+        // Delay de cortesía para no sobrecargar el proxy/dpm.lol.
+        await new Promise(r => setTimeout(r, 800));
+      }
+    } finally {
+      if (sessionId) {
+        await destroyFlareSolverrSession(sessionId);
+        writeLog(`[W-${workerId}] Sesión persistente de FlareSolverr cerrada.`);
+      }
     }
   };
 
@@ -368,7 +391,7 @@ export async function syncMetaAndBuilds(
   }
 
   writeLog("[DONE] Sincronizacion completa - Datos actualizados en SQLite local");
-  onProgress?.(pendingChamps.length, pendingChamps.length, 'done');
+  onProgress?.(completedTasks, pendingTasks.length, 'done');
   return "Sincronización completa";
 }
 
