@@ -328103,7 +328103,7 @@
     }
   },
   "Mel": {
-    "lane": "BOTTOM",
+    "lane": "MIDDLE",
     "tags": [],
     "scalingType": "Mid",
     "combat": {
@@ -539017,7 +539017,7 @@
     }
   },
   "Sylas": {
-    "lane": "MIDDLE",
+    "lane": "JUNGLE",
     "tags": [
       "Mage",
       "Assassin"

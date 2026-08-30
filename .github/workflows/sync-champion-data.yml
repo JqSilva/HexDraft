@@ -27,7 +27,10 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Correr sync completo
+      - name: Sincronizar estructura de carriles
+        run: npm run sync:lanes:cli
+
+      - name: Sincronizar Meta y Builds
         run: npm run sync:cli
 
       - name: Configurar Python

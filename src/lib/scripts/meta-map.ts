@@ -66,8 +66,9 @@ export async function SyncEstructuraLanes(
         try {
             const { configRepo } = await import('../db/config.repo.js');
             configRepo.setConfig('last_lane_sync_timestamp', new Date().toISOString());
+            configRepo.setConfig('last_lane_sync_version', version);
         } catch (e) {
-            // Ignorado de forma segura si falla al persistir el timestamp de actualización
+            writeLog(`⚠️ No se pudo guardar la fecha del mapeo de carriles: ${e}`);
         }
         onProgress?.(10, 10, 'done');
     } catch (err: any) {

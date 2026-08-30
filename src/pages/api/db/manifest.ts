@@ -2,6 +2,27 @@ import type { APIRoute } from 'astro';
 import fs from 'node:fs';
 import { appConfig } from '../../../lib/services/config.service.js';
 
+function isRemoteManifestNewer(remoteManifest: Record<string, unknown>, localManifest: Record<string, unknown>): boolean {
+  const remoteVersion = Number(remoteManifest.version || 0);
+  const localVersion = Number(localManifest.version || 0);
+
+  // El número de release es el criterio principal mientras siga siendo monotónico.
+  if (remoteVersion > localVersion) return true;
+
+  const remoteChecksum = typeof remoteManifest.checksum === 'string' ? remoteManifest.checksum : '';
+  const localChecksum = typeof localManifest.checksum === 'string' ? localManifest.checksum : '';
+  if (remoteChecksum && localChecksum && remoteChecksum === localChecksum) return false;
+
+  // Si el contador remoto fue reiniciado, la fecha de publicación permite detectar
+  // una release posterior aunque su número sea menor que el instalado.
+  const remoteDate = Date.parse(String(remoteManifest.lastUpdate || ''));
+  const localDate = Date.parse(String(localManifest.lastUpdate || ''));
+  if (Number.isFinite(remoteDate) && Number.isFinite(localDate) && remoteDate > localDate) return true;
+
+  // Un manifest distinto con la misma versión también debe poder actualizarse.
+  return remoteVersion === localVersion && Boolean(remoteChecksum && localChecksum && remoteChecksum !== localChecksum);
+}
+
 export const GET: APIRoute = async () => {
   try {
     // 1. Leer versión local
@@ -102,8 +123,9 @@ export const GET: APIRoute = async () => {
       remoteManifest.size = dbAsset.size;
     }
 
-    // 5. Comparar versiones
-    const needsUpdate = remoteManifest.version > localManifest.version;
+    // 5. Comparar versión, checksum y fecha para tolerar reinicios del contador
+    // de releases sin ocultar una base publicada posteriormente.
+    const needsUpdate = isRemoteManifestNewer(remoteManifest, localManifest);
 
     return new Response(
       JSON.stringify({

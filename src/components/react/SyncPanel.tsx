@@ -1,514 +1,222 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppMode } from './useAppMode';
-import type { LogItem, ToastState, PublishStatus } from './sync/types';
+import type { PublishStatus } from './sync/types';
 import { formatTimestamp } from './sync/utils';
-import { SyncToast } from './sync/SyncToast';
-import { SyncConsole } from './sync/SyncConsole';
+
+interface SyncStatus {
+  version: string;
+  database_patch: string;
+  last_sync_timestamp: string;
+  last_lane_sync_timestamp: string;
+  last_sync_version: string;
+  last_lane_sync_version: string;
+  needs_build_sync: boolean;
+  needs_lane_sync: boolean;
+  version_source: string;
+}
+
+type ActionState = 'idle' | 'publishing' | 'done' | 'error';
+
+const statusLabel = (pending: boolean) => pending ? 'Pendiente' : 'Al día';
 
 export const SyncPanel = () => {
   const { mode, isAdmin, loaded: modeLoaded } = useAppMode();
-  const [isSyncing, setIsSyncing] = useState<'meta_builds' | 'SyncEstructuraLanes' | null>(null);
-  const [version, setVersion] = useState<string>('--.--');
-  const [lastSync, setLastSync] = useState<string>('-');
-  const [lastLaneSync, setLastLaneSync] = useState<string>('-');
-  const [forceSync, setForceSync] = useState<boolean>(false);
-  const [progressPercent, setProgressPercent] = useState<number>(0);
-  const [progressPhase, setProgressPhase] = useState<string>('idle');
-  const [showRecommendAlert, setShowRecommendAlert] = useState<boolean>(false);
-  const [recommendMessage, setRecommendMessage] = useState<string>('');
-  const [showDockerAlert, setShowDockerAlert] = useState<boolean>(false);
-  const [pendingSyncType, setPendingSyncType] = useState<'meta_builds' | 'SyncEstructuraLanes' | null>(null);
-
-  const [logs, setLogs] = useState<LogItem[]>([
-    { time: '--:--', msg: 'Esperando inicialización de sincronización masiva...', type: 'idle' }
-  ]);
-  const [toast, setToast] = useState<ToastState>({ visible: false, title: '', body: '', type: 'info' });
-
-  // Estados para Publicación de GitHub (Admin)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
   const [publishStatus, setPublishStatus] = useState<PublishStatus | null>(null);
   const [loadingPublish, setLoadingPublish] = useState(true);
-  const [actionState, setActionState] = useState<'idle' | 'syncing' | 'publishing' | 'done' | 'error'>('idle');
-  const [statusMessage, setStatusMessage] = useState('Listo');
+  const [actionState, setActionState] = useState<ActionState>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0;
-    }
-  }, [logs]);
-
-  // Cargar versión y estado de recomendación de sincronización
-  const fetchInitialData = async () => {
+  const fetchSyncStatus = async () => {
     try {
-      const checkRes = await fetch('/api/sync?type=check');
-      if (checkRes.ok) {
-        const checkData = await checkRes.json();
-        setVersion(checkData.version || '--.--');
-        setLastSync(checkData.last_sync_timestamp || '-');
-        setLastLaneSync(checkData.last_lane_sync_timestamp || '-');
-        
-        if (checkData.needs_build_sync && checkData.needs_lane_sync) {
-          setRecommendMessage('Se recomienda actualizar tanto el Meta/Builds como la Estructura de Carriles (Lanes).');
-          setShowRecommendAlert(true);
-        } else if (checkData.needs_build_sync) {
-          setRecommendMessage('Se ha detectado un parche nuevo o han pasado más de 3 días desde la última sincronización de Meta y Builds.');
-          setShowRecommendAlert(true);
-        } else if (checkData.needs_lane_sync) {
-          setRecommendMessage('Han pasado más de 21 días desde la última actualización de Estructura de Carriles (Lanes). Se recomienda sincronizar la estructura de carriles.');
-          setShowRecommendAlert(true);
-        } else {
-          setShowRecommendAlert(false);
-        }
-      }
-    } catch (e) {
-      console.error("No se pudo comprobar el estado de sincronización:", e);
+      const response = await fetch('/api/sync?type=check', { cache: 'no-store' });
+      if (!response.ok) throw new Error('No se pudo consultar el estado de sincronización');
+      setSyncStatus(await response.json() as SyncStatus);
+    } catch (error) {
+      console.error('No se pudo comprobar el estado de sincronización:', error);
+    } finally {
+      setLoadingStatus(false);
     }
   };
 
   const fetchPublishStatus = async () => {
     try {
-      const res = await fetch('/api/sync/status');
-      if (res.ok) {
-        const data = await res.json();
-        setPublishStatus(data);
-      }
-    } catch (e) {
-      console.error('Error al obtener estado de sincronización:', e);
+      const response = await fetch('/api/sync/status', { cache: 'no-store' });
+      if (response.ok) setPublishStatus(await response.json() as PublishStatus);
+    } catch (error) {
+      console.error('No se pudo obtener el estado de publicación:', error);
     } finally {
       setLoadingPublish(false);
     }
   };
 
-  const handlePublishGithub = async () => {
-    setActionState('publishing');
-    setStatusMessage('Compilando base de datos y subiendo a GitHub...');
-
-    try {
-      const res = await fetch('/api/sync/publish', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'Fallo en la publicación');
-      }
-      setActionState('done');
-      setStatusMessage(`Publicado con éxito: Versión ${data.version} (Parche ${data.patch})`);
-      fetchPublishStatus();
-      
-      setTimeout(() => {
-        setActionState('idle');
-        setStatusMessage('Listo');
-      }, 5000);
-
-    } catch (e: any) {
-      setActionState('error');
-      setStatusMessage(`Error en publicación: ${e.message || 'Error desconocido'}`);
-    }
-  };
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => void fetchSyncStatus(), 0);
+    const interval = window.setInterval(() => void fetchSyncStatus(), 60_000);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
-    const initData = async () => {
-      await fetchInitialData();
-      if (modeLoaded && isAdmin) {
-        await fetchPublishStatus();
-      }
-    };
-    initData();
+    if (!modeLoaded || !isAdmin) return;
+    const initialLoad = window.setTimeout(() => void fetchPublishStatus(), 0);
+    return () => window.clearTimeout(initialLoad);
   }, [modeLoaded, isAdmin]);
 
-  const triggerToast = (title: string, body: string, type: string) => {
-    setToast({ visible: true, title, body, type });
-    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 6000);
-  };
-
-  const addLog = (msg: string, type: string) => {
-    const now = new Date();
-    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    setLogs(prev => [{ time, msg, type }, ...prev].slice(0, 50));
-  };
-
-  const handleInitiateSync = (type: 'meta_builds' | 'SyncEstructuraLanes') => {
-    setPendingSyncType(type);
-    setShowDockerAlert(true);
-  };
-
-  const runSync = async (type: 'meta_builds' | 'SyncEstructuraLanes') => {
-    setIsSyncing(type);
-    setProgressPercent(0);
-    setProgressPhase('starting');
-    addLog(`Iniciando sincronización ${type === 'meta_builds' ? 'Bayesiana de Builds' : 'de Mapeo de Posiciones'}...`, 'sync');
-    triggerToast("Iniciando", `Actualizando base de datos ${version}...`, "warn");
+  const handlePublishGithub = async () => {
+    setActionState('publishing');
+    setStatusMessage('Compilando base de datos y publicando...');
 
     try {
-      const url = `/api/sync?type=${type}&version=${version}&force=${type === 'meta_builds' ? forceSync : 'false'}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error();
-      }
-      addLog(`MOTOR: Solicitud de sincronización ${type} enviada. Ejecutando en segundo plano...`, 'info');
-    } catch (e) {
-      addLog(`ERROR: Fallo al iniciar la sincronización ${type}.`, 'error');
-      triggerToast("Error", "Fallo al iniciar el motor", "error");
-      setIsSyncing(null);
+      const response = await fetch('/api/sync/publish', { method: 'POST' });
+      const data = await response.json() as { error?: string; version?: number; patch?: string };
+      if (!response.ok || data.error) throw new Error(data.error || 'Fallo en la publicación');
+
+      setActionState('done');
+      setStatusMessage(`Publicada la versión ${data.version} para el parche ${data.patch}`);
+      await fetchPublishStatus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      setActionState('error');
+      setStatusMessage(message);
     }
   };
 
-  useEffect(() => {
-    const checkServerStatus = async () => {
-      try {
-        const res = await fetch('/api/sync?type=status');
-        const data = await res.json();
-        
-        if (data.logs && data.logs.length > 0) {
-          const mappedLogs = data.logs.map((log: string) => {
-            const match = log.match(/^\[(\d{2}):(\d{2}):(\d{2})\]\s*(.*)$/);
-            if (match) {
-              const [_, hh, mm, ss, msg] = match;
-              let type = 'info';
-              if (msg.includes('❌') || msg.includes('Error') || msg.includes('falló')) type = 'error';
-              else if (msg.includes('🛑') || msg.includes('CANCEL')) type = 'error';
-              else if (msg.includes('✅') || msg.includes('🏁') || msg.includes('finalizado') || msg.includes('finalizada')) type = 'success';
-              else if (msg.includes('🚀') || msg.includes('Motor') || msg.includes('Iniciando') || msg.includes('Scrapeando') || msg.includes('⚡')) type = 'sync';
-              return {
-                time: `${hh}:${mm}:${ss}`,
-                msg: msg,
-                type: type
-              };
-            }
-            return { time: '--:--', msg: log, type: 'info' };
-          });
-          setLogs([...mappedLogs].reverse());
-        }
-
-        if (data.syncing) {
-          setIsSyncing(data.progressPhase === 'lanes' ? 'SyncEstructuraLanes' : 'meta_builds');
-          setProgressPercent(data.progressPercent || 0);
-          setProgressPhase(data.progressPhase || 'idle');
-        } else {
-          if (isSyncing) {
-            triggerToast("Finalizado", "Proceso de sincronización terminado", "info");
-            setIsSyncing(null);
-            setProgressPercent(0);
-            setProgressPhase('idle');
-            fetchInitialData();
-          }
-        }
-      } catch (e) { /* Error de red */ }
-    };
-
-    const interval = setInterval(checkServerStatus, 2000);
-    return () => clearInterval(interval);
-  }, [isSyncing]);
-
-  const cancelSync = async () => {
-    addLog("Enviando señal de aborto...", "error");
-    try {
-      const res = await fetch('/api/sync?type=cancel');
-      if (res.ok) {
-        triggerToast("Cancelando", "Deteniendo motores de scrapping", "error");
-      }
-    } catch (e) {
-      addLog("Error al comunicar cancelación", "error");
-    }
-  };
+  const databasePatch = syncStatus?.database_patch || '-';
+  const activePatch = syncStatus?.version || '--.--';
+  const needsBuildSync = syncStatus?.needs_build_sync ?? false;
+  const needsLaneSync = syncStatus?.needs_lane_sync ?? false;
+  const needsPublish = publishStatus?.pendingPublish ?? false;
 
   return (
-    <>
-      <SyncToast toast={toast} />
-
-      {showDockerAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 transition-opacity duration-200">
-          <div className="w-full max-w-md bg-[#0e0e12] border border-slate-800 rounded-sm p-6 shadow-2xl relative">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">
-              REQUISITO DE DOCKER
-            </h3>
-            <p className="text-[10px] text-slate-400 font-bold leading-relaxed mb-6 uppercase tracking-wide">
-              Esta sincronización utiliza FlareSolverr y requiere que tengas **Docker** instalado en tu sistema.
-              <br /><br />
-              HexDraft intentará arrancar Docker Desktop de fondo e iniciar el contenedor de forma automática.
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setShowDockerAlert(false);
-                  setPendingSyncType(null);
-                }}
-                className="px-4 py-2.5 bg-transparent hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-[9px] font-black uppercase tracking-widest rounded-sm transition-colors duration-150 cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  if (pendingSyncType) {
-                    runSync(pendingSyncType);
-                  }
-                  setShowDockerAlert(false);
-                  setPendingSyncType(null);
-                }}
-                className="px-4 py-2.5 bg-purple-950/45 hover:bg-purple-900 border border-purple-800/80 text-purple-300 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-sm transition-colors duration-150 cursor-pointer shadow-[0_2px_4px_rgba(0,0,0,0.4)]"
-              >
-                Confirmar e Iniciar
-              </button>
-            </div>
+    <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
+      <header className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-warm pb-5 mb-6">
+        <div>
+          <span className="text-[10px] uppercase tracking-[0.25em] font-black text-slate-500 block mb-2">
+            Mantenimiento de datos
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-xl font-black text-white tracking-tight">
+              Estado de <span className="text-purple-accent">sincronización</span>
+            </h1>
+            {modeLoaded && (
+              <span className={`px-2 py-0.5 text-[9px] uppercase font-black tracking-wider border rounded-sm ${
+                isAdmin ? 'bg-purple-950/40 border-purple-500/40 text-purple-300' : 'bg-slate-900 border-slate-700 text-slate-400'
+              }`}>
+                Modo: {mode}
+              </span>
+            )}
           </div>
+          <p className="max-w-2xl mt-2 text-[11px] text-slate-400 leading-relaxed">
+            La base de datos se actualiza automáticamente mediante GitHub Actions. Esta pantalla muestra el estado local y la última publicación disponible.
+          </p>
         </div>
-      )}
+        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+          {loadingStatus ? 'Consultando estado...' : `Fuente del parche: ${syncStatus?.version_source || 'local'}`}
+        </span>
+      </header>
 
-      <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
-        
-        {/* Cabecera Táctica (Ocupa todo el ancho) */}
-        <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
-              MANTENIMIENTO // TELEMETRÍA DE BASE DE DATOS
-            </span>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-black text-white uppercase tracking-tight">
-                Sincronización <span className="text-purple-accent">de Datos</span>
-              </h1>
-              {modeLoaded && (
-                <span className={`px-2 py-0.5 text-[9px] uppercase font-black tracking-wider border rounded-sm ${
-                  isAdmin 
-                    ? 'bg-purple-950/40 border-purple-500/40 text-purple-300' 
-                    : 'bg-slate-900 border-slate-700 text-slate-400'
-                }`}>
-                  Modo: {mode}
-                </span>
-              )}
+      <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-5">
+        <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 h-28 w-28 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="mb-5">
+            <h2 className="text-xs text-purple-accent font-black uppercase tracking-[0.18em] mb-1">Estado actual</h2>
+            <p className="text-[11px] text-slate-400">Comparación entre el parche instalado, los datos locales y el calendario automático.</p>
+          </div>
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+              <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Parche activo</span>
+              <span className="text-base font-mono font-black text-white">{activePatch}</span>
+            </div>
+            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+              <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Parche de datos</span>
+              <span className="text-base font-mono font-black text-white">{databasePatch}</span>
+            </div>
+            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+              <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Meta y builds</span>
+              <span className="text-xs font-mono font-bold text-slate-300">{formatTimestamp(syncStatus?.last_sync_timestamp || '-')}</span>
+            </div>
+            <div>
+              <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Carriles</span>
+              <span className="text-xs font-mono font-bold text-slate-300">{formatTimestamp(syncStatus?.last_lane_sync_timestamp || '-')}</span>
             </div>
           </div>
-        </header>
+        </section>
 
-        {/* Alerta de Actualización Recomendada */}
-        {showRecommendAlert && (
-          <div className="mb-6 bg-amber-500/10 border border-amber-500/20 rounded-sm p-4 text-slate-200 relative overflow-hidden shadow-lg animate-in slide-in-from-top-4 duration-300">
-            <div className="absolute top-0 left-0 w-[3px] h-full bg-amber-500" />
-            <div className="flex items-center gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-              <div className="flex-1">
-                <h4 className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
-                  Sincronización recomendada
-                </h4>
-                <p className="text-[9.5px] uppercase tracking-wide font-bold text-slate-400 mt-0.5">
-                  {recommendMessage}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contenido Principal Centrado */}
-        <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
-          {/* TARJETA DE ESTADO GLOBAL */}
-          <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="mb-6">
-              <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
-                Estado del Motor y Base de Datos
-              </h3>
-              <p className="text-[9.5px] text-slate-550 uppercase tracking-widest font-extrabold">
-                Diagnóstico y telemetría de caché en tiempo real
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-5">
+          <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6">
+            <div className="mb-5">
+              <h2 className="text-sm font-black text-white">Proceso automático</h2>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Cada ejecución procesa primero la estructura de carriles, después Meta y Builds, y finalmente publica la base resultante.
               </p>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-2">
-              <div className="md:border-r border-border-warm-hover/40 pr-4">
-                <span className="block text-[8.5px] text-slate-550 uppercase tracking-widest font-black mb-1">Versión LoL Activa</span>
-                <span className="text-sm font-mono font-black text-white">{version}</span>
-              </div>
-              
-              <div className="md:border-r border-border-warm-hover/40 pr-4">
-                <span className="block text-[8.5px] text-slate-550 uppercase tracking-widest font-black mb-1">Último Meta Sync</span>
-                <span className="text-xs font-mono font-black text-slate-300 truncate block">
-                  {formatTimestamp(lastSync)}
-                </span>
-              </div>
-
-              <div className="md:border-r border-border-warm-hover/40 pr-4">
-                <span className="block text-[8.5px] text-slate-555 uppercase tracking-widest font-black mb-1">Mapeo de Carriles</span>
-                <span className="text-xs font-mono font-black text-slate-300 truncate block">
-                  {formatTimestamp(lastLaneSync)}
-                </span>
-              </div>
-
-              <div>
-                <span className="block text-[8.5px] text-slate-555 uppercase tracking-widest font-black mb-1">Integridad del Cache</span>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-yellow-500 animate-pulse' : 'bg-cyan-400 shadow-[0_0_8px_#00f0ff]'}`} />
-                  <span className={`text-[10px] font-black tracking-wider uppercase font-mono ${isSyncing ? 'text-yellow-500' : 'text-cyan-400'}`}>
-                    {isSyncing ? 'Sincronizando' : 'Actualizado'}
-                  </span>
+            <div className="divide-y divide-border-warm/50 border-y border-border-warm/50">
+              <div className="flex items-center gap-3 py-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400/10 text-[10px] font-mono font-black text-cyan-300">1</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-200">Estructura de carriles</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Última ejecución: {formatTimestamp(syncStatus?.last_lane_sync_timestamp || '-')}</p>
                 </div>
+                <span className={`text-[9px] uppercase tracking-wider font-black ${needsLaneSync ? 'text-amber-400' : 'text-emerald-400'}`}>{statusLabel(needsLaneSync)}</span>
+              </div>
+              <div className="flex items-center gap-3 py-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-accent/10 text-[10px] font-mono font-black text-purple-300">2</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-200">Meta y Builds</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Última ejecución: {formatTimestamp(syncStatus?.last_sync_timestamp || '-')}</p>
+                </div>
+                <span className={`text-[9px] uppercase tracking-wider font-black ${needsBuildSync ? 'text-amber-400' : 'text-emerald-400'}`}>{statusLabel(needsBuildSync)}</span>
+              </div>
+              <div className="flex items-center gap-3 py-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-400/10 text-[10px] font-mono font-black text-emerald-300">3</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-200">Publicación de la base</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Última release: {publishStatus?.lastPublishDate && publishStatus.lastPublishDate !== '-' ? formatTimestamp(publishStatus.lastPublishDate) : 'Nunca'}</p>
+                </div>
+                <span className={`text-[9px] uppercase tracking-wider font-black ${needsPublish ? 'text-amber-400' : 'text-emerald-400'}`}>{statusLabel(needsPublish)}</span>
               </div>
             </div>
-          </div>
+            <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
+              No es necesario ejecutar estos procesos desde la aplicación. Si una ejecución queda pendiente, se resolverá en el próximo ciclo del workflow.
+            </p>
+          </section>
 
-          {/* ACCIONES DE SINCRONIZACIÓN */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Card 1: Builds & Meta */}
-            <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">01 //</span>
-                  <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Sincronización de Meta & Builds</h4>
-                </div>
-                <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
-                  Extrae datos estadísticos en tiempo real de OP.GG y DPM.lol para recalcular coeficientes Bayesianos, tiers de campeones y diagramas de builds sugeridos.
-                </p>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                <label className="flex items-center gap-3 p-3 cursor-pointer select-none transition-all duration-200 active:scale-[0.99]">
-                  <input 
-                    type="checkbox" 
-                    checked={forceSync}
-                    onChange={(e) => setForceSync(e.target.checked)}
-                    disabled={!!isSyncing}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors duration-200 shrink-0 ${forceSync ? 'bg-purple-accent border-purple-accent' : 'bg-black/40 border-slate-700'}`}>
-                    {forceSync && <span className="text-[8px] font-bold text-white"></span>}
-                  </div>
-                  <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">
-                    Forzar descarga completa (ignora caché diferencial y descarga todo de cero)
-                  </span>
-                </label>
-
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => handleInitiateSync('meta_builds')}
-                    disabled={!!isSyncing} 
-                    className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
-                      ${isSyncing 
-                        ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
-                        : 'bg-purple-accent border-purple-accent hover:bg-purple-accent/90 text-white shadow-[0_0_15px_rgba(144,85,255,0.2)]'}`}
-                  >
-                    {isSyncing === 'meta_builds' ? 'Procesando...' : 'Ejecutar Sincronización'}
-                  </button>
-                  
-                  {isSyncing === 'meta_builds' && (
-                    <button 
-                      onClick={cancelSync}
-                      className="px-5 py-3.5 bg-transparent border border-red-900/50 hover:bg-red-600/20 text-red-500 font-black uppercase text-[9px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95"
-                    >
-                      Detener
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Lanes Mapping */}
-            <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">02 //</span>
-                  <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Mapeo de Posiciones y Carriles</h4>
-                </div>
-                <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
-                  Actualiza y mapea la distribución de líneas (Top, Jng, Mid, Adc, Sup) preferidas de cada campeón conforme a los roles más jugados en el parche actual (Diamond+).
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center gap-3">
-                <button 
-                  onClick={() => handleInitiateSync('SyncEstructuraLanes')}
-                  disabled={!!isSyncing}
-                  className={`flex-1 px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
-                    ${isSyncing 
-                      ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
-                      : 'bg-transparent border-border-warm hover:border-slate-800 text-slate-400 hover:text-slate-200'}`}
-                >
-                  {isSyncing === 'SyncEstructuraLanes' ? 'Procesando...' : 'Actualizar Mapeo'}
-                </button>
-                
-                {isSyncing === 'SyncEstructuraLanes' && (
-                  <button 
-                    onClick={cancelSync}
-                    className="px-5 py-3.5 bg-transparent border border-red-900/50 hover:bg-red-600/20 text-red-500 font-black uppercase text-[9px] tracking-widest rounded-sm transition-all duration-200 cursor-pointer active:scale-95"
-                  >
-                    Detener
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Card 3: GitHub Releases */}
-            <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col justify-between gap-5">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-accent font-black uppercase tracking-widest font-mono">03 //</span>
-                  <h4 className="text-sm font-black text-white uppercase tracking-wider italic">Distribución en GitHub</h4>
-                </div>
-                <p className="text-[11px] text-slate-400 uppercase tracking-wide leading-relaxed font-bold">
-                  Empaqueta la base de datos local actual, calcula su checksum SHA256 y la publica como un asset binario en una nueva release de GitHub.
-                </p>
-              </div>
-
-              {/* Telemetría de GitHub */}
+          <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6 flex flex-col justify-between">
+            <div>
+              <h2 className="text-sm font-black text-white">Distribución en GitHub</h2>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Publica una copia de la base local para que las instalaciones de usuario puedan descargarla y verificar su checksum.
+              </p>
               {!loadingPublish && publishStatus && (
-                <div className="text-[9.5px] uppercase font-mono space-y-1.5 py-1.5 border-t border-b border-border-warm-hover/30">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Última Release:</span>
-                    <span className="font-bold text-slate-300">
-                      {publishStatus.lastPublishVersion ? `v${publishStatus.lastPublishVersion} (Parche ${publishStatus.lastPublishPatch})` : 'Ninguna'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Publicado el:</span>
-                    <span className="font-bold text-slate-300">
-                      {publishStatus.lastPublishDate !== '-' ? formatTimestamp(publishStatus.lastPublishDate) : 'Nunca'}
-                    </span>
-                  </div>
-                  {publishStatus.pendingPublish && (
-                    <div className="text-amber-500 font-black animate-pulse text-[9px] pt-1">
-                      ⚠ Cambios locales pendientes de publicar
-                    </div>
-                  )}
+                <div className="mt-5 space-y-2 border-y border-border-warm/50 py-3 text-[10px] font-mono">
+                  <div className="flex justify-between gap-4"><span className="text-slate-500">Última release</span><span className="text-right font-bold text-slate-300">{publishStatus.lastPublishVersion ? `v${publishStatus.lastPublishVersion} · ${publishStatus.lastPublishPatch}` : 'Ninguna'}</span></div>
+                  <div className="flex justify-between gap-4"><span className="text-slate-500">Parche local</span><span className="font-bold text-slate-300">{syncStatus?.last_sync_version || '-'}</span></div>
                 </div>
               )}
-
-              <div className="pt-2 flex flex-col gap-2.5">
-                <button 
-                  onClick={handlePublishGithub}
-                  disabled={actionState === 'publishing' || !!isSyncing}
-                  className={`w-full px-6 py-3.5 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-all duration-200 border cursor-pointer select-none active:scale-95
-                    ${actionState === 'publishing' || !!isSyncing
-                      ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed' 
-                      : 'bg-[#0e1c14] border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]'}`}
-                >
-                  {actionState === 'publishing' ? 'Publicando...' : 'Publicar en GitHub'}
-                </button>
-                
-                {actionState !== 'idle' && (
-                  <div className={`text-[9.5px] uppercase font-bold tracking-wider text-center ${
-                    actionState === 'error' ? 'text-red-400' : 'text-emerald-400'
-                  }`}>
-                    {statusMessage}
-                  </div>
-                )}
-              </div>
             </div>
-          </div>
-
-          {/* TERMINAL DE EVENTOS */}
-          <SyncConsole 
-            isSyncing={!!isSyncing} 
-            progressPhase={progressPhase} 
-            progressPercent={progressPercent} 
-            logs={logs} 
-            scrollRef={scrollRef} 
-          />
-
+            {isAdmin && (
+              <div className="mt-5">
+                <button
+                  onClick={handlePublishGithub}
+                  disabled={actionState === 'publishing'}
+                  className={`w-full px-5 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-colors border ${
+                    actionState === 'publishing'
+                      ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed'
+                      : 'bg-[#0e1c14] border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white cursor-pointer'
+                  }`}
+                >
+                  {actionState === 'publishing' ? 'Publicando...' : 'Publicar base de datos'}
+                </button>
+                {statusMessage && <p className={`mt-3 text-center text-[10px] leading-relaxed ${actionState === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>{statusMessage}</p>}
+              </div>
+            )}
+          </section>
         </div>
       </div>
-    </>
+    </div>
   );
 };

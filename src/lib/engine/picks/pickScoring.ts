@@ -595,6 +595,8 @@ export function calculateScore(
 
 /**
  * Obtiene la build completa o adaptada para un campeón específico.
+ * Prioriza siempre getAdaptedBuild para generar los clusters por consenso del meta
+ * incluso si los equipos están vacíos (bots, personalizada, blind pick, fase in-game directa).
  */
 export function getSingleChampionBuild(
   championId: number,
@@ -602,10 +604,8 @@ export function getSingleChampionBuild(
   theirTeamIds: number[] = [],
   myRole: string = 'jungle'
 ): any {
-  if (myTeamIds.length > 0 || theirTeamIds.length > 0) {
-    const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole);
-    if (adapted) return adapted;
-  }
+  const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole);
+  if (adapted) return adapted;
 
   const name = getNameFromId(championId);
   if (!name) return null;
@@ -634,6 +634,7 @@ export function getSingleChampionBuild(
   };
 
   return {
+    id: championId,
     name: champ.name,
     build: {
       summoners: (b.summoners || []).map((id: number) => hydrateAsset('summoners', id)),

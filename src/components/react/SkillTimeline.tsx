@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { calculateSkillMaxOrder } from '../../lib/engine/tacticalEngine.js';
 
 interface SkillTimelineProps {
     skillOrder?: string;
@@ -6,6 +7,10 @@ interface SkillTimelineProps {
 }
 
 export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelineProps) => {
+    const computedSkillOrder = (tacticalData?.skills && tacticalData.skills.length >= 3)
+        ? calculateSkillMaxOrder(tacticalData.skills)
+        : (skillOrder || 'Q > W > E');
+
     return (
         <div className="p-3 bg-bg-warm/30 border border-border-warm/50 rounded-sm w-full relative tech-corners flex flex-col gap-2">
             <div className="flex justify-between items-center">
@@ -14,11 +19,11 @@ export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelinePr
                 </h4>
                 
                 {/* ORDEN DE MAXEO GLOBAL */}
-                {skillOrder && (
-                    <div className="flex items-center gap-2 px-3 py-1">
-                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">Maxeo:</span>
-                        <span className="text-[10px] text-white font-black tracking-widest uppercase">
-                            {skillOrder}
+                {computedSkillOrder && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-input-warm/40 border border-border-warm/30 rounded-sm">
+                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">MAXEO:</span>
+                        <span className="text-[10px] text-white font-black tracking-widest uppercase font-mono">
+                            {computedSkillOrder}
                         </span>
                     </div>
                 )}

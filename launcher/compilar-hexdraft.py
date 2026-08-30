@@ -8,6 +8,7 @@ import urllib.request
 import zipfile
 import json
 import time
+import argparse
 
 # --- CONFIGURACIÓN ---
 # Nos aseguramos de estar en la raíz del proyecto
@@ -15,34 +16,60 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROYECTO_DIR = os.path.dirname(SCRIPT_DIR) if os.path.basename(SCRIPT_DIR) == "launcher" else SCRIPT_DIR
 os.chdir(PROYECTO_DIR)
 
+try:
+    from .version_manager import (
+        obtener_version_actual,
+        sincronizar_version_proyecto,
+        actualizar_archivo_iss,
+        limpiar_instaladores_locales_antiguos,
+        parse_version
+    )
+    from .publish_installer import (
+        subir_instaladores_a_github,
+        eliminar_releases_antiguas,
+        list_local_installers
+    )
+except ImportError:
+    from version_manager import (
+        obtener_version_actual,
+        sincronizar_version_proyecto,
+        actualizar_archivo_iss,
+        limpiar_instaladores_locales_antiguos,
+        parse_version
+    )
+    from publish_installer import (
+        subir_instaladores_a_github,
+        eliminar_releases_antiguas,
+        list_local_installers
+    )
+
 NOMBRE_SCRIPT = os.path.join("launcher", "automatizador-hexdraft.py")
 NOMBRE_EXE = "HexDraft"
 DEPENDENCIAS_PY = []
 CARPETA_BUILD_NODE = "dist" 
 
 def preparar_entorno_node():
-    """Verifica si Node está listo y compila de forma segura."""
-    print("\n>>> Verificando entorno Node.js...")
+    """Verifica si Node esta listo y compila de forma segura."""
+    print("\n>>> Verificando entorno Node.js y compilando frontend Astro...")
     
     if not shutil.which("npm"):
-        print("[ERROR] npm no está instalado. Instala Node.js antes de continuar.")
+        print("[ERROR] npm no esta instalado. Instala Node.js antes de continuar.")
         return False
 
     # 1. Verificar node_modules y package-lock.json
     if not os.path.exists("node_modules"):
         if os.path.exists("package-lock.json"):
-            print("[WARN] node_modules no encontrado. Ejecutando 'npm ci' (instalación segura)...")
+            print("[WARN] node_modules no encontrado. Ejecutando 'npm ci' (instalacion segura)...")
             try:
                 subprocess.run(["npm", "ci"], shell=True, check=True)
             except subprocess.CalledProcessError:
-                print("[ERROR] 'npm ci' falló. Asegúrate de que package-lock.json sea válido.")
+                print("[ERROR] 'npm ci' fallo. Asegurate de que package-lock.json sea valido.")
                 return False
         else:
-            print("[WARN] No se encontró package-lock.json. Usando 'npm install' como respaldo...")
+            print("[WARN] No se encontro package-lock.json. Usando 'npm install' como respaldo...")
             subprocess.run(["npm", "install"], shell=True, check=True)
 
-    # 3. Limpiar y compilar el proyecto Astro para asegurar que empaquetamos los cambios más recientes
-    print("Limpiando compilación anterior y compilando proyecto Astro...")
+    # 2. Limpiar y compilar el proyecto Astro
     if os.path.exists(CARPETA_BUILD_NODE):
         try:
             shutil.rmtree(CARPETA_BUILD_NODE)
@@ -54,29 +81,25 @@ def preparar_entorno_node():
         print("[OK] Build de Node finalizado.")
     except subprocess.CalledProcessError:
         if os.path.exists(CARPETA_BUILD_NODE) and len(os.listdir(CARPETA_BUILD_NODE)) > 0:
-            print("[WARN] 'npm run build' reportó un error o advertencias, pero la carpeta 'dist' se generó con éxito. Continuando...")
+            print("[WARN] 'npm run build' reporto advertencias, pero la carpeta 'dist' se genero con exito. Continuando...")
         else:
-            print("[ERROR] al ejecutar npm run build y no se encontró la carpeta 'dist'.")
+            print("[ERROR] al ejecutar npm run build y no se encontro la carpeta 'dist'.")
             return False
     return True
-
 
 def verificar_dependencias_python():
     print("\n>>> Verificando dependencias de Python...")
     
-    # Detectar si estamos dentro de un entorno virtual (.venv)
     en_entorno_virtual = (
         sys.prefix != sys.base_prefix 
         or "VIRTUAL_ENV" in os.environ
     )
     
-    # Detectamos si 'uv' está disponible
     usa_uv = shutil.which("uv") is not None
     if usa_uv:
-        print("[INFO] Se detectó 'uv'. Se usará para la gestión de paquetes.")
+        print("[INFO] Se detecto 'uv'. Se usara para la gestion de paquetes.")
 
     for dep in DEPENDENCIAS_PY:
-        # CORRECCIÓN: PyInstaller se registra en Python como "PyInstaller" (con mayúsculas)
         nombre_modulo = "PyInstaller" if dep.lower() == "pyinstaller" else dep
         spec = importlib.util.find_spec(nombre_modulo)
         
@@ -110,7 +133,6 @@ def descargar_python_embed(destino_zip):
         def reporthook(count, block_size, total_size):
             if total_size > 0:
                 percent = int(count * block_size * 100 / total_size)
-                # Limitar a 100%
                 percent = min(100, percent)
                 sys.stdout.write(f"\rProgreso: {percent}%")
                 sys.stdout.flush()
@@ -126,7 +148,7 @@ def build_python():
     release_dir = os.path.abspath("release/HexDraft")
     os.makedirs(release_dir, exist_ok=True)
     
-    # Eliminar ejecutables antiguos de PyInstaller para evitar bloqueos del antivirus
+    # Eliminar ejecutables antiguos de PyInstaller para evitar bloqueos
     for exe_name in ["HexDraft.exe", "HexDraftApp.exe"]:
         exe_path = os.path.join(release_dir, exe_name)
         if os.path.exists(exe_path):
@@ -150,7 +172,7 @@ def build_python():
     
     if not os.path.exists(zip_path):
         if not descargar_python_embed(zip_path):
-            print("[ERROR] Error crítico al obtener Python Embebido.")
+            print("[ERROR] Error critico al obtener Python Embebido.")
             return
 
     # 2. Descomprimir Python Embebido en release/HexDraft/python
@@ -163,7 +185,7 @@ def build_python():
     try:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(python_dest)
-        print("[OK] Python Embebido extraído.")
+        print("[OK] Python Embebido extraido.")
     except Exception as e:
         print(f"[ERROR] No se pudo extraer Python Embebido: {e}")
         return
@@ -183,7 +205,6 @@ def build_python():
     # 4. Copiar todos los recursos requeridos para el lanzamiento
     copiar_recursos_release(release_dir)
     print(f"\n[OK] Carpeta de lanzamiento lista en: {release_dir}")
-
 
 def load_env(env_path):
     """Carga variables de entorno de forma manual desde un archivo .env local."""
@@ -210,7 +231,7 @@ def copiar_recursos_release(release_dir):
         print("Copiando node.exe portable...")
         shutil.copy2("node.exe", os.path.join(release_dir, "node.exe"))
     else:
-        print("[WARN] node.exe portable no encontrado en la raíz.")
+        print("[WARN] node.exe portable no encontrado en la raiz.")
 
     # 2. Copiar dist/
     if os.path.exists("dist"):
@@ -234,7 +255,7 @@ def copiar_recursos_release(release_dir):
     else:
         print("[WARN] Carpeta src/lib/data no encontrada.")
 
-    # 4. Copiar archivos de public/ (solo los iconos activos para producción)
+    # 4. Copiar archivos de public/
     print("Copiando recursos de public...")
     target_public = os.path.join(release_dir, "public")
     if os.path.exists(target_public):
@@ -249,7 +270,7 @@ def copiar_recursos_release(release_dir):
             shutil.copy2(src_path, dest_path)
             print(f"  Copiado: {archivo}")
         else:
-            print(f"  [WARN] No se encontró {src_path}")
+            print(f"  [WARN] No se encontro {src_path}")
 
     # 5. Copiar Detener-HexDraft.bat
     bat_path = os.path.join("launcher", "Detener-HexDraft.bat")
@@ -258,18 +279,16 @@ def copiar_recursos_release(release_dir):
         shutil.copy2(bat_path, os.path.join(release_dir, "Detener-HexDraft.bat"))
 
     # 6. Copiar y procesar configuraciones en release/HexDraft/data/
-    print("Preparando archivos de configuración (data/)...")
+    print("Preparando archivos de configuracion (data/)...")
     release_data_dir = os.path.join(release_dir, "data")
     os.makedirs(release_data_dir, exist_ok=True)
     
-    # Copiar config-user.json directamente
     user_config_src = os.path.join("launcher", "config-user.json")
     user_config_dest = os.path.join(release_data_dir, "config-user.json")
     if os.path.exists(user_config_src):
         shutil.copy2(user_config_src, user_config_dest)
         print("  Copiado config-user.json")
         
-    # Procesar config-admin.json para inyectar token de .env
     admin_config_src = os.path.join("launcher", "config-admin.json")
     admin_config_dest = os.path.join(release_data_dir, "config-admin.json")
     if os.path.exists(admin_config_src):
@@ -277,79 +296,28 @@ def copiar_recursos_release(release_dir):
             with open(admin_config_src, "r", encoding="utf-8") as f:
                 config_admin = json.load(f)
             
-            # Cargar token desde .env
             env_vars = load_env(".env")
             token = env_vars.get("GITHUB_LAUNCHER_TOKEN", "")
             
             if token:
                 config_admin["github_token"] = token
-                print("  [OK] Token GITHUB_LAUNCHER_TOKEN de .env inyectado en config-admin.json de release.")
+                print("  [OK] Token GITHUB_LAUNCHER_TOKEN inyectado en config-admin.json de release.")
             else:
-                print("  [WARN] No se encontró GITHUB_LAUNCHER_TOKEN en .env. Compilando con token vacío.")
+                print("  [WARN] No se encontro GITHUB_LAUNCHER_TOKEN en .env.")
                 
             with open(admin_config_dest, "w", encoding="utf-8") as f:
                 json.dump(config_admin, f, indent=2)
             print("  Escrito config-admin.json procesado en release")
         except Exception as e:
             print(f"  [ERROR] Al procesar config-admin.json: {e}")
-            # Fallback: copiar directamente
             shutil.copy2(admin_config_src, admin_config_dest)
-
-
-def obtener_version_actual():
-    """Intenta extraer la versión configurada actualmente en HexDraftSetup.iss."""
-    iss_path = os.path.join("launcher", "HexDraftSetup.iss")
-    if os.path.exists(iss_path):
-        try:
-            with open(iss_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip().startswith("AppVersion="):
-                        return line.split("=")[1].strip()
-        except Exception:
-            pass
-    return "2.1.0"
-
-
-def actualizar_archivo_iss(ruta_iss, nueva_version, es_admin=False):
-    """Actualiza la versión y el nombre del ejecutable de salida en un archivo .iss."""
-    if not os.path.exists(ruta_iss):
-        print(f"[ERROR] No se encuentra el archivo: {ruta_iss}")
-        return False
-    
-    print(f"Actualizando {ruta_iss} a la versión {nueva_version}...")
-    try:
-        with open(ruta_iss, "r", encoding="utf-8") as f:
-            contenido = f.read()
-
-        # Reemplazar directivas de versión
-        contenido = re.sub(r"^(AppVersion=).*$", f"\\g<1>{nueva_version}", contenido, flags=re.MULTILINE)
-        
-        # Reemplazar AppVerName
-        if es_admin:
-            contenido = re.sub(r"^(AppVerName=).*$", f"\\g<1>HexDraft {nueva_version} (Admin)", contenido, flags=re.MULTILINE)
-            contenido = re.sub(r"^(OutputBaseFilename=).*$", f"\\g<1>HexDraft-Setup-Admin-{nueva_version}", contenido, flags=re.MULTILINE)
-        else:
-            contenido = re.sub(r"^(AppVerName=).*$", f"\\g<1>HexDraft {nueva_version}", contenido, flags=re.MULTILINE)
-            contenido = re.sub(r"^(OutputBaseFilename=).*$", f"\\g<1>HexDraft-Setup-{nueva_version}", contenido, flags=re.MULTILINE)
-            
-        contenido = re.sub(r"^(VersionInfoVersion=).*$", f"\\g<1>{nueva_version}", contenido, flags=re.MULTILINE)
-
-        with open(ruta_iss, "w", encoding="utf-8", newline="\r\n") as f:
-            f.write(contenido)
-        return True
-    except Exception as e:
-        print(f"[ERROR] No se pudo escribir en {ruta_iss}: {e}")
-        return False
-
 
 def buscar_iscc():
     """Busca el ejecutable de Inno Setup (ISCC.exe)."""
-    # 1. Intentar en el PATH
     iscc_path = shutil.which("iscc") or shutil.which("ISCC.exe")
     if iscc_path:
         return iscc_path
         
-    # 2. Rutas comunes en Windows
     rutas_comunes = [
         r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
         r"C:\Program Files\Inno Setup 6\ISCC.exe",
@@ -361,13 +329,11 @@ def buscar_iscc():
             
     return None
 
-
 def ejecutar_iscc(ruta_iss):
     """Ejecuta el compilador de Inno Setup sobre el script indicado."""
     iscc = buscar_iscc()
     if not iscc:
-        print("[ERROR] No se encontró el compilador de Inno Setup (ISCC.exe).")
-        print("Por favor, asegúrate de tener Inno Setup instalado o agrega su ruta al PATH.")
+        print("[ERROR] No se encontro el compilador de Inno Setup (ISCC.exe).")
         return False
         
     print(f"\n>>> Compilando instalador para {os.path.basename(ruta_iss)}...")
@@ -376,123 +342,191 @@ def ejecutar_iscc(ruta_iss):
             result = subprocess.run([iscc, ruta_iss], check=True)
             return result.returncode == 0
         except subprocess.CalledProcessError as e:
-            print(f"[WARN] La compilación con Inno Setup falló (intento {intento}/3): {e}")
+            print(f"[WARN] La compilacion con Inno Setup fallo (intento {intento}/3): {e}")
             if intento < 3:
-                print("Reintentando en 3 segundos (posible bloqueo temporal por escaneo de antivirus Windows Defender)...")
+                print("Reintentando en 3 segundos...")
                 time.sleep(3)
             else:
-                print(f"[ERROR] La compilación falló tras 3 intentos.")
-                print("Sugerencia: Si persiste el Error 110 (EndUpdateResource), excluye la carpeta 'dist-installer' en tu antivirus o cierra instancias activas del instalador.")
+                print(f"[ERROR] La compilacion fallo tras 3 intentos.")
                 return False
         except Exception as e:
-            print(f"[ERROR] Ocurrió un error al ejecutar ISCC: {e}")
+            print(f"[ERROR] Ocurrio un error al ejecutar ISCC: {e}")
             return False
 
+def procesar_instaladores_inno(nueva_version, compilar_normal=True, compilar_admin=True):
+    """Genera los instaladores Inno Setup seleccionados."""
+    if not nueva_version or (not compilar_normal and not compilar_admin):
+        return []
 
-def obtener_configuracion_instaladores():
-    """Pregunta los datos de configuración al inicio del script."""
-    print("\n=============================================")
-    print("      CONFIGURACIÓN DE INSTALADORES INNO      ")
-    print("=============================================")
-    
-    version_sugerida = obtener_version_actual()
-    version_input = input(f"Ingresa la versión para los instaladores [{version_sugerida}]: ").strip()
-    nueva_version = version_input if version_input else version_sugerida
-    
-    print("\nSelecciona qué instalador deseas compilar al finalizar el build:")
-    print("1) Solo instalador Normal")
-    print("2) Solo instalador Administrador (Admin)")
-    print("3) Ambos instaladores (Normal y Admin)")
-    print("4) Ninguno / Omitir creación de instaladores")
-    
-    opcion = input("Elige una opción [1-4]: ").strip()
-    
-    if opcion not in ["1", "2", "3"]:
-        return None, None
-        
-    compilar_normal = opcion in ["1", "3"]
-    compilar_admin = opcion in ["2", "3"]
-    
-    # Comprobar la existencia del compilador de inmediato para avisar al usuario
     iscc_exe = buscar_iscc()
     if not iscc_exe:
-        print("\n[ADVERTENCIA] No se encontró 'ISCC.exe' en las rutas por defecto ni en el PATH.")
-        print("Los archivos .iss serán actualizados con la nueva versión, pero no se generará el ejecutable final.")
-        confirmar = input("¿Deseas continuar de todas formas y actualizar los archivos .iss? (s/n): ").strip().lower()
-        if confirmar != 's':
-            return None, None
-            
-    return nueva_version, (compilar_normal, compilar_admin)
-
-
-def procesar_instaladores_inno(nueva_version, opciones):
-    """Genera los instaladores según las opciones configuradas al inicio."""
-    if not nueva_version or not opciones:
-        return
-
-    compilar_normal, compilar_admin = opciones
-    iscc_exe = buscar_iscc()
+        print("\n[WARN] No se encontro 'ISCC.exe'. Los archivos .iss fueron actualizados pero no se compilo el .exe.")
+        return []
     
     print("\n=============================================")
     print("       GENERANDO INSTALADORES INNO SETUP     ")
     print("=============================================")
     
-    # 1. Actualizar e Iniciar compilación
+    archivos_generados = []
+    dist_dir = os.path.join(PROYECTO_DIR, "dist-installer")
+
     if compilar_normal:
         iss_normal = os.path.join("launcher", "HexDraftSetup.iss")
         if actualizar_archivo_iss(iss_normal, nueva_version, es_admin=False):
-            if iscc_exe:
-                ejecutar_iscc(iss_normal)
+            if ejecutar_iscc(iss_normal):
+                exe_name = f"HexDraft-Setup-{nueva_version}.exe"
+                archivos_generados.append((exe_name, os.path.join(dist_dir, exe_name)))
                 
     if compilar_admin:
         if compilar_normal:
             time.sleep(2)
         iss_admin = os.path.join("launcher", "HexDraftSetupAdmin.iss")
         if actualizar_archivo_iss(iss_admin, nueva_version, es_admin=True):
-            if iscc_exe:
-                ejecutar_iscc(iss_admin)
+            if ejecutar_iscc(iss_admin):
+                exe_name = f"HexDraft-Setup-Admin-{nueva_version}.exe"
+                archivos_generados.append((exe_name, os.path.join(dist_dir, exe_name)))
 
-def sincronizar_version_proyecto(version):
-    """Sincroniza la nueva versión en src/config/version.ts antes del build de Node."""
-    if not version:
-        return
-    print(f"\n>>> Sincronizando versión ({version}) en src/config/version.ts...")
-    
-    # Actualizar únicamente src/config/version.ts
-    version_ts = os.path.join(PROYECTO_DIR, "src", "config", "version.ts")
-    if os.path.exists(version_ts):
-        try:
-            with open(version_ts, "r", encoding="utf-8") as f:
-                content = f.read()
-            new_content = re.sub(
-                r"export const APP_VERSION = ['\"].*?['\"];",
-                f"export const APP_VERSION = '{version}';",
-                content
-            )
-            with open(version_ts, "w", encoding="utf-8", newline="\n") as f:
-                f.write(new_content)
-            print(f"  [OK] Actualizado src/config/version.ts -> '{version}'")
-        except Exception as e:
-            print(f"  [WARN] Error al actualizar src/config/version.ts: {e}")
+    return archivos_generados
 
+def main():
+    parser = argparse.ArgumentParser(description="Compilador integral y orquestador de release de HexDraft.")
+    parser.add_argument("--version", "-v", help="Nueva version de la aplicacion (ejemplo: 2.6.4)")
+    parser.add_argument("--installer", "-i", choices=["normal", "admin", "both", "none"], default="both", help="Tipo de instalador a generar (por defecto both)")
+    parser.add_argument("--publish", "-p", action="store_true", help="Publicar a GitHub Releases el instalador de usuario")
+    parser.add_argument("--clean-local", action="store_true", default=True, help="Limpiar instaladores antiguos en dist-installer")
+    parser.add_argument("--yes", "-y", action="store_true", help="Ejecutar flujo predeterminado sin pausas interactivas")
+    args = parser.parse_args()
 
-if __name__ == "__main__":
-    # 1. Asegurar dependencias de Python para que este script corra
+    # 1. Asegurar dependencias de Python
     verificar_dependencias_python()
     
-    # 2. Configurar la versión e instaladores a generar de forma interactiva AL INICIO
-    nueva_version, opciones_instaladores = obtener_configuracion_instaladores()
-    
-    if nueva_version:
-        sincronizar_version_proyecto(nueva_version)
+    version_sugerida = obtener_version_actual(PROYECTO_DIR)
 
-    # 3. Asegurar que el proyecto Node esté compilado (con el código de versión actualizado)
-    if preparar_entorno_node():
-        # 4. Compilar el script de Python a EXE
-        if os.path.exists(NOMBRE_SCRIPT):
-            build_python()
-            # 5. Generar los instaladores al final de forma automatizada (sin interrupción)
-            if opciones_instaladores:
-                procesar_instaladores_inno(nueva_version, opciones_instaladores)
+    # Si se especificaron flags completos por CLI o modo no interactivo
+    if args.version and (args.yes or args.publish):
+        nueva_version = args.version
+        compilar_normal = args.installer in ["normal", "both"]
+        compilar_admin = args.installer in ["admin", "both"]
+        limpiar_locales = args.clean_local
+        publicar_github = args.publish
+    else:
+        # Modo interactivo amigable
+        print("\n=======================================================")
+        print("      PIPELINE DE COMPILACION Y RELEASE - HEXDRAFT     ")
+        print("=======================================================\n")
+        
+        version_input = input(f"Ingresa la version para HexDraft [{version_sugerida}]: ").strip()
+        nueva_version = version_input if version_input else version_sugerida
+        
+        print("\nSelecciona el flujo que deseas ejecutar:")
+        print("1) Workflow Predeterminado: Compilar Ambos (User + Admin) -> Limpiar Locales -> Publicar User en GitHub y Limpiar Releases Antiguas [Por defecto / Enter]")
+        print("2) Solo compilar ambos instaladores y limpiar locales (Sin publicar a GitHub)")
+        print("3) Compilacion personalizada (Elegir instalador o saltar pasos)")
+        print("4) Salir")
+        
+        opcion = input("\nElige una opcion [1-4, por defecto 1]: ").strip()
+        if not opcion:
+            opcion = "1"
+            
+        if opcion == "1":
+            compilar_normal = True
+            compilar_admin = True
+            publicar_github = True
+            
+            # Pregunta de confirmacion para eliminar versiones locales antiguas
+            limp_input = input("\n¿Eliminar instaladores locales antiguos de dist-installer? (Y/n) [Y]: ").strip().lower()
+            limpiar_locales = (limp_input != "n")
+            
+        elif opcion == "2":
+            compilar_normal = True
+            compilar_admin = True
+            publicar_github = False
+            
+            limp_input = input("\n¿Eliminar instaladores locales antiguos de dist-installer? (Y/n) [Y]: ").strip().lower()
+            limpiar_locales = (limp_input != "n")
+            
+        elif opcion == "3":
+            print("\nTipo de instalador a compilar:")
+            print("1) Solo instalador Normal (User)")
+            print("2) Solo instalador Administrador (Admin)")
+            print("3) Ambos instaladores (Normal y Admin)")
+            print("4) Ninguno (Solo preparar build de Node y Python)")
+            
+            sel_inst = input("Elige opcion [1-4, por defecto 3]: ").strip()
+            if sel_inst == "1":
+                compilar_normal, compilar_admin = True, False
+            elif sel_inst == "2":
+                compilar_normal, compilar_admin = False, True
+            elif sel_inst == "4":
+                compilar_normal, compilar_admin = False, False
+            else:
+                compilar_normal, compilar_admin = True, True
+                
+            limp_input = input("\n¿Eliminar instaladores locales antiguos de dist-installer? (Y/n) [Y]: ").strip().lower()
+            limpiar_locales = (limp_input != "n")
+            
+            pub_input = input("¿Deseas publicar el instalador de usuario a GitHub Releases al finalizar? (s/n) [n]: ").strip().lower()
+            publicar_github = (pub_input == "s")
+            
         else:
-            print(f"[ERROR] No se encuentra {NOMBRE_SCRIPT}.")
+            print("\nOperacion cancelada.")
+            return
+
+    # 2. Sincronizar version en TODOS los archivos del proyecto antes de compilar
+    if nueva_version:
+        sincronizar_version_proyecto(nueva_version, PROYECTO_DIR)
+
+    # 3. Compilacion de Node/Astro y empaquetado de Python
+    if not preparar_entorno_node():
+        print("[ERROR] Fallo la compilacion de Node/Astro.")
+        sys.exit(1)
+        
+    if os.path.exists(NOMBRE_SCRIPT):
+        build_python()
+    else:
+        print(f"[ERROR] No se encuentra {NOMBRE_SCRIPT}.")
+        sys.exit(1)
+
+    # 4. Generar instaladores Inno Setup
+    archivos_generados = []
+    if compilar_normal or compilar_admin:
+        archivos_generados = procesar_instaladores_inno(nueva_version, compilar_normal, compilar_admin)
+
+    # 5. Limpieza de versiones locales antiguas en dist-installer
+    if limpiar_locales:
+        print(f"\n>>> Limpiando instaladores locales antiguos en dist-installer (conservando version {nueva_version})...")
+        eliminados = limpiar_instaladores_locales_antiguos(nueva_version, PROYECTO_DIR)
+        if eliminados:
+            print(f"[OK] Se eliminaron {len(eliminados)} instalador(es) local(es) antiguo(s).")
+        else:
+            print("[INFO] No se encontraron instaladores locales antiguos para eliminar.")
+
+    # 6. Publicacion automatica en GitHub Releases si fue seleccionada (solo instalador de usuario)
+    if publicar_github:
+        print("\n=======================================================")
+        print("      PUBLICACION AUTOMATICA A GITHUB RELEASES         ")
+        print("=======================================================\n")
+        
+        # Filtramos para subir unicamente el instalador de usuario
+        user_installer_path = os.path.join(PROYECTO_DIR, "dist-installer", f"HexDraft-Setup-{nueva_version}.exe")
+        archivos_a_subir = None
+        if os.path.exists(user_installer_path):
+            archivos_a_subir = [(f"HexDraft-Setup-{nueva_version}.exe", user_installer_path)]
+            
+        subir_instaladores_a_github(
+            version=nueva_version,
+            files_to_upload=archivos_a_subir,
+            solo_user=True,
+            limpiar_anteriores=True
+        )
+
+    print("\n=======================================================")
+    print(f"[OK] Pipeline completado con exito para HexDraft v{nueva_version}")
+    print("=======================================================\n")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n[CANCEL] Proceso cancelado por el usuario.")
+        sys.exit(0)

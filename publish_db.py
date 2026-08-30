@@ -66,30 +66,40 @@ if not os.path.exists(db_path):
     print(f"[ERROR] No se encontró el archivo de base de datos local en: {db_path}")
     sys.exit(1)
 
-# 3. Leer versión del parche actual (patch)
-patch = "-"
-meta_path = os.path.join(PROYECTO_DIR, "src", "lib", "data", "meta-cache.json")
-if os.path.exists(meta_path):
+# 3. Leer el parche real de los datos sincronizados
+def patch_key(value):
     try:
-        with open(meta_path, "r", encoding="utf-8") as f:
-            meta = json.load(f)
-            patch = meta.get("version", "-")
-            print(f"  [OK] Parche detectado en meta-cache.json: {patch}")
-    except Exception as e:
-        print(f"  [WARN] Error leyendo meta-cache.json: {e}")
+        return tuple(int(part) for part in str(value).split("."))
+    except (TypeError, ValueError):
+        return tuple()
 
-if patch == "-":
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT value FROM config WHERE key = 'last_sync_version'")
-        row = cursor.fetchone()
-        if row:
-            patch = row[0]
-            print(f"  [OK] Parche detectado en base de datos SQLite: {patch}")
-        conn.close()
-    except Exception as e:
-        print(f"  [WARN] No se pudo leer el parche desde la base de datos: {e}")
+def is_valid_patch(value):
+    return bool(value and str(value).strip() not in {"-", "0"} and patch_key(value))
+
+patch_candidates = []
+try:
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT value FROM config WHERE key IN ('last_sync_version', 'last_lane_sync_version')")
+    for (value,) in cursor.fetchall():
+        if is_valid_patch(value):
+            patch_candidates.append(str(value).strip())
+
+    cursor.execute("SELECT DISTINCT patch FROM builds WHERE patch IS NOT NULL AND patch <> ''")
+    for (value,) in cursor.fetchall():
+        if is_valid_patch(value):
+            patch_candidates.append(str(value).strip())
+    conn.close()
+except Exception as e:
+    print(f"  [WARN] No se pudo leer el parche desde la base de datos: {e}")
+
+if patch_candidates:
+    patch = max(patch_candidates, key=patch_key)
+    print(f"  [OK] Parche detectado en datos persistidos: {patch}")
+else:
+    patch = "-"
+    print("  [WARN] No se encontró un parche válido en SQLite; se publicará como '-'.")
 
 # 4. Obtener última release remota para calcular versión incremental
 print("Consultando última versión publicada en GitHub...")

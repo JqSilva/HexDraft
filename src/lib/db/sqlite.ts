@@ -267,6 +267,7 @@ setInitialConfig('lane_sync_period_days', '21');
 setInitialConfig('last_sync_timestamp', '-');
 setInitialConfig('last_lane_sync_timestamp', '-');
 setInitialConfig('last_sync_version', '-');
+setInitialConfig('last_lane_sync_version', '-');
 setInitialConfig('meta_sync_frequency', '2');
 setInitialConfig('last_meta_cache_sync', '-');
 setInitialConfig('auto_accept_enabled', 'false');
@@ -393,7 +394,9 @@ setTimeout(async () => {
     const isScript = process.argv[1]?.includes('migrate') || 
                      process.argv[1]?.includes('test-engine') || 
                      process.argv[1]?.includes('sync-champions-cdrag') ||
-                     process.argv[1]?.includes('update-champion-db');
+                     process.argv[1]?.includes('update-champion-db') ||
+                     process.argv[1]?.includes('run-sync-cli') ||
+                     process.argv[1]?.includes('run-lanes-sync-cli');
     if (isScript) return;
 
     const { startAutomaticMetaCacheScheduler } = await import('../services/sync.service.js');

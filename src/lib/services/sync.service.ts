@@ -283,6 +283,12 @@ export async function syncMetaAndBuilds(
   }
 
   if (pendingChamps.length === 0) {
+    try {
+      configRepo.setConfig('last_sync_timestamp', new Date().toISOString());
+      configRepo.setConfig('last_sync_version', version);
+    } catch (err) {
+      writeLog(`[WARN] No se pudo guardar el estado del sync de Meta: ${err}`);
+    }
     writeLog("[DONE] Todos los campeones estan al dia. Sincronizacion finalizada.");
     onProgress?.(0, 0, 'done');
     return "Sincronización al día";

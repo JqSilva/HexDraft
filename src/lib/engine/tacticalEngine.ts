@@ -292,3 +292,60 @@ export function getTacticalDirectives(
         }
     };
 }
+
+/**
+ * Calcula dinámicamente el orden de maxeo de habilidades (Q, W, E) analizando
+ * la secuencia de niveles 1 a 15 o los metadatos de prioridades.
+ * 
+ * @param skillsData - Array de habilidades por nivel (ej: ['Q','W','E','Q','Q','R',...]) o un objeto con prioridades.
+ * @returns String con el orden de maxeo formateado (ej: 'Q > E > W').
+ */
+export function calculateSkillMaxOrder(skillsData: any): string {
+    if (!skillsData) return 'Q > W > E';
+
+    // 1. Caso: Array de niveles (ej: scraper de OP.GG con 15 niveles)
+    if (Array.isArray(skillsData) && skillsData.length >= 3) {
+        const counts: Record<string, number> = { Q: 0, W: 0, E: 0 };
+        const maxReachedOrder: string[] = [];
+
+        for (let i = 0; i < skillsData.length; i++) {
+            const rawSkill = String(skillsData[i]).toUpperCase().trim();
+            if (rawSkill === 'Q' || rawSkill === 'W' || rawSkill === 'E') {
+                counts[rawSkill] = (counts[rawSkill] || 0) + 1;
+                // Al alcanzar el 5to punto (máximo de la habilidad básica)
+                if (counts[rawSkill] === 5 && !maxReachedOrder.includes(rawSkill)) {
+                    maxReachedOrder.push(rawSkill);
+                }
+            }
+        }
+
+        // Habilidades restantes que no alcanzaron los 5 puntos ordenadas por cantidad de puntos acumulados
+        const remaining = ['Q', 'W', 'E']
+            .filter(k => !maxReachedOrder.includes(k))
+            .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+
+        const finalOrder = [...maxReachedOrder, ...remaining];
+        return finalOrder.join(' > ');
+    }
+
+    // 2. Caso: Objeto con skillLevelUp1, skillLevelUp2, skillLevelUp3
+    if (typeof skillsData === 'object') {
+        const s = skillsData.skills || skillsData;
+        if (s.skillLevelUp1 !== undefined || s.skillLevelUp2 !== undefined || s.skillLevelUp3 !== undefined) {
+            const order = [
+                { key: 'Q', pos: typeof s.skillLevelUp1 === 'number' ? s.skillLevelUp1 : 1 },
+                { key: 'W', pos: typeof s.skillLevelUp2 === 'number' ? s.skillLevelUp2 : 2 },
+                { key: 'E', pos: typeof s.skillLevelUp3 === 'number' ? s.skillLevelUp3 : 3 }
+            ].sort((a, b) => a.pos - b.pos);
+            return order.map(x => x.key).join(' > ');
+        }
+    }
+
+    // 3. Caso: String preexistente
+    if (typeof skillsData === 'string' && skillsData.includes('>')) {
+        return skillsData.trim();
+    }
+
+    return 'Q > W > E';
+}
+

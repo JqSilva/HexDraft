@@ -1,7 +1,7 @@
 {
   "name": "hexdraft",
   "type": "module",
-  "version": "2.3.2",
+  "version": "3.0.3",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -12,11 +12,15 @@
     "preview": "node --experimental-sqlite node_modules/astro/bin/astro.mjs preview",
     "astro": "node --experimental-sqlite node_modules/astro/bin/astro.mjs",
     "sim": "node scripts/simulate-draft.js",
+    "sync:lanes:cli": "tsx scripts/run-lanes-sync-cli.ts",
     "sync:cli": "tsx scripts/run-sync-cli.ts",
     "sandbox": "vite --config sandbox/vite.config.ts",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "pre-release": "eslint src && tsc --noEmit && npx react-doctor@latest ."
+    "pre-release": "eslint src && tsc --noEmit && npx react-doctor@latest .",
+    "build:installer": "python launcher/compilar-hexdraft.py",
+    "publish:installer": "python launcher/publish_installer.py",
+    "release": "python launcher/compilar-hexdraft.py --publish"
   },
   "dependencies": {
     "@astrojs/node": "^10.1.1",

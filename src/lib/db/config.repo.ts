@@ -14,6 +14,40 @@ if (isDev) {
 }
 
 let memoryCache: Record<string, string> | null = null;
+const SYNC_METADATA_KEYS = [
+  'last_sync_timestamp',
+  'last_lane_sync_timestamp',
+  'last_sync_version',
+  'last_lane_sync_version',
+  'last_meta_cache_sync'
+] as const;
+
+function readSyncMetadataFromSqlite(): Record<string, string> {
+  if (!db || typeof db.prepare !== 'function') return {};
+
+  try {
+    const placeholders = SYNC_METADATA_KEYS.map(() => '?').join(', ');
+    const rows = db.prepare(
+      `SELECT key, value FROM config WHERE key IN (${placeholders})`
+    ).all(...SYNC_METADATA_KEYS) as { key: string; value: string }[];
+
+    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  } catch (e) {
+    console.warn('[Config Repo] No se pudo leer el estado de sincronización desde SQLite:', e);
+    return {};
+  }
+}
+
+function persistSyncMetadataToSqlite(key: string, value: string): void {
+  if (!SYNC_METADATA_KEYS.includes(key as (typeof SYNC_METADATA_KEYS)[number])) return;
+  if (!db || typeof db.prepare !== 'function') return;
+
+  try {
+    db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run(key, value);
+  } catch (e) {
+    console.warn(`[Config Repo] No se pudo persistir ${key} en SQLite:`, e);
+  }
+}
 
 function loadConfigFile(): Record<string, string> {
   if (memoryCache) return memoryCache;
@@ -30,6 +64,18 @@ function loadConfigFile(): Record<string, string> {
       if (parsed.lolPath && !memoryCache.lol_path) {
         memoryCache.lol_path = parsed.lolPath;
       }
+
+      // Recuperar las claves de sincronización que faltan en configuraciones antiguas.
+      const sqliteMetadata = readSyncMetadataFromSqlite();
+      let metadataWasRecovered = false;
+      for (const key of SYNC_METADATA_KEYS) {
+        if (memoryCache[key] === undefined && sqliteMetadata[key]) {
+          memoryCache[key] = sqliteMetadata[key];
+          metadataWasRecovered = true;
+        }
+      }
+      if (metadataWasRecovered) saveConfigFile(memoryCache);
+
       return memoryCache;
     }
   } catch (e) {
@@ -101,6 +147,7 @@ export const configRepo = {
     const cache = loadConfigFile();
     cache[key] = value;
     saveConfigFile(cache);
+    persistSyncMetadataToSqlite(key, value);
   },
 
   // Obtener todas las configuraciones del usuario
@@ -114,6 +161,7 @@ export const configRepo = {
     const cache = loadConfigFile();
     for (const [key, value] of Object.entries(configs)) {
       cache[key] = value;
+      persistSyncMetadataToSqlite(key, value);
     }
     saveConfigFile(cache);
     console.log('[Config Repo] Configuraciones locales guardadas exitosamente en hexdraft-config.json.');

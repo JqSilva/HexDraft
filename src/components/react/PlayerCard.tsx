@@ -164,10 +164,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const soloLosses = p.ranked?.losses || 0;
   const soloWinrate = p.ranked?.winrate || 0;
 
-  const normSearchName = displayChampName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalize = (name: string) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const rawChampName = displayChampName || resolvedChampName || p.championName || '';
   const champStat = p.topChampions?.find(c => {
-    const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return cNorm === normSearchName || (normSearchName === 'wukong' && cNorm === 'monkeyking') || (normSearchName === 'monkeyking' && cNorm === 'wukong');
+    const cNorm = normalize(c.name);
+    const targetNorm = normalize(rawChampName);
+    return cNorm === targetNorm || (targetNorm === 'wukong' && cNorm === 'monkeyking') || (targetNorm === 'monkeyking' && cNorm === 'wukong');
   });
   const champGames = champStat ? (champStat.wins + champStat.losses) : 0;
   const champWr = champStat ? champStat.winrate : null;
@@ -274,9 +276,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                 {champGames} games - <span className="text-purple-400 font-bold">{champWr}% WR</span>
               </>
             ) : (
-              <>
-                0 games - <span className="text-purple-400 font-bold">0% WR</span>
-              </>
+              <span className="text-slate-400 font-normal">Sin partidas SoloQ</span>
             )}
           </div>
         </div>
@@ -294,7 +294,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                 title={tagItem.tooltip}
                 className={`
                   px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-tight
-                  border shadow-sm cursor-help select-none backdrop-blur-xs
+                  border shadow-sm cursor-help select-none
                   ${tagItem.style || 'border-white/15 bg-black/60 text-slate-200'}
                 `}
               >

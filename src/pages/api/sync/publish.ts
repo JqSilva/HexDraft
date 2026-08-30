@@ -1,8 +1,7 @@
 import type { APIRoute } from 'astro';
 import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
-import { dbPath } from '../../../lib/db/sqlite.js';
+import { db, dbPath } from '../../../lib/db/sqlite.js';
 import { appConfig } from '../../../lib/services/config.service.js';
 import { configRepo } from '../../../lib/db/config.repo.js';
 
@@ -30,26 +29,38 @@ export const POST: APIRoute = async () => {
     const checksum = hash.digest('hex');
     const size = fileBuffer.length;
 
-    // 2. Leer versión del parche actual (patch)
-    let patch = '-';
+    // 2. Leer el parche real de los datos sincronizados
+    const patchKey = (value: string): number[] => value.split('.').map(Number);
+    const validPatches: string[] = [];
     try {
-      const metaPath = path.resolve(process.cwd(), 'src/lib/data/meta-cache.json');
-      if (fs.existsSync(metaPath)) {
-        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-        patch = meta.version || '-';
+      const configs = configRepo.getAllConfigs();
+      for (const value of [configs.last_sync_version, configs.last_lane_sync_version]) {
+        if (value && value !== '-' && value !== '0' && patchKey(value).every(Number.isFinite)) {
+          validPatches.push(value);
+        }
       }
-    } catch {
-      // Ignorado, se mantendrá el valor por defecto
+
+      const rows = db.prepare(
+        "SELECT DISTINCT patch FROM builds WHERE patch IS NOT NULL AND patch <> ''"
+      ).all() as Array<{ patch: string }>;
+      for (const row of rows) {
+        if (row.patch && row.patch !== '-' && patchKey(row.patch).every(Number.isFinite)) {
+          validPatches.push(row.patch);
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo leer el parche desde los datos persistidos:', error);
     }
 
-    if (patch === '-') {
-      try {
-        const configs = configRepo.getAllConfigs();
-        patch = configs.last_sync_version || '-';
-      } catch {
-        // Ignorado si falla al recuperar la versión guardada en configs
+    const patch = validPatches.sort((a, b) => {
+      const aParts = patchKey(a);
+      const bParts = patchKey(b);
+      for (let index = 0; index < Math.max(aParts.length, bParts.length); index++) {
+        const difference = (aParts[index] || 0) - (bParts[index] || 0);
+        if (difference !== 0) return difference;
       }
-    }
+      return 0;
+    }).at(-1) || '-';
 
     // 3. Consultar la última release en GitHub para saber la última versión numérica
     const gitHeaders: Record<string, string> = {

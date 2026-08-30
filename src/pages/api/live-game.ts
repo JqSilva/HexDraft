@@ -173,10 +173,16 @@ const SPELL_NAME_TO_ID: Record<string, number> = {
 function parseLiveClientSpellId(spellData: any): number | undefined {
   if (!spellData) return undefined;
   if (typeof spellData === 'number') return spellData;
+  if (typeof spellData.id === 'number') return spellData.id;
+  if (typeof spellData.id === 'string' && !isNaN(Number(spellData.id))) return Number(spellData.id);
+  if (typeof spellData.spellId === 'number') return spellData.spellId;
+  if (typeof spellData.summonerSpellId === 'number') return spellData.summonerSpellId;
+
   const raw = (
     spellData.rawDisplayName ||
     spellData.displayName ||
     spellData.rawDescription ||
+    spellData.name ||
     (typeof spellData === 'string' ? spellData : '')
   ).toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -221,7 +227,10 @@ export const GET: APIRoute = async ({ request }) => {
           spell1Id,
           spell2Id,
           keystoneId,
-          secondaryStyleId
+          secondaryStyleId,
+          summonerSpells: p.summonerSpells,
+          runes: p.runes,
+          rawPlayer: p
         };
       });
     }
@@ -264,11 +273,11 @@ export const GET: APIRoute = async ({ request }) => {
           ...p,
           teamId,
           championId: p.championId || getIdFromName(p.championName || p.championInternalName),
-          spell1Id: p.spell1Id || p.spellOneId || p.summoner1Id,
-          spell2Id: p.spell2Id || p.spellTwoId || p.summoner2Id,
+          spell1Id: p.spell1Id || p.spellOneId || p.summoner1Id || (p.spells && p.spells[0]) || parseLiveClientSpellId(p.summonerSpells?.summonerSpellOne),
+          spell2Id: p.spell2Id || p.spellTwoId || p.summoner2Id || (p.spells && p.spells[1]) || parseLiveClientSpellId(p.summonerSpells?.summonerSpellTwo),
           selectedSkinId: p.selectedSkinId || p.skinId,
-          keystoneId: p.perk0 || p.perks?.perkIds?.[0] || p.keystoneId,
-          secondaryStyleId: p.perkSubStyle || p.perks?.perkSubStyle || p.secondaryStyleId
+          keystoneId: p.perks?.perk0 || p.perk0 || p.perks?.perkIds?.[0] || p.keystoneId || p.runes?.keystone?.id,
+          secondaryStyleId: p.perks?.perkSubStyle || p.perkSubStyle || p.secondaryStyleId || p.runes?.secondaryRuneTree?.id
         });
 
         if (teamOne.length > 0 || teamTwo.length > 0) {
@@ -493,10 +502,36 @@ export const GET: APIRoute = async ({ request }) => {
     const skinId = p.selectedSkinId || p.skinId || p.skinID || 0;
     const skinNum = await resolveSkinNumber(championId, skinId);
 
-    const spell1Id = p.spell1Id || (p.spells && p.spells[0]) || (p.summoner1Id) || undefined;
-    const spell2Id = p.spell2Id || (p.spells && p.spells[1]) || (p.summoner2Id) || undefined;
-    const keystoneId = p.keystoneId || (p.runes?.keystone?.id) || (p.perks?.perkIds?.[0]) || p.perk0 || undefined;
-    const secondaryStyleId = p.secondaryStyleId || (p.runes?.secondaryRuneTree?.id) || (p.perks?.perkSubStyle) || p.perkSubStyle || undefined;
+    const spell1Id = p.spell1Id ||
+      parseLiveClientSpellId(p.summonerSpells?.summonerSpellOne) ||
+      parseLiveClientSpellId(p.rawPlayer?.summonerSpells?.summonerSpellOne) ||
+      p.spellOneId ||
+      p.summoner1Id ||
+      (p.spells && p.spells[0]) ||
+      undefined;
+
+    const spell2Id = p.spell2Id ||
+      parseLiveClientSpellId(p.summonerSpells?.summonerSpellTwo) ||
+      parseLiveClientSpellId(p.rawPlayer?.summonerSpells?.summonerSpellTwo) ||
+      p.spellTwoId ||
+      p.summoner2Id ||
+      (p.spells && p.spells[1]) ||
+      undefined;
+
+    const keystoneId = p.keystoneId ||
+      p.runes?.keystone?.id ||
+      p.rawPlayer?.runes?.keystone?.id ||
+      p.perks?.perk0 ||
+      p.perk0 ||
+      p.perks?.perkIds?.[0] ||
+      undefined;
+
+    const secondaryStyleId = p.secondaryStyleId ||
+      p.runes?.secondaryRuneTree?.id ||
+      p.rawPlayer?.runes?.secondaryRuneTree?.id ||
+      p.perks?.perkSubStyle ||
+      p.perkSubStyle ||
+      undefined;
 
     console.log(`[LiveGame API] Invocador: ${rawName || 'Anónimo'}${isSelf ? ' (TÚ)' : ''} | Campeón: ${championName} (ID: ${championId}) | Rol: ${role} | SkinId: ${skinId} -> #${skinNum} | Spells: [${spell1Id}, ${spell2Id}] | Keystone: ${keystoneId} | SubStyle: ${secondaryStyleId}`);
 

@@ -3,6 +3,7 @@ import { resolveCurrentPatchVersion } from '../src/lib/domain/patch-version-reso
 import { syncMetaAndBuilds } from '../src/lib/services/sync.service.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../src/lib/services/docker.service.js';
 import { initializeEngineData } from '../src/lib/engine/core/dataProvider.js';
+import { checkpointDb, closeDb } from '../src/lib/db/sqlite.js';
 
 async function main() {
   console.log("=== INICIANDO SYNC CLI (STANDALONE) ===");
@@ -62,6 +63,8 @@ async function main() {
     } catch (stopErr: any) {
       console.warn(`[CLI WARN] Error al detener FlareSolverr: ${stopErr.message || stopErr}`);
     }
+    checkpointDb();
+    closeDb();
   }
 
   if (process.exitCode === 1) {

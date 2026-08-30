@@ -8,6 +8,11 @@ import { getNameFromId } from '../engine/core/constants.js';
 const CACHE_FILE_PATH = path.resolve(process.cwd(), 'src/lib/data/opgg-cache.json');
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora de caché por jugador
 
+export const normalizeChampionName = (name: string): string => {
+  if (!name) return '';
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 export interface OpggPlayerProfile {
   puuid: string;
   riotId: string;
@@ -394,8 +399,13 @@ export async function scrapeOpggProfile(
 
     // Nombre del Campeón actual fijado en la partida
     const currentChampName = currentChampionId > 0 ? getNameFromId(currentChampionId) : null;
+    const normalize = (name: string) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const isMain = currentChampName
-      ? topChampions.some(c => c.name.toLowerCase() === currentChampName.toLowerCase())
+      ? topChampions.some(c => {
+          const cNorm = normalize(c.name);
+          const currNorm = normalize(currentChampName);
+          return cNorm === currNorm || (currNorm === 'wukong' && cNorm === 'monkeyking') || (currNorm === 'monkeyking' && cNorm === 'wukong');
+        })
       : false;
 
     // CONSTRUIR LISTA DE TAGS SINTETIZADA

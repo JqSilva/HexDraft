@@ -162,14 +162,6 @@ export const ItemBuild = memo(({
 }: ItemBuildProps) => {
     const scoredClusters: ScoredCluster[] = currentBuild?.scoredClusters || [];
 
-    if (inDraft && !everyonePicked) {
-        return (
-            <div className="h-full w-full flex items-center justify-center text-slate-400 font-bold uppercase tracking-wider text-[11px] text-center select-none">
-                esperando que todos confirmen seleccion.
-            </div>
-        );
-    }
-
     if (!currentBuild) return null;
 
     const clampedIndex = Math.min(activePlaystyleIndex, scoredClusters.length - 1);
@@ -302,18 +294,18 @@ export const ItemBuild = memo(({
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
                                 {build?.items?.starter?.map((item: any, idx: number) => (
-                                    <div key={`starter-${idx}`} className="relative group w-[40px] h-[40px]" title={item.name}>
+                                    <div key={`starter-${idx}`} className="relative group w-[40px] h-[40px]" title={item?.name || 'Objeto inicial'}>
                                         <img
-                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                                            src={item?.icon || getDDragonUrl('item', item?.id)}
                                             className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                            alt="starter item"
+                                            alt={item?.name || 'starter item'}
                                         />
                                     </div>
                                 ))}
                                 {build?.items?.boots && (
                                     <div className="relative w-[40px] h-[40px]" title={build.items.boots.name}>
                                         <img
-                                            src={build.items.boots.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${build.items.boots.id}.png`}
+                                            src={build.items.boots.icon || getDDragonUrl('item', build.items.boots.id)}
                                             className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
                                             alt="boots"
                                         />
@@ -330,19 +322,37 @@ export const ItemBuild = memo(({
                             <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
                                 Core Build
                             </span>
-                            <div className="flex flex-wrap justify-center items-center gap-2.5 max-w-[190px] mx-auto w-full">
-                                {build?.items?.core?.map((item: any, idx: number) => (
-                                    <div key={`core-${idx}`} className="relative w-[40px] h-[40px] group" title={item.name}>
-                                        <img
-                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
-                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                            alt="core item"
-                                        />
-                                        <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
-                                            0{idx + 1}
+                            <div className="flex flex-wrap justify-center items-center gap-2.5 max-w-[210px] mx-auto w-full">
+                                {build?.items?.core?.map((item: any, idx: number) => {
+                                    const suppEvol = currentBuild?.supportEvolution || build?.supportEvolution;
+                                    const isSuppSlot = idx === 0 && (Boolean(suppEvol) || [3869, 3870, 3871, 3876, 3877].includes(item?.id));
+                                    const tooltipText = isSuppSlot && suppEvol?.reason
+                                        ? `${item?.name} [MEJORA SOPORTE]\n${suppEvol.reason}`
+                                        : item?.name;
+
+                                    return (
+                                        <div key={`core-${idx}`} className="relative w-[40px] h-[40px] group" title={tooltipText}>
+                                            <img
+                                                src={item?.icon || getDDragonUrl('item', item?.id)}
+                                                className={`w-full h-full rounded-sm transition-colors cursor-default ${
+                                                    isSuppSlot
+                                                        ? 'border-2 border-amber-400/90'
+                                                        : 'border border-border-warm/60 hover:border-purple-accent'
+                                                }`}
+                                                alt={item?.name || 'core item'}
+                                            />
+                                            <div
+                                                className={`absolute -top-1.5 -right-1.5 border text-[7.5px] font-black px-1 py-0.2 rounded-sm select-none tracking-tight ${
+                                                    isSuppSlot
+                                                        ? 'bg-amber-950/90 border-amber-400/80 text-amber-300'
+                                                        : 'bg-input-warm border-border-warm/60 text-slate-400'
+                                                }`}
+                                            >
+                                                {isSuppSlot ? 'SUPP' : `0${idx + 1}`}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -353,19 +363,55 @@ export const ItemBuild = memo(({
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
                                 {finalSituational.slice(0, 10).map((item: any, idx: number) => (
-                                    <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={item.name}>
+                                    <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={item?.name}>
                                         <img
-                                            src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
+                                            src={item?.icon || getDDragonUrl('item', item?.id)}
                                             className="w-full h-full border border-border-warm/40 rounded-sm hover:border-purple-accent transition-colors cursor-default"
-                                            alt={item.name}
+                                            alt={item?.name || 'situational item'}
                                         />
                                     </div>
                                 ))}
                             </div>
                         </div>
 
+                        {/* Bloque Swaps Situacionales Recomendados (si existen) */}
+                        {coreItemSwaps && coreItemSwaps.length > 0 && (
+                            <div className="col-span-1 md:col-span-2 border-t border-border-warm/30 pt-2 flex flex-col gap-1.5">
+                                <span className="text-[9px] text-amber-400/90 font-extrabold uppercase tracking-widest block text-center select-none">
+                                    Swaps Tácticos Adaptativos
+                                </span>
+                                <div className="flex flex-col gap-1 max-w-md mx-auto w-full">
+                                    {coreItemSwaps.slice(0, 2).map((swap: any, sIdx: number) => (
+                                        <div
+                                            key={`swap-${sIdx}`}
+                                            className="flex items-center justify-between gap-2 p-1.5 bg-input-warm/50 border border-border-warm/40 rounded-sm text-[10px]"
+                                        >
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                <img
+                                                    src={swap.replaceItem?.icon || getDDragonUrl('item', swap.replaceItem?.id)}
+                                                    className="w-[22px] h-[22px] rounded-sm border border-red-500/50 opacity-80"
+                                                    title={`Reemplazar: ${swap.replaceItem?.name}`}
+                                                    alt="replace item"
+                                                />
+                                                <span className="text-slate-500 font-bold">→</span>
+                                                <img
+                                                    src={swap.withItem?.icon || getDDragonUrl('item', swap.withItem?.id)}
+                                                    className="w-[22px] h-[22px] rounded-sm border border-emerald-500/80"
+                                                    title={`Equipar: ${swap.withItem?.name}`}
+                                                    alt="with item"
+                                                />
+                                            </div>
+                                            <span className="text-slate-300 text-[9.5px] truncate font-medium flex-1 pl-1">
+                                                {swap.reason}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Botón Re-Importar como fila del Grid (col-span-2) */}
-                        <div className="col-span-1 md:col-span-2 flex justify-center items-center w-full mt-3 pt-3  shrink-0">
+                        <div className="col-span-1 md:col-span-2 flex justify-center items-center w-full mt-2 pt-2 shrink-0">
                             <button
                                 onClick={() => onReImport({
                                     name: activeCluster?.title

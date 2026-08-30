@@ -330,9 +330,13 @@ export function generatePlayerTags(ctx: PlayerTagContext): PlayerTagItem[] {
   // 3. MAESTRÍA Y DOMINIO CON EL CAMPEÓN ACTUAL
   const champName = ctx.championName || 'Campeón';
   const matches = ctx.recentMatches || [];
-  const champMatches = matches.filter(m => m.championId === ctx.championId || (m.championName && m.championName.toLowerCase() === champName.toLowerCase()));
-
-  const mainEntry = ctx.topChampions?.find(c => c.name.toLowerCase() === champName.toLowerCase());
+  const normalize = (name: string) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetNorm = normalize(champName);
+  const champMatches = matches.filter(m => m.championId === ctx.championId || (m.championName && normalize(m.championName) === targetNorm));
+  const mainEntry = ctx.topChampions?.find(c => {
+    const cNorm = normalize(c.name);
+    return cNorm === targetNorm || (targetNorm === 'wukong' && cNorm === 'monkeyking') || (targetNorm === 'monkeyking' && cNorm === 'wukong');
+  });
 
   if (champMatches.length >= 10 && champMatches.length / Math.max(1, matches.length) >= 0.6) {
     tags.push({ id: 'otp', ...TAG_CONFIG.OTP(champName) });

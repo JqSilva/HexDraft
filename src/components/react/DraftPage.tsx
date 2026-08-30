@@ -675,13 +675,14 @@ export const DraftPage = () => {
                             if (currentSig !== prevSig) {
                                 setCurrentBuild(buildData);
                                 localStorage.setItem('last_build_data:v1', JSON.stringify(buildData));
+                                sessionStorage.setItem('hexdraft_active_build', JSON.stringify(buildData));
                             }
                         }
 
                         // 2. Cargar razones de recomendación
                         const pickedRec = picks.find(r => r.id === myId);
                         if (pickedRec && !selectedRecommendation) {
-                            console.log("✅ Razones capturadas con éxito");
+                            console.log("Razones capturadas con exito");
                             setSelectedRecommendation(pickedRec);
                             localStorage.setItem('last_pick_analysis:v1', JSON.stringify(pickedRec));
                         }
@@ -693,9 +694,9 @@ export const DraftPage = () => {
                                 .then(res => res.ok ? res.json() : null)
                                 .then(tData => {
                                     if (tData) setTacticalData(tData);
-                                    console.log("🔥 Data táctica cargada:", tData);
+                                    console.log("Data tactica cargada:", tData);
                                 })
-                                .catch(err => console.error("Error táctico:", err));
+                                .catch(err => console.error("Error tactico:", err));
                         }
 
                         // 4. Exportación automática al LCU de LoL al bloquear o cambiar de playstyle
@@ -727,7 +728,7 @@ export const DraftPage = () => {
                             if (everyonePicked && !lastEveryonePickedRef.current) {
                                 lastEveryonePickedRef.current = true;
                                 triggerImport = true;
-                                console.log(`[FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importación definitiva.`);
+                                console.log(`[FINAL] Todos los jugadores han bloqueado sus campeones (Draft 100% completo). Ejecutando importacion definitiva.`);
                             }
 
                             if (triggerImport) {
@@ -780,16 +781,18 @@ export const DraftPage = () => {
                     const storageKey = 'hexdraft_telegram_notified_start';
                     if (sessionStorage.getItem(storageKey) !== 'true') {
                         sessionStorage.setItem(storageKey, 'true');
-                        notifyTelegram('La partida ha comenzado. ¡Buena suerte en la Grieta! 🎮');
+                        notifyTelegram('La partida ha comenzado. ¡Buena suerte en la Grieta!');
                     }
                 }
 
                 if (!isRestoredRef.current) {
                     isRestoredRef.current = true;
-                    console.log("🔌 [InProgress] Iniciando restauración única de estado de juego...");
+                    console.log("[InProgress] Iniciando restauracion de estado de juego...");
 
-                    // 1. Obtener campeón real en partida desde /api/live-game
+                    // 1. Obtener campeón y jugadores reales en partida desde /api/live-game
                     let liveChampId = 0;
+                    let liveMyTeamIds: number[] = [];
+                    let liveTheirTeamIds: number[] = [];
                     try {
                         const liveRes = await fetch('/api/live-game');
                         if (liveRes.ok) {
@@ -799,56 +802,95 @@ export const DraftPage = () => {
                             if (selfPlayer && selfPlayer.championId > 0) {
                                 liveChampId = selfPlayer.championId;
                             }
+                            if (liveData.myTeam) {
+                                liveMyTeamIds = liveData.myTeam.map((p: any) => p.championId).filter((id: number) => id > 0 && id !== liveChampId);
+                            }
+                            if (liveData.theirTeam) {
+                                liveTheirTeamIds = liveData.theirTeam.map((p: any) => p.championId).filter((id: number) => id > 0);
+                            }
                         }
                     } catch (_e) {}
 
-                    // 2. Restaurar o calcular build
-                    let activeBuild = currentBuild;
-                    if (liveChampId > 0 && (!activeBuild || activeBuild.id !== liveChampId)) {
-                        const newBuild = getSingleChampionBuild(liveChampId, [], [], myRole || 'top');
-                        if (newBuild) {
-                            activeBuild = newBuild;
-                            setCurrentBuild(newBuild);
-                            localStorage.setItem('last_build_data:v1', JSON.stringify(newBuild));
-                        }
-                    } else if (!activeBuild) {
-                        try {
-                            const savedBuild = localStorage.getItem('last_build_data:v1');
-                            if (savedBuild) {
-                                activeBuild = JSON.parse(savedBuild);
-                                setCurrentBuild(activeBuild);
-                                console.log("🔄 Build restaurada desde localStorage para InProgress");
-                            }
-                        } catch (e) {
-                            console.error("Error restaurando build:", e);
-                        }
-                    }
-
-                    // 3. Restaurar equipos si están vacíos
+                    // 2. Restaurar equipos y rol de localStorage si están vacíos
+                    let restoredRole = myRole || 'top';
+                    let restoredMyTeam = myTeam;
+                    let restoredTheirTeam = theirTeam;
                     const teamsEmpty = myTeam.every(p => p.championId === 0 && p.championPickIntent === 0);
                     if (teamsEmpty) {
                         try {
                             const savedMyTeam = localStorage.getItem('last_my_team:v1');
                             const savedTheirTeam = localStorage.getItem('last_their_team:v1');
                             const savedRole = localStorage.getItem('last_my_role:v1');
-                            if (savedMyTeam) setMyTeam(JSON.parse(savedMyTeam));
-                            if (savedTheirTeam) setTheirTeam(JSON.parse(savedTheirTeam));
-                            if (savedRole) setMyRole(savedRole);
-                            console.log("🔄 Equipos restaurados desde localStorage");
+                            if (savedMyTeam) {
+                                restoredMyTeam = JSON.parse(savedMyTeam);
+                                setMyTeam(restoredMyTeam);
+                            }
+                            if (savedTheirTeam) {
+                                restoredTheirTeam = JSON.parse(savedTheirTeam);
+                                setTheirTeam(restoredTheirTeam);
+                            }
+                            if (savedRole) {
+                                restoredRole = savedRole;
+                                setMyRole(savedRole);
+                            }
+                            console.log("Equipos restaurados desde localStorage");
                         } catch (e) {
                             console.error("Error restaurando equipos:", e);
                         }
                     }
 
+                    // 3. Restaurar o calcular build completa y unificada
+                    let activeBuild = currentBuild;
+                    if (!activeBuild) {
+                        try {
+                            const savedBuild = sessionStorage.getItem('hexdraft_active_build') || localStorage.getItem('last_build_data:v1');
+                            if (savedBuild) {
+                                activeBuild = JSON.parse(savedBuild);
+                            }
+                        } catch (e) {
+                            console.error("Error restaurando build:", e);
+                        }
+                    }
+
+                    const liveChampName = liveChampId > 0 ? getNameFromId(liveChampId) : null;
+                    const isSameChampion = activeBuild && (
+                        activeBuild.id === liveChampId ||
+                        (liveChampName && activeBuild.name?.toLowerCase() === liveChampName.toLowerCase()) ||
+                        (!liveChampId && activeBuild.name)
+                    );
+
+                    if (isSameChampion && activeBuild) {
+                        // Conservar build calculada con todos sus clusters intactos
+                        setCurrentBuild(activeBuild);
+                        console.log("Build previa conservada para InProgress:", activeBuild.name);
+                    } else if (liveChampId > 0) {
+                        // Campeón en vivo sin build previa o diferente: calcular con contexto completo
+                        const cleanMyTeam = liveMyTeamIds.length > 0
+                            ? liveMyTeamIds
+                            : restoredMyTeam.map(p => p.championId).filter(id => id > 0 && id !== liveChampId);
+                        const cleanTheirTeam = liveTheirTeamIds.length > 0
+                            ? liveTheirTeamIds
+                            : restoredTheirTeam.map(p => p.championId).filter(id => id > 0);
+
+                        const newBuild = getSingleChampionBuild(liveChampId, cleanMyTeam, cleanTheirTeam, restoredRole);
+                        if (newBuild) {
+                            activeBuild = newBuild;
+                            setCurrentBuild(newBuild);
+                            localStorage.setItem('last_build_data:v1', JSON.stringify(newBuild));
+                            sessionStorage.setItem('hexdraft_active_build', JSON.stringify(newBuild));
+                            console.log("Nueva build generada para InProgress:", newBuild.name);
+                        }
+                    }
+
                     // 4. Cargar datos tácticos para el campeón activo
                     if (activeBuild && (!tacticalData || (tacticalData as any)?.champion !== activeBuild.name?.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
-                        fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${myRole || 'top'}`)
+                        fetch(`/api/tactical-data?champion=${activeBuild.name}&role=${restoredRole}`)
                             .then(res => res.ok ? res.json() : null)
                             .then(tData => {
                                 if (tData) setTacticalData(tData);
-                                console.log("🔥 Data táctica cargada durante InProgress para", activeBuild.name);
+                                console.log("Data tactica cargada durante InProgress para", activeBuild.name);
                             })
-                            .catch(err => console.error("Error táctico InProgress:", err));
+                            .catch(err => console.error("Error tactico InProgress:", err));
                     }
 
                     // 5. Restaurar recomendación seleccionada

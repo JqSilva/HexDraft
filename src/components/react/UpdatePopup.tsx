@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useAppMode } from './useAppMode';
 import { useDbUpdate } from './useDbUpdate';
 
 export const UpdatePopup = () => {
-  const { isAdmin, loaded } = useAppMode();
   const {
     checking,
     needsUpdate,
@@ -23,13 +21,13 @@ export const UpdatePopup = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    // Si ya cargó el modo, necesita actualizar, no está buscando y no fue omitido
-    if (loaded && needsUpdate && !checking && !isDismissed) {
+    // La actualización de la BD es relevante para todos los modos de la aplicación.
+    if (needsUpdate && !checking && !isDismissed) {
       queueMicrotask(() => setVisible(true));
     } else {
       queueMicrotask(() => setVisible(false));
     }
-  }, [isAdmin, needsUpdate, checking, loaded, isDismissed]);
+  }, [needsUpdate, checking, isDismissed]);
 
   // Listener para cuando termina la actualización con éxito
   useEffect(() => {
@@ -99,7 +97,7 @@ export const UpdatePopup = () => {
           ) : (
             <div className="space-y-3">
               <p className="text-[11.5px] text-slate-400 uppercase tracking-wide font-bold leading-relaxed">
-                Hay una nueva versión de la base de datos disponible para mejorar la precisión táctica.
+                Hay una nueva versión de la base de datos disponible para mejorar la precisión de las recomendaciones.
               </p>
               
               {/* Caja de Datos de Versión */}

@@ -5,6 +5,7 @@ import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
 import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
 import { initializeEngineData } from '../../lib/engine/core/dataProvider.js';
 import { resolveCurrentPatchVersion } from '../../lib/domain/patch-version-resolver.js';
+import { db as dbInstance } from '../../lib/db/sqlite.js';
 
 let isGlobalSyncing = false;
 let shouldAbort = false;
@@ -12,6 +13,33 @@ let syncLogs: string[] = [];
 
 let progressPercent = 0;
 let progressPhase = 'idle'; // 'idle', 'starting', 'opgg', 'puppeteer', 'lanes', 'done', 'error', 'cancelled'
+
+function comparePatchVersions(a: string, b: string): number {
+    const aParts = a.split('.').map(Number);
+    const bParts = b.split('.').map(Number);
+    for (let index = 0; index < Math.max(aParts.length, bParts.length); index++) {
+        const aPart = Number.isFinite(aParts[index]) ? aParts[index] : 0;
+        const bPart = Number.isFinite(bParts[index]) ? bParts[index] : 0;
+        if (aPart !== bPart) return aPart - bPart;
+    }
+    return 0;
+}
+
+function getDatabasePatch(configs: Record<string, string>): string {
+    const patches = [configs.last_sync_version, configs.last_lane_sync_version]
+        .filter((patch): patch is string => Boolean(patch) && patch !== '-');
+
+    try {
+        const rows = dbInstance.prepare(
+            "SELECT DISTINCT patch FROM builds WHERE patch IS NOT NULL AND patch <> ''"
+        ).all() as Array<{ patch: string }>;
+        patches.push(...rows.map((row) => row.patch).filter(Boolean));
+    } catch (error) {
+        console.warn('[SYNC] No se pudo leer el parche directamente desde builds:', error);
+    }
+
+    return patches.sort(comparePatchVersions).at(-1) || '-';
+}
 
 function writeLog(msg: string) {
     const now = new Date();
@@ -92,6 +120,7 @@ export const GET: APIRoute = async ({ url }) => {
             const lastSyncTimestamp = configs.last_sync_timestamp || '-';
             const lastLaneSyncTimestamp = configs.last_lane_sync_timestamp || '-';
             const lastSyncVersion = configs.last_sync_version || '-';
+            const databasePatch = getDatabasePatch(configs);
 
             // Obtener versión de LoL resolviendo con el resolver de dominio
             const patchResolution = await resolveCurrentPatchVersion();
@@ -110,7 +139,8 @@ export const GET: APIRoute = async ({ url }) => {
                 }
             };
 
-            const isNewPatch = lastSyncVersion !== '-' && lastSyncVersion !== '0' && shortVersion !== lastSyncVersion;
+            // Comparar contra el parche que realmente contienen los datos persistidos.
+            const isNewPatch = databasePatch !== '-' && comparePatchVersions(shortVersion, databasePatch) > 0;
             const needsBuildSync = isOutdated(lastSyncTimestamp, syncPeriodDays) || isNewPatch;
             const needsLaneSync = isOutdated(lastLaneSyncTimestamp, laneSyncPeriodDays);
 
@@ -120,6 +150,7 @@ export const GET: APIRoute = async ({ url }) => {
                 last_sync_timestamp: lastSyncTimestamp,
                 last_lane_sync_timestamp: lastLaneSyncTimestamp,
                 last_sync_version: lastSyncVersion,
+                database_patch: databasePatch,
                 sync_period_days: syncPeriodDays,
                 lane_sync_period_days: laneSyncPeriodDays,
                 version: shortVersion,

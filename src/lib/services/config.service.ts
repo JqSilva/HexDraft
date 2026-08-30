@@ -40,6 +40,7 @@ if (!fs.existsSync(dbVersionPath)) {
 interface AppConfig {
   mode: 'admin' | 'user';
   github_repo: string;
+  github_token?: string;
 }
 
 let configData: AppConfig;
@@ -67,6 +68,8 @@ if (!fs.existsSync(configPath)) {
 }
 
 function getEnvToken(): string | undefined {
+  if (configData.github_token) return configData.github_token;
+
   try {
     const metaEnv = (import.meta as any).env;
     if (metaEnv?.GITHUB_TOKEN) return metaEnv.GITHUB_TOKEN;

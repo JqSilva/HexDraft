@@ -3,6 +3,7 @@ import { ENRICHED_DB, ITEMS_DB } from './core/dataProvider.js';
 import { NAME_TO_ID } from './core/constants.js';
 import { hydrateAsset } from './core/hydrator.js';
 import { analyzeComposition } from './picks/compositionAnalyzer.js';
+import { calculateSkillMaxOrder } from './tacticalEngine.js';
 import type { EnrichedChampion } from './core/types.js';
 import assetsMap from '../data/assets-map.json' with { type: 'json' };
 
@@ -509,7 +510,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
           behind: finalCleanBehind.map((id: number) => hydrateAsset('items', id))
         }
       },
-      skillOrder: "Q > W > E"
+      skillOrder: calculateSkillMaxOrder(champ.buildData?.skills)
     }
   };
 }
@@ -787,16 +788,16 @@ export function getDynamicPaths(
 export const ADAPTATION_THRESHOLDS = {
   antiHeal: {
     minHealerCount: 2,
-    minChampPickrate: 3.0,
+    minChampPickrate: 8.0,
     maxCoreDisruption: 1,
   },
   tankPen: {
     minTankCount: 2,
-    minChampPickrate: 2.0,
+    minChampPickrate: 10.0,
   },
   defensiveItem: {
-    minThreatCount: 3,
-    minChampPickrate: 1.5,
+    minThreatCount: 2,
+    minChampPickrate: 10.0,
   }
 };
 
@@ -826,48 +827,40 @@ export function getItemsByCategory(category: string): number[] {
 }
 
 /**
- * Determina si un ítem calificado como contramedida táctica (heridas graves, penetración, etc.) es viable e históricamente usado por el campeón.
- * 
- * @param itemId - ID del ítem.
- * @param champName - Nombre del campeón.
- * @returns true si el ítem supera los umbrales de pickrate mínimos para ese campeón y es coherente con su tipo de daño.
- * 
- * @modifica Para configurar los umbrales mínimos de pickrate de ítems tácticos por tipo, ajustar `ADAPTATION_THRESHOLDS` en {@link file:///d:/Documentos/HexDraft/src/lib/engine/itemEngine.ts#L761-L775}.
+ * Determina si un ítem calificado como contramedida táctica es viable e históricamente usado por el campeón.
+ * Estricto y cerrado: solo aprueba si el ítem tiene presencia real documentada (PR >= minPickrateThreshold).
+ * Sin fallback permisivo por tipo de daño.
  */
-export function isItemViableForChamp(itemId: number, champName: string): boolean {
+export function isItemViableForChamp(
+  itemId: number,
+  champName: string,
+  minPickrateThreshold: number = 10.0
+): boolean {
   const champData = ENRICHED_DB[champName];
   if (!champData) return false;
-  
-  let minPickrate = 3.0;
-  
-  if (ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(itemId)) {
-    minPickrate = ADAPTATION_THRESHOLDS.antiHeal.minChampPickrate;
-  } else if (ITEM_CATEGORIES.ARMOR_PEN.includes(itemId) || ITEM_CATEGORIES.MAGIC_PEN.includes(itemId)) {
-    minPickrate = ADAPTATION_THRESHOLDS.tankPen.minChampPickrate;
-  } else if (ITEM_CATEGORIES.ARMOR.includes(itemId) || ITEM_CATEGORIES.MAGIC_RESIST.includes(itemId) || ITEM_CATEGORIES.TENACITY.includes(itemId)) {
-    minPickrate = ADAPTATION_THRESHOLDS.defensiveItem.minChampPickrate;
-  }
-  
+
+  const baseId = itemId > 220000 ? itemId % 220000 : itemId;
+
+  // Recolectar todos los ítems de las ranuras históricas del campeón
   const allSlotItems = Object.values(champData.buildData?.slotItems || {}).flat();
-  const inPool = allSlotItems.find((i: any) => 
-    Number(i.Id || i.id) === itemId
-  ) as any;
-  
+  const dpmItems = Object.values(champData.buildData?.dpmData?.items || {}).flat();
+  const combinedItems = [...allSlotItems, ...dpmItems];
+
+  const inPool = combinedItems.find((i: any) => {
+    const iId = Number(i.Id || i.id || i.itemId);
+    const cleanId = iId > 220000 ? iId % 220000 : iId;
+    return cleanId === baseId;
+  }) as any;
+
   if (inPool) {
     const pickrate = parseFloat(inPool.pickrate || inPool.pickRate || 0);
-    if (pickrate >= minPickrate) return true;
+    if (pickrate >= minPickrateThreshold) {
+      return true;
+    }
   }
-  
-  const item = ITEMS_DB[itemId];
-  const champDmgType = champData.damageType;
-  const itemCats = item?.categories || [];
-  
-  if (champDmgType === 'AD' && itemCats.includes('SpellDamage') && !itemCats.includes('Damage')) 
-    return false;
-  if (champDmgType === 'AP' && itemCats.includes('AttackDamage') && !itemCats.includes('SpellDamage')) 
-    return false;
-  
-  return true;
+
+  // ELIMINADO EL FALLBACK PERMISIVO: Si no supera el umbral en el pool real, retorna false.
+  return false;
 }
 
 export interface CoreItemSwap {
@@ -878,14 +871,9 @@ export interface CoreItemSwap {
 }
 
 /**
- * Propone reemplazos en los core items recomendados adaptándolos al draft enemigo (ej. comprar penetración vs tanques, heridas graves vs curadores).
- * 
- * @param coreItems - Arreglo de los ítems del core original del cluster ganador.
- * @param enemyContext - Datos contextuales y conteos del draft del equipo enemigo.
- * @param champProfile - Datos de perfil enriquecido del campeón.
- * @returns Lista de objetos descriptivos de los swaps propuestos (`CoreItemSwap`).
- * 
- * @modifica El número máximo de reemplazos permitidos en el core se rige por `ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption`.
+ * Propone reemplazos en los core items recomendados adaptándolos al draft enemigo.
+ * Filtra rigurosamente con umbrales de viabilidad (PR >= 10%, o >= 8% para anti-curación).
+ * No emite swaps forzados si ninguna alternativa viable califica.
  */
 export function getCoreItemSwaps(
   coreItems: number[],
@@ -897,120 +885,114 @@ export function getCoreItemSwaps(
     enemyHealerCount: number;
     realTanks?: number;
   },
-  champProfile: any
+  champProfile: any,
+  enemies: string[] = []
 ): CoreItemSwap[] {
   const swaps: CoreItemSwap[] = [];
   const champName = champProfile.name;
+  const isAP = champProfile.damageType === 'AP';
+  const cleanCore = [...coreItems];
+  if (cleanCore.length === 0) return [];
 
-  if (coreItems.includes(3135) && enemyContext.enemyTankCount === 0) {
-    const targetItem = 4645;
-    if (isItemViableForChamp(targetItem, champName) && isItemCoherentWithCluster(targetItem, champProfile.damageType)) {
+  // Detectar amenazas de asesinos/burst enemigos
+  const enemyAssassinCount = enemies.filter(enemyName => {
+    const e = ENRICHED_DB[enemyName];
+    if (!e) return false;
+    const role = e.tacticRole || e.tactic_role || '';
+    return role === 'burst' || role === 'assassin' || role === 'dive' || e.class === 'Assassin';
+  }).length;
+
+  // 1. SWAP CONTRA ASESINOS / BURST AD (Supervivencia defensiva) - Umbral PR >= 10.0%
+  if (enemyAssassinCount >= 2) {
+    const defensiveCandidates = isAP
+      ? [3157, 3102] // Zhonya's, Banshee's
+      : [6333, 3156, 3026, 3143, 2504]; // Death's Dance, Maw, GA, Randuin, Kaenic
+
+    const viableDef = defensiveCandidates.find(id => 
+      !cleanCore.includes(id) && 
+      isItemViableForChamp(id, champName, 10.0) && 
+      isItemCoherentWithCluster(id, champProfile.damageType)
+    );
+
+    if (viableDef) {
+      const replaceIdx = cleanCore.length >= 3 ? 2 : cleanCore.length - 1;
+      const replaceItem = cleanCore[replaceIdx];
       swaps.push({
-        replaceItem: 3135,
-        withItem: targetItem,
-        reason: "No hay tanques que justifiquen Void Staff. Shadowflame maximiza el burst contra objetivos blandos.",
-        priority: 'recommended'
-      });
-    }
-  }
-
-  if (swaps.length >= ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption) {
-    return swaps;
-  }
-
-  const hasAntiHeal = coreItems.some(id => ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(id));
-  if (!hasAntiHeal && enemyContext.enemyHealerCount >= ADAPTATION_THRESHOLDS.antiHeal.minHealerCount) {
-    const isAP = champProfile.damageType === 'AP';
-    let bestAntiHeal = isAP ? 3165 : 3033;
-    
-    if (champProfile.class === 'Tank') bestAntiHeal = 3075;
-    else if (champProfile.class === 'Fighter' && !isAP) bestAntiHeal = 3181;
-    
-    let viableAntiHeal: number | null = bestAntiHeal;
-    if (!isItemViableForChamp(bestAntiHeal, champName)) {
-      const alternatives = getItemsByCategory('AntiHeal')
-        .filter(id => isItemViableForChamp(id, champName));
-      
-      if (alternatives.length === 0) {
-        viableAntiHeal = null;
-      } else {
-        const classPref: number[] = [];
-        if (champProfile.class === 'Tank') classPref.push(3075);
-        if (champProfile.class === 'Fighter') classPref.push(3181, 3075);
-        if (isAP) classPref.push(3165);
-        else classPref.push(3033, 3181);
-        
-        const sortedAlternatives = [...alternatives].sort((a, b) => {
-          const idxA = classPref.indexOf(a);
-          const idxB = classPref.indexOf(b);
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          if (idxA !== -1) return -1;
-          if (idxB !== -1) return 1;
-          return 0;
-        });
-        viableAntiHeal = sortedAlternatives[0] || null;
-      }
-    }
-    
-    if (viableAntiHeal !== null && isItemCoherentWithCluster(viableAntiHeal, champProfile.damageType)) {
-      swaps.push({
-        replaceItem: coreItems[coreItems.length - 1],
-        withItem: viableAntiHeal,
-        reason: `${enemyContext.enemyHealerCount} fuentes de curación en el enemigo. Obligatorio comprar Heridas Graves.`,
+        replaceItem,
+        withItem: viableDef,
+        reason: `${enemyAssassinCount} asesinos/burst en el equipo rival. Supervivencia defensiva prioritaria.`,
         priority: 'critical'
       });
+      return swaps;
     }
   }
 
-  if (swaps.length >= ADAPTATION_THRESHOLDS.antiHeal.maxCoreDisruption) {
-    return swaps;
+  // 2. SWAP CONTRA CURACIÓN (Heridas Graves) - Umbral PR >= 8.0%
+  const hasAntiHeal = cleanCore.some(id => ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(id));
+  if (!hasAntiHeal && enemyContext.enemyHealerCount >= ADAPTATION_THRESHOLDS.antiHeal.minHealerCount) {
+    const antiHealCandidates = isAP
+      ? [3165] // Morellonomicon
+      : (champProfile.class === 'Tank' ? [3075] : [3033, 3181, 3075]); // Mortal Reminder, Chempunk, Thornmail
+
+    const viableAntiHeal = antiHealCandidates.find(id =>
+      !cleanCore.includes(id) &&
+      isItemViableForChamp(id, champName, ADAPTATION_THRESHOLDS.antiHeal.minChampPickrate) &&
+      isItemCoherentWithCluster(id, champProfile.damageType)
+    );
+
+    if (viableAntiHeal) {
+      const replaceIdx = cleanCore.length >= 3 ? 2 : cleanCore.length - 1;
+      const replaceItem = cleanCore[replaceIdx];
+      swaps.push({
+        replaceItem,
+        withItem: viableAntiHeal,
+        reason: `${enemyContext.enemyHealerCount} fuentes de curación en el rival. Heridas Graves requeridas.`,
+        priority: 'critical'
+      });
+      return swaps;
+    }
   }
 
-  const hasPen = coreItems.some(id => 
+  // 3. SWAP CONTRA TANQUES (Penetración Porcentual) - Umbral PR >= 10.0%
+  const realTanksCount = enemyContext.realTanks !== undefined ? enemyContext.realTanks : enemyContext.enemyTankCount;
+  const hasPen = cleanCore.some(id => 
     ITEM_CATEGORIES.ARMOR_PEN.includes(id) || ITEM_CATEGORIES.MAGIC_PEN.includes(id)
   );
-  if (!hasPen) {
-    const isAP = champProfile.damageType === 'AP';
-    if (isAP) {
-      if (enemyContext.enemyTankCount >= ADAPTATION_THRESHOLDS.tankPen.minTankCount) {
-        const bestPen = 3135;
-        let viablePen: number | null = bestPen;
-        if (!isItemViableForChamp(bestPen, champName)) {
-          const alternatives = ITEM_CATEGORIES.MAGIC_PEN.filter(id => isItemViableForChamp(id, champName));
-          viablePen = alternatives[0] || null;
-        }
-        if (viablePen !== null && isItemCoherentWithCluster(viablePen, champProfile.damageType)) {
-          swaps.push({
-            replaceItem: coreItems[coreItems.length - 1],
-            withItem: viablePen,
-            reason: `${enemyContext.enemyTankCount} tanques enemigos. Se requiere penetración para infligir daño.`,
-            priority: 'recommended'
-          });
-        }
-      }
-    } else {
-      const realTanksCount = enemyContext.realTanks !== undefined ? enemyContext.realTanks : enemyContext.enemyTankCount;
-      if (realTanksCount >= 2) {
-        const bestPen = 3036;
-        let viablePen: number | null = bestPen;
-        if (!isItemViableForChamp(bestPen, champName)) {
-          const alternatives = ITEM_CATEGORIES.ARMOR_PEN.filter(id => isItemViableForChamp(id, champName));
-          viablePen = alternatives[0] || null;
-        }
-        if (viablePen !== null && isItemCoherentWithCluster(viablePen, champProfile.damageType)) {
-          swaps.push({
-            replaceItem: coreItems[coreItems.length - 1],
-            withItem: viablePen,
-            reason: `${realTanksCount} tanques reales enemigos. Se requiere penetración de armadura para infligir daño.`,
-            priority: 'recommended'
-          });
-        }
-      }
+
+  if (!hasPen && realTanksCount >= ADAPTATION_THRESHOLDS.tankPen.minTankCount) {
+    const penCandidates = isAP
+      ? [3135, 3137] // Void Staff, Cryptbloom
+      : [3036, 3071, 3033, 6694]; // LDR, Black Cleaver, Mortal Reminder, Serylda
+
+    const viablePen = penCandidates.find(id =>
+      !cleanCore.includes(id) &&
+      isItemViableForChamp(id, champName, ADAPTATION_THRESHOLDS.tankPen.minChampPickrate) &&
+      isItemCoherentWithCluster(id, champProfile.damageType)
+    );
+
+    if (viablePen) {
+      const replaceIdx = cleanCore.length >= 3 ? 2 : cleanCore.length - 1;
+      const replaceItem = cleanCore[replaceIdx];
+      swaps.push({
+        replaceItem,
+        withItem: viablePen,
+        reason: `${realTanksCount} tanques enemigos con resistencias. Penetración porcentual requerida.`,
+        priority: 'recommended'
+      });
+      return swaps;
     }
   }
 
   return swaps;
 }
+
+export const SUPPORT_EVOLUTIONS = {
+  DREAM_MAKER: { id: 3870, name: "Creador de Sueños", archetype: "Enchanter" },
+  ZAZZAK: { id: 3871, name: "Púa de Reino de Zaz'Zak", archetype: "Mage" },
+  CELESTIAL: { id: 3869, name: "Oposición Celestial", archetype: "Tank" },
+  SOLSTICE: { id: 3876, name: "Trineo del Solsticio", archetype: "Engage" },
+  BLOODSONG: { id: 3877, name: "Canción de Sangre", archetype: "AD" }
+};
 
 export function champUsesQuestItem(champName: string, myRole: string): boolean {
   if (myRole.toLowerCase() === 'utility' || myRole.toLowerCase() === 'support') {
@@ -1026,39 +1008,67 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
   
   const champ = ENRICHED_DB[champName];
   if (!champ) return null;
-  const tacticRole = champ.tacticRole;
-  const damageType = champ.damageType;
-  
-  if (tacticRole === 'peel' || champ.teamProvides?.includes('healing') || champ.teamProvides?.includes('shielding') || champ.class === 'Enchanter')
-    return { itemId: 3869, reason: "Encantadora con heal/shield — Hoja Zelote maximiza el uptime de protección" };
-  
-  if (tacticRole === 'engage' || champ.isFrontline || champ.class === 'Tank')
-    return { itemId: 3876, reason: "Support de iniciación — Oposición Celestial aporta resistencias para sobrevivir el engage" };
-  
-  if (damageType === 'AP' && (tacticRole === 'poke' || champ.class === 'Mage'))
-    return { itemId: 3877, reason: "Support de daño — Canción de Sangre amplifica el burst mágico" };
-  
-  if (tacticRole === 'skirmish' || champ.tags?.includes('Assassin') || champ.class === 'Assassin')
-    return { itemId: 3871, reason: "Support de roam — Media Luna maximiza el control de visión y la movilidad" };
-  
-  return { itemId: 3870, reason: "Evolución estándar de utilidad para supports de control" };
+  const tacticRole = champ.tacticRole || champ.tactic_role || '';
+  const damageType = champ.damageType || 'AD';
+  const champClass = champ.class || '';
+
+  // 1. AD / Asesinos / Skirmish / Tiradores en soporte (Senna, Pyke, Pantheon, Ashe, etc.)
+  if (damageType === 'AD' || champ.tags?.includes('Assassin') || champClass === 'Assassin' || champClass === 'Marksman' || tacticRole === 'skirmish') {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.BLOODSONG.id,
+      reason: "Soporte AD / Hostigamiento — Canción de Sangre aplica Exponer Debilidad y amplifica el daño"
+    };
+  }
+
+  // 2. Magos / Poke / Daño Mágico (Brand, Zyra, Vel'Koz, Lux, Xerath, Swain, etc.)
+  if (damageType === 'AP' && (tacticRole === 'poke' || champClass === 'Mage' || (tacticRole === 'burst' && !champ.isFrontline))) {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.ZAZZAK.id,
+      reason: "Soporte mágico / Poke — Púa de Zaz'Zak maximiza el hostigamiento y daño porcentual"
+    };
+  }
+
+  // 3. Iniciación / Tanque de Engage con CC (Nautilus, Leona, Rell, Alistar, Blitzcrank, Thresh, Rakan)
+  if (tacticRole === 'engage' || champ.teamProvides?.includes('engage') || (champ.isFrontline && champ.hasHardCC) || champClass === 'Vanguard') {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.SOLSTICE.id,
+      reason: "Soporte de iniciación — Trineo del Solsticio aporta aceleración y vida extra al aplicar CC"
+    };
+  }
+
+  // 4. Tanques / Frontline defensiva pura (Braum, Taric, Tahm Kench, Shen, Poppy)
+  if (champClass === 'Tank' || champ.isFrontline) {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.CELESTIAL.id,
+      reason: "Tanque / Frontline — Oposición Celestial aporta reducción masiva de daño inicial"
+    };
+  }
+
+  // 5. Encantadoras / Curación / Escudos / Utilidad pura (Zilean, Lulu, Janna, Milio, Soraka, Sona, Nami, Yuumi, Karma, Seraphine)
+  if (tacticRole === 'peel' || champ.teamProvides?.includes('healing') || champ.teamProvides?.includes('shielding') || champClass === 'Enchanter' || tacticRole === 'utility') {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.DREAM_MAKER.id,
+      reason: "Encantadora / Utilidad — Creador de Sueños potencia escudos y mitigación de daño aliada"
+    };
+  }
+
+  return {
+    itemId: SUPPORT_EVOLUTIONS.DREAM_MAKER.id,
+    reason: "Evolución de soporte para utilidad"
+  };
 }
 
 /**
- * Calcula un score de viabilidad ponderando el winrate de un elemento por su pickrate histórico (para dar confianza estadística).
- * 
- * @param winrate - Win rate base (porcentaje).
- * @param pickrate - Pick rate base (porcentaje).
- * @returns Score numérico de viabilidad.
- * 
- * @modifica Para ajustar la curva de confianza estadística según el pickrate, editar la lógica del cálculo de `confidence`.
+ * Ponderación de consenso meta donde el Pickrate es el factor dominante sobre el Winrate.
  */
-export function viabilityScore(winrate: number, pickrate: number): number {
+export function consensusScore(pickrate: number, winrate: number): number {
   const pr = Math.max(0, pickrate || 0);
   const wr = winrate || 50.0;
-  // Ponderación principal en popularidad/partidas (80%) con calibración secundaria de winrate
-  return (pr * 0.8) + ((wr - 50.0) * 1.5);
+  return (pr * 0.75) + ((wr - 50.0) * 0.5);
 }
+
+// Alias para compatibilidad
+export const viabilityScore = consensusScore;
 
 /**
  * Clasifica un grupo de ítems (como el representativeCore) para determinar si la build es de daño físico (AD), mágico (AP) o híbrido (Hybrid).
@@ -1069,8 +1079,11 @@ export function viabilityScore(winrate: number, pickrate: number): number {
  * @modifica Para forzar que ciertos ítems se consideren AP o AD de forma directa, editar las listas estáticas `apItems` y `adItems` definidas en esta función.
  */
 export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybrid' {
-  const apItems = [3089, 3152, 3115, 3102, 3157, 3165, 6653, 3001, 3003, 3007, 3092, 3100, 3118, 3185, 4629, 3135, 3137, 4633, 2510, 4645, 3124];
-  const adItems = [6697, 6699, 6696, 3179, 3814, 3142, 6695, 6698, 6693, 6692, 3071, 6333, 3053, 3156, 3161, 3078, 6610, 6631, 3074, 6609, 3026, 2501, 3031, 3046, 3094, 3085, 3091, 3153, 6672, 3033, 3035, 3036, 4642];
+  const apItems = [
+    3089, 3152, 3115, 3102, 3157, 3165, 6653, 3001, 3003, 3007, 3092, 3100, 3118, 3185, 4629, 3135, 3137, 4633, 2510, 4645, 3124,
+    2065, 4005, 3107, 3222, 3504, 6617, 6620, 3174, 3870, 3871 // Ítems de soporte de utilidad y AP
+  ];
+  const adItems = [6697, 6699, 6696, 3179, 3814, 3142, 6695, 6698, 6693, 6692, 3071, 6333, 3053, 3156, 3161, 3078, 6610, 6631, 3074, 6609, 3026, 2501, 3031, 3046, 3094, 3085, 3091, 3153, 6672, 3033, 3035, 3036, 4642, 3877];
 
   let apScore = 0;
   let adScore = 0;
@@ -1080,8 +1093,8 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
     const item = ITEMS_DB[baseId];
     if (item) {
       const cats = item.categories || [];
-      const isAp = cats.some(c => ['SpellDamage', 'MagicPenetration', 'AbilityPower', 'SpellVamp'].includes(c));
-      const isAd = cats.some(c => ['Damage', 'AttackDamage', 'Lethality', 'ArmorPenetration', 'CriticalStrike', 'LifeSteal'].includes(c));
+      const isAp = cats.some(c => ['SpellDamage', 'MagicPenetration', 'AbilityPower', 'SpellVamp', 'ManaRegen'].includes(c)) || apItems.includes(baseId);
+      const isAd = cats.some(c => ['Damage', 'AttackDamage', 'Lethality', 'ArmorPenetration', 'CriticalStrike', 'LifeSteal'].includes(c)) || adItems.includes(baseId);
       if (isAp && isAd) {
         apScore++;
         adScore++;
@@ -1103,93 +1116,118 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
   }
   if (apScore > 0) return 'AP';
   if (adScore > 0) return 'AD';
-  return 'AD';
+  return 'AP';
 }
 
 /**
- * Analiza el DPM del campeón y detecta clusters de builds distintas basándose en la coincidencia del segundo ítem terminado (`coreItem2`).
+ * Analiza el DPM del campeón y detecta clusters de builds basándose directamente en combinaciones completas de 3 ítems (`coreItem3`)
+ * ordenadas por consenso meta (Pickrate dominante sobre Winrate).
  * 
  * @param dpmData - Datos de DPM del scraper/base de datos para el campeón.
- * @returns Lista de clusters ordenados por porcentaje de popularidad.
- * 
- * @modifica Para cambiar el umbral de filtrado de ítems de poco pickrate o el número de clusters generados, editar esta función.
+ * @returns Lista de clusters ordenados por consenso.
  */
 export function detectBuildClusters(dpmData: any): BuildCluster[] {
   if (!dpmData || !dpmData.coreBuilds) return [];
 
+  const coreItem3 = dpmData.coreBuilds.coreItem3 || [];
   const coreItem2 = dpmData.coreBuilds.coreItem2 || [];
-  if (!Array.isArray(coreItem2) || coreItem2.length === 0) return [];
-
-  const clustersByPivot: Record<number, any[]> = {};
-
-  coreItem2.forEach((pair: any) => {
-    const items = pair.itemIds || [];
-    if (items.length < 2) return;
-    const pivot = items[1];
-
-    if (!clustersByPivot[pivot]) {
-      clustersByPivot[pivot] = [];
-    }
-    clustersByPivot[pivot].push(pair);
-  });
-
   const clusters: BuildCluster[] = [];
+  const seenSignatures = new Set<string>();
 
-  Object.entries(clustersByPivot).forEach(([pivotStr, clusterItems]) => {
-    const pivotItem = Number(pivotStr);
-    let totalPickrate = 0;
-    let weightedWinrateSum = 0;
-    let totalGames = 0;
+  // 1. Priorizar triplete de coreItem3 evaluado por consensusScore
+  if (Array.isArray(coreItem3) && coreItem3.length > 0) {
+    const sortedCore3 = [...coreItem3]
+      .filter((c: any) => Array.isArray(c.itemIds) && c.itemIds.length >= 3)
+      .sort((a: any, b: any) => {
+        const scoreA = consensusScore(a.pickrate || 0, a.winrate || 50.0);
+        const scoreB = consensusScore(b.pickrate || 0, b.winrate || 50.0);
+        return scoreB - scoreA;
+      });
 
-    clusterItems.forEach(item => {
-      const pr = item.pickrate || 0;
-      const wr = item.winrate || 50.0;
-      const weight = pr;
+    for (const c of sortedCore3) {
+      const representativeCore = c.itemIds.slice(0, 3);
+      const sig = [...representativeCore].sort().join('-');
+      if (seenSignatures.has(sig)) continue;
+      seenSignatures.add(sig);
 
-      totalPickrate += pr;
-      totalGames += weight;
-      weightedWinrateSum += wr * weight;
-    });
+      const pivotItem = representativeCore[1] || representativeCore[0];
+      const totalPickrate = c.pickrate || 0;
+      const weightedWinrate = c.winrate || 50.0;
+      const damageType = classifyItemsDamageType(representativeCore);
 
-    const weightedWinrate = totalGames > 0 ? (weightedWinrateSum / totalGames) : 50.0;
-
-    let representativeCore: number[] = [];
-    const coreItem3 = dpmData?.coreBuilds?.coreItem3 || [];
-    const matchingCore3 = coreItem3
-      .filter((c: any) => c.itemIds && c.itemIds.includes(pivotItem))
-      .sort((a: any, b: any) => (b.pickrate || 0) - (a.pickrate || 0));
-
-    if (matchingCore3.length > 0) {
-      representativeCore = matchingCore3[0].itemIds;
-    } else {
-      const bestPair = [...clusterItems].sort((a, b) => (b.pickrate || 0) - (a.pickrate || 0))[0];
-      representativeCore = bestPair ? [...bestPair.itemIds] : [pivotItem];
+      clusters.push({
+        pivotItem,
+        representativeCore,
+        totalPickrate,
+        weightedWinrate,
+        damageType
+      });
+      if (clusters.length >= 6) break;
     }
+  }
 
-    const damageType = classifyItemsDamageType(representativeCore);
+  // 2. Si no hay triplete disponible, completar desde coreItem2 con ítems estadísticamente viables (PR >= 10%)
+  if (clusters.length === 0 && Array.isArray(coreItem2) && coreItem2.length > 0) {
+    const sortedCore2 = [...coreItem2]
+      .filter((pair: any) => Array.isArray(pair.itemIds) && pair.itemIds.length >= 2)
+      .sort((a: any, b: any) => {
+        const scoreA = consensusScore(a.pickrate || 0, a.winrate || 50.0);
+        const scoreB = consensusScore(b.pickrate || 0, b.winrate || 50.0);
+        return scoreB - scoreA;
+      });
 
-    clusters.push({
-      pivotItem,
-      representativeCore,
-      totalPickrate,
-      weightedWinrate,
-      damageType
-    });
+    for (const pair of sortedCore2) {
+      const pairIds = pair.itemIds.slice(0, 2);
+      const pivotItem = pairIds[1] || pairIds[0];
+      const damageType = classifyItemsDamageType(pairIds);
+
+      // Buscar 3er ítem viable en slotItems / dpmData.items
+      let thirdItem = 0;
+      const slotItemsArr = [
+        ...(dpmData.items?.item3 || []),
+        ...(dpmData.items?.item4 || []),
+        ...(dpmData.items?.item5 || [])
+      ];
+
+      const viable3rd = slotItemsArr
+        .filter((item: any) => {
+          const id = Number(item.Id || item.id);
+          return id && !pairIds.includes(id) && isItemCoherentWithCluster(id, damageType) && (item.pickrate || 0) >= 10.0;
+        })
+        .sort((a: any, b: any) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+
+      if (viable3rd.length > 0) {
+        thirdItem = Number(viable3rd[0].Id || viable3rd[0].id);
+      } else {
+        const fallbacks = damageType === 'AP' ? AP_FALLBACKS.offensive : AD_FIGHTER_FALLBACKS.offensive;
+        thirdItem = fallbacks.find(id => !pairIds.includes(id)) || (damageType === 'AP' ? 3089 : 3031);
+      }
+
+      const representativeCore = [...pairIds, thirdItem];
+      const sig = [...representativeCore].sort().join('-');
+      if (seenSignatures.has(sig)) continue;
+      seenSignatures.add(sig);
+
+      clusters.push({
+        pivotItem,
+        representativeCore,
+        totalPickrate: pair.pickrate || 0,
+        weightedWinrate: pair.winrate || 50.0,
+        damageType
+      });
+      if (clusters.length >= 6) break;
+    }
+  }
+
+  return clusters.sort((a, b) => {
+    const scoreA = consensusScore(a.totalPickrate, a.weightedWinrate);
+    const scoreB = consensusScore(b.totalPickrate, b.weightedWinrate);
+    return scoreB - scoreA;
   });
-
-  return clusters.sort((a, b) => b.totalPickrate - a.totalPickrate);
 }
 
 /**
  * Evalúa y califica un cluster de build en el contexto de la partida actual. Aplica bonos por sinergia y penalizaciones tácticas.
- * 
- * @param cluster - El cluster de build a evaluar.
- * @param allies - Nombres de los campeones aliados.
- * @param enemies - Nombres de los campeones enemigos.
- * @param champData - Datos enriquecidos del campeón evaluado.
- * @returns Score total calculado.
- * 
- * @modifica Los bonos de curadores (`healersCount`), penalización de RM (`highMrCount`) y armadura (`highArmorCount`) están cableados directamente. Ajustar coeficientes aquí.
  */
 export function scoreClusterInContext(
   cluster: BuildCluster,
@@ -1200,9 +1238,9 @@ export function scoreClusterInContext(
   const pr = Math.max(0, cluster.totalPickrate || 0);
   const wr = cluster.weightedWinrate || 50.0;
 
-  // Pesa prioritariamente la cantidad de partidas (pickrate) con influencia del winrate
-  const prContrib = pr * 0.8;
-  const wrContrib = (wr - 50.0) * 1.5;
+  // Pesa con prioridad de consenso meta (Pickrate dominante)
+  const prContrib = pr * 0.75;
+  const wrContrib = (wr - 50.0) * 0.5;
   const baseScore = prContrib + wrContrib;
   let score = baseScore;
 
@@ -1277,7 +1315,7 @@ export function scoreClusterInContext(
     bonuses.push({ label: `AD highArmor penalty (${highArmorCount} Armor enemies)`, value: armorPenalty });
   }
 
-  // Penalización por sobrecarga de tipo de daño aliado (evitar stacking defensivo enemigo)
+  // Penalización por sobrecarga de tipo de daño aliado
   const allyComp = analyzeComposition(allies);
   if (cluster.damageType === 'AD' && allyComp.adCount >= 3) {
     const penalty = allyComp.adCount === 3 ? -6.0 : -16.0;
@@ -1290,7 +1328,7 @@ export function scoreClusterInContext(
     bonuses.push({ label: `AP ally overload penalty (${allyComp.apCount} AP allies)`, value: penalty });
   }
 
-  // Adjuntar desglose al objeto retornado para debug (se imprime desde getAdaptedBuild)
+  // Adjuntar desglose al objeto retornado para debug
   (cluster as any).__scoreDebug = {
     wrContrib: +wrContrib.toFixed(3),
     prContrib: +prContrib.toFixed(3),
@@ -1304,14 +1342,6 @@ export function scoreClusterInContext(
 
 /**
  * Calcula la puntuación adicional contextual para un par de botas frente al equipo enemigo.
- * 
- * @param bootId - ID de las botas a calificar.
- * @param cluster - Cluster de build activo.
- * @param enemies - Lista de nombres de los campeones enemigos.
- * @param champData - Datos enriquecidos del campeón.
- * @returns El bono numérico calculado.
- * 
- * @modifica Para modificar cuándo se bonifican las botas Mercury (3111), Steelcaps (3047) o Sorcerer's (3020), ajustar los coeficientes dentro de esta función.
  */
 export function calcBootContextBonus(
   bootId: number,
@@ -1367,17 +1397,7 @@ export function calcBootContextBonus(
 }
 
 /**
- * Selecciona las mejores botas de entre las opciones históricas del campeón ponderando su viabilidad y adaptabilidad contra el enemigo.
- * 
- * @param boots - Lista de opciones de botas históricas.
- * @param cluster - Cluster de build activo.
- * @param enemies - Nombres de los campeones enemigos.
- * @param tacticRole - Rol táctico del campeón.
- * @param champClass - Clase del campeón.
- * @param champData - Datos del perfil del campeón.
- * @returns ID de la bota recomendada.
- * 
- * @modifica Para evitar botas específicas por rol de juego (ej. Berserker en asesinos), editar el objeto `BOOTS_BLACKLIST_BY_ROLE`.
+ * Selecciona las mejores botas de entre las opciones históricas del campeón ponderando consenso y adaptabilidad.
  */
 export function selectBootsForCluster(
   boots: any[],
@@ -1392,9 +1412,9 @@ export function selectBootsForCluster(
   }
 
   const BOOTS_BLACKLIST_BY_ROLE: Record<string, number[]> = {
-    burst:    [3006],  // no attack speed en asesinos
+    burst:    [3006],
     dive:     [3006],
-    skirmish: [],      // fighters pueden llevarlas
+    skirmish: [],
     poke:     [3006],
     siege:    [3006],
   };
@@ -1419,23 +1439,6 @@ export function selectBootsForCluster(
   });
   const bootPool = filteredBoots.length > 0 ? filteredBoots : boots;
 
-  // Log de debug solicitado
-  console.log('[BOOTS DEBUG] Scores calculados:', 
-    bootPool.map(b => {
-      const id = Number(b.itemId || b.id);
-      const wr = b.winrate || 50.0;
-      const pr = b.pickrate || 0;
-      const viability = viabilityScore(wr, pr);
-      const contextBonus = calcBootContextBonus(id, cluster, enemies, champData);
-      return {
-        id,
-        viability,
-        contextBonus,
-        total: viability + contextBonus
-      };
-    })
-  );
-
   let bestBootId = 3047;
   let maxScore = -9999;
 
@@ -1444,9 +1447,7 @@ export function selectBootsForCluster(
     const wr = b.winrate || 50.0;
     const pr = b.pickrate || 0;
     
-    const viability = viabilityScore(wr, pr);
-    const contextBonus = calcBootContextBonus(id, cluster, enemies, champData);
-    const score = viability + contextBonus;
+    const score = consensusScore(pr, wr) + calcBootContextBonus(id, cluster, enemies, champData);
 
     if (score > maxScore) {
       maxScore = score;
@@ -1458,406 +1459,140 @@ export function selectBootsForCluster(
 }
 
 /**
- * Helper to select the best rune from options.
- */
-function selectBestRune(options: RuneOption[], isKeystone: boolean = false, clusterDmgType?: 'AD' | 'AP' | 'Hybrid', playstyle?: string): number {
-  if (!Array.isArray(options) || options.length === 0) return 0;
-  
-  const filtered = options.filter(o => (o.pickrate || 0) >= 1.0);
-  const candidates = filtered.length > 0 ? filtered : options;
-
-  let bestId = 0;
-  let maxScore = -9999;
-
-  candidates.forEach(o => {
-    const id = Number(o.Id || o.id);
-    const wr = o.winrate || 50.0;
-    const pr = o.pickrate || 0;
-    
-    let score = viabilityScore(wr, pr);
-
-    if (isKeystone && playstyle) {
-      const preferred = PLAYSTYLE_KEYSTONES[playstyle] || [];
-      const prefIdx = preferred.indexOf(id);
-      if (prefIdx !== -1) {
-        // Bonificación decreciente según la prioridad del playstyle
-        // Ejemplo: 1er elemento = +25.0, 2do = +20.0, 3er = +15.0, etc.
-        const bonus = Math.max(5.0, 25.0 - prefIdx * 5.0);
-        score += bonus;
-      }
-    } else if (isKeystone && clusterDmgType) {
-      const apKeystones = [8112, 8128, 8229, 8214];
-      const adKeystones = [8010, 8128, 8008, 9923]; // Corregido: incluye 9923 (Hail of Blades) y remueve 8000
-      
-      if (clusterDmgType === 'AP' && apKeystones.includes(id)) {
-        score += 2.0;
-      } else if (clusterDmgType === 'AD' && adKeystones.includes(id)) {
-        score += 2.0;
-      }
-    }
-
-    if (score > maxScore) {
-      maxScore = score;
-      bestId = id;
-    }
-  });
-
-  return bestId;
-}
-
-/**
- * Filtra keystones por coherencia de cluster.
- * @param keystones - Opciones de keystones.
- * @param clusterDamageType - Daño del cluster.
- * @returns Lista filtrada de keystones.
- */
-export function filterKeystonesByCluster(
-  keystones: RuneOption[],
-  clusterDamageType: 'AD' | 'AP' | 'Hybrid'
-): RuneOption[] {
-  const filtered = keystones.filter(rune => {
-    const id = Number(rune.Id || rune.id);
-    const runeType = KEYSTONE_DAMAGE_TYPE[id];
-    
-    if (!runeType) return true;
-    if (runeType === 'Hybrid') return true;
-    
-    if (clusterDamageType === 'AD') return runeType === 'AD';
-    if (clusterDamageType === 'AP') return runeType === 'AP';
-    
-    return true;
-  });
-
-  return filtered.length > 0 ? filtered : keystones;
-}
-
-/**
- * Filtra las opciones del árbol primario para que coincidan con el estilo de la keystone elegida.
- * @param runeOptions - Opciones de runas.
- * @param keystoneId - ID de la keystone elegida.
- * @param runeToStyle - Mapa de runa a estilo.
- * @returns Opciones filtradas.
- */
-export function filterPrimaryTreeByKeystone(
-  runeOptions: RuneOption[],
-  keystoneId: number,
-  runeToStyle: Record<number, number>
-): RuneOption[] {
-  const keystoneStyle = runeToStyle[keystoneId];
-  if (!keystoneStyle) return runeOptions;
-  
-  const filtered = runeOptions.filter(rune => {
-    const id = Number(rune.Id || rune.id);
-    return runeToStyle[id] === keystoneStyle;
-  });
-  
-  return filtered.length >= 1 ? filtered : runeOptions;
-}
-
-/**
- * Selecciona el mejor árbol de runas secundario y sus runas individuales sumando la viabilidad de sus dos mejores runas, aplicando exclusiones de tipo de daño.
+ * Selecciona una página de runas completa y coherente (tupla completa) asociada al cluster y playstyle
+ * directamente desde el dataset de partidas reales sin generar combinaciones híbridas artificiales.
  * 
- * @param secondaryRunes - Opciones de runas secundarias.
- * @param primaryStyleId - ID del estilo de runas primario elegido.
- * @param clusterDamageType - Tipo de daño del cluster.
- * @param runeToStyle - Mapa que asocia IDs de runas a su correspondiente ID de estilo.
- * @param champData - Datos enriquecidos del campeón.
- * @param playstyle - Estilo de juego deducido del cluster.
- * @returns Objeto con el estilo del árbol secundario (`styleId`) y la lista de runas seleccionadas (`runes`).
- * 
- * @modifica Para cambiar qué árboles están prohibidos según el tipo de daño del cluster, editar la constante `EXCLUDED_SECONDARY_TREES`.
- */
-export function getBestSecondaryRunesForCluster(
-  secondaryRunes: RuneOption[],
-  primaryStyleId: number,
-  clusterDamageType: 'AD' | 'AP' | 'Hybrid',
-  runeToStyle: Record<number, number>,
-  champData?: EnrichedChampion,
-  playstyle?: string
-): { styleId: number; runes: RuneOption[] } {
-  const EXCLUDED_SECONDARY_TREES: Record<string, number[]> = {
-    AD: [8200],     // Sorcery
-    AP: [8000],     // Precision
-    Hybrid: [],
-  };
-
-  const excluded = EXCLUDED_SECONDARY_TREES[clusterDamageType] || [];
-
-  const filterAndGroup = (runesList: RuneOption[], applyExclusions: boolean) => {
-    const filtered = runesList.filter((o: any) => {
-      const id = Number(o.Id || o.id);
-      const styleId = Number(runeToStyle[id]);
-      if (!styleId) return false;
-      if (styleId === primaryStyleId) return false;
-      if (id === 0) return false;
-
-      // Exclusión por blacklist de asesinos en Precision (8000)
-      if (styleId === 8000 && champData) {
-        const tacticRole = champData.tacticRole || champData.tactic_role || '';
-        if (['burst', 'dive'].includes(tacticRole)) {
-          const PRECISION_BLACKLIST_ASSASSIN = [9104, 9101];
-          if (PRECISION_BLACKLIST_ASSASSIN.includes(id)) {
-            return false;
-          }
-        }
-      }
-
-      if (applyExclusions && excluded.includes(styleId)) return false;
-
-      return (o.pickrate || 0) >= 1.0;
-    });
-
-    const groups: Record<number, RuneOption[]> = {};
-    filtered.forEach((o: any) => {
-      const id = Number(o.Id || o.id);
-      const styleId = Number(runeToStyle[id]);
-      if (!groups[styleId]) groups[styleId] = [];
-      groups[styleId].push(o);
-    });
-
-    return groups;
-  };
-
-  let styleGroups = filterAndGroup(secondaryRunes, true);
-
-  const findBestStyle = (groups: Record<number, RuneOption[]>) => {
-    let bestId = 0;
-    let maxScore = -9999;
-    Object.entries(groups).forEach(([styleKey, opts]) => {
-      const styleId = Number(styleKey);
-      if (opts.length < 2) return;
-      
-      // Calcular los scores individuales de todas las opciones en este árbol
-      const individualScores = opts.map((o: any) => viabilityScore(o.winrate || 50.0, o.pickrate || 0));
-      
-      // Ordenar de mayor a menor
-      individualScores.sort((a, b) => b - a);
-      
-      // Sumar solo los 2 mejores, que es el número real de runas elegibles secundarias
-      let totalScore = individualScores[0] + individualScores[1];
-
-      if (playstyle) {
-        const preferredStyles = PLAYSTYLE_SECONDARY_STYLES[playstyle] || [];
-        const prefIdx = preferredStyles.indexOf(styleId);
-        if (prefIdx !== -1) {
-          // Bonificación decreciente según la prioridad del playstyle
-          // Ejemplo: 1er elemento = +15.0, 2do = +10.0, etc.
-          const bonus = Math.max(2.0, 15.0 - prefIdx * 5.0);
-          totalScore += bonus;
-        }
-      }
-
-      if (totalScore > maxScore) {
-        maxScore = totalScore;
-        bestId = styleId;
-      }
-    });
-    return bestId;
-  };
-
-  let bestSecStyleId = findBestStyle(styleGroups);
-
-  if (bestSecStyleId === 0) {
-    styleGroups = filterAndGroup(secondaryRunes, false);
-    bestSecStyleId = findBestStyle(styleGroups);
-  }
-
-  if (bestSecStyleId === 0) {
-    const allSecOptions = secondaryRunes.filter((o: any) => {
-      const id = Number(o.Id || o.id);
-      const styleId = Number(runeToStyle[id]);
-      
-      // Exclusión por blacklist de asesinos en Precision
-      if (styleId === 8000 && champData) {
-        const tacticRole = champData.tacticRole || champData.tactic_role || '';
-        if (['burst', 'dive'].includes(tacticRole)) {
-          const PRECISION_BLACKLIST_ASSASSIN = [9104, 9101];
-          if (PRECISION_BLACKLIST_ASSASSIN.includes(id)) {
-            return false;
-          }
-        }
-      }
-
-      return styleId && styleId !== primaryStyleId && id !== 0;
-    });
-
-    const fallbackGroups: Record<number, RuneOption[]> = {};
-    allSecOptions.forEach((o: any) => {
-      const id = Number(o.Id || o.id);
-      const styleId = Number(runeToStyle[id]);
-      if (!fallbackGroups[styleId]) fallbackGroups[styleId] = [];
-      fallbackGroups[styleId].push(o);
-    });
-
-    const sortedFallbackStyles = Object.entries(fallbackGroups).sort((a, b) => {
-      const sumA = a[1].reduce((sum, o) => sum + (o.pickrate || 0), 0);
-      const sumB = b[1].reduce((sum, o) => sum + (o.pickrate || 0), 0);
-      return sumB - sumA;
-    });
-
-    const bestFallbackStyle = sortedFallbackStyles[0];
-    if (bestFallbackStyle) {
-      const styleId = Number(bestFallbackStyle[0]);
-      const sortedOpts = bestFallbackStyle[1].sort((a, b) => (b.pickrate || 0) - (a.pickrate || 0));
-      return {
-        styleId,
-        runes: sortedOpts.slice(0, 2)
-      };
-    }
-
-    return {
-      styleId: 8400,
-      runes: []
-    };
-  }
-
-  const sortedOpts = styleGroups[bestSecStyleId].sort((a, b) => {
-    const scoreA = viabilityScore(a.winrate || 50.0, a.pickrate || 0);
-    const scoreB = viabilityScore(b.winrate || 50.0, b.pickrate || 0);
-    return scoreB - scoreA;
-  });
-
-  return {
-    styleId: bestSecStyleId,
-    runes: sortedOpts.slice(0, 2)
-  };
-}
-
-/**
- * Selecciona los shards coherentes con el cluster.
- * @param shardsData - Datos de shards por slot.
- * @param clusterDamageType - Daño del cluster.
- * @param champData - Datos enriquecidos del campeón.
- * @returns Tres IDs de shards.
- */
-export function selectShardsForCluster(
-  shardsData: { stat1: RuneOption[]; stat2: RuneOption[]; stat3: RuneOption[] },
-  clusterDamageType: 'AD' | 'AP' | 'Hybrid',
-  champData?: EnrichedChampion
-): number[] {
-  const AP_INCOMPATIBLE_SHARDS = [5005];
-  const incompatible = [...(clusterDamageType === 'AP' ? AP_INCOMPATIBLE_SHARDS : [])];
-
-  if (champData) {
-    const tacticRole = champData.tacticRole || champData.tactic_role || '';
-    const SHARD_BLACKLIST_BY_ROLE: Record<string, number[]> = {
-      burst:    [5005],  // attack speed inútil en asesinos one-shot
-      dive:     [5005],
-      poke:     [5005],
-      skirmish: [],
-      teamfight:[],
-    };
-    const roleBlacklist = SHARD_BLACKLIST_BY_ROLE[tacticRole] || [];
-    roleBlacklist.forEach(id => {
-      if (!incompatible.includes(id)) {
-        incompatible.push(id);
-      }
-    });
-  }
-
-  const selectShard = (options: RuneOption[]): number => {
-    if (!options || options.length === 0) return 0;
-    const filtered = options.filter(o => !incompatible.includes(Number(o.Id || o.id)));
-    const viable = filtered.length > 0 ? filtered : options;
-
-    const sorted = [...viable].sort((a, b) => {
-      const wrA = a.winrate || 50.0;
-      const prA = a.pickrate || 0;
-      const wrB = b.winrate || 50.0;
-      const prB = b.pickrate || 0;
-      return viabilityScore(wrB, prB) - viabilityScore(wrA, prA);
-    });
-
-    return Number(sorted[0]?.Id || sorted[0]?.id || 0);
-  };
-
-  return [
-    selectShard(shardsData.stat1),
-    selectShard(shardsData.stat2),
-    selectShard(shardsData.stat3),
-  ];
-}
-
-/**
- * Selecciona el conjunto de runas (primarias, secundarias y shards) adaptadas a la coherencia de daño y playstyle del cluster.
- * 
- * @param runesData - Estructura cruda de runas históricas del campeón.
+ * @param runesData - Estructura de runas del scraper/DPM.
  * @param cluster - El cluster de build activo.
  * @param champData - Datos de perfil enriquecido del campeón.
- * @returns Estructura hidratada con la página de runas adaptadas.
- * 
- * @modifica La deducción del estilo de juego (playstyle) utiliza el helper `getClusterTitle`.
+ * @returns Estructura con la página de runas completa coherente.
  */
 export function selectRunesForCluster(
   runesData: RunesData,
   cluster: BuildCluster,
   champData?: EnrichedChampion
-): any {
+): {
+  primaryStyleId: number;
+  subStyleId: number;
+  selections: number[];
+  shards: number[];
+} {
   const clusterDamageType = cluster.damageType || 'Hybrid';
-  const runeToStyle = assetsMap.runeToStyle as Record<number, number>;
+  const runeToStyle = (assetsMap.runeToStyle || {}) as Record<number, number>;
 
-  // Deducir playstyle usando getClusterTitle
-  const coreItemIds = cluster.representativeCore || [];
-  const playstyle = getClusterTitle(coreItemIds, clusterDamageType);
+  // 1. Si champData tiene una build por defecto con página de runas completa coherente con el daño, reutilizarla
+  if (champData?.buildData?.runes?.selections && champData.buildData.runes.selections.length >= 6) {
+    const baseSelections = champData.buildData.runes.selections.map((r: any) => typeof r === 'object' ? Number(r.id || r.Id) : Number(r));
+    const keystoneId = baseSelections[0];
+    const keystoneType = KEYSTONE_DAMAGE_TYPE[keystoneId] || 'Hybrid';
+    if (keystoneType === 'Hybrid' || keystoneType === clusterDamageType || clusterDamageType === 'Hybrid') {
+      const primaryStyleId = Number(champData.buildData.runes.primaryStyleId) || Number(runeToStyle[keystoneId]) || 8000;
+      const subStyleId = Number(champData.buildData.runes.subStyleId) || 8400;
+      const shards = (champData.buildData.runes.shards || [5008, 5008, 5002]).map((s: any) => typeof s === 'object' ? Number(s.id || s.Id) : Number(s));
+      return {
+        primaryStyleId,
+        subStyleId,
+        selections: baseSelections,
+        shards
+      };
+    }
+  }
 
-  // 1. Filtrar y seleccionar keystone
-  const keystones = runesData.primaryRuneId || [];
-  const filteredKeystones = filterKeystonesByCluster(keystones, clusterDamageType);
-  const primaryRuneId = selectBestRune(filteredKeystones, true, clusterDamageType, playstyle);
+  // 2. Extraer la keystone con mayor consensusScore coherente con el tipo de daño
+  const rawKeystones = runesData.primaryRuneId || [];
+  const filteredKeystones = rawKeystones.filter(r => {
+    const id = Number(r.Id || r.id);
+    const kType = KEYSTONE_DAMAGE_TYPE[id] || 'Hybrid';
+    if (clusterDamageType === 'AD') return kType === 'AD' || kType === 'Hybrid';
+    if (clusterDamageType === 'AP') return kType === 'AP' || kType === 'Hybrid';
+    return true;
+  });
+
+  const candidatesKeystones = filteredKeystones.length > 0 ? filteredKeystones : rawKeystones;
+  const sortedKeystones = [...candidatesKeystones].sort((a, b) => {
+    return consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0);
+  });
+
+  const primaryRuneId = Number(sortedKeystones[0]?.Id || sortedKeystones[0]?.id || 8010);
   const primaryStyleId = Number(runeToStyle[primaryRuneId]) || 8000;
 
-  // 2. Filtrar y seleccionar árbol primario
-  const rawPrimary2 = runesData.primaryRuneId2 || [];
-  const rawPrimary3 = runesData.primaryRuneId3 || [];
-  const rawPrimary4 = runesData.primaryRuneId4 || [];
-
-  const filteredPrimary2 = filterPrimaryTreeByKeystone(rawPrimary2, primaryRuneId, runeToStyle);
-  const filteredPrimary3 = filterPrimaryTreeByKeystone(rawPrimary3, primaryRuneId, runeToStyle);
-  const filteredPrimary4 = filterPrimaryTreeByKeystone(rawPrimary4, primaryRuneId, runeToStyle);
-
-  const primaryRuneId2 = selectBestRune(filteredPrimary2);
-  const primaryRuneId3 = selectBestRune(filteredPrimary3);
-  const primaryRuneId4 = selectBestRune(filteredPrimary4);
-
-  // 3. Filtrar y seleccionar árbol secundario
-  const secondaryRunesRaw = runesData.secondaryRuneId || [];
-  const bestSec = getBestSecondaryRunesForCluster(
-    secondaryRunesRaw,
-    primaryStyleId,
-    clusterDamageType,
-    runeToStyle,
-    champData,
-    playstyle
-  );
-
-  // 4. Filtrar y seleccionar shards
-  const shardsData = {
-    stat1: runesData.perksStat1 || [],
-    stat2: runesData.perksStat2 || [],
-    stat3: runesData.perksStat3 || [],
+  // 3. Extraer perks de las ranuras 2, 3 y 4 que pertenezcan estrictamente al árbol primario seleccionado
+  const selectSlotRune = (slotOptions: RuneOption[] | undefined): number => {
+    if (!Array.isArray(slotOptions) || slotOptions.length === 0) return 0;
+    const sameStyle = slotOptions.filter(r => {
+      const id = Number(r.Id || r.id);
+      return Number(runeToStyle[id]) === primaryStyleId;
+    });
+    const pool = sameStyle.length > 0 ? sameStyle : slotOptions;
+    const sorted = [...pool].sort((a, b) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+    return Number(sorted[0]?.Id || sorted[0]?.id || 0);
   };
-  const shards = selectShardsForCluster(shardsData, clusterDamageType, champData);
+
+  const primaryRuneId2 = selectSlotRune(runesData.primaryRuneId2);
+  const primaryRuneId3 = selectSlotRune(runesData.primaryRuneId3);
+  const primaryRuneId4 = selectSlotRune(runesData.primaryRuneId4);
+
+  // 4. Seleccionar árbol secundario cerrado: agrupar por estilo secundario, sumar consenso conjunto de sus 2 mejores runas
+  const rawSecondary = runesData.secondaryRuneId || [];
+  const secondaryByStyle: Record<number, RuneOption[]> = {};
+  rawSecondary.forEach(r => {
+    const id = Number(r.Id || r.id);
+    const style = Number(runeToStyle[id]);
+    if (style && style !== primaryStyleId && id !== 0) {
+      if (!secondaryByStyle[style]) secondaryByStyle[style] = [];
+      secondaryByStyle[style].push(r);
+    }
+  });
+
+  let bestSubStyleId = 8400; // Resolve fallback
+  let maxSubScore = -9999;
+  let bestSubRunes: [number, number] = [0, 0];
+
+  Object.entries(secondaryByStyle).forEach(([styleKey, opts]) => {
+    const styleId = Number(styleKey);
+    const sortedOpts = [...opts].sort((a, b) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+    if (sortedOpts.length >= 2) {
+      const r1 = sortedOpts[0];
+      const r2 = sortedOpts[1];
+      const score = consensusScore(r1.pickrate || 0, r1.winrate || 50.0) + consensusScore(r2.pickrate || 0, r2.winrate || 50.0);
+      if (score > maxSubScore) {
+        maxSubScore = score;
+        bestSubStyleId = styleId;
+        bestSubRunes = [Number(r1.Id || r1.id), Number(r2.Id || r2.id)];
+      }
+    }
+  });
+
+  // 5. Seleccionar shards por consenso
+  const selectBestShard = (shardOpts: RuneOption[] | undefined, defaultShard: number): number => {
+    if (!Array.isArray(shardOpts) || shardOpts.length === 0) return defaultShard;
+    const sorted = [...shardOpts].sort((a, b) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+    return Number(sorted[0]?.Id || sorted[0]?.id || defaultShard);
+  };
+
+  const shards = [
+    selectBestShard(runesData.perksStat1, 5008), // Adaptive Force
+    selectBestShard(runesData.perksStat2, 5008), // Adaptive Force
+    selectBestShard(runesData.perksStat3, 5002)  // Armor
+  ];
 
   return {
     primaryStyleId,
-    subStyleId: bestSec.styleId,
+    subStyleId: bestSubStyleId,
     selections: [
       primaryRuneId,
       primaryRuneId2,
       primaryRuneId3,
       primaryRuneId4,
-      Number(bestSec.runes[0]?.Id || bestSec.runes[0]?.id || 0),
-      Number(bestSec.runes[1]?.Id || bestSec.runes[1]?.id || 0)
+      bestSubRunes[0],
+      bestSubRunes[1]
     ],
     shards
   };
 }
 
 /**
- * Selects the starter items for the cluster.
- * @param startItems - Starter items options.
- * @param cluster - Cluster object.
- * @returns Selected starter item IDs.
+ * Selecciona los items iniciales para el cluster según consenso.
  */
 export function selectStarterForCluster(
   startItems: any[],
@@ -1874,7 +1609,7 @@ export function selectStarterForCluster(
     const ids = s.startItems || [];
     const wr = s.winrate || 50.0;
     const pr = s.pickrate || 0;
-    const score = viabilityScore(wr, pr);
+    const score = consensusScore(pr, wr);
 
     if (score > maxScore) {
       maxScore = score;
@@ -1886,10 +1621,7 @@ export function selectStarterForCluster(
 }
 
 /**
- * Selects summoners.
- * @param summoners - Summoner options.
- * @param role - Role string.
- * @returns Summoner IDs.
+ * Selecciona summoners según consenso.
  */
 export function selectSummonersForCluster(
   summoners: any[],
@@ -1908,7 +1640,7 @@ export function selectSummonersForCluster(
   candidates.forEach(s => {
     const wr = s.winrate || 50.0;
     const pr = s.pickrate || 0;
-    const score = viabilityScore(wr, pr);
+    const score = consensusScore(pr, wr);
 
     if (score > maxScore) {
       maxScore = score;
@@ -1935,6 +1667,10 @@ function getPivotItemName(pivotId: number): string | null {
 
 
 function getClusterTitle(coreItems: number[], damageType: string): string {
+  const enchanterItems = [2065, 4005, 3504, 6617, 6620, 3107, 3222, 3870, 3876, 3190];
+  if (coreItems.some(id => enchanterItems.includes(Number(id)))) {
+    return 'Support Enchanter';
+  }
   if (damageType === 'AP') {
     const hasBurn = coreItems.some(id => [6653, 2503].includes(id));
     if (hasBurn) return 'AP Burn';
@@ -1983,7 +1719,16 @@ function buildOutputForCluster(
   const chosenBootId = selectBootsForCluster(rawBoots, c, enemyNames, champ.tacticRole || champ.tactic_role, champ.class, champ);
   const chosenRunes = selectRunesForCluster(rawRunes, c, champ);
 
-  const chosenStarterIds = selectStarterForCluster(rawStarters, c);
+  const isSupport = myRole?.toUpperCase() === 'UTILITY' || myRole?.toUpperCase() === 'SUPPORT' || champUsesQuestItem(champ.name, myRole);
+  const supportEvolution = selectSupportItemEvolution(champ.name, myRole);
+
+  // 1. Starter: Obligatoriamente Atlas Mundial (3865) + 2 pociones de vida si es soporte
+  let chosenStarterIds: number[] = [];
+  if (isSupport) {
+    chosenStarterIds = [3865, 2003, 2003];
+  } else {
+    chosenStarterIds = selectStarterForCluster(rawStarters, c);
+  }
   const chosenSummoners = selectSummonersForCluster(rawSummoners, myRole);
 
   const dynamicPaths = getDynamicPaths(
@@ -1999,7 +1744,7 @@ function buildOutputForCluster(
   const boots = hydrateAsset('items', chosenBootId);
 
   // Swaps de core items dinámicos
-  const swapsRaw = getCoreItemSwaps(coreItemIds, enemyContext, champ);
+  const swapsRaw = getCoreItemSwaps(coreItemIds, enemyContext, champ, enemyNames);
   const coreItemSwaps = swapsRaw.map(s => ({
     replaceItem: hydrateAsset('items', s.replaceItem),
     withItem: hydrateAsset('items', s.withItem),
@@ -2007,14 +1752,38 @@ function buildOutputForCluster(
     priority: s.priority
   }));
 
-  // Completar core items a 5 finalizados
-  const fullCoreIds = [...coreItemIds];
-  for (const id of dynamicPaths.neutral) {
-    if (fullCoreIds.length >= 5) break;
-    if (!fullCoreIds.includes(id)) {
-      fullCoreIds.push(id);
+  // 2. Construcción de Core Items
+  let fullCoreIds: number[] = [];
+  if (isSupport && supportEvolution) {
+    // Slot 1: Evolución de Soporte recomendada
+    fullCoreIds = [supportEvolution.itemId];
+
+    // Slots siguientes: 2-3 ítems principales completados del campeón (máximo 3-4 ítems totales sumando soporte)
+    for (const id of coreItemIds) {
+      if (fullCoreIds.length >= 4) break;
+      if (!fullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== chosenBootId) {
+        fullCoreIds.push(id);
+      }
+    }
+
+    // Si aún tiene menos de 3 ítems totales, completar con la rama neutral
+    for (const id of dynamicPaths.neutral) {
+      if (fullCoreIds.length >= 3) break;
+      if (!fullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== chosenBootId) {
+        fullCoreIds.push(id);
+      }
+    }
+  } else {
+    // Roles normales: completar a 5 finalizados
+    fullCoreIds = [...coreItemIds];
+    for (const id of dynamicPaths.neutral) {
+      if (fullCoreIds.length >= 5) break;
+      if (!fullCoreIds.includes(id)) {
+        fullCoreIds.push(id);
+      }
     }
   }
+
   const core = fullCoreIds.map((id: number) => hydrateAsset('items', id));
 
   const paths = {
@@ -2023,17 +1792,8 @@ function buildOutputForCluster(
     behind: dynamicPaths.behind.map((id: number) => hydrateAsset('items', id))
   };
 
-  const skillOrder = defaultBuild?.skills || champ.buildData?.skills;
-  const fullOrder = skillOrder
-    ? [
-        { key: "Q", pos: skillOrder.skillLevelUp1 || 1 },
-        { key: "W", pos: skillOrder.skillLevelUp2 || 2 },
-        { key: "E", pos: skillOrder.skillLevelUp3 || 3 }
-      ]
-      .sort((a, b) => a.pos - b.pos)
-      .map(s => s.key)
-      .join(" > ")
-    : "Q > W > E";
+  const skillsData = defaultBuild?.skills || dpmData?.skills || champ.buildData?.skills;
+  const fullOrder = calculateSkillMaxOrder(skillsData);
 
   return {
     build: {
@@ -2071,7 +1831,7 @@ function buildOutputForCluster(
  * 5. Adaptar botas, runas, iniciales y proponer swaps en el core.
  * 6. Generar las ramas dinámicas y retornar el resultado completo.
  * 
- * @param championId - ID del campeón a buildear.
+ * @param championId - ID o nombre del campeón a buildear.
  * @param myTeamIds - IDs de los aliados pickeados.
  * @param theirTeamIds - IDs de los enemigos pickeados.
  * @param myRole - Rol en el que jugará el campeón.
@@ -2080,12 +1840,20 @@ function buildOutputForCluster(
  * @modifica La lógica de fallback y resolución de DPM de builds por base de datos se maneja al inicio de esta función.
  */
 export function getAdaptedBuild(
-  championId: number,
+  championId: number | string,
   myTeamIds: number[] = [],
   theirTeamIds: number[] = [],
   myRole: string = 'jungle'
 ): any {
-  const name = getNameFromId(championId);
+  let name = '';
+  let champIdNum = 0;
+  if (typeof championId === 'number') {
+    champIdNum = championId;
+    name = getNameFromId(championId) || '';
+  } else {
+    name = championId;
+    champIdNum = NAME_TO_ID[name] || 0;
+  }
   if (!name) return null;
   const champ = ENRICHED_DB[name];
   if (!champ) return null;
@@ -2108,7 +1876,7 @@ export function getAdaptedBuild(
     || champ.buildData?.dpmData  // ← ruta directa del JSON
     || champ.dpmData;
 
-  console.log(`\n🔍 [ENGINE] getAdaptedBuild → ${name} (ID: ${championId})`);
+  console.log(`\n🔍 [ENGINE] getAdaptedBuild → ${name} (ID: ${champIdNum})`);
   console.log(`   tacticRole: ${tacticRole} | class: ${champClass} | isAssassin: ${isAssassin}`);
   console.log(`   hasDpmData: ${!!(dpmData && dpmData.coreBuilds)} | builds count: ${champ.builds?.length ?? 0}`);
   console.log(`   allies: [${myTeamIds.join(', ')}] | enemies: [${theirTeamIds.join(', ')}]`);
@@ -2200,6 +1968,8 @@ export function getAdaptedBuild(
     return arr1.filter(x => set2.has(x)).length;
   };
 
+  const isSupport = myRole?.toUpperCase() === 'UTILITY' || myRole?.toUpperCase() === 'SUPPORT' || champUsesQuestItem(name, myRole);
+
   const runFiltering = (threshold: number) => {
   const result: any[] = [];
   for (const c of scoredClusters) {
@@ -2218,11 +1988,28 @@ export function getAdaptedBuild(
       enemyContext,
       isAssassin
     );
-    const cFullCoreIds = [...c.representativeCore];
-    for (const id of cDynamicPaths.neutral) {
-      if (cFullCoreIds.length >= 5) break;
-      if (!cFullCoreIds.includes(id)) {
-        cFullCoreIds.push(id);
+    let cFullCoreIds: number[] = [];
+    if (isSupport && supportEvolution) {
+      cFullCoreIds = [supportEvolution.itemId];
+      for (const id of c.representativeCore) {
+        if (cFullCoreIds.length >= 4) break;
+        if (!cFullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== cBootId) {
+          cFullCoreIds.push(id);
+        }
+      }
+      for (const id of cDynamicPaths.neutral) {
+        if (cFullCoreIds.length >= 3) break;
+        if (!cFullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== cBootId) {
+          cFullCoreIds.push(id);
+        }
+      }
+    } else {
+      cFullCoreIds = [...c.representativeCore];
+      for (const id of cDynamicPaths.neutral) {
+        if (cFullCoreIds.length >= 5) break;
+        if (!cFullCoreIds.includes(id)) {
+          cFullCoreIds.push(id);
+        }
       }
     }
 
@@ -2365,6 +2152,7 @@ filteredClusters.forEach((c, i) => {
   }
 
   return {
+    id: championId,
     name: name,
     isAdapted: chosenBootId !== defaultBootId || winningClusterData.pivotItem !== (defaultBuild?.items?.core?.[0] || 0) || coreItemSwaps.length > 0,
     bootsSelection: {

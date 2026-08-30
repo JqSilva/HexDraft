@@ -20,7 +20,7 @@ export const useDbUpdate = () => {
     setChecking(true);
     setError(null);
     try {
-      const res = await fetch('/api/db/manifest');
+      const res = await fetch('/api/db/manifest', { cache: 'no-store' });
       if (!res.ok) {
         throw new Error('Fallo al obtener el manifest de base de datos');
       }
@@ -135,9 +135,19 @@ export const useDbUpdate = () => {
   }, [downloadUrl, remoteChecksum, remoteManifest, remoteVersion, remotePatch]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      checkForUpdate();
-    });
+    const initialLoad = window.setTimeout(() => {
+      void checkForUpdate();
+    }, 0);
+
+    // El servidor local puede tardar unos instantes en quedar disponible al arrancar.
+    const retryTimer = window.setTimeout(() => {
+      void checkForUpdate();
+    }, 2500);
+
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearTimeout(retryTimer);
+    };
   }, [checkForUpdate]);
 
   return {
