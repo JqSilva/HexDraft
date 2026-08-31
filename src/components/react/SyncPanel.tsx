@@ -27,6 +27,8 @@ export const SyncPanel = () => {
   const [loadingPublish, setLoadingPublish] = useState(true);
   const [actionState, setActionState] = useState<ActionState>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const [syncingNow, setSyncingNow] = useState(false);
+  const [syncProgress, setSyncProgress] = useState('');
 
   const fetchSyncStatus = async () => {
     try {
@@ -76,6 +78,61 @@ export const SyncPanel = () => {
     return () => window.clearTimeout(initialLoad);
   }, [modeLoaded, isAdmin]);
 
+  const waitForManualSync = async (type: 'SyncEstructuraLanes' | 'meta_builds', label: string) => {
+    const response = await fetch(`/api/sync?type=${type}`, { cache: 'no-store' });
+    const data = await response.json() as { error?: string };
+    if (!response.ok || data.error) throw new Error(data.error || `No se pudo iniciar ${label}`);
+
+    for (let attempt = 0; attempt < 240; attempt += 1) {
+      await new Promise(resolve => window.setTimeout(resolve, 1500));
+      const statusResponse = await fetch('/api/sync?type=status', { cache: 'no-store' });
+      const runtime = await statusResponse.json() as {
+        syncing: boolean;
+        progressPercent: number;
+        progressPhase: string;
+        logs?: string[];
+      };
+      setSyncProgress(`${label}: ${runtime.progressPercent || 0}%`);
+      if (!runtime.syncing) {
+        if (runtime.progressPhase === 'error') {
+          const lastLog = runtime.logs?.[runtime.logs.length - 1];
+          throw new Error(lastLog || `Falló ${label}`);
+        }
+        return;
+      }
+    }
+
+    throw new Error(`Tiempo de espera agotado durante ${label}`);
+  };
+
+  const handleManualSync = async () => {
+    setSyncingNow(true);
+    setSyncProgress('Preparando sincronización...');
+    setStatusMessage('');
+    try {
+      await waitForManualSync('SyncEstructuraLanes', 'Carriles');
+      await waitForManualSync('meta_builds', 'Meta, builds y LoLalytics');
+      setSyncProgress('Sincronización completada');
+      setStatusMessage('Datos de LoLalytics actualizados correctamente.');
+      await fetchSyncStatus();
+      window.dispatchEvent(new Event('hexdraft-db-updated'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      setSyncProgress('Sincronización fallida');
+      setStatusMessage(message);
+    } finally {
+      setSyncingNow(false);
+    }
+  };
+
+  const handleCancelSync = async () => {
+    try {
+      await fetch('/api/sync?type=cancel', { cache: 'no-store' });
+      setSyncProgress('Cancelación solicitada...');
+    } catch (error) {
+      console.error('No se pudo cancelar la sincronización:', error);
+    }
+  };
   const handlePublishGithub = async () => {
     setActionState('publishing');
     setStatusMessage('Compilando base de datos y publicando...');
@@ -190,8 +247,35 @@ export const SyncPanel = () => {
                 <span className={`text-[9px] uppercase tracking-wider font-black ${needsPublish ? 'text-amber-400' : 'text-emerald-400'}`}>{statusLabel(needsPublish)}</span>
               </div>
             </div>
+            {isAdmin && (
+              <div className="mt-5 border-t border-border-warm/50 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleManualSync}
+                    disabled={syncingNow || actionState === "publishing"}
+                    className={`flex-1 min-w-[220px] px-5 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-colors border ${
+                      syncingNow
+                        ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed'
+                        : 'bg-purple-950/30 border-purple-500/40 hover:border-purple-400 text-purple-300 hover:text-white cursor-pointer'
+                    }`}
+                  >
+                    {syncingNow ? 'Sincronizando...' : 'Sincronizar ahora'}
+                  </button>
+                  {syncingNow && (
+                    <button
+                      onClick={handleCancelSync}
+                      className="px-4 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm border border-rose-500/30 text-rose-300 hover:border-rose-400 hover:text-white"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+                {syncProgress && <p className="mt-2 text-[10px] text-purple-300 font-mono">{syncProgress}</p>}
+                {statusMessage && <p className="mt-2 text-[10px] text-slate-300 leading-relaxed">{statusMessage}</p>}
+              </div>
+            )}
             <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
-              No es necesario ejecutar estos procesos desde la aplicación. Si una ejecución queda pendiente, se resolverá en el próximo ciclo del workflow.
+              El botón ejecuta una sincronización completa de carriles, meta, builds y datos de LoLalytics.
             </p>
           </section>
 
@@ -212,7 +296,7 @@ export const SyncPanel = () => {
               <div className="mt-5">
                 <button
                   onClick={handlePublishGithub}
-                  disabled={actionState === 'publishing'}
+                  disabled={actionState === 'publishing' || syncingNow}
                   className={`w-full px-5 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-colors border ${
                     actionState === 'publishing'
                       ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed'

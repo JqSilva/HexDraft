@@ -2,6 +2,8 @@
 import { resolveChampionId } from '../domain/champion-name-resolver.js';
 import { getStyleOfRune } from '../domain/rune-style-map.js';
 import { getPathsForBuild } from '../engine/itemEngine.js';
+import { chooseSecondaryPair } from '../engine/rune-validation.js';
+import { evidenceScore, isReliableVariant } from '../engine/statisticalScoring.js';
 import { CHAMPIONS_DB } from '../data/championdb.js';
 import type { championsRepo } from '../db/champions.repo.js';
 
@@ -11,7 +13,7 @@ export const getBestSummoners = (arr: any[]): [number, number] => {
   if (!arr || arr.length === 0) return [4, 11]; // Flash y Smite o similar
   const valid = arr.filter(i => i.pickrate > 0.3);
   const source = valid.length > 0 ? valid : arr;
-  const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
+  const sorted = [...source].sort((a, b) => evidenceScore(b) - evidenceScore(a));
   return [sorted[0].summonerId1, sorted[0].summonerId2];
 };
 
@@ -19,13 +21,17 @@ export const getBestRuneSlot = (arr: any[]): number => {
   if (!arr || arr.length === 0) return 0;
   const valid = arr.filter(i => i.pickrate > 0.1);
   const source = valid.length > 0 ? valid : arr;
-  const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
+  const sorted = [...source].sort((a, b) => evidenceScore(b) - evidenceScore(a));
   return sorted[0].Id;
 };
 
-export const getBestSecondaryRunes = (arr: any[]): [number, number] => {
+export const getBestSecondaryRunes = (arr: any[], primaryStyleId = 0): [number, number] => {
   if (!arr || arr.length < 2) return [0, 0];
-  const validRunes = arr.filter(r => r.Id !== 0);
+  const validRunes = arr.filter(r => {
+    const id = Number(r.Id || r.id);
+    const styleId = getStyleOfRune(id);
+    return id !== 0 && (!primaryStyleId || styleId !== primaryStyleId);
+  });
   
   const groups: Record<number, any[]> = {};
   validRunes.forEach(rune => {
@@ -42,7 +48,7 @@ export const getBestSecondaryRunes = (arr: any[]): [number, number] => {
     const styleId = Number(styleKey);
     const runesInStyle = groups[styleId];
     const mainRunes = runesInStyle.filter(r => r.pickrate >= 15);
-    const stylePower = mainRunes.reduce((acc, r) => acc + (r.winrate + r.pickrate), 0);
+    const stylePower = mainRunes.reduce((acc, r) => acc + evidenceScore(r), 0);
 
     if (stylePower > maxStylePower && runesInStyle.length >= 2) {
       maxStylePower = stylePower;
@@ -52,8 +58,8 @@ export const getBestSecondaryRunes = (arr: any[]): [number, number] => {
 
   if (bestStyleId === 0) {
     const fallbackGroups = Object.keys(groups).sort((a, b) => {
-      const sumA = groups[Number(a)].reduce((acc, r) => acc + r.pickrate, 0);
-      const sumB = groups[Number(b)].reduce((acc, r) => acc + r.pickrate, 0);
+      const sumA = groups[Number(a)].reduce((acc, r) => acc + evidenceScore(r), 0);
+      const sumB = groups[Number(b)].reduce((acc, r) => acc + evidenceScore(r), 0);
       return sumB - sumA;
     });
     bestStyleId = Number(fallbackGroups[0]);
@@ -63,11 +69,10 @@ export const getBestSecondaryRunes = (arr: any[]): [number, number] => {
     return [0, 0];
   }
 
-  const finalRunes = groups[bestStyleId].sort((a, b) => 
-    (b.winrate + b.pickrate) - (a.winrate + a.pickrate)
-  );
-
-  return [finalRunes[0].Id, finalRunes[1].Id];
+  const pair = chooseSecondaryPair(groups[bestStyleId], evidenceScore);
+  return pair
+    ? [Number(pair[0].Id || pair[0].id), Number(pair[1].Id || pair[1].id)]
+    : [0, 0];
 };
 
 export function getBestKeystoneForStyle(primaryRunesList: any[], style: string): number | null {
@@ -86,7 +91,7 @@ export function getBestKeystoneForStyle(primaryRunesList: any[], style: string):
     preferredTrees = [8000, 8100, 8400];
   }
 
-  const sorted = [...primaryRunesList].sort((a, b) => b.pickrate - a.pickrate);
+  const sorted = [...primaryRunesList].sort((a, b) => evidenceScore(b) - evidenceScore(a));
 
   for (const treeId of preferredTrees) {
     const matched = sorted.find(r => getStyleOfRune(r.Id) === treeId);
@@ -100,7 +105,7 @@ export function getBestRuneForStyleInSlot(arr: any[], styleId: number): number {
   if (!arr || arr.length === 0) return 0;
   const filtered = arr.filter(r => getStyleOfRune(r.Id) === styleId);
   const source = filtered.length > 0 ? filtered : arr;
-  const sorted = [...source].sort((a, b) => b.pickrate - a.pickrate);
+  const sorted = [...source].sort((a, b) => evidenceScore(b) - evidenceScore(a));
   return sorted[0]?.Id || 0;
 }
 
@@ -123,7 +128,7 @@ export function getBestSecondaryRunesForStyle(arr: any[], primaryStyleId: number
     const styleId = Number(styleKey);
     const runesInStyle = groups[styleId];
     const mainRunes = runesInStyle.filter(r => r.pickrate >= 10);
-    const stylePower = mainRunes.reduce((acc, r) => acc + (r.winrate + r.pickrate), 0);
+    const stylePower = mainRunes.reduce((acc, r) => acc + evidenceScore(r), 0);
 
     if (stylePower > maxStylePower && runesInStyle.length >= 2) {
       maxStylePower = stylePower;
@@ -133,8 +138,8 @@ export function getBestSecondaryRunesForStyle(arr: any[], primaryStyleId: number
 
   if (bestStyleId === 0) {
     const fallbackGroups = Object.keys(groups).sort((a, b) => {
-      const sumA = groups[Number(a)].reduce((acc, r) => acc + r.pickrate, 0);
-      const sumB = groups[Number(b)].reduce((acc, r) => acc + r.pickrate, 0);
+      const sumA = groups[Number(a)].reduce((acc, r) => acc + evidenceScore(r), 0);
+      const sumB = groups[Number(b)].reduce((acc, r) => acc + evidenceScore(r), 0);
       return sumB - sumA;
     });
     bestStyleId = Number(fallbackGroups[0]);
@@ -144,23 +149,34 @@ export function getBestSecondaryRunesForStyle(arr: any[], primaryStyleId: number
     return { subStyleId: 0, selections: [0, 0] };
   }
 
-  const finalRunes = groups[bestStyleId].sort((a, b) => 
-    (b.winrate + b.pickrate) - (a.winrate + a.pickrate)
-  );
+  const pair = chooseSecondaryPair(groups[bestStyleId], evidenceScore);
+  if (!pair) return { subStyleId: 0, selections: [0, 0] };
 
   return {
     subStyleId: bestStyleId,
-    selections: [finalRunes[0].Id, finalRunes[1].Id]
+    selections: [
+      Number(pair[0].Id || pair[0].id),
+      Number(pair[1].Id || pair[1].id)
+    ]
   };
 }
 
 export const getBestCoreBuild = (coreBuilds: any): number[] => {
   if (!coreBuilds) return [];
   if (coreBuilds.coreItem3 && coreBuilds.coreItem3.length > 0) {
-    return [...coreBuilds.coreItem3].sort((a: any, b: any) => b.pickrate - a.pickrate)[0].itemIds.slice(0, 3);
+    const candidates = [...coreBuilds.coreItem3];
+    const hasSamples = candidates.some((item: any) => Number(item.games || item.count || 0) > 0);
+    const reliable = hasSamples ? candidates.filter((item: any) => isReliableVariant(item, 100)) : candidates;
+    const source = reliable.length > 0 ? reliable : [];
+    if (source.length === 0) return [];
+    return source.sort((a: any, b: any) => evidenceScore(b) - evidenceScore(a))[0].itemIds.slice(0, 3);
   }
   if (coreBuilds.coreItem5 && coreBuilds.coreItem5.length > 0) {
-    return [...coreBuilds.coreItem5].sort((a: any, b: any) => b.pickrate - a.pickrate)[0].itemIds.slice(0, 3);
+    const candidates = [...coreBuilds.coreItem5];
+    const hasSamples = candidates.some((item: any) => Number(item.games || item.count || 0) > 0);
+    const reliable = hasSamples ? candidates.filter((item: any) => isReliableVariant(item, 100)) : candidates;
+    if (reliable.length === 0) return [];
+    return reliable.sort((a: any, b: any) => evidenceScore(b) - evidenceScore(a))[0].itemIds.slice(0, 3);
   }
   return [];
 };
@@ -305,21 +321,23 @@ export function buildChampionRecord(
   const { nameIdMap, currentChampion: current, version } = context;
   const laneUpper = lane.toUpperCase();
   const laneLower = lane.toLowerCase();
-  const dpmLane = laneUpper === 'UTILITY' ? 'utility' : laneLower;
+  const sourceLane = laneUpper === 'UTILITY' ? 'utility' : laneLower;
+  const dataPatch = rawData.sourceMetadata?.patch || version;
+  const isLolalytics = rawData.sourceMetadata?.source === 'lolalytics';
 
   // 1. Extraer God Matchups para este carril
-  const laneGodMatchups = (rawData.enemyMatchups?.[laneUpper] || rawData.enemyMatchups?.[laneLower] || rawData.enemyMatchups?.[dpmLane] || [])
-    .filter((m: any) => m.count > 160)
+  const laneGodMatchups = (rawData.enemyMatchups?.[laneUpper] || rawData.enemyMatchups?.[laneLower] || rawData.enemyMatchups?.[sourceLane] || [])
+    .filter((m: any) => m.count > 160 && (isLolalytics ? Number(m.delta1 || 0) >= 0 : true))
     .map((m: any) => {
       const goldValue = m.goldDiffAt15 || 0;
       const xpValue = m.xpDiffAt15 || 0;
       const winrateValue = m.winrate || 0.50;
       const countValue = m.count || 0;
-      const isGoodLane = (goldValue + xpValue) > 200;
+      const isGoodLane = isLolalytics ? Number(m.delta1 || 0) >= 0 : (goldValue + xpValue) > 200;
       const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
       const K = 120; 
       const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
-      const deltaScore = (bayesianWinrate - 0.50) * 100;
+      const deltaScore = isLolalytics ? Number(m.delta1 || 0) : (bayesianWinrate - 0.50) * 100;
 
       return {
         name: m.championName,
@@ -336,18 +354,18 @@ export function buildChampionRecord(
     .slice(0, 15);
 
   // 2. Extraer Counters para este carril
-  const laneCounters = (rawData.enemyMatchups?.[laneUpper] || rawData.enemyMatchups?.[laneLower] || rawData.enemyMatchups?.[dpmLane] || [])
-    .filter((m: any) => m.count > 160)
+  const laneCounters = (rawData.enemyMatchups?.[laneUpper] || rawData.enemyMatchups?.[laneLower] || rawData.enemyMatchups?.[sourceLane] || [])
+    .filter((m: any) => m.count > 160 && (isLolalytics ? Number(m.delta1 || 0) < 0 : true))
     .map((m: any) => {
       const goldValue = m.goldDiffAt15 || 0;
       const xpValue = m.xpDiffAt15 || 0;
       const winrateValue = m.winrate || 0.50;
       const countValue = m.count || 0;
-      const isGoodLane = (goldValue + xpValue) > 200;
+      const isGoodLane = isLolalytics ? Number(m.delta1 || 0) >= 0 : (goldValue + xpValue) > 200;
       const laneTag = isGoodLane ? "Good Lane" : "Bad Lane";
       const K = 100;
       const bayesianWinrate = ((winrateValue * countValue) + (0.50 * K)) / (countValue + K);
-      const deltaScore = (bayesianWinrate - 0.50) * 100;
+      const deltaScore = isLolalytics ? Number(m.delta1 || 0) : (bayesianWinrate - 0.50) * 100;
 
       return {
         name: m.championName,
@@ -371,7 +389,7 @@ export function buildChampionRecord(
       synergies[pos] = (rawData.allyMatchups[pos] || [])
         .filter((a: any) => a.count > 100)
         .map((a: any) => {
-          const rawDelta = a.delta || 0;
+          const rawDelta = Number.isFinite(Number(a.delta)) ? Number(a.delta) : Number(a.delta1 || 0) / 100;
           const countValue = a.count || 0;
           const bayesianFactor = countValue / (countValue + 80);
           const smoothedDelta = rawDelta * bayesianFactor;
@@ -408,9 +426,21 @@ export function buildChampionRecord(
   // 5. Extraer Build por Defecto
   const r = rawData.runes;
   const bestKeystone = getBestRuneSlot(r.primaryRuneId);
-  const secondaryRunes = getBestSecondaryRunes(r.secondaryRuneId);
   const primaryStyleId = getStyleOfRune(bestKeystone);
+  const secondaryRunes = getBestSecondaryRunes(r.secondaryRuneId, primaryStyleId);
   const subStyleId = getStyleOfRune(secondaryRunes[0]);
+  const sourcePage = Array.isArray(r.pages)
+    ? r.pages.find((page: any) => Array.isArray(page.selections) && page.selections.length >= 6)
+    : null;
+  const persistedRuneSelections = sourcePage?.selections?.slice(0, 6) || [
+    bestKeystone,
+    getBestRuneForStyleInSlot(r.primaryRuneId2, primaryStyleId) || getBestRuneSlot(r.primaryRuneId2),
+    getBestRuneForStyleInSlot(r.primaryRuneId3, primaryStyleId) || getBestRuneSlot(r.primaryRuneId3),
+    getBestRuneForStyleInSlot(r.primaryRuneId4, primaryStyleId) || getBestRuneSlot(r.primaryRuneId4),
+    ...secondaryRunes
+  ];
+  const persistedPrimaryStyleId = sourcePage?.primaryStyleId || primaryStyleId;
+  const persistedSubStyleId = sourcePage?.subStyleId || subStyleId;
   const bestStarter = rawData.startItems?.sort((a: any, b: any) => b.pickrate - a.pickrate)[0]?.startItems || [];   
   const bestBootsId = getMostPopularItem(rawData.boots, 'itemId') || 3047;
   const bestCoreItems = getBestCoreBuild(rawData.coreBuilds);
@@ -424,20 +454,14 @@ export function buildChampionRecord(
   );
 
   const laneBuildData = {
-    patch: version,
+    patch: dataPatch,
     lastUpdate: new Date().toISOString(),
     summoners: bestSummoners,
     runes: {
-      primaryStyleId: primaryStyleId,
-      subStyleId: subStyleId,
-      selections: [
-        bestKeystone,
-        getBestRuneSlot(r.primaryRuneId2),
-        getBestRuneSlot(r.primaryRuneId3),
-        getBestRuneSlot(r.primaryRuneId4),
-        ...secondaryRunes
-      ],
-      shards: [
+      primaryStyleId: persistedPrimaryStyleId,
+      subStyleId: persistedSubStyleId,
+      selections: persistedRuneSelections,
+      shards: sourcePage?.shards || [
         getBestRuneSlot(r.perksStat1),
         getBestRuneSlot(r.perksStat2),
         getBestRuneSlot(r.perksStat3)
@@ -450,14 +474,28 @@ export function buildChampionRecord(
       paths: defaultPaths,
       slotItems: rawData.items
     },
-    skills: rawData.skillLevelUp?.sort((a: any, b: any) => b.winrate - a.winrate)[0] || null,
-    dpmData: {
+    skills: (() => {
+      const skillCandidates = Array.isArray(rawData.skillLevelUp) ? rawData.skillLevelUp : [];
+      const hasSamples = skillCandidates.some((skill: any) => Number(skill.games || skill.count || 0) > 0);
+      const reliableSkills = hasSamples ? skillCandidates.filter((skill: any) => isReliableVariant(skill, 100)) : skillCandidates;
+      return [...(reliableSkills.length > 0 ? reliableSkills : skillCandidates)].sort((a: any, b: any) => evidenceScore(b) - evidenceScore(a))[0] || null;
+    })(),
+    statsData: {
+      sourceMetadata: rawData.sourceMetadata || { source: 'lolalytics' },
       coreBuilds: rawData.coreBuilds,
       items: rawData.items,
       boots: rawData.boots,
       runes: rawData.runes,
       summoners: rawData.summoners,
-      startItems: rawData.startItems
+      startItems: rawData.startItems,
+      header: rawData.header,
+      history: rawData.history,
+      winrateByGameTime: rawData.winrateByGameTime,
+      gameLengthDistribution: rawData.gameLengthDistribution,
+      enemyMatchups: rawData.enemyMatchups,
+      allyMatchups: rawData.allyMatchups,
+      skillPriority: rawData.skillPriority,
+      skillOrders: rawData.skillOrders
     }
   };
 
@@ -549,7 +587,7 @@ export function buildChampionRecord(
     champion_id: champId,
     build_name: "Recomendada",
     is_default: 1,
-    patch: version,
+    patch: dataPatch,
     summoners: JSON.stringify(laneBuildData.summoners || []),
     runes: JSON.stringify(laneBuildData.runes || {}),
     items: JSON.stringify(laneBuildData.items || {}),
@@ -560,7 +598,7 @@ export function buildChampionRecord(
       winrate: laneBuildData.skills?.winrate || 50.0,
       pickrate: laneBuildData.skills?.pickrate || 100.0,
       style: "Default",
-      dpmData: laneBuildData.dpmData
+      statsData: laneBuildData.statsData
     }),
     lane: lane
   };
@@ -572,7 +610,11 @@ export function buildChampionRecord(
     coreSource = rawData.coreBuilds.coreItem5;
   }
   
-  const sortedCandidates = [...coreSource].sort((a: any, b: any) => b.pickrate - a.pickrate);
+  const hasCandidateSamples = coreSource.some((candidate: any) => Number(candidate.games || candidate.count || 0) > 0);
+  const reliableCandidates = hasCandidateSamples
+    ? coreSource.filter((candidate: any) => isReliableVariant(candidate, 100))
+    : coreSource;
+  const sortedCandidates = [...reliableCandidates].sort((a: any, b: any) => evidenceScore(b) - evidenceScore(a));
   const minPickrate = 0.7;
 
   const seenItemSignatures = new Set<string>();
@@ -642,7 +684,7 @@ export function buildChampionRecord(
       champion_id: champId,
       build_name: `Core ${style} #${candidateIdx}`,
       is_default: 0,
-      patch: version,
+      patch: dataPatch,
       summoners: JSON.stringify(laneBuildData.summoners || []),
       runes: JSON.stringify(candRunes),
       items: JSON.stringify({

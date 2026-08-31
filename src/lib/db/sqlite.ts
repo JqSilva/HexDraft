@@ -262,8 +262,6 @@ setInitialConfig('auto_pick', 'false');
 setInitialConfig('auto_ban', 'false');
 setInitialConfig('auto_execute_seconds', '3.5');
 setInitialConfig('puppeteer_concurrency', '3');
-setInitialConfig('sync_period_days', '3');
-setInitialConfig('lane_sync_period_days', '21');
 setInitialConfig('last_sync_timestamp', '-');
 setInitialConfig('last_lane_sync_timestamp', '-');
 setInitialConfig('last_sync_version', '-');
@@ -391,7 +389,8 @@ try {
 // Usamos setTimeout para romper el interbloqueo circular de ESM (Top-Level Await circular deadlock)
 setTimeout(async () => {
   try {
-    const isScript = process.argv[1]?.includes('migrate') || 
+    const isScript = process.env.HEXDRAFT_DISABLE_SCHEDULER === '1' ||
+                     process.argv[1]?.includes('migrate') ||
                      process.argv[1]?.includes('test-engine') || 
                      process.argv[1]?.includes('sync-champions-cdrag') ||
                      process.argv[1]?.includes('update-champion-db') ||

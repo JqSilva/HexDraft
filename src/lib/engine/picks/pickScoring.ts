@@ -4,6 +4,7 @@ import { normalizeKey, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFro
 import { hydrateAsset } from '../core/hydrator.js';
 import { getAdaptedBuild } from '../itemEngine.js';
 import type { EnrichedChampion } from '../core/types.js';
+import { scorePickRecommendation } from '../recommendationScoring.js';
 import { 
   analyzeComposition, 
   detectEnemyArchetype, 
@@ -166,9 +167,19 @@ export function calculateScore(
     personal_mastery: engineWeights.personal_mastery ?? 0.8
   };
 
-  let score = 5.0;
-  const reasons: string[] = [];
   const targetLane = target.lane;
+  const sourceStats = target.buildData?.statsData || target.statsData || {};
+  const sourceHeader = sourceStats.header || {};
+  const metaEvidence = {
+    winrate: target.meta?.winRate ?? 50,
+    pickrate: sourceHeader.pickrate ?? sourceHeader.pickRate ?? (target.meta as any)?.pickRate,
+    games: sourceHeader.games ?? sourceHeader.n ?? undefined
+  };
+  const centralPick = scorePickRecommendation(metaEvidence, { phase: phaseKey });
+  let score = 5.0 + ((centralPick.score - 50) * 0.08);
+  const reasons: string[] = [];
+  if (centralPick.score >= 65) reasons.push("Meta estadístico: evidencia sólida (" + centralPick.score.toFixed(1) + "/100)");
+  else if (centralPick.score <= 40) reasons.push("Riesgo estadístico: evidencia limitada (" + centralPick.score.toFixed(1) + "/100)");
 
   // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
   if (phaseKey === 'pick1' && isFlexChampion(target)) {

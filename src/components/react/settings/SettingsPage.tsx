@@ -13,8 +13,6 @@ export const SettingsPage = () => {
     const [autoAcceptEnabled, setAutoAcceptEnabled] = useState<boolean>(false);
     const [autoAcceptDelayPct, setAutoAcceptDelayPct] = useState<number>(80);
     const [puppeteerConcurrency, setPuppeteerConcurrency] = useState<number>(3);
-    const [syncPeriodDays, setSyncPeriodDays] = useState<number>(3);
-    const [laneSyncPeriodDays, setLaneSyncPeriodDays] = useState<number>(21);
     const [metaSyncFrequency, setMetaSyncFrequency] = useState<number>(2);
     const [telegramNotificationsEnabled, setTelegramNotificationsEnabled] = useState<boolean>(false);
     const [telegramBotToken, setTelegramBotToken] = useState<string>('');
@@ -51,8 +49,6 @@ export const SettingsPage = () => {
                     setAutoAcceptEnabled(data.auto_accept_enabled);
                     setAutoAcceptDelayPct(data.auto_accept_delay_pct || 80);
                     setPuppeteerConcurrency(data.puppeteer_concurrency);
-                    setSyncPeriodDays(data.sync_period_days || 3);
-                    setLaneSyncPeriodDays(data.lane_sync_period_days || 21);
                     setMetaSyncFrequency(data.meta_sync_frequency !== undefined ? data.meta_sync_frequency : 2);
                     setTelegramNotificationsEnabled(data.telegram_notifications_enabled);
                     setTelegramBotToken(data.telegram_bot_token || '');
@@ -103,8 +99,6 @@ export const SettingsPage = () => {
                     telegram_chat_id: telegramChatId,
                     telegram_deduplicate_enabled: telegramDeduplicateEnabled,
                     puppeteer_concurrency: puppeteerConcurrency,
-                    sync_period_days: syncPeriodDays,
-                    lane_sync_period_days: laneSyncPeriodDays,
                     meta_sync_frequency: metaSyncFrequency,
                     engine_weights: weights
                 })
@@ -491,41 +485,6 @@ export const SettingsPage = () => {
                                     </div>
 
                                     <div className="space-y-5 flex-1 flex flex-col justify-center">
-                                        <div className="space-y-2">
-                                            <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Meta & Builds</span>
-                                            <select
-                                                value={syncPeriodDays}
-                                                onChange={(e) => setSyncPeriodDays(parseInt(e.target.value))}
-                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
-                                            >
-                                                <option value={1}>Cada 1 día</option>
-                                                <option value={3}>Cada 3 días (Recomendado)</option>
-                                                <option value={5}>Cada 5 días</option>
-                                                <option value={7}>Cada 7 días (1 semana)</option>
-                                                <option value={15}>Cada 15 días</option>
-                                            </select>
-                                            <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                                Tiempo antes de obligar una recarga de builds al arrancar.
-                                            </span>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider">Mapeo de Posiciones (Lanes)</span>
-                                            <select
-                                                value={laneSyncPeriodDays}
-                                                onChange={(e) => setLaneSyncPeriodDays(parseInt(e.target.value))}
-                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
-                                            >
-                                                <option value={15}>Cada 15 días</option>
-                                                <option value={21}>Cada 21 días (3 semanas)</option>
-                                                <option value={30}>Cada 30 días (1 mes - Recomendado)</option>
-                                                <option value={60}>Cada 60 días (2 meses)</option>
-                                            </select>
-                                            <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                                Tiempo antes de forzar el mapeo de carriles preferidos.
-                                            </span>
-                                        </div>
-
                                         <div className="space-y-2">
                                             <span className="block text-[9.5px] uppercase font-black text-slate-300 tracking-wider font-sans">Frecuencia Sincronización Ligera</span>
                                             <select

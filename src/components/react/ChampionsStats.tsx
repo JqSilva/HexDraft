@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import META_CACHE from '../../lib/data/meta-cache.json';
 import { getChampionCdnName } from '../../lib/championMapper';
 import type { Champion } from './champions/types';
 import { 
-  getEnrichedChampionsFromMeta, 
   getRoleKey, 
   laneToMetaKey, 
   normalizeKey, 
@@ -19,17 +17,16 @@ export const ChampionsStats = ({
   initialChampionId?: number; 
   initialLane?: string; 
 }) => {
-  // Convertir CHAMPIONS_DB a array y enriquecerlo de forma básica para carga instantánea
-  const initialChamps = useMemo(() => {
-    return getEnrichedChampionsFromMeta(META_CACHE);
-  }, []);
+  // La lista enriquecida proviene de SQLite; el único JSON dinámico restante
+  // (meta-cache) se utiliza exclusivamente como tierlist por carril.
+  const initialChamps = useMemo(() => [], []);
 
   // Estados de datos
   const [champions, setChampions] = useState<Champion[]>(initialChamps);
-  const [loading] = useState(false); // Carga instantánea desde JSON
-  const [error] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState("14.9.1");
-  const [metaCache, setMetaCache] = useState<any>(META_CACHE);
+  const [metaCache, setMetaCache] = useState<any>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("-");
   const [timeAgoText, setTimeAgoText] = useState<string>("Nunca");
 
@@ -67,6 +64,16 @@ export const ChampionsStats = ({
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        const championsRes = await fetch('/api/champions', { cache: 'no-store' });
+        if (!championsRes.ok) {
+          throw new Error('No se pudo cargar la lista de campeones desde SQLite');
+        }
+        const dbChampions = await championsRes.json();
+        setChampions(dbChampions);
+        if (initialChampionId) {
+          setSelectedChamp(dbChampions.find((champ: Champion) => champ.id === initialChampionId) || null);
+        }
+
         // Intentar obtener la versión actual del LCU
         try {
           const meRes = await fetch('/api/me');
@@ -87,8 +94,6 @@ export const ChampionsStats = ({
             const metaData = await metaRes.json();
             if (metaData.meta) {
               setMetaCache(metaData.meta);
-              const freshChamps = getEnrichedChampionsFromMeta(metaData.meta);
-              setChampions(freshChamps);
             }
             if (metaData.lastUpdated) {
               setLastUpdated(metaData.lastUpdated);
@@ -99,6 +104,9 @@ export const ChampionsStats = ({
         }
       } catch (err: any) {
         console.error("Error al cargar lista en background:", err);
+        setError(err?.message || 'No se pudieron cargar los datos desde SQLite');
+      } finally {
+        setLoading(false);
       }
     };
 

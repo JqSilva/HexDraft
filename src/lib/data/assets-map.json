@@ -958,7 +958,7 @@
     },
     "3006": {
       "name": "Grebas del Berserker",
-      "description": "<mainText><stats><attention> 25%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Velocidad de Movimiento</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 30%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Velocidad de Movimiento</stats><br><br></mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/3006_Class_T2_BerserkersGreaves.png"
     },
@@ -1139,7 +1139,7 @@
     "3068": {
       "name": "Égida de Fuego Solar",
       "description": "<mainText><stats><attention> 350</attention> de Vida<br><attention> 50</attention> de Armadura<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Inmolar</passive><br>Tras recibir o infligir daño, inflige <magicDamage>daño mágico</magicDamage> por seg a los enemigos cercanos durante 3 seg. </mainText>",
-      "gold": 2700,
+      "gold": 2800,
       "icon": "ASSETS/Items/Icons2D/3068_Tank_T4_SunfireAegis.png"
     },
     "3070": {
@@ -1150,7 +1150,7 @@
     },
     "3071": {
       "name": "Cuchilla Oscura",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 400</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. (se acumula 5 veces).<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>20 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 400</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones, reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. El efecto puede acumularse hasta 5 veces.<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>0 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/3071_Fighter_T3_BlackCleaver.png"
     },
@@ -1186,7 +1186,7 @@
     },
     "3077": {
       "name": "Tiamat",
-      "description": "<mainText><stats><attention> 20</attention> de Daño de Ataque</stats><br><br><passive>Hender</passive><br>Los ataques infligen <physicalDamage>daño físico</physicalDamage> a los enemigos cercanos.<br> <active>Creciente</active><br>Inflige <physicalDamage>daño físico</physicalDamage> a los enemigos a tu alrededor.</mainText>",
+      "description": "<mainText><stats><attention> 25</attention> de Daño de Ataque</stats><br><br><passive>Hender</passive><br>Los ataques infligen <physicalDamage>daño físico</physicalDamage> a los enemigos cercanos.<br> <active>Creciente</active><br>Inflige <physicalDamage>daño físico</physicalDamage> a los enemigos a tu alrededor.</mainText>",
       "gold": 1200,
       "icon": "ASSETS/Items/Icons2D/3077_Fighter_T2_Tiamat.png"
     },
@@ -1216,7 +1216,7 @@
     },
     "3085": {
       "name": "Huracán de Runaan",
-      "description": "<mainText><stats><attention> 40%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 4%</attention> de Velocidad de Movimiento</stats><br><br><passive>Furia del Viento</passive><br>Los ataques disparan proyectiles a 2 enemigos adicionales cerca del objetivo.<br>Cada proyectil inflige <physicalDamage>daño físico</physicalDamage> y aplica efectos  <OnHit>al impacto</OnHit>.</mainText>",
+      "description": "<mainText><stats><attention> 40%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico<br><attention> 5%</attention> de Velocidad de Movimiento</stats><br><br><passive>Furia del Viento</passive><br>Los ataques disparan proyectiles a 2 enemigos adicionales cerca del objetivo.<br>Cada proyectil inflige <physicalDamage>daño físico</physicalDamage> y aplica efectos  <OnHit>al impacto</OnHit>.</mainText>",
       "gold": 2650,
       "icon": "ASSETS/Items/Icons2D/3085_Marksman_T3_Runaans.png"
     },
@@ -1251,14 +1251,8 @@
       "icon": "ASSETS/Items/Icons2D/3094_Marksman_T3_RapidFireHandCannon.png"
     },
     "3095": {
-      "name": "Objeto obsoleto",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 20%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Proyectil</passive><br>Tus <keyword>ataques energizados</keyword> infligen <magicDamage>0 de daño mágico adicional</magicDamage> y otorgan un <speed>45% de Velocidad de Movimiento</speed> durante 1.5 seg.<br></mainText>",
-      "gold": 3000,
-      "icon": "ASSETS/Items/Icons2D/3095_Windblade.png"
-    },
-    "3097": {
       "name": "Filo de la Tormenta",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 20%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Proyectil</passive><br>Tus <keyword>ataques energizados</keyword> infligen <magicDamage>0 de daño mágico adicional</magicDamage> y otorgan un <speed>45% de Velocidad de Movimiento</speed> durante 1.5 seg.<br></mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 25%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Proyectil</passive><br>Tus <keyword>ataques energizados</keyword> infligen <magicDamage>0 de daño mágico adicional</magicDamage> y otorgan un <speed>45% de Velocidad de Movimiento</speed> durante 1.5 seg.<br></mainText>",
       "gold": 3200,
       "icon": "ASSETS/Items/Icons2D/3095_Windblade.png"
     },
@@ -1516,7 +1510,7 @@
     },
     "3170": {
       "name": "Botas de Marcha Rápida",
-      "description": "<mainText><stats><attention> 65</attention> de Velocidad de Movimiento</stats><br><br><passive>Pies ligeros</passive><br>Reduce la eficacia de los efectos de <keyword>ralentización</keyword> en un 40%.<br><br><passive>Fervor Noxiano</passive><br>Obtienes un 5% de tu <speed>Velocidad de Movimiento</speed> como fuerza adaptable.</mainText>",
+      "description": "<mainText><stats><attention> 65</attention> de Velocidad de Movimiento</stats><br><br><passive>Pies ligeros</passive><br>Reduce la eficacia de los efectos de <keyword>ralentización</keyword> en un 25%.<br><br><passive>Fervor Noxiano</passive><br>Obtienes un 5% de tu <speed>Velocidad de Movimiento</speed> como fuerza adaptable.</mainText>",
       "gold": 1000,
       "icon": "ASSETS/Items/Icons2D/Boots_Tier3_Swiftness_64.png"
     },
@@ -1528,13 +1522,13 @@
     },
     "3172": {
       "name": "Grebas de Armacero",
-      "description": "<mainText><stats><attention> 40%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 5%</attention> de Robo de Vida</stats><br><br><passive>Marcha Noxiana</passive><br>Los ataques contra campeones otorgan <speed>Velocidad de Movimiento</speed>  <OnHit>al impacto</OnHit> que decae a lo largo de 2 seg.</mainText>",
+      "description": "<mainText><stats><attention> 45%</attention> de Velocidad de Ataque<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 5%</attention> de Robo de Vida</stats><br><br></mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/Boots_Tier3_BerserkersGreaves_64.png"
     },
     "3173": {
       "name": "Trituradoras Aceradas",
-      "description": "<mainText><stats><attention> 30</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Persistencia Noxiana</passive>  (0 seg)<br>Tras recibir daño mágico de un campeón, obtienes un <shield>escudo</shield> que protege contra <shield>0</shield> de <magicDamage>daño mágico</magicDamage> durante 5 seg.</mainText>",
+      "description": "<mainText><stats><attention> 25</attention> de Resistencia Mágica<br><attention> 45</attention> de Velocidad de Movimiento<br><attention> 30%</attention> de Tenacidad</stats><br><br><passive>Persistencia Noxiana</passive>  (0 seg)<br>Tras recibir daño mágico de un campeón, obtienes un <shield>escudo</shield> que protege contra <shield>0</shield> de <magicDamage>daño mágico</magicDamage> durante 5 seg.</mainText>",
       "gold": 1250,
       "icon": "ASSETS/Items/Icons2D/Boots_Tier3_Mercury_64.png"
     },
@@ -1546,7 +1540,7 @@
     },
     "3175": {
       "name": "Zapatos de Lanzahechizos",
-      "description": "<mainText><stats><attention> 18</attention> de Penetración de Magia<br><attention> 8%</attention> Penetración de Magia<br><attention> 45</attention> de Velocidad de Movimiento</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 20</attention> de Penetración de Magia<br><attention> 8%</attention> Penetración de Magia<br><attention> 45</attention> de Velocidad de Movimiento</stats><br><br></mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/Boots_Tier3_Sorceror_64.png"
     },
@@ -2032,7 +2026,7 @@
     },
     "6610": {
       "name": "Cielo Desgarrado",
-      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 400</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Golpe de Escudo de Luz</passive><br>Tu primer ataque contra un campeón asesta un <attention>golpe crítico</attention> y <healing>restaura vida</healing>.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 400</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Golpe de Escudo de Luz</passive><br>Tu primer ataque contra un campeón asesta un <attention>golpe crítico</attention> y <healing>restaura vida</healing>.</mainText>",
       "gold": 3100,
       "icon": "ASSETS/Items/Icons2D/6610_SunderedSky.png"
     },
@@ -2938,13 +2932,13 @@
     },
     "223033": {
       "name": "Recordatorio Mortal",
-      "description": "<mainText><stats><attention> 30</attention> de Daño de Ataque<br><attention> 30%</attention> de Penetración de Armadura<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Sepsis</passive><br>Infligir daño físico aplica un <status>40% de Heridas Graves</status> a campeones enemigos durante 3 seg.<br><br><buffedStat>Si un enemigo se cura más del 60% de su Vida Máxima mientras se ve afectado de forma continua por <status>Heridas Graves</status>, aumenta a un <status>80% de Heridas Graves</status>.</buffedStat><br><br><rules><status>Heridas Graves</status> reduce la efectividad de los efectos de curación y regeneración.</rules></mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 30%</attention> de Penetración de Armadura<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Sepsis</passive><br>Infligir daño físico aplica un <status>40% de Heridas Graves</status> a campeones enemigos durante 3 seg.<br><br><buffedStat>Si un enemigo se cura más del 60% de su Vida Máxima mientras se ve afectado de forma continua por <status>Heridas Graves</status>, aumenta a un <status>80% de Heridas Graves</status>.</buffedStat><br><br><rules><status>Heridas Graves</status> reduce la efectividad de los efectos de curación y regeneración.</rules></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3033_Marksman_T3_MortalReminder.png"
     },
     "223036": {
       "name": "Recuerdos de Lord Dominik",
-      "description": "<mainText><stats><attention> 30</attention> de Daño de Ataque<br><attention> 40%</attention> de Penetración de Armadura<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 40%</attention> de Penetración de Armadura<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3036_Marksman_T3_DominikRegards.png"
     },
@@ -3022,7 +3016,7 @@
     },
     "223071": {
       "name": "Cuchilla Oscura",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 350</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. (El efecto se puede acumular hasta 5 veces).<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>20 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
+      "description": "<mainText><stats><attention> 45</attention> de Daño de Ataque<br><attention> 350</attention> de Vida<br><attention> 20</attention> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones, reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. El efecto puede acumularse hasta 5 veces.<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>0 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3071_Fighter_T3_BlackCleaver.png"
     },
@@ -3094,7 +3088,7 @@
     },
     "223095": {
       "name": "Filo de la Tormenta",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 20%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Proyectil</passive><br>Tus <keyword>ataques energizados</keyword> aplican <magicDamage>0 de daño mágico adicional</magicDamage> y otorgan un <speed>45% de Velocidad de Movimiento</speed> durante 2 seg.<br><br><buffedStat>Los ataques energizados se acumulan el doble de rápido en la Arena.</buffedStat><br></mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 25%</attention> de Velocidad de Ataque<br><attention> 25%</attention> de Probabilidad de Golpe Crítico</stats><br><br><passive>Energizado</passive><br>Moverse y atacar generará un <keyword>ataque energizado</keyword>.<br><br><passive>Proyectil</passive><br>Tus <keyword>ataques energizados</keyword> aplican <magicDamage>0 de daño mágico adicional</magicDamage> y otorgan un <speed>45% de Velocidad de Movimiento</speed> durante 2 seg.<br><br><buffedStat>Los ataques energizados se acumulan el doble de rápido en la Arena.</buffedStat><br></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3095_Windblade.png"
     },
@@ -3118,7 +3112,7 @@
     },
     "223107": {
       "name": "Redención",
-      "description": "<mainText><stats><attention> 30</attention> de Poder de Habilidad<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Maná Básica<br><attention> 12%</attention> de poder de curaciones y escudos</stats><br><br><br><br> <active>ACTIVA</active>  (0 seg)<br><active>Intervención</active><br>Selecciona un área dentro del alcance. Tras 2.5 seg, invoca un destello de luz para recuperar vida a campeones aliados e infligir daño a los campeones enemigos.</mainText>",
+      "description": "<mainText><stats><attention> 30</attention> de Poder de Habilidad<br><attention> 15</attention> de Aceleración de Habilidad<br><attention> 100%</attention> de Regen. de Maná Básica<br><attention> 10%</attention> de poder de curaciones y escudos</stats><br><br><br><br> <active>ACTIVA</active>  (0 seg)<br><active>Intervención</active><br>Selecciona un área dentro del alcance. Tras 2.5 seg, invoca un destello de luz para recuperar vida a campeones aliados e infligir daño a los campeones enemigos.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3107_Enchanter_T3_Redemption.png"
     },
@@ -3316,7 +3310,7 @@
     },
     "223504": {
       "name": "Pebetero Ardiente",
-      "description": "<mainText><stats><attention> 40</attention> de Poder de Habilidad<br><attention> 12%</attention> de poder de curaciones y escudos<br><attention> 150%</attention> de Regen. de Maná Básica<br><attention> 6%</attention> de Velocidad de Movimiento</stats><br><br><passive>Santificación</passive><br>Curar o escudar a otro aliado los mejora a ambos durante 6 seg, lo que otorga a sus ataques un <attackSpeed>40% de Velocidad de Ataque</attackSpeed> y <magicDamage>25 de daño mágico</magicDamage>  <OnHit>al impacto</OnHit>.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Poder de Habilidad<br><attention> 10%</attention> de poder de curaciones y escudos<br><attention> 150%</attention> de Regen. de Maná Básica<br><attention> 6%</attention> de Velocidad de Movimiento</stats><br><br><passive>Santificación</passive><br>Curar o escudar a otro aliado los mejora a ambos durante 6 seg, lo que otorga a sus ataques un <attackSpeed>40% de Velocidad de Ataque</attackSpeed> y <magicDamage>25 de daño mágico</magicDamage>  <OnHit>al impacto</OnHit>.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3504_Enchanter_T3_ArdentCenser.png"
     },
@@ -3393,7 +3387,7 @@
       "icon": "ASSETS/Items/Icons2D/4636_Mage_T4_NightHarvester.png"
     },
     "224637": {
-      "name": "Abrazo Demoníaco",
+      "name": "Abrazo Demoniaco",
       "description": "GeneratedTip_Item_224637_ExternalDescription",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/4637_Mage_T3_DemonicEmbrace.png"
@@ -3436,13 +3430,13 @@
     },
     "226610": {
       "name": "Cielo Desgarrado",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 350</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Golpe de Escudo de Luz</passive><br>Tu primer ataque contra un campeón asesta un <attention>golpe crítico</attention> y <healing>restaura vida</healing>.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque<br><attention> 400</attention> de Vida<br><attention> 10</attention> de Aceleración de Habilidad</stats><br><br><passive>Golpe de Escudo de Luz</passive><br>Tu primer ataque contra un campeón asesta un <attention>golpe crítico</attention> y <healing>restaura vida</healing>.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6610_SunderedSky.png"
     },
     "226616": {
       "name": "Báculo de Agua Fluyente",
-      "description": "<mainText><stats><attention> 65</attention> de Poder de Habilidad<br><attention> 14%</attention> de poder de curaciones y escudos<br><attention> 150%</attention> de Regen. de Maná Básica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Rápidos</passive><br>Curar o escudar a un aliado les otorga a ambos  <magicDamage>40 de Poder de Habilidad</magicDamage> y  <attention>15 de Aceleración de Habilidad</attention> durante 6 seg.</mainText>",
+      "description": "<mainText><stats><attention> 65</attention> de Poder de Habilidad<br><attention> 10%</attention> de poder de curaciones y escudos<br><attention> 150%</attention> de Regen. de Maná Básica<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Rápidos</passive><br>Curar o escudar a un aliado les otorga a ambos  <magicDamage>40 de Poder de Habilidad</magicDamage> y  <attention>15 de Aceleración de Habilidad</attention> durante 6 seg.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3744_Enchanter_T3_StaffOfFlowingWater.png"
     },
@@ -3530,6 +3524,12 @@
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6667_Tank_T4_RadiantVirtue.png"
     },
+    "226668": {
+      "name": "Ultrahidra",
+      "description": "<mainText><stats><attention> 200</attention> de Daño de Ataque<br><attention> 25</attention> de Aceleración de Habilidad<br><attention> 25</attention> de Letalidad<br><attention> 1000</attention> de Vida<br><attention> 15%</attention> de Omnivampirismo</stats><br><br> <active>Ultrahidra</active> (0 seg)<br>Al activar el efecto, tu siguiente ataque básico se potencia e inflige <physicalDamage>daño físico</physicalDamage> a los enemigos a tu alrededor y a los enemigos que estén detrás del objetivo. <active>Ultrahidra</active> (0 seg)<br>Al activar el efecto, tu siguiente ataque básico se potencia e inflige <physicalDamage>daño físico</physicalDamage> a los enemigos a tu alrededor y a los enemigos que estén detrás del objetivo.</mainText>",
+      "gold": 6000,
+      "icon": "ASSETS/Items/Icons2D/Kiwi/ARAM_UltimateHydra_64.png"
+    },
     "226671": {
       "name": "Fuerza del Viento",
       "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 15%</attention> de Velocidad de Ataque<br><attention> 20%</attention> de Probabilidad de Golpe Crítico<br><attention> 7%</attention> de Velocidad de Movimiento</stats><br><br><br><br><rarityMythic>Pasiva Mítica:</rarityMythic> Otorga a todos los otros objetos <rarityLegendary>legendarios</rarityLegendary> <attention>5</attention> de Daño de Ataque. <br><br><rules>Daño de misil máximo infligido cuando la vida de un enemigo es menor que el 25%. <br>El desplazamiento de Tromba no puede pasar a través del terreno.</rules><br><br> <active>Activa:</active> <active>Tromba:</active> Se desplaza a la dirección objetivo y dispara tres misiles al enemigo con menos vida que se encuentre cerca de tu destino. Inflige daño físico que aumenta contra objetivos con poca vida.</mainText>",
@@ -3580,7 +3580,7 @@
     },
     "226694": {
       "name": "Rencor de Serylda",
-      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 40%</attention> de Penetración de Armadura<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Frío Implacable</passive><br>Las habilidades de daño <status>ralentizan</status> en un 50% a los enemigos <scaleHealth>con menos de un 50% de Vida</scaleHealth> durante 1 seg.</mainText>",
+      "description": "<mainText><stats><attention> 50</attention> de Daño de Ataque<br><attention> 45%</attention> de Penetración de Armadura<br><attention> 15</attention> de Aceleración de Habilidad</stats><br><br><passive>Frío Implacable</passive><br>Las habilidades de daño <status>ralentizan</status> en un 50% a los enemigos <scaleHealth>con menos de un 60% de Vida</scaleHealth> durante 1 seg.</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/6694_Assasin_T3_SeryldasGrudge.png"
     },
@@ -3646,7 +3646,7 @@
     },
     "228005": {
       "name": "Cuchilla de Obsidiana",
-      "description": "<mainText><stats><ornnBonus> 70</ornnBonus> de Daño de Ataque<br><ornnBonus> 700</ornnBonus> de Vida<br><ornnBonus> 40</ornnBonus> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. (se acumula 5 veces).<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>20 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
+      "description": "<mainText><stats><ornnBonus> 70</ornnBonus> de Daño de Ataque<br><ornnBonus> 700</ornnBonus> de Vida<br><ornnBonus> 40</ornnBonus> de Aceleración de Habilidad</stats><br><br><passive>Cortar</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage> a campeones, reduces la <scaleArmor>Armadura del objetivo en un 6%</scaleArmor> durante 6 seg. El efecto puede acumularse hasta 5 veces.<br><br><passive>Fervor</passive><br>Al infligir <physicalDamage>daño físico</physicalDamage>, obtienes <speed>0 de Velocidad de Movimiento</speed> durante 2 seg.</mainText>",
       "gold": 3000,
       "icon": "ASSETS/Items/Icons2D/3380_The_Forge_Cleaver.png"
     },
@@ -4128,43 +4128,43 @@
       "name": "Color de la barra de vida: Azul",
       "description": "GeneratedTip_Item_550001_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550001.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550001.png"
     },
     "550002": {
       "name": "Color de la barra de vida: Naranja",
       "description": "GeneratedTip_Item_550002_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550002.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550002.png"
     },
     "550003": {
       "name": "Color de la barra de vida: Verde",
       "description": "GeneratedTip_Item_550003_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550003.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550003.png"
     },
     "550004": {
       "name": "Color de la barra de vida: Rosa",
       "description": "GeneratedTip_Item_550004_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550004.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550004.png"
     },
     "550005": {
       "name": "Efecto de la barra de vida: Restablecer color",
       "description": "GeneratedTip_Item_550005_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550005.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550005.png"
     },
     "550006": {
       "name": "Color de la barra de vida: Arcoíris",
       "description": "GeneratedTip_Item_550006_ExternalDescription",
       "gold": 0,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550006.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550006.png"
     },
     "550007": {
       "name": "Recuerdito de fiesta",
       "description": "GeneratedTip_Item_550007_ExternalDescription",
       "gold": 10,
-      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550007.Kiwi_Apricot.png"
+      "icon": "ASSETS/Items/Icons2D/Kiwi/Kiwi_550007.png"
     },
     "663039": {
       "name": "Juicio de Atma",
@@ -4320,7 +4320,7 @@
       "name": "Cota de Malla",
       "description": "<mainText><stats><attention> 40</attention> de Armadura</stats><br><br></mainText>",
       "gold": 720,
-      "icon": "ASSETS/Items/Icons2D/1031_Base_T2_ChainVest.png"
+      "icon": "ASSETS/Items/Icons2D/Jade/1031_Chain_Vest.png"
     },
     "771033": {
       "name": "Manto Anulamagia",
@@ -4612,7 +4612,7 @@
     },
     "773035": {
       "name": "Último Suspiro",
-      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque</stats><br><br><jadeUnique>Descarga Penetrante:</jadeUnique> Ignora un <armorPen>35%</armorPen> de la Armadura de tu oponente.</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Daño de Ataque</stats><br><br><jadeUnique>Descarga Penetrante:</jadeUnique> Ignora un <armorPen>35%</armorPen> de la <scaleArmor>Armadura</scaleArmor> de tu oponente.</mainText>",
       "gold": 2300,
       "icon": "ASSETS/Items/Icons2D/773035_Last_Whisper.png"
     },
@@ -4786,13 +4786,13 @@
     },
     "773084": {
       "name": "Relicario Enervante",
-      "description": "<mainText><stats><attention> 430</attention> de Vida<br><attention> 450</attention> de Maná</stats><br><br><jadeUnique>Inervación</jadeUnique>: Restaura <healing>50 de Vida</healing> y <scaleMana>20 de Maná</scaleMana> durante 2 seg al campeón aliado cercano con la menor cantidad de Vida cada vez que usa una Habilidad. <keywordMajor>Inervación</keywordMajor> tiene 3 seg de enfriamiento.</mainText>",
-      "gold": 2650,
+      "description": "<mainText><stats><attention> 500</attention> de Vida<br><attention> 450</attention> de Maná<br>Otorga un <attention>10%</attention> de Reducción de Enfriamiento .</stats><br><br><jadeUnique>Inervación</jadeUnique>: Restaura <healing>60 de Vida</healing> y <scaleMana>25 de Maná</scaleMana> durante 2 seg al campeón aliado cercano con la menor cantidad de Vida cada vez que usa una Habilidad. <keywordMajor>Inervación</keywordMajor> tiene 3 seg de enfriamiento.</mainText>",
+      "gold": 2250,
       "icon": "ASSETS/Items/Icons2D/773084_Innervating_Locket.project_jade.png"
     },
     "773085": {
       "name": "Huracán de Runaan",
-      "description": "<mainText><stats><attention> 70%</attention> de Velocidad de Ataque</stats><br><br><jadeUnique>Ráfaga Huracanada:</jadeUnique> Al realizar un ataque, se lanzan proyectiles hasta a 2 enemigos cercanos al objetivo, cada uno de los cuales inflige 10 (<physicalDamage>50% de Daño de Ataque</physicalDamage>) de daño físico. Estos proyectiles aplican efectos al impacto.</mainText>",
+      "description": "<mainText><stats><attention> 70%</attention> de Velocidad de Ataque</stats><br><br><jadeUnique>Ráfaga Huracanada:</jadeUnique> Al realizar un ataque, se lanzan proyectiles hasta a 2 enemigos cercanos al objetivo. Cada uno inflige <physicalDamage>0 de daño físico</physicalDamage>. Estos proyectiles aplican efectos al impacto.</mainText>",
       "gold": 2400,
       "icon": "ASSETS/Items/Icons2D/3085_Runaans_Hurricane.project_jade.png"
     },
@@ -4912,7 +4912,7 @@
     },
     "773115": {
       "name": "Diente de Nashor",
-      "description": "<mainText><stats><attention> 65</attention> de Poder de Habilidad<br><attention> 50%</attention> de Velocidad de Ataque</stats><br><br> 20% de Reducción de Enfriamiento.</mainText>",
+      "description": "<mainText><stats><attention> 65</attention> de Poder de Habilidad<br><attention> 50%</attention> de Velocidad de Ataque<br>Otorga un <attention>20%</attention> de Reducción de Enfriamiento .</stats><br><br></mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3115_Nashors_Tooth.project_jade.png"
     },
@@ -4942,7 +4942,7 @@
     },
     "773128": {
       "name": "Garra de la Muerte Ígnea",
-      "description": "<mainText><stats><attention> 120</attention> de Poder de Habilidad</stats><br><br> 10% de Reducción de Enfriamiento. <jadeUnique>Activa</jadeUnique>  60 seg.<br>Inflige un 15% de la Vida Máxima del campeón objetivo como <magicDamage>daño mágico</magicDamage> y aumenta todo el <magicDamage>daño mágico</magicDamage> posterior que reciba el objetivo en un 20% durante 4 seg.</mainText>",
+      "description": "<mainText><stats><attention> 120</attention> de Poder de Habilidad<br>Otorga un <attention>10%</attention> de Reducción de Enfriamiento .</stats><br><br> <jadeUnique>Activa</jadeUnique>  60 seg.<br>Inflige un 15% de la Vida Máxima del campeón objetivo como <magicDamage>daño mágico</magicDamage> y aumenta todo el <magicDamage>daño mágico</magicDamage> posterior que reciba el objetivo en un 20% durante 4 seg.</mainText>",
       "gold": 3100,
       "icon": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3128_Deathfire_Grasp.png"
     },
@@ -5050,7 +5050,7 @@
     },
     "773154": {
       "name": "Linterna de Wriggle",
-      "description": "<mainText><stats><attention> 25</attention> de Daño de Ataque<br><attention> 25</attention> de Armadura<br><attention> 15%</attention> de Robo de Vida</stats><br><br><jadeUnique>Pasiva:</jadeUnique> Los ataques básicos tienen un 25% de probabilidad de infligir <magicDamage>500 de daño mágico adicional</magicDamage> al impacto a súbditos y monstruos.<br><br><jadeLimit>Se transforma en <attention>Llamarada Salvaje</attention> tras obtener 30 asesinatos de monstruos grandes o derribos de campeones.</jadeLimit> <jadeUnique>Activa</jadeUnique>  180 seg.<br>Coloca un Centinela de Visión invisible que revela el área circundante durante 180 seg.</mainText>",
+      "description": "<mainText><stats><attention> 30%</attention> de Velocidad de Ataque<br><attention> 25</attention> de Armadura<br><attention> 15%</attention> de Robo de Vida</stats><br><br><jadeUnique>Pasiva:</jadeUnique> Los ataques básicos tienen un 25% de probabilidad de infligir <magicDamage>500 de daño mágico adicional</magicDamage> al impacto a súbditos y monstruos.<br><br><jadeLimit>Se transforma en <attention>Llamarada Salvaje</attention> tras obtener 30 asesinatos de monstruos grandes o derribos de campeones.</jadeLimit> <jadeUnique>Activa</jadeUnique>  180 seg.<br>Coloca un Centinela de Visión invisible que revela el área circundante durante 180 seg.</mainText>",
       "gold": 2000,
       "icon": "ASSETS/Items/Icons2D/3154_WriggleLantern.project_jade.png"
     },
@@ -5080,7 +5080,7 @@
     },
     "773160": {
       "name": "Llamarada Salvaje",
-      "description": "<mainText><stats><attention> 25</attention> de Daño de Ataque<br><attention> 25</attention> de Armadura<br><attention> 15%</attention> de Robo de Vida</stats><br><br><jadeUnique>Marca Feral:</jadeUnique> Obtiene una acumulación de Salvaje por cada derribo de campeón y monstruo grande asesinado. Los ataques básicos infligen <magicDamage>25 (+1 por cada acumulación de Feral) de daño mágico adicional</magicDamage> al impacto. Los súbditos y monstruos tienen un 25% de probabilidad de recibir un 425 de daño adicional. <jadeUnique>Activa</jadeUnique>  180 seg.<br>Coloca un Centinela de Visión invisible que revela el área circundante durante 180 seg.</mainText>",
+      "description": "<mainText><stats><attention> 30%</attention> de Velocidad de Ataque<br><attention> 25</attention> de Armadura<br><attention> 15%</attention> de Robo de Vida</stats><br><br><jadeUnique>Marca Feral:</jadeUnique> Obtiene una acumulación de Salvaje por cada derribo de campeón y monstruo grande asesinado. Los ataques básicos infligen <magicDamage>25 (+1 por cada acumulación de Feral) de daño mágico adicional</magicDamage> al impacto. Los súbditos y monstruos tienen un 25% de probabilidad de recibir un 425 de daño adicional. <jadeUnique>Activa</jadeUnique>  180 seg.<br>Coloca un Centinela de Visión invisible que revela el área circundante durante 180 seg.</mainText>",
       "gold": 2000,
       "icon": "ASSETS/Items/Icons2D/Jade/3160_Feral_Flare.png"
     },
@@ -5098,7 +5098,7 @@
     },
     "773173": {
       "name": "Milagro de Eleisa",
-      "description": "<mainText><stats>Otorga <attention>10</attention> de Regeneración de Vida  cada 5 seg.<br>Otorga <attention>15</attention> de Regeneración de Maná  cada 5 seg.</stats><br><br><jadeUnique>Ayuda:</jadeUnique> Reduce el enfriamiento de los hechizos de invocador <spellName>Curación, Clarividencia</spellName> y <spellName>Claridad</spellName> en un 25%.<br><jadeUnique>Bendición de Eleisa:</jadeUnique> Al subir 3 niveles tras adquirir este objeto, se consume y todos sus efectos se vuelven permanentes.</mainText>",
+      "description": "<mainText><stats>Otorga <attention>10</attention> de Regeneración de Vida  cada 5 seg.<br>Otorga <attention>15</attention> de Regeneración de Maná  cada 5 seg.</stats><br><br><jadeUnique>Ayuda:</jadeUnique> Reduce el enfriamiento de los hechizos de invocador <spellName>Curación, Clarividencia</spellName> y <spellName>Claridad</spellName> en un 30%.<br><jadeUnique>Bendición de Eleisa:</jadeUnique> Al subir 3 niveles tras adquirir este objeto, se consume y todos sus efectos se vuelven permanentes.</mainText>",
       "gold": 1100,
       "icon": "ASSETS/Items/Icons2D/3173_Eleisas_Miracle.project_jade.png"
     },
@@ -5152,7 +5152,7 @@
     },
     "773222": {
       "name": "Crisol de Mikael",
-      "description": "<mainText><stats><attention> 40</attention> de Resistencia Mágica<br>Otorga <attention>7</attention> de Regeneración de Vida  cada 5 seg.<br>Otorga <attention>18</attention> de Regeneración de Maná  cada 5 seg.</stats><br><br><jadeUnique>Fuente de Maná:</jadeUnique> Aumenta la <scaleMana>Regeneración de Maná</scaleMana> en un 1% por cada 1% de Maná faltante. <jadeUnique>Activa</jadeUnique>  180 seg.<br>Elimina todos los <status>aturdimientos, ralentizaciones, provocaciones, miedos, silencios, cegueras,</status> e <status>inmovilizaciones</status> de un campeón aliado y lo <healing>cura</healing> por <healing>150</healing> (<scaleHealth>+10 de la Vida Máxima</scaleHealth>).</mainText>",
+      "description": "<mainText><stats><attention> 40</attention> de Resistencia Mágica<br>Otorga <attention>7</attention> de Regeneración de Vida  cada 5 seg.<br>Otorga <attention>18</attention> de Regeneración de Maná  cada 5 seg.</stats><br><br><jadeUnique>Fuente de Maná:</jadeUnique> Aumenta la <scaleMana>Regeneración de Maná</scaleMana> en un 1% por cada 1% de Maná faltante. <jadeUnique>Activa</jadeUnique>  180 seg.<br>Elimina todos los <status>aturdimientos, ralentizaciones, provocaciones, miedos, silencios, cegueras,</status> e <status>inmovilizaciones</status> de un campeón aliado y lo <healing>cura</healing> por <healing>150</healing> (<scaleHealth>+10% de la Vida Máxima</scaleHealth>).</mainText>",
       "gold": 2500,
       "icon": "ASSETS/Items/Icons2D/3222_Mikaels_Crucible.project_jade.png"
     },
@@ -5414,5 +5414,69 @@
       "name": "Destello",
       "icon": "SummonerCherryFlash.png"
     }
+  },
+  "runeToRow": {
+    "8005": 0,
+    "8008": 0,
+    "8009": 1,
+    "8010": 0,
+    "8014": 3,
+    "8017": 3,
+    "8021": 0,
+    "8105": 3,
+    "8106": 3,
+    "8112": 0,
+    "8126": 1,
+    "8128": 0,
+    "8135": 3,
+    "8137": 2,
+    "8139": 1,
+    "8140": 2,
+    "8141": 2,
+    "8143": 1,
+    "8210": 2,
+    "8214": 0,
+    "8224": 1,
+    "8226": 1,
+    "8229": 0,
+    "8230": 0,
+    "8232": 3,
+    "8233": 2,
+    "8234": 2,
+    "8236": 3,
+    "8237": 3,
+    "8242": 3,
+    "8275": 1,
+    "8299": 3,
+    "8304": 1,
+    "8306": 1,
+    "8313": 2,
+    "8316": 3,
+    "8321": 1,
+    "8345": 2,
+    "8347": 3,
+    "8351": 0,
+    "8352": 2,
+    "8360": 0,
+    "8369": 0,
+    "8401": 1,
+    "8410": 3,
+    "8429": 2,
+    "8437": 0,
+    "8439": 0,
+    "8444": 2,
+    "8446": 1,
+    "8451": 3,
+    "8453": 3,
+    "8463": 1,
+    "8465": 0,
+    "8473": 2,
+    "8992": 0,
+    "9101": 1,
+    "9103": 2,
+    "9104": 2,
+    "9105": 2,
+    "9111": 1,
+    "9923": 0
   }
 }

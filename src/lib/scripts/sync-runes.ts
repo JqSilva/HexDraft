@@ -46,14 +46,16 @@ export async function syncRunesFromCommunityDragon(): Promise<{ runesCount: numb
   const runesMap: Record<string, any> = {};
   const shardsMap: Record<string, any> = {};
   const runeToStyleMap: Record<string, number> = {};
+  const runeToRowMap: Record<string, number> = {};
 
   // 2a. Construir runeToStyle a partir de perkstyles.json (fuente autoritativa)
   for (const style of perkStyles.styles) {
-    for (const slot of style.slots) {
+    for (const [row, slot] of style.slots.entries()) {
       // Solo mapear slots de runas reales (no statmods)
       if (slot.type === 'kStatMod') continue;
       for (const perkId of slot.perks) {
         runeToStyleMap[String(perkId)] = style.id;
+        runeToRowMap[String(perkId)] = row;
       }
     }
     // También incluir los subStyleBonus perks
@@ -98,6 +100,7 @@ export async function syncRunesFromCommunityDragon(): Promise<{ runesCount: numb
   currentAssets.runes = runesMap;
   currentAssets.shards = shardsMap;
   currentAssets.runeToStyle = runeToStyleMap;
+  currentAssets.runeToRow = runeToRowMap;
 
   // 4. Escribir de vuelta
   fs.writeFileSync(ASSETS_MAP_PATH, JSON.stringify(currentAssets, null, 2));

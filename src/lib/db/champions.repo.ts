@@ -1,6 +1,5 @@
 // src/lib/db/champions.repo.ts
 import { db } from './sqlite';
-import { getStoredMeta } from '../metaManager.js';
 import { normalizeChampionName } from '../championMapper.js';
 
 const normalizeKey = (name: string) => normalizeChampionName(name);
@@ -143,6 +142,13 @@ export const championsRepo = {
     );
   },
 
+  clearMatchups(championId: number, lane: string): void {
+    db.prepare('DELETE FROM matchups WHERE champion_id = ? AND lane = ?').run(championId, lane);
+  },
+
+  clearSynergies(championId: number, lane: string): void {
+    db.prepare('DELETE FROM synergies WHERE champion_id = ? AND lane = ?').run(championId, lane);
+  },
   // Guardar un matchup
   saveMatchup(matchup: DbMatchup) {
     const stmt = db.prepare(`
@@ -244,34 +250,6 @@ export const championsRepo = {
   getAllEnrichedChampions(): any[] {
     const start = Date.now();
     
-    // Cargar meta cache
-    const metaCache = getStoredMeta();
-    const metaMap: Record<string, Record<string, { winRate: number; tier: number; pickRate: number }>> = {};
-    if (metaCache) {
-      const roles = ['top', 'jungle', 'mid', 'adc', 'support'];
-      const laneMapping: Record<string, string> = {
-        'top': 'TOP',
-        'jungle': 'JUNGLE',
-        'mid': 'MIDDLE',
-        'adc': 'BOTTOM',
-        'support': 'UTILITY'
-      };
-      roles.forEach(role => {
-        const list = metaCache[role] || [];
-        list.forEach((entry: any) => {
-          const normName = normalizeKey(entry.name);
-          if (!metaMap[normName]) {
-            metaMap[normName] = {};
-          }
-          const winRate = parseFloat(entry.winRate) || 50.0;
-          const tier = parseInt(entry.rank) || 99;
-          const pickRate = parseFloat(entry.pickRate) || 0.0;
-          const dbLane = laneMapping[role];
-          metaMap[normName][dbLane] = { winRate, tier, pickRate };
-        });
-      });
-    }
-
     // 1. Cargar todos los campeones
     const champsQuery = db.prepare('SELECT * FROM champions');
     const champs = champsQuery.all() as DbChampion[];
@@ -360,7 +338,7 @@ export const championsRepo = {
         lane: b.lane
       }));
 
-      const buildData = builds.find(b => b.is_default && b.special_notes?.dpmData)
+      const buildData = builds.find(b => b.is_default && b.special_notes?.statsData)
         || builds.find(b => b.is_default && b.lane !== 'UNKNOWN')
         || builds.find(b => b.is_default)
         || builds[0]
@@ -389,47 +367,10 @@ export const championsRepo = {
         lanePhase: c.lane_phase || 'average',
         resourceDependency: c.resource_dependency || 'medium',
 
-        meta: (() => {
-          const normName = normalizeKey(c.name);
-          const champMeta = metaMap[normName];
-          let winRate = c.win_rate;
-          let tier = c.tier;
-          if (champMeta) {
-            const primaryLane = c.lane ? c.lane.toUpperCase() : "UNKNOWN";
-            const metaStats = champMeta[primaryLane] || Object.values(champMeta)[0];
-            if (metaStats) {
-              winRate = metaStats.winRate;
-              tier = metaStats.tier;
-            }
-          }
-          return { winRate, tier };
-        })(),
+        meta: { winRate: c.win_rate, tier: c.tier },
         playLanes: JSON.parse(c.play_lanes || '[]'),
-        lanesPickrate: (() => {
-          const normName = normalizeKey(c.name);
-          const champMeta = metaMap[normName];
-          const pickrates = JSON.parse(c.lanes_pickrate || '{}');
-          if (champMeta) {
-            Object.entries(champMeta).forEach(([lane, stats]) => {
-              pickrates[lane] = stats.pickRate;
-            });
-          }
-          return pickrates;
-        })(),
-        lanesStats: (() => {
-          const normName = normalizeKey(c.name);
-          const champMeta = metaMap[normName];
-          const statsObj = JSON.parse(c.lanes_stats || '{}');
-          if (champMeta) {
-            Object.entries(champMeta).forEach(([lane, stats]) => {
-              statsObj[lane] = {
-                winRate: stats.winRate,
-                tier: stats.tier
-              };
-            });
-          }
-          return statsObj;
-        })(),
+        lanesPickrate: JSON.parse(c.lanes_pickrate || '{}'),
+        lanesStats: JSON.parse(c.lanes_stats || '{}'),
         scalingType: c.scaling_type,
         combat: {
           damageComposition: { physical: c.damage_type === 'AD' ? 80 : 20, magic: c.damage_type === 'AP' ? 80 : 20, true: 0 },
@@ -474,33 +415,6 @@ export const championsRepo = {
   getSingleEnrichedChampion(champId: number): any | null {
     const c = db.prepare('SELECT * FROM champions WHERE id = ?').get(champId) as DbChampion | undefined;
     if (!c) return null;
-
-    const metaCache = getStoredMeta();
-    const metaMap: Record<string, Record<string, { winRate: number; tier: number; pickRate: number }>> = {};
-    if (metaCache) {
-      const roles = ['top', 'jungle', 'mid', 'adc', 'support'];
-      const laneMapping: Record<string, string> = {
-        'top': 'TOP',
-        'jungle': 'JUNGLE',
-        'mid': 'MIDDLE',
-        'adc': 'BOTTOM',
-        'support': 'UTILITY'
-      };
-      roles.forEach(role => {
-        const list = metaCache[role] || [];
-        list.forEach((entry: any) => {
-          const normName = normalizeKey(entry.name);
-          if (!metaMap[normName]) {
-            metaMap[normName] = {};
-          }
-          const winRate = parseFloat(entry.winRate) || 50.0;
-          const tier = parseInt(entry.rank) || 99;
-          const pickRate = parseFloat(entry.pickRate) || 0.0;
-          const dbLane = laneMapping[role];
-          metaMap[normName][dbLane] = { winRate, tier, pickRate };
-        });
-      });
-    }
 
     const nameIdMap = this.getChampionNameIdMap();
 
@@ -576,7 +490,7 @@ export const championsRepo = {
       lane: b.lane
     }));
 
-    const buildData = builds.find(b => b.is_default && b.special_notes?.dpmData)
+    const buildData = builds.find(b => b.is_default && b.special_notes?.statsData)
       || builds.find(b => b.is_default && b.lane !== 'UNKNOWN')
       || builds.find(b => b.is_default)
       || builds[0]
@@ -605,47 +519,10 @@ export const championsRepo = {
       lanePhase: c.lane_phase || 'average',
       resourceDependency: c.resource_dependency || 'medium',
 
-      meta: (() => {
-        const normName = normalizeKey(c.name);
-        const champMeta = metaMap[normName];
-        let winRate = c.win_rate;
-        let tier = c.tier;
-        if (champMeta) {
-          const primaryLane = c.lane ? c.lane.toUpperCase() : "UNKNOWN";
-          const metaStats = champMeta[primaryLane] || Object.values(champMeta)[0];
-          if (metaStats) {
-            winRate = metaStats.winRate;
-            tier = metaStats.tier;
-          }
-        }
-        return { winRate, tier };
-      })(),
+      meta: { winRate: c.win_rate, tier: c.tier },
       playLanes: JSON.parse(c.play_lanes || '[]'),
-      lanesPickrate: (() => {
-        const normName = normalizeKey(c.name);
-        const champMeta = metaMap[normName];
-        const pickrates = JSON.parse(c.lanes_pickrate || '{}');
-        if (champMeta) {
-          Object.entries(champMeta).forEach(([lane, stats]) => {
-            pickrates[lane] = stats.pickRate;
-          });
-        }
-        return pickrates;
-      })(),
-      lanesStats: (() => {
-        const normName = normalizeKey(c.name);
-        const champMeta = metaMap[normName];
-        const statsObj = JSON.parse(c.lanes_stats || '{}');
-        if (champMeta) {
-          Object.entries(champMeta).forEach(([lane, stats]) => {
-            statsObj[lane] = {
-              winRate: stats.winRate,
-              tier: stats.tier
-            };
-          });
-        }
-        return statsObj;
-      })(),
+      lanesPickrate: JSON.parse(c.lanes_pickrate || '{}'),
+      lanesStats: JSON.parse(c.lanes_stats || '{}'),
       scalingType: c.scaling_type,
       combat: {
         damageComposition: { physical: c.damage_type === 'AD' ? 80 : 20, magic: c.damage_type === 'AP' ? 80 : 20, true: 0 },

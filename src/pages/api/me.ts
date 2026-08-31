@@ -2,42 +2,11 @@
 import type { APIRoute } from 'astro';
 import { getLockfileData, readLcuProfileCache, writeLcuProfileCache } from '../../lib/services/lcu.service.js';
 import { getNameFromId } from '../../lib/engine/core/constants.js';
-import { configRepo } from '../../lib/db/config.repo.js';
 
 // Desactivar validación de certificados SSL autofirmados para el cliente local de Riot
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let isBackgroundUpdating = false;
-
-function checkIfSyncRecommended(gameVersion?: string): boolean {
-  try {
-    const lastSyncTimestamp = configRepo.getConfig('last_sync_timestamp') || '-';
-    const lastSyncVersion = configRepo.getConfig('last_sync_version') || '-';
-    const syncPeriodDays = parseInt(configRepo.getConfig('sync_period_days') || '3') || 3;
-    
-    // 1. Comprobar tiempo transcurrido (3 días)
-    if (lastSyncTimestamp === '-' || !lastSyncTimestamp) return true;
-    const lastDate = new Date(lastSyncTimestamp);
-    if (!isNaN(lastDate.getTime())) {
-      const diffDays = (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-      if (diffDays >= syncPeriodDays) return true;
-    } else {
-      return true;
-    }
-    
-    // 2. Comprobar versión de parche (si la tenemos)
-    if (gameVersion && lastSyncVersion !== '-' && lastSyncVersion !== '0') {
-      const parts = gameVersion.split('.');
-      if (parts.length >= 2) {
-        const shortVersion = `${parts[0]}.${parts[1]}`;
-        if (shortVersion !== lastSyncVersion) return true;
-      }
-    }
-  } catch (e) {
-    console.error("Error al comprobar la recomendación de sync:", e);
-  }
-  return false;
-}
 
 async function fetchAllProfileData(lcu: any, summonerData: any, signature: string) {
   const auth = btoa(`riot:${lcu.token}`);
@@ -311,7 +280,7 @@ export const GET: APIRoute = async () => {
 
   const offlineEmptyPayload = {
     isConnected: false,
-    syncRecommended: checkIfSyncRecommended(),
+    syncRecommended: false,
     gameVersion: "16.12",
     summoner: "Desconectado",
     level: 0,
@@ -343,7 +312,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify({
         ...cachedProfile,
         isConnected: false,
-        syncRecommended: checkIfSyncRecommended(cachedProfile.gameVersion)
+        syncRecommended: false
       }), { status: 200 });
     }
     return new Response(JSON.stringify(offlineEmptyPayload), { status: 200 });
@@ -359,7 +328,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify({
       ...cachedProfile,
       isConnected: true,
-      syncRecommended: checkIfSyncRecommended(cachedProfile.gameVersion)
+      syncRecommended: false
     }), { status: 200 });
   }
 
@@ -393,7 +362,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify({
         ...cachedProfile,
         isConnected: true,
-        syncRecommended: checkIfSyncRecommended(cachedProfile.gameVersion)
+        syncRecommended: false
       }), { status: 200 });
     }
 
@@ -402,7 +371,7 @@ export const GET: APIRoute = async () => {
     return new Response(JSON.stringify({
       ...newProfile,
       isConnected: true,
-      syncRecommended: checkIfSyncRecommended(newProfile.gameVersion)
+      syncRecommended: false
     }), { status: 200 });
 
   } catch (e: any) {
@@ -411,7 +380,7 @@ export const GET: APIRoute = async () => {
       return new Response(JSON.stringify({
         ...cachedProfile,
         isConnected: false,
-        syncRecommended: checkIfSyncRecommended(cachedProfile.gameVersion),
+        syncRecommended: false,
         error: "Error de conexión con el LCU"
       }), { status: 200 });
     }

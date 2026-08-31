@@ -2,12 +2,11 @@
 import { db as dbInstance } from '../db/sqlite.js';
 import { championsRepo } from '../db/champions.repo.js';
 import { normalizeKey } from '../domain/champion-name-resolver.js';
-import { fetchDpmChampionStats } from '../sources/dpm-champion-stats.source.js';
+import { fetchLolalyticsChampionStats } from '../sources/lolalytics.source.js';
 import { buildChampionRecord } from './build-champion-record.js';
 
 export function getChampionPlayLanes(
   name: string,
-  dbMemory: any,
   nameIdMap: Record<string, number>
 ): string[] {
   const champId = nameIdMap[normalizeKey(name)];
@@ -23,7 +22,7 @@ export function getChampionPlayLanes(
   }
 
   if (playLanes.length === 0) {
-    let fallbackLane = laneRow?.lane || dbMemory[name]?.lane || "UNKNOWN";
+    let fallbackLane = laneRow?.lane || "UNKNOWN";
     if (!fallbackLane || fallbackLane === "UNKNOWN") fallbackLane = "MIDDLE";
     playLanes.push(fallbackLane);
   }
@@ -35,24 +34,45 @@ export async function scrapeSingleChampionLane(
   name: string,
   lane: string,
   version: string,
-  dbMemory: any,
   nameIdMap: Record<string, number>,
   writeLog: (msg: string) => void,
   sessionId?: string
-): Promise<void> {
+): Promise<boolean> {
   const champId = nameIdMap[normalizeKey(name)];
-  if (!champId || lane === "UNKNOWN") return;
+  if (!champId || lane === "UNKNOWN") return false;
 
   writeLog(`   > Procesando carril: ${lane} para ${name}`);
 
   try {
-    const rawData = await fetchDpmChampionStats(name, lane, version, sessionId);
+    let rawData: any = null;
+    let lastFetchError: unknown = null;
 
-    if (!rawData || rawData.error || !rawData.runes) {
-      writeLog(`   [WARN] dpm.lol no tiene builds para ${name} en ${lane}`);
-      return;
+    // LoLalytics puede responder temporalmente con 403/5xx o HTML incompleto.
+    // Reintentar aquí evita abortar toda la transacción por un fallo aislado.
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const candidate = await fetchLolalyticsChampionStats(name, lane, version, sessionId);
+        if (!candidate || candidate.error || !candidate.runes) {
+          throw new Error('respuesta sin build o página de runas válida');
+        }
+        rawData = candidate;
+        writeLog('   [OK] LoLalytics: ' + name + ' ' + lane + ' (' + (rawData.sourceMetadata?.patch || version) + ')');
+        break;
+      } catch (error) {
+        lastFetchError = error;
+        if (attempt < 3) {
+          const detail = error instanceof Error ? error.message : String(error);
+          writeLog(`   [RETRY] ${name} ${lane}: intento ${attempt}/3 falló (${detail}).`);
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
+        }
+      }
     }
 
+    if (!rawData) {
+      const detail = lastFetchError instanceof Error ? lastFetchError.message : String(lastFetchError || 'error desconocido');
+      writeLog(`   [ERROR] No se pudo obtener LoLalytics para ${name} ${lane} tras 3 intentos: ${detail}`);
+      return false;
+    }
     const currentChampStmt = dbInstance.prepare('SELECT * FROM champions WHERE id = ?');
     const current = currentChampStmt.get(champId) as any;
 
@@ -62,42 +82,42 @@ export async function scrapeSingleChampionLane(
       version
     });
 
-    // Persistir en SQLite. Cada tarea solo modifica la combinación campeón/carril.
-    championsRepo.saveChampion(record.championUpdate);
-    record.matchups.forEach(m => championsRepo.saveMatchup(m));
-    record.synergies.forEach(s => championsRepo.saveSynergy(s));
-    championsRepo.clearBuilds(champId, lane);
-    championsRepo.saveBuild(record.defaultBuild);
-    record.candidateBuilds.forEach(b => championsRepo.saveBuild(b));
-
-    // El JSON es un snapshot secundario; SQLite conserva los datos por carril.
-    const cData = { ...(dbMemory[name] || {}) };
-    cData.godMatchups = record.cDataSnapshot.godMatchups;
-    cData.counters = record.cDataSnapshot.counters;
-    cData.synergies = record.cDataSnapshot.synergies;
-    cData.buildData = record.cDataSnapshot.buildData;
-    if (record.cDataSnapshot.combat) cData.combat = record.cDataSnapshot.combat;
-    if (record.cDataSnapshot.scalingType) cData.scalingType = record.cDataSnapshot.scalingType;
-    dbMemory[name] = cData;
+        // Persistir cada tarea con un savepoint. Si una tarea falla, sólo ella vuelve
+    // a su estado anterior y las demás tareas válidas pueden conservarse.
+    const savepoint = `champion_${champId}_${lane.replace(/[^A-Za-z0-9_]/g, '_')}`;
+    dbInstance.exec(`SAVEPOINT ${savepoint};`);
+    try {
+      championsRepo.saveChampion(record.championUpdate);
+      championsRepo.clearMatchups(champId, lane);
+      championsRepo.clearSynergies(champId, lane);
+      record.matchups.forEach(m => championsRepo.saveMatchup(m));
+      record.synergies.forEach(s => championsRepo.saveSynergy(s));
+      championsRepo.clearBuilds(champId, lane);
+      championsRepo.saveBuild(record.defaultBuild);
+      record.candidateBuilds.forEach(b => championsRepo.saveBuild(b));
+      dbInstance.exec(`RELEASE SAVEPOINT ${savepoint};`);
+    } catch (error) {
+      dbInstance.exec(`ROLLBACK TO SAVEPOINT ${savepoint};`);
+      dbInstance.exec(`RELEASE SAVEPOINT ${savepoint};`);
+      throw error;
+    }
+    return true;
   } catch (e: any) {
     writeLog(`   [ERROR] Error scrapeando carril ${lane} de ${name}: ${e.message || e}`);
+    return false;
   }
 }
 
 export async function scrapeSingleChampion(
   name: string,
   version: string,
-  dbMemory: any,
   nameIdMap: Record<string, number>,
   writeLog: (msg: string) => void,
   sessionId?: string
 ): Promise<void> {
-  const playLanes = getChampionPlayLanes(name, dbMemory, nameIdMap);
-
+  const playLanes = getChampionPlayLanes(name, nameIdMap);
   for (const lane of playLanes) {
-    await scrapeSingleChampionLane(name, lane, version, dbMemory, nameIdMap, writeLog, sessionId);
-
-    // Delay entre carriles para respetar Cloudflare.
+    await scrapeSingleChampionLane(name, lane, version, nameIdMap, writeLog, sessionId);
     await new Promise(r => setTimeout(r, 1000));
   }
 }

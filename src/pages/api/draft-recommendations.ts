@@ -3,11 +3,17 @@ import type { APIRoute } from 'astro';
 import { getProcessedRecommendations, analyzeComposition } from '../../lib/engine/picks/index.js';
 import { getBanRecommendations } from '../../lib/engine/bans/index.js';
 import { NAME_TO_ID, normalizeRole } from '../../lib/engine/core/constants.js';
+import { initializeEngineData } from '../../lib/engine/core/dataProvider.js';
+import { championsRepo } from '../../lib/db/champions.repo.js';
 
 export const POST: APIRoute = async ({ request, url }) => {
   try {
     const body = await request.json();
     const phaseParam = url.searchParams.get('phase') || body.phase || 'all';
+
+    // Las recomendaciones siempre trabajan con la misma instantánea enriquecida
+    // que entrega SQLite al resto de la aplicación.
+    initializeEngineData(championsRepo.getAllEnrichedChampions());
     
     // Captura tolerante de carril/rol en body o query params
     const rawLane = body.assignedLane || 

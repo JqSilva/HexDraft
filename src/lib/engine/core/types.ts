@@ -51,7 +51,7 @@ export interface EnrichedChampion extends ChampionData {
   scalingType: ScalingType;
   buildData?: any;
   builds?: any[];
-  dpmData?: any;
+  statsData?: any;
   
   // Compatibilidad dual de nombres (snake_case / camelCase)
   tacticRole?: 'engage' | 'peel' | 'poke' | 'dive' | 'burst' | 'splitpush' | 'skirmish' | 'teamfight' | 'siege' | 'utility';

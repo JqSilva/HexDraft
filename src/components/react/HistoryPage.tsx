@@ -181,11 +181,11 @@ export const HistoryPage = () => {
       const wins = groupMatches.filter(m => m.win).length;
       const losses = groupMatches.length - wins;
       const totalScore = groupMatches.reduce((acc, m) => acc + getPerformanceScore(m), 0);
-      const averageDpmScore = parseFloat((totalScore / groupMatches.length).toFixed(1));
+      const averageHexScore = parseFloat((totalScore / groupMatches.length).toFixed(1));
       return {
         dateKey,
         matches: groupMatches,
-        stats: { wins, losses, averageDpmScore }
+        stats: { wins, losses, averageHexScore }
       };
     });
   };
@@ -241,7 +241,7 @@ export const HistoryPage = () => {
                 <h3 className="text-sm font-black text-white tracking-wider uppercase font-mono">{group.dateKey}</h3>
                 <div className="flex items-center gap-2">
                   <span className="bg-[#9055ff]/10 border border-[#9055ff]/30 text-[#9055ff] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
-                    Hex Score : {group.stats.averageDpmScore}
+                    Hex Score : {group.stats.averageHexScore}
                   </span>
                   <span className="bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm">
                     {group.stats.wins} V

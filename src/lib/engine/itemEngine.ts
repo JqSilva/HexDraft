@@ -4,6 +4,9 @@ import { NAME_TO_ID } from './core/constants.js';
 import { hydrateAsset } from './core/hydrator.js';
 import { analyzeComposition } from './picks/compositionAnalyzer.js';
 import { calculateSkillMaxOrder } from './tacticalEngine.js';
+import { evidenceScore, isReliableVariant } from './statisticalScoring.js';
+import { scoreBuildVariant, scoreEvidence100, scoreItemOption, scoreRunePage } from './recommendationScoring.js';
+import { chooseSecondaryPair, isValidRunePage } from './rune-validation.js';
 import type { EnrichedChampion } from './core/types.js';
 import assetsMap from '../data/assets-map.json' with { type: 'json' };
 
@@ -16,6 +19,7 @@ export interface RuneOption {
 }
 
 export interface RunesData {
+  pages?: RunePage[];
   primaryRuneId?: RuneOption[];
   primaryRuneId2?: RuneOption[];
   primaryRuneId3?: RuneOption[];
@@ -26,11 +30,22 @@ export interface RunesData {
   perksStat3?: RuneOption[];
 }
 
+export interface RunePage {
+  primaryStyleId: number;
+  subStyleId: number;
+  selections: number[];
+  shards: number[];
+  winrate?: number;
+  pickrate?: number;
+  games?: number;
+}
+
 export interface BuildCluster {
   pivotItem: number;
   representativeCore: number[];
   totalPickrate: number;
   weightedWinrate: number;
+  games?: number;
   damageType: 'AD' | 'AP' | 'Hybrid';
 }
 
@@ -517,7 +532,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
 
 
 /**
- * Genera ramas de compra estáticas para tres condiciones de partida (snowball, neutral, behind) para campeones sin datos DPM completos.
+ * Genera ramas de compra estáticas para tres condiciones de partida (snowball, neutral, behind) para campeones sin datos LoLalytics completos.
  * 
  * @param slotItems - Opciones de ítems del campeón.
  * @param coreItemIds - IDs de los ítems del core.
@@ -636,7 +651,8 @@ export function getDynamicPaths(
 ): { snowball: number[], neutral: number[], behind: number[] } {
   const candidatesMap = new Map<number, { id: number; pickrate: number; winrate: number }>();
 
-  const slotsToCheck = ['item4', 'item5', 'item3'];
+  // Item 4/5/6 son alternativas contextuales; no se concatenan como core fijo.
+  const slotsToCheck = ['item4', 'item5', 'item6', 'item3'];
   
   slotsToCheck.forEach(slotKey => {
     const arr = slotItems?.[slotKey] || [];
@@ -681,7 +697,7 @@ export function getDynamicPaths(
   const candidates: { id: number; pickrate: number; winrate: number; score: number }[] = [];
 
   prFiltered.forEach(cand => {
-    let score = cand.winrate + cand.pickrate * 0.5;
+    let score = scoreItemOption(cand).score;
 
     // 1. Grievous Wounds
     if (ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(cand.id)) {
@@ -843,8 +859,8 @@ export function isItemViableForChamp(
 
   // Recolectar todos los ítems de las ranuras históricas del campeón
   const allSlotItems = Object.values(champData.buildData?.slotItems || {}).flat();
-  const dpmItems = Object.values(champData.buildData?.dpmData?.items || {}).flat();
-  const combinedItems = [...allSlotItems, ...dpmItems];
+  const statsItems = Object.values(champData.buildData?.statsData?.items || {}).flat();
+  const combinedItems = [...allSlotItems, ...statsItems];
 
   const inPool = combinedItems.find((i: any) => {
     const iId = Number(i.Id || i.id || i.itemId);
@@ -1064,7 +1080,7 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
 export function consensusScore(pickrate: number, winrate: number): number {
   const pr = Math.max(0, pickrate || 0);
   const wr = winrate || 50.0;
-  return (pr * 0.75) + ((wr - 50.0) * 0.5);
+  return scoreEvidence100({ pickrate: pr, winrate: wr }).score;
 }
 
 // Alias para compatibilidad
@@ -1120,27 +1136,32 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
 }
 
 /**
- * Analiza el DPM del campeón y detecta clusters de builds basándose directamente en combinaciones completas de 3 ítems (`coreItem3`)
+ * Analiza el LoLalytics del campeón y detecta clusters de builds basándose directamente en combinaciones completas de 3 ítems (`coreItem3`)
  * ordenadas por consenso meta (Pickrate dominante sobre Winrate).
  * 
- * @param dpmData - Datos de DPM del scraper/base de datos para el campeón.
+ * @param statsData - Datos de LoLalytics del scraper/base de datos para el campeón.
  * @returns Lista de clusters ordenados por consenso.
  */
-export function detectBuildClusters(dpmData: any): BuildCluster[] {
-  if (!dpmData || !dpmData.coreBuilds) return [];
+export function detectBuildClusters(statsData: any): BuildCluster[] {
+  if (!statsData || !statsData.coreBuilds) return [];
 
-  const coreItem3 = dpmData.coreBuilds.coreItem3 || [];
-  const coreItem2 = dpmData.coreBuilds.coreItem2 || [];
+  const coreItem3 = statsData.coreBuilds.coreItem3 || [];
+  const coreItem2 = statsData.coreBuilds.coreItem2 || [];
   const clusters: BuildCluster[] = [];
   const seenSignatures = new Set<string>();
 
   // 1. Priorizar triplete de coreItem3 evaluado por consensusScore
   if (Array.isArray(coreItem3) && coreItem3.length > 0) {
-    const sortedCore3 = [...coreItem3]
-      .filter((c: any) => Array.isArray(c.itemIds) && c.itemIds.length >= 3)
+    const candidatesCore3 = [...coreItem3]
+      .filter((c: any) => Array.isArray(c.itemIds) && c.itemIds.length >= 3);
+    const hasSampleCounts = candidatesCore3.some((c: any) => Number(c.games || c.count || 0) > 0);
+    const reliableCore3 = hasSampleCounts
+      ? candidatesCore3.filter((c: any) => isReliableVariant(c, 100))
+      : candidatesCore3;
+    const sortedCore3 = [...(reliableCore3.length > 0 ? reliableCore3 : [])]
       .sort((a: any, b: any) => {
-        const scoreA = consensusScore(a.pickrate || 0, a.winrate || 50.0);
-        const scoreB = consensusScore(b.pickrate || 0, b.winrate || 50.0);
+        const scoreA = evidenceScore(a);
+        const scoreB = evidenceScore(b);
         return scoreB - scoreA;
       });
 
@@ -1151,16 +1172,17 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
       seenSignatures.add(sig);
 
       const pivotItem = representativeCore[1] || representativeCore[0];
-      const totalPickrate = c.pickrate || 0;
-      const weightedWinrate = c.winrate || 50.0;
+        const totalPickrate = c.pickrate || 0;
+        const weightedWinrate = c.winrate || 50.0;
       const damageType = classifyItemsDamageType(representativeCore);
 
       clusters.push({
         pivotItem,
         representativeCore,
-        totalPickrate,
-        weightedWinrate,
-        damageType
+          totalPickrate,
+          weightedWinrate,
+          games: Number(c.games || c.count || 0) || undefined,
+          damageType
       });
       if (clusters.length >= 6) break;
     }
@@ -1168,11 +1190,16 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
 
   // 2. Si no hay triplete disponible, completar desde coreItem2 con ítems estadísticamente viables (PR >= 10%)
   if (clusters.length === 0 && Array.isArray(coreItem2) && coreItem2.length > 0) {
-    const sortedCore2 = [...coreItem2]
-      .filter((pair: any) => Array.isArray(pair.itemIds) && pair.itemIds.length >= 2)
+    const candidatesCore2 = [...coreItem2]
+      .filter((pair: any) => Array.isArray(pair.itemIds) && pair.itemIds.length >= 2);
+    const hasSampleCounts = candidatesCore2.some((pair: any) => Number(pair.games || pair.count || 0) > 0);
+    const reliableCore2 = hasSampleCounts
+      ? candidatesCore2.filter((pair: any) => isReliableVariant(pair, 100))
+      : candidatesCore2;
+    const sortedCore2 = [...(reliableCore2.length > 0 ? reliableCore2 : [])]
       .sort((a: any, b: any) => {
-        const scoreA = consensusScore(a.pickrate || 0, a.winrate || 50.0);
-        const scoreB = consensusScore(b.pickrate || 0, b.winrate || 50.0);
+        const scoreA = evidenceScore(a);
+        const scoreB = evidenceScore(b);
         return scoreB - scoreA;
       });
 
@@ -1181,12 +1208,12 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
       const pivotItem = pairIds[1] || pairIds[0];
       const damageType = classifyItemsDamageType(pairIds);
 
-      // Buscar 3er ítem viable en slotItems / dpmData.items
+      // Buscar 3er ítem viable en slotItems / statsData.items
       let thirdItem = 0;
       const slotItemsArr = [
-        ...(dpmData.items?.item3 || []),
-        ...(dpmData.items?.item4 || []),
-        ...(dpmData.items?.item5 || [])
+        ...(statsData.items?.item3 || []),
+        ...(statsData.items?.item4 || []),
+        ...(statsData.items?.item5 || [])
       ];
 
       const viable3rd = slotItemsArr
@@ -1194,7 +1221,7 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
           const id = Number(item.Id || item.id);
           return id && !pairIds.includes(id) && isItemCoherentWithCluster(id, damageType) && (item.pickrate || 0) >= 10.0;
         })
-        .sort((a: any, b: any) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+        .sort((a: any, b: any) => scoreItemOption(b).score - scoreItemOption(a).score);
 
       if (viable3rd.length > 0) {
         thirdItem = Number(viable3rd[0].Id || viable3rd[0].id);
@@ -1213,6 +1240,7 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
         representativeCore,
         totalPickrate: pair.pickrate || 0,
         weightedWinrate: pair.winrate || 50.0,
+        games: Number(pair.games || pair.count || 0) || undefined,
         damageType
       });
       if (clusters.length >= 6) break;
@@ -1220,8 +1248,8 @@ export function detectBuildClusters(dpmData: any): BuildCluster[] {
   }
 
   return clusters.sort((a, b) => {
-    const scoreA = consensusScore(a.totalPickrate, a.weightedWinrate);
-    const scoreB = consensusScore(b.totalPickrate, b.weightedWinrate);
+    const scoreA = evidenceScore({ pickrate: a.totalPickrate, winrate: a.weightedWinrate, games: a.games });
+    const scoreB = evidenceScore({ pickrate: b.totalPickrate, winrate: b.weightedWinrate, games: b.games });
     return scoreB - scoreA;
   });
 }
@@ -1241,7 +1269,7 @@ export function scoreClusterInContext(
   // Pesa con prioridad de consenso meta (Pickrate dominante)
   const prContrib = pr * 0.75;
   const wrContrib = (wr - 50.0) * 0.5;
-  const baseScore = prContrib + wrContrib;
+  const baseScore = scoreBuildVariant({ pickrate: pr, winrate: wr, games: cluster.games }).score;
   let score = baseScore;
 
   const bonuses: { label: string; value: number }[] = [];
@@ -1462,7 +1490,7 @@ export function selectBootsForCluster(
  * Selecciona una página de runas completa y coherente (tupla completa) asociada al cluster y playstyle
  * directamente desde el dataset de partidas reales sin generar combinaciones híbridas artificiales.
  * 
- * @param runesData - Estructura de runas del scraper/DPM.
+ * @param runesData - Estructura de runas del scraper/LoLalytics.
  * @param cluster - El cluster de build activo.
  * @param champData - Datos de perfil enriquecido del campeón.
  * @returns Estructura con la página de runas completa coherente.
@@ -1479,15 +1507,43 @@ export function selectRunesForCluster(
 } {
   const clusterDamageType = cluster.damageType || 'Hybrid';
   const runeToStyle = (assetsMap.runeToStyle || {}) as Record<number, number>;
+  const basePrimaryStyleId = Number(champData?.buildData?.runes?.primaryStyleId) || 0;
+  const baseSubStyleId = Number(champData?.buildData?.runes?.subStyleId) || 0;
+
+  const sourcePages = Array.isArray(runesData.pages) ? [...runesData.pages]
+    .sort((a, b) => scoreRunePage(b).score - scoreRunePage(a).score) : [];
+  for (const page of sourcePages) {
+    if (!page.selections || page.selections.length < 6) continue;
+    const pageKeystoneType = KEYSTONE_DAMAGE_TYPE[page.selections[0]] || 'Hybrid';
+    const damageCompatible = pageKeystoneType === 'Hybrid'
+      || pageKeystoneType === clusterDamageType
+      || clusterDamageType === 'Hybrid';
+    if (damageCompatible && isValidRunePage(
+      page.selections,
+      page.primaryStyleId,
+      page.subStyleId,
+      runeToStyle
+    )) {
+      return {
+        primaryStyleId: page.primaryStyleId,
+        subStyleId: page.subStyleId,
+        selections: page.selections.slice(0, 6),
+        shards: page.shards?.slice(0, 3) || [5008, 5008, 5002]
+      };
+    }
+  }
 
   // 1. Si champData tiene una build por defecto con página de runas completa coherente con el daño, reutilizarla
   if (champData?.buildData?.runes?.selections && champData.buildData.runes.selections.length >= 6) {
     const baseSelections = champData.buildData.runes.selections.map((r: any) => typeof r === 'object' ? Number(r.id || r.Id) : Number(r));
     const keystoneId = baseSelections[0];
     const keystoneType = KEYSTONE_DAMAGE_TYPE[keystoneId] || 'Hybrid';
-    if (keystoneType === 'Hybrid' || keystoneType === clusterDamageType || clusterDamageType === 'Hybrid') {
-      const primaryStyleId = Number(champData.buildData.runes.primaryStyleId) || Number(runeToStyle[keystoneId]) || 8000;
-      const subStyleId = Number(champData.buildData.runes.subStyleId) || 8400;
+    if (
+      (keystoneType === 'Hybrid' || keystoneType === clusterDamageType || clusterDamageType === 'Hybrid')
+      && isValidRunePage(baseSelections, basePrimaryStyleId || Number(runeToStyle[keystoneId]) || 8000, baseSubStyleId || 8400, runeToStyle)
+    ) {
+      const primaryStyleId = basePrimaryStyleId || Number(runeToStyle[keystoneId]) || 8000;
+      const subStyleId = baseSubStyleId || 8400;
       const shards = (champData.buildData.runes.shards || [5008, 5008, 5002]).map((s: any) => typeof s === 'object' ? Number(s.id || s.Id) : Number(s));
       return {
         primaryStyleId,
@@ -1510,7 +1566,7 @@ export function selectRunesForCluster(
 
   const candidatesKeystones = filteredKeystones.length > 0 ? filteredKeystones : rawKeystones;
   const sortedKeystones = [...candidatesKeystones].sort((a, b) => {
-    return consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0);
+    return evidenceScore(b) - evidenceScore(a);
   });
 
   const primaryRuneId = Number(sortedKeystones[0]?.Id || sortedKeystones[0]?.id || 8010);
@@ -1524,7 +1580,7 @@ export function selectRunesForCluster(
       return Number(runeToStyle[id]) === primaryStyleId;
     });
     const pool = sameStyle.length > 0 ? sameStyle : slotOptions;
-    const sorted = [...pool].sort((a, b) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
+    const sorted = [...pool].sort((a, b) => evidenceScore(b) - evidenceScore(a));
     return Number(sorted[0]?.Id || sorted[0]?.id || 0);
   };
 
@@ -1550,11 +1606,10 @@ export function selectRunesForCluster(
 
   Object.entries(secondaryByStyle).forEach(([styleKey, opts]) => {
     const styleId = Number(styleKey);
-    const sortedOpts = [...opts].sort((a, b) => consensusScore(b.pickrate || 0, b.winrate || 50.0) - consensusScore(a.pickrate || 0, a.winrate || 50.0));
-    if (sortedOpts.length >= 2) {
-      const r1 = sortedOpts[0];
-      const r2 = sortedOpts[1];
-      const score = consensusScore(r1.pickrate || 0, r1.winrate || 50.0) + consensusScore(r2.pickrate || 0, r2.winrate || 50.0);
+    const pair = chooseSecondaryPair(opts, evidenceScore);
+    if (pair) {
+      const [r1, r2] = pair;
+      const score = evidenceScore(r1) + evidenceScore(r2);
       if (score > maxSubScore) {
         maxSubScore = score;
         bestSubStyleId = styleId;
@@ -1704,7 +1759,7 @@ function getClusterTitle(coreItems: number[], damageType: string): string {
 function buildOutputForCluster(
   c: any,
   champ: any,
-  dpmData: any,
+  statsData: any,
   rawBoots: any,
   rawRunes: any,
   rawStarters: any,
@@ -1732,7 +1787,7 @@ function buildOutputForCluster(
   const chosenSummoners = selectSummonersForCluster(rawSummoners, myRole);
 
   const dynamicPaths = getDynamicPaths(
-    dpmData.items || {},
+    statsData.items || {},
     coreItemIds,
     c.damageType,
     chosenBootId,
@@ -1792,7 +1847,7 @@ function buildOutputForCluster(
     behind: dynamicPaths.behind.map((id: number) => hydrateAsset('items', id))
   };
 
-  const skillsData = defaultBuild?.skills || dpmData?.skills || champ.buildData?.skills;
+  const skillsData = defaultBuild?.skills || statsData?.skills || champ.buildData?.skills;
   const fullOrder = calculateSkillMaxOrder(skillsData);
 
   return {
@@ -1824,7 +1879,7 @@ function buildOutputForCluster(
  * Esta función es un **entrypoint principal** del motor de items invocado a través de `getSingleChampionBuild` desde `DraftPage.tsx`.
  * 
  * El flujo del algoritmo consiste en:
- * 1. Resolver el perfil y DPM del campeón. Si no existen, invoca a `getFallbackStaticBuild`.
+ * 1. Resolver el perfil y LoLalytics del campeón. Si no existen, invoca a `getFallbackStaticBuild`.
  * 2. Detectar los clusters de builds distintas con `detectBuildClusters`.
  * 3. Evaluar y puntuar cada cluster contra el draft enemigo y aliado con `scoreClusterInContext`.
  * 4. Filtrar clusters redundantes y seleccionar el cluster ganador.
@@ -1837,7 +1892,7 @@ function buildOutputForCluster(
  * @param myRole - Rol en el que jugará el campeón.
  * @returns La build adaptada final con el cluster ganador, botas, runas, iniciales, swaps propuestos y alternativas.
  * 
- * @modifica La lógica de fallback y resolución de DPM de builds por base de datos se maneja al inicio de esta función.
+ * @modifica La lógica de fallback y resolución de LoLalytics de builds por base de datos se maneja al inicio de esta función.
  */
 export function getAdaptedBuild(
   championId: number | string,
@@ -1863,31 +1918,31 @@ export function getAdaptedBuild(
   const isAssassin = tacticRole === 'burst' || tacticRole === 'assassin' || champClass === 'Assassin';
 
   const roleUpper = myRole?.toUpperCase() || '';
-  const defaultBuild = champ.builds?.find((b: any) => b.is_default && b.lane?.toUpperCase() === roleUpper && b.special_notes?.dpmData)
-    || champ.builds?.find((b: any) => b.is_default && b.special_notes?.dpmData)
+  const defaultBuild = champ.builds?.find((b: any) => b.is_default && b.lane?.toUpperCase() === roleUpper && b.special_notes?.statsData)
+    || champ.builds?.find((b: any) => b.is_default && b.special_notes?.statsData)
     || champ.builds?.find((b: any) => b.is_default && b.lane?.toUpperCase() === roleUpper)
     || champ.builds?.find((b: any) => b.is_default)
     || champ.buildData;
   // La ruta varía según la fuente de datos:
-  // - SQLite → special_notes.dpmData (guardado por sync.service)
-  // - JSON (counter-synergies.json) → buildData.dpmData (ruta directa del scraper)
-  const dpmData = defaultBuild?.special_notes?.dpmData
-    || champ.buildData?.special_notes?.dpmData
-    || champ.buildData?.dpmData  // ← ruta directa del JSON
-    || champ.dpmData;
+  // - SQLite → special_notes.statsData (guardado por sync.service)
+  // - SQLite → buildData.statsData (ruta directa del scraper)
+  const statsData = defaultBuild?.special_notes?.statsData
+    || champ.buildData?.special_notes?.statsData
+    || champ.buildData?.statsData  // ← ruta directa del JSON
+    || champ.statsData;
 
   console.log(`\n🔍 [ENGINE] getAdaptedBuild → ${name} (ID: ${champIdNum})`);
   console.log(`   tacticRole: ${tacticRole} | class: ${champClass} | isAssassin: ${isAssassin}`);
-  console.log(`   hasDpmData: ${!!(dpmData && dpmData.coreBuilds)} | builds count: ${champ.builds?.length ?? 0}`);
+  console.log(`   hasStatsData: ${!!(statsData && statsData.coreBuilds)} | builds count: ${champ.builds?.length ?? 0}`);
   console.log(`   allies: [${myTeamIds.join(', ')}] | enemies: [${theirTeamIds.join(', ')}]`);
 
-  // Fallback si no hay dpmData para campeones sin scrapeo completo
-  if (!dpmData || !dpmData.coreBuilds) {
-    console.log(`   ⚠️  Sin dpmData → usando getFallbackStaticBuild`);
+  // Fallback si no hay statsData para campeones sin scrapeo completo
+  if (!statsData || !statsData.coreBuilds) {
+    console.log(`   ⚠️  Sin statsData → usando getFallbackStaticBuild`);
     return getFallbackStaticBuild(champ, myRole);
   }
 
-  const clusters = detectBuildClusters(dpmData);
+  const clusters = detectBuildClusters(statsData);
   if (clusters.length === 0) {
     return getFallbackStaticBuild(champ, myRole);
   }
@@ -1927,10 +1982,10 @@ export function getAdaptedBuild(
   const losingLogs = scoredClusters.slice(1).map(c => `cluster_${c.damageType} (score: ${c.score.toFixed(2)})`).join(", ");
   console.log(`✅ [CLUSTER] ${champ.name} → cluster_${winningCluster.damageType} (score: ${winningCluster.score.toFixed(2)})${losingLogs ? ` sobre ${losingLogs}` : ""}`);
 
-  const rawBoots = dpmData.boots || [];
-  const rawRunes = dpmData.runes || {};
-  const rawStarters = dpmData.startItems || [];
-  const rawSummoners = dpmData.summoners || [];
+  const rawBoots = statsData.boots || [];
+  const rawRunes = statsData.runes || {};
+  const rawStarters = statsData.startItems || [];
+  const rawSummoners = statsData.summoners || [];
   const supportEvolution = selectSupportItemEvolution(name, myRole);
   let hydratedSupportEvolution = null;
   if (supportEvolution) {
@@ -1981,7 +2036,7 @@ export function getAdaptedBuild(
       champ.class, champ
     );
     const cDynamicPaths = getDynamicPaths(
-      dpmData.items || {},
+      statsData.items || {},
       c.representativeCore,
       c.damageType,
       cBootId,
@@ -2028,7 +2083,7 @@ export function getAdaptedBuild(
 
     if (!isSimilar) {
       const clusterBuildOutput = buildOutputForCluster(
-        c, champ, dpmData, rawBoots, rawRunes,
+        c, champ, statsData, rawBoots, rawRunes,
         rawStarters, rawSummoners, myRole,
         enemyNames, enemyContext, isAssassin, defaultBuild
       );
@@ -2040,6 +2095,7 @@ export function getAdaptedBuild(
         damageType: c.damageType,
         totalPickrate: c.totalPickrate,
         weightedWinrate: c.weightedWinrate,
+        games: c.games,
         score: +(c.score.toFixed(2)),
         isWinner: false,
         fullCoreIds: cFullCoreIds,
@@ -2064,7 +2120,7 @@ if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
 if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
   filteredClusters = scoredClusters.slice(0, 4).map(c => {
     const clusterBuildOutput = buildOutputForCluster(
-      c, champ, dpmData, rawBoots, rawRunes,
+      c, champ, statsData, rawBoots, rawRunes,
       rawStarters, rawSummoners, myRole,
       enemyNames, enemyContext, isAssassin, defaultBuild
     );
@@ -2075,7 +2131,8 @@ if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
       damageType: c.damageType,
       totalPickrate: c.totalPickrate,
       weightedWinrate: c.weightedWinrate,
-      score: +(c.score.toFixed(2)),
+      games: c.games,
+        score: +(c.score.toFixed(2)),
       isWinner: false,
       fullCoreIds: clusterBuildOutput.fullCoreIds,
       title,
@@ -2122,6 +2179,36 @@ filteredClusters.forEach((c, i) => {
   const coreItemSwaps = winningClusterData.coreItemSwaps;
   const build = winningClusterData.build;
 
+  const selectedRunePage = Array.isArray(rawRunes.pages)
+    ? rawRunes.pages.find((page: any) => Array.isArray(page.selections) && page.selections.length >= 6 && page.selections.slice(0, 6).join(',') === winningClusterData.build.runes.selections.map((r: any) => Number(r?.id || r)).slice(0, 6).join(','))
+    : null;
+  const recommendationScores = {
+    build: scoreBuildVariant({
+      pickrate: winningClusterData.totalPickrate,
+      winrate: winningClusterData.weightedWinrate,
+      games: winningClusterData.games
+    }),
+    runes: scoreRunePage(selectedRunePage || {})
+  };
+
+  const situationalItems = ['item4', 'item5', 'item6'].reduce((result: any, slot: string) => {
+    const options = (statsData.items?.[slot] || [])
+      .map((item: any) => ({ ...item, itemId: Number(item.itemId || item.Id || item.id) }))
+      .filter((item: any) => item.itemId > 0 && isItemCoherentWithCluster(item.itemId, winningClusterData.damageType))
+      .sort((a: any, b: any) => scoreItemOption(b).score - scoreItemOption(a).score)
+      .slice(0, 3)
+      .map((item: any) => ({
+        item: hydrateAsset('items', item.itemId),
+        score: scoreItemOption(item).score,
+        confidence: scoreItemOption(item).confidence,
+        pickrate: Number(item.pickrate || item.pickRate || 0),
+        winrate: Number(item.winrate || item.winRate || 50),
+        games: Number(item.games || item.count || 0)
+      }));
+    result[slot] = options;
+    return result;
+  }, {} as Record<string, any[]>);
+
   const defaultBootId = typeof defaultBuild?.items?.boots === 'object'
     ? (defaultBuild.items.boots.id || defaultBuild.items.boots.itemId)
     : (Number(defaultBuild?.items?.boots) || 3047);
@@ -2161,13 +2248,16 @@ filteredClusters.forEach((c, i) => {
     },
     supportEvolution: hydratedSupportEvolution,
     coreItemSwaps,
+    recommendationScores,
+    situationalItems,
     // Clusters limpios con sus builds para que la UI pueda renderizarlos y alternar entre ellos
     scoredClusters: filteredClusters.map(c => ({
       pivotItem: c.pivotItem,
       damageType: c.damageType,
       totalPickrate: c.totalPickrate,
       weightedWinrate: c.weightedWinrate,
-      score: c.score,
+      games: c.games,
+        score: c.score,
       isWinner: c.isWinner,
       title: c.title,
       build: c.build,

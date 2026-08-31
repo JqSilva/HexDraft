@@ -6,35 +6,13 @@ import { configRepo } from '../../../lib/db/config.repo.js';
 
 export const GET: APIRoute = async () => {
   try {
-    // 1. Obtener parche actual local de config o meta-cache.json
-    let patch = '-';
-    try {
-      const metaPath = path.resolve(process.cwd(), 'src/lib/data/meta-cache.json');
-      if (fs.existsSync(metaPath)) {
-        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-        patch = meta.version || '-';
-      }
-    } catch {
-      // Ignorado, se mantendrá el valor por defecto
-    }
-
-    if (patch === '-') {
-      try {
-        const configs = configRepo.getAllConfigs();
-        patch = configs.last_sync_version || '-';
-      } catch {
-        // Ignorado si falla lectura de config de sincronización
-      }
-    }
+    // La versión local se toma de SQLite; meta-cache.json queda reservado
+    // exclusivamente para la tierlist que se actualiza por carril.
+    const configs = configRepo.getAllConfigs();
+    const patch = configs.last_sync_version || '-';
 
     // 2. Obtener fecha del último sync de datos local
-    let lastSyncTimestamp = '-';
-    try {
-      const configs = configRepo.getAllConfigs();
-      lastSyncTimestamp = configs.last_sync_timestamp || '-';
-    } catch {
-      // Ignorado si falla lectura del timestamp en configs
-    }
+    const lastSyncTimestamp = configs.last_sync_timestamp || '-';
 
     // 3. Leer versión publicada de data/db-version.json
     let dbVersion = {

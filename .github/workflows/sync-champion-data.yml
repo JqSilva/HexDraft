@@ -9,12 +9,6 @@ jobs:
   sync-and-publish:
     runs-on: ubuntu-latest
 
-    services:
-      flaresolverr:
-        image: ghcr.io/flaresolverr/flaresolverr:latest
-        ports:
-          - 8191:8191
-
     steps:
       - name: Checkout del repo
         uses: actions/checkout@v4
@@ -27,10 +21,16 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Sincronizar estructura de carriles
+      - name: Validar parser y scoring LoLalytics
+        run: |
+          npx tsc --noEmit
+          npx tsx tests/buildQuality.test.ts
+          node --experimental-sqlite node_modules/tsx/dist/cli.mjs tests/lolalytics.integration.test.ts
+
+      - name: Sincronizar estructura de carriles (OP.GG)
         run: npm run sync:lanes:cli
 
-      - name: Sincronizar Meta y Builds
+      - name: Sincronizar Meta, builds y datos LoLalytics
         run: npm run sync:cli
 
       - name: Configurar Python

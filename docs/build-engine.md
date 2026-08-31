@@ -10,7 +10,7 @@ HexDraft no recomienda una única build genérica para cada campeón; en su luga
 
 Este proceso es realizado por la función [detectBuildClusters](file:///d:/Documentos/HexDraft/src/lib/engine/itemEngine.ts#L1061):
 
-1. **Huella dactilar (`coreItem2`):** El motor lee los datos de DPM (datos agregados de partidas de rango alto) para el campeón y analiza la lista `coreItem2`. Esta lista contiene los pares de dos primeros ítems terminados más comunes.
+1. **Huella dactilar (`coreItem2`):** El motor lee los datos de LoLalytics (datos agregados de partidas clasificatorias) para el campeón y analiza la lista `coreItem2`. Esta lista contiene los pares de dos primeros ítems terminados más comunes.
 2. **Pivote y Agrupación:** Los pares se agrupan por su primer ítem terminado (llamado `pivotItem`).
 3. **Puntuación y Filtros:** Se calcula el pickrate total y el winrate ponderado por partidas para cada pivote. Se descartan aquellos clusters con pickrate menor al 3.0%.
 4. **Núcleo Representativo (`representativeCore`):** Para cada cluster de pivote, se busca la combinación de 3 ítems (`coreItem3`) más común. Si no se encuentra, se hace fallback al par de ítems más popular de ese pivote.

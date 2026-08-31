@@ -1,6 +1,4 @@
-// src/lib/sources/dpm-champion-stats.source.ts
 import axios from 'axios';
-import { API_NAME_MAP } from '../domain/champion-name-resolver.js';
 
 const FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
 
@@ -30,7 +28,7 @@ export async function destroyFlareSolverrSession(sessionId: string): Promise<voi
       timeout: 10000
     });
   } catch {
-    // La sesión puede haber expirado o FlareSolverr puede haberse detenido ya.
+    // La sesión puede haber expirado o FlareSolverr puede haberse detenido.
   }
 }
 
@@ -38,24 +36,21 @@ export function extractJsonFromHtml(htmlOrJson: string | any): any {
   if (typeof htmlOrJson === 'object') return htmlOrJson;
   try {
     return JSON.parse(htmlOrJson);
-  } catch (e) {
+  } catch {
     const preMatch = htmlOrJson.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
-    if (preMatch && preMatch[1]) {
-      return JSON.parse(preMatch[1].trim());
-    }
+    if (preMatch?.[1]) return JSON.parse(preMatch[1].trim());
     const bodyMatch = htmlOrJson.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (bodyMatch && bodyMatch[1]) {
-      const text = bodyMatch[1].replace(/<[^>]*>/g, '').trim();
-      return JSON.parse(text);
+    if (bodyMatch?.[1]) {
+      return JSON.parse(bodyMatch[1].replace(/<[^>]*>/g, '').trim());
     }
-    throw new Error("No se pudo extraer JSON puro de la respuesta de FlareSolverr.");
+    throw new Error('No se pudo extraer JSON de la respuesta renderizada.');
   }
 }
 
 export async function fetchWithFlareSolverr(url: string, sessionId?: string): Promise<any> {
   const response = await axios.post(FLARESOLVERR_URL, {
-    cmd: "request.get",
-    url: url,
+    cmd: 'request.get',
+    url,
     maxTimeout: 60000,
     ...(sessionId ? { session: sessionId } : {})
   }, {
@@ -63,18 +58,6 @@ export async function fetchWithFlareSolverr(url: string, sessionId?: string): Pr
     timeout: 70000
   });
 
-  if (response.data && response.data.status === 'ok') {
-    return response.data.solution.response;
-  }
-  throw new Error(`FlareSolverr falló con estado: ${response.data?.status}`);
-}
-
-export async function fetchDpmChampionStats(champName: string, lane: string, version: string, sessionId?: string): Promise<any> {
-  const internalName = API_NAME_MAP[champName] || champName;
-  const urlName = internalName.replace(/[^a-zA-Z0-9]/g, "");
-  const dpmLane = lane.toUpperCase() === 'UTILITY' ? 'utility' : lane.toLowerCase();
-  const url = `https://dpm.lol/v1/builds/${urlName}?lane=${dpmLane}&tier=diamond&timeframe=${version}&gameMode=ranked`;
-
-  const responseHtml = await fetchWithFlareSolverr(url, sessionId);
-  return extractJsonFromHtml(responseHtml);
+  if (response.data?.status === 'ok') return response.data.solution.response;
+  throw new Error(`FlareSolverr falló con estado: ${response.data?.status || 'desconocido'}`);
 }

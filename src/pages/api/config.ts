@@ -13,8 +13,6 @@ export const GET: APIRoute = async () => {
       auto_ban: rawConfigs.auto_ban === 'true',
       auto_execute_seconds: parseFloat(rawConfigs.auto_execute_seconds || '3.5') || 3.5,
       puppeteer_concurrency: parseInt(rawConfigs.puppeteer_concurrency || '3') || 3,
-      sync_period_days: parseInt(rawConfigs.sync_period_days || '3') || 3,
-      lane_sync_period_days: parseInt(rawConfigs.lane_sync_period_days || '21') || 21,
       last_sync_timestamp: rawConfigs.last_sync_timestamp || '-',
       last_lane_sync_timestamp: rawConfigs.last_lane_sync_timestamp || '-',
       meta_sync_frequency: rawConfigs.meta_sync_frequency !== undefined ? parseFloat(rawConfigs.meta_sync_frequency) : 2,
@@ -59,16 +57,6 @@ export const POST: APIRoute = async ({ request }) => {
       if (!isNaN(concurrency)) updates.puppeteer_concurrency = String(concurrency);
     }
     
-    if (payload.sync_period_days !== undefined) {
-      const val = parseInt(payload.sync_period_days);
-      if (!isNaN(val)) updates.sync_period_days = String(val);
-    }
-
-    if (payload.lane_sync_period_days !== undefined) {
-      const val = parseInt(payload.lane_sync_period_days);
-      if (!isNaN(val)) updates.lane_sync_period_days = String(val);
-    }
-
     if (payload.last_sync_timestamp !== undefined) {
       updates.last_sync_timestamp = String(payload.last_sync_timestamp);
     }

@@ -2,7 +2,6 @@
 import type { APIRoute } from 'astro';
 import { syncMetaAndBuilds } from '../../lib/services/sync.service.js';
 import { SyncEstructuraLanes } from '../../lib/scripts/meta-map.js';
-import { startDockerAndFlareSolverr, stopDockerAndFlareSolverr } from '../../lib/services/docker.service.js';
 import { initializeEngineData } from '../../lib/engine/core/dataProvider.js';
 import { resolveCurrentPatchVersion } from '../../lib/domain/patch-version-resolver.js';
 import { db as dbInstance } from '../../lib/db/sqlite.js';
@@ -46,7 +45,7 @@ function writeLog(msg: string) {
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     const formatted = `[${time}] ${msg}`;
     syncLogs.push(formatted);
-    if (syncLogs.length > 50) syncLogs.shift();
+    if (syncLogs.length > 2000) syncLogs.shift();
     console.log(formatted);
 }
 
@@ -77,8 +76,6 @@ const updateProgress = (current: number, total: number, phase: 'opgg' | 'puppete
 
 export const GET: APIRoute = async ({ url }) => {
     const type = url.searchParams.get('type');
-    const force = url.searchParams.get('force') === 'true';
-
     let version = url.searchParams.get('version');
     if (!version) {
         try {
@@ -115,8 +112,6 @@ export const GET: APIRoute = async ({ url }) => {
             const { configRepo } = await import('../../lib/db/config.repo.js');
             const configs = configRepo.getAllConfigs();
             
-            const syncPeriodDays = parseInt(configs.sync_period_days || '3') || 3;
-            const laneSyncPeriodDays = parseInt(configs.lane_sync_period_days || '21') || 21;
             const lastSyncTimestamp = configs.last_sync_timestamp || '-';
             const lastLaneSyncTimestamp = configs.last_lane_sync_timestamp || '-';
             const lastSyncVersion = configs.last_sync_version || '-';
@@ -126,23 +121,12 @@ export const GET: APIRoute = async ({ url }) => {
             const patchResolution = await resolveCurrentPatchVersion();
             const shortVersion = patchResolution.version;
 
-            const isOutdated = (timestampStr: string, limitDays: number): boolean => {
-                if (timestampStr === '-' || !timestampStr) return true;
-                try {
-                    const lastDate = new Date(timestampStr);
-                    if (isNaN(lastDate.getTime())) return true;
-                    const diffMs = Date.now() - lastDate.getTime();
-                    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-                    return diffDays >= limitDays;
-                } catch {
-                    return true;
-                }
-            };
-
             // Comparar contra el parche que realmente contienen los datos persistidos.
             const isNewPatch = databasePatch !== '-' && comparePatchVersions(shortVersion, databasePatch) > 0;
-            const needsBuildSync = isOutdated(lastSyncTimestamp, syncPeriodDays) || isNewPatch;
-            const needsLaneSync = isOutdated(lastLaneSyncTimestamp, laneSyncPeriodDays);
+            // La cadencia y el lanzamiento los controla GitHub Actions. El
+            // panel sólo marca una versión nueva; no aplica TTL local.
+            const needsBuildSync = isNewPatch;
+            const needsLaneSync = false;
 
             return new Response(JSON.stringify({
                 needs_build_sync: needsBuildSync,
@@ -151,8 +135,6 @@ export const GET: APIRoute = async ({ url }) => {
                 last_lane_sync_timestamp: lastLaneSyncTimestamp,
                 last_sync_version: lastSyncVersion,
                 database_patch: databasePatch,
-                sync_period_days: syncPeriodDays,
-                lane_sync_period_days: laneSyncPeriodDays,
                 version: shortVersion,
                 version_source: patchResolution.source,
                 is_new_patch: isNewPatch
@@ -182,17 +164,13 @@ export const GET: APIRoute = async ({ url }) => {
         syncLogs = [];
         progressPercent = 0;
         progressPhase = 'starting';
-        writeLog(`Motor de sincronización iniciado (Tipo: ${type}, Versión: ${version}, Fuerza: ${force}).`);
+        writeLog(`Motor de sincronización iniciado (Tipo: ${type}, Versión: ${version}).`);
         
         const runSyncFlow = async () => {
-            let dockerDesktopStarted = false;
             try {
-                // 1. Levantar Docker y FlareSolverr de fondo
-                dockerDesktopStarted = await startDockerAndFlareSolverr(writeLog);
-
-                // 2. Ejecutar la sincronización correspondiente
+                // Ejecutar la sincronización correspondiente
                 if (type === 'meta_builds') {
-                    const resStatus = await syncMetaAndBuilds(version, () => shouldAbort, writeLog, force, updateProgress);
+                    const resStatus = await syncMetaAndBuilds(version, () => shouldAbort, writeLog, updateProgress);
                     try {
                         initializeEngineData();
                         if (resStatus === "Cancelado por el usuario") {
@@ -226,12 +204,6 @@ export const GET: APIRoute = async ({ url }) => {
                 progressPhase = 'error';
                 writeLog(`[ERROR] Sincronizacion fallo: ${err.message || err}`);
             } finally {
-                // 3. Detener FlareSolverr y apagar Docker Desktop de fondo si se inició en este flujo
-                try {
-                    await stopDockerAndFlareSolverr(writeLog, dockerDesktopStarted);
-                } catch (dockerStopErr: any) {
-                    writeLog(`[WARN] No se pudo detener Docker/FlareSolverr: ${dockerStopErr.message}`);
-                }
                 isGlobalSyncing = false;
             }
         };

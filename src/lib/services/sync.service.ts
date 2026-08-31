@@ -11,43 +11,13 @@ import { syncRunesFromCommunityDragon } from '../scripts/sync-runes.js';
 import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 import { API_NAME_MAP, NORM_API_NAME_MAP, normalizeKey, resolveChampionId } from '../domain/champion-name-resolver.js';
 import { getStyleOfRune } from '../domain/rune-style-map.js';
-import { createFlareSolverrSession, destroyFlareSolverrSession } from '../sources/dpm-champion-stats.source.js';
+import { createFlareSolverrSession, destroyFlareSolverrSession } from '../sources/flaresolverr.source.js';
 import { fetchOpggMetaByPosition } from '../sources/opgg-meta.source.js';
 
 import { getChampionPlayLanes, scrapeSingleChampion, scrapeSingleChampionLane } from '../sync/scrape-champion.js';
 import { buildChampionRecord } from '../sync/build-champion-record.js';
 
 export { scrapeSingleChampion, buildChampionRecord };
-
-// --- COMPROBAR SI LA BUILD ESTÁ AL DÍA EN TODOS SUS CARRILES ---
-function isChampionBuildUpToDate(champId: number, version: string, syncPeriodDays: number, playLanes: string[]): boolean {
-  try {
-    if (playLanes.length === 0) return false;
-
-    const stmt = dbInstance.prepare('SELECT patch, special_notes FROM builds WHERE champion_id = ? AND lane = ? AND is_default = 1 LIMIT 1');
-    for (const lane of playLanes) {
-      const row = stmt.get(champId, lane) as { patch: string; special_notes: string } | undefined;
-      if (!row) return false;
-      
-      // 1. Verificar parche
-      if (row.patch !== version) return false;
-
-      // 2. Verificar antigüedad de la build
-      const notes = JSON.parse(row.special_notes || '{}');
-      if (!notes.last_update) return false;
-
-      const lastDate = new Date(notes.last_update);
-      if (isNaN(lastDate.getTime())) return false;
-
-      const diffMs = Date.now() - lastDate.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      if (diffDays >= syncPeriodDays) return false;
-    }
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
 
 // --- SERVICIO DE SINCRONIZACIÓN GENERAL ---
 export async function syncMetaCacheOnly(writeLog: (msg: string) => void): Promise<void> {
@@ -103,16 +73,6 @@ export async function syncMetaCacheOnly(writeLog: (msg: string) => void): Promis
     });
   });
 
-  const dbPath = './src/lib/data/counter-synergies.json';
-  let db: any = {};
-  try {
-    if (fs.existsSync(dbPath)) {
-      db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-    }
-  } catch (err) {
-    db = {};
-  }
-
   Object.keys(champMetaStats).forEach(idStr => {
     const champId = Number(idStr);
     const statsList = champMetaStats[champId];
@@ -167,10 +127,6 @@ export async function syncMetaCacheOnly(writeLog: (msg: string) => void): Promis
  
      const primaryLane = roleToLaneMap[bestStat.role] || "UNKNOWN";
  
-     if (db[baseChamp.name]) {
-       db[baseChamp.name].lane = primaryLane;
-     }
- 
      championsRepo.saveChampion({
        id: champId,
        name: baseChamp.name,
@@ -191,12 +147,6 @@ export async function syncMetaCacheOnly(writeLog: (msg: string) => void): Promis
   });
 
   try {
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-  } catch (err) {
-    writeLog(`[OPGG-SYNC] Error escribiendo counter-synergies: ${err}`);
-  }
-
-  try {
     configRepo.setConfig('last_meta_cache_sync', new Date().toISOString());
   } catch (err) {
     writeLog(`[OPGG-SYNC] Error guardando last_meta_cache_sync: ${err}`);
@@ -209,20 +159,8 @@ export async function syncMetaAndBuilds(
   version: string,
   checkAbort: () => boolean,
   writeLog: (msg: string) => void,
-  forceSync = false,
   onProgress?: (current: number, total: number, phase: 'opgg' | 'puppeteer' | 'done') => void
 ): Promise<string> {
-  const dbPath = './src/lib/data/counter-synergies.json';
-  const cachePath = './src/lib/data/meta-cache.json';
-  let db: any = {};
-  try {
-    if (fs.existsSync(dbPath)) {
-      db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-    }
-  } catch (e) {
-    db = {};
-  }
-
   const nameIdMap = championsRepo.getChampionIdNameMap();
   const nameMap = championsRepo.getChampionNameIdMap();
   const champions = Object.values(nameMap); // Obtener todos los campeones de SQLite para soportar nuevos campeones
@@ -252,34 +190,12 @@ export async function syncMetaAndBuilds(
   await syncMetaCacheOnly(writeLog);
   onProgress?.(5, 5, 'opgg');
 
-  // Recargar db desde archivo por si cambió
-  let updatedDb;
-  try {
-    updatedDb = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-  } catch (e) {
-    updatedDb = {};
-  }
-  Object.keys(db).forEach(k => delete db[k]);
-  Object.assign(db, updatedDb);
-
-  const syncPeriodSetting = parseInt(configRepo.getConfig('sync_period_days') || '3') || 3;
-
-  // --- COMPROBAR CAMPEONES A SINCRONIZAR (Sync Diferencial) ---
-  const pendingChamps = champions.filter(name => {
-    const id = nameIdMap[normalizeKey(name)];
-    if (!id) return false;
-    if (forceSync) return true;
-
-    // Obtener carriles jugables desde la BD
-    const laneRow = dbInstance.prepare('SELECT play_lanes FROM champions WHERE id = ?').get(id) as { play_lanes: string } | undefined;
-    const playLanes = JSON.parse(laneRow?.play_lanes || '[]');
-
-    return !isChampionBuildUpToDate(id, version, syncPeriodSetting, playLanes);
-  });
-
+  // El workflow de GitHub es la única política de actualización: cada ejecución
+  // procesa todos los campeones válidos y deja SQLite como fuente de verdad.
+  const pendingChamps = champions.filter(name => Boolean(nameIdMap[normalizeKey(name)]));
   const skippedCount = champions.length - pendingChamps.length;
   if (skippedCount > 0) {
-    writeLog(`[SKIP] Omitiendo ${skippedCount} campeones ya actualizados para el parche ${version}.`);
+    writeLog(`[WARN] ${skippedCount} campeones no tienen ID válido en SQLite y fueron omitidos.`);
   }
 
   if (pendingChamps.length === 0) {
@@ -295,7 +211,7 @@ export async function syncMetaAndBuilds(
   }
 
   const pendingTasks = pendingChamps.flatMap(name =>
-    getChampionPlayLanes(name, db, nameIdMap).map(lane => ({ name, lane }))
+    getChampionPlayLanes(name, nameIdMap).map(lane => ({ name, lane }))
   );
 
   if (pendingTasks.length === 0) {
@@ -304,28 +220,31 @@ export async function syncMetaAndBuilds(
     return "Sincronización finalizada sin carriles pendientes";
   }
 
-  writeLog(`[FLARESOLVERR] Iniciando procesamiento de ${pendingChamps.length} campeones en ${pendingTasks.length} tareas campeón/carril.`);
+  writeLog(`[LOLALYTICS] Iniciando procesamiento de ${pendingChamps.length} campeones en ${pendingTasks.length} tareas campeón/carril.`);
   onProgress?.(0, pendingTasks.length, 'puppeteer');
 
-  // --- PARTE 2: DPM.LOL (CONCURRENCIA PARALELA CON FLARESOLVERR) ---
+  // --- PARTE 2: LoLalytics (concurrencia limitada) ---
   const concurrencySetting = parseInt(configRepo.getConfig('puppeteer_concurrency') || '3') || 3;
   // Concurrencia de trabajadores
   const concurrency = Math.min(Math.max(concurrencySetting, 1), 6); 
 
-  writeLog(`[FLARESOLVERR] Concurrencia: ${concurrency} trabajadores simultáneos.`);
+  writeLog(`[LOLALYTICS] Concurrencia: ${concurrency} trabajadores simultáneos.`);
 
   let index = 0;
   let completedTasks = 0;
+  let failedTasks = 0;
+  const failedTaskLabels: string[] = [];
 
   const worker = async (workerId: number) => {
-    const requestedSessionId = `hexdraft-sync-${Date.now()}-${workerId}`;
     let sessionId: string | undefined;
-
-    try {
-      sessionId = await createFlareSolverrSession(requestedSessionId);
-      writeLog(`[W-${workerId}] Sesión persistente de FlareSolverr creada.`);
-    } catch (e: any) {
-      writeLog(`[W-${workerId}] [WARN] No se pudo crear sesión persistente; se usarán solicitudes temporales: ${e.message || e}`);
+    if (process.env.HEXDRAFT_USE_FLARESOLVERR === '1') {
+      const requestedSessionId = `hexdraft-sync-${Date.now()}-${workerId}`;
+      try {
+        sessionId = await createFlareSolverrSession(requestedSessionId);
+        writeLog(`[W-${workerId}] Sesión opcional de FlareSolverr creada.`);
+      } catch (e: any) {
+        writeLog(`[W-${workerId}] [WARN] FlareSolverr opcional no disponible: ${e.message || e}`);
+      }
     }
 
     try {
@@ -337,20 +256,17 @@ export async function syncMetaAndBuilds(
 
         writeLog(`[W-${workerId}] Descargando build y matchups: ${task.name} / ${task.lane} (${index}/${pendingTasks.length})`);
 
-        await scrapeSingleChampionLane(task.name, task.lane, version, db, nameIdMap, writeLog, sessionId);
+        const succeeded = await scrapeSingleChampionLane(task.name, task.lane, version, nameIdMap, writeLog, sessionId);
+        if (!succeeded) {
+          failedTasks++;
+          failedTaskLabels.push(`${task.name} / ${task.lane}`);
+          writeLog(`[WARN] Tarea fallida registrada: ${task.name} / ${task.lane}`);
+          continue;
+        }
         completedTasks++;
         onProgress?.(completedTasks, pendingTasks.length, 'puppeteer');
 
-        // Guardar preventivamente cada 5 tareas en JSON (fallback opcional).
-        if (completedTasks % 5 === 0) {
-          try {
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-          } catch (e) {
-            // Ignorado en producción si el sistema de archivos es de solo lectura (SQLite es la fuente primaria).
-          }
-        }
-
-        // Delay de cortesía para no sobrecargar el proxy/dpm.lol.
+        // Delay de cortesía para no sobrecargar el LoLalytics.
         await new Promise(r => setTimeout(r, 800));
       }
     } finally {
@@ -361,13 +277,23 @@ export async function syncMetaAndBuilds(
     }
   };
 
-  // Lanzar todos los workers en paralelo
-  await Promise.all(Array.from({ length: concurrency }).map((_, i) => worker(i + 1)));
-
+  // Cada tarea usa un savepoint; los carriles válidos se conservan aunque falle otro.
+  dbInstance.exec('BEGIN TRANSACTION;');
   try {
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-  } catch (e) {
-    // Ignorado de forma segura en producción
+    // Lanzar todos los workers en paralelo
+    await Promise.all(Array.from({ length: concurrency }).map((_, i) => worker(i + 1)));
+    if (failedTasks > 0) {
+      writeLog(`[WARN] ${failedTasks} tareas fallaron; se conservarán los datos anteriores de esos carriles y se guardarán los éxitos. Pendientes: ${failedTaskLabels.join(', ')}`);
+    }
+    if (checkAbort()) {
+      dbInstance.exec('ROLLBACK;');
+      writeLog('[ABORT] Cancelación procesada; se conservaron los datos anteriores.');
+      return 'Cancelado por el usuario';
+    }
+    dbInstance.exec('COMMIT;');
+  } catch (error) {
+    try { dbInstance.exec('ROLLBACK;'); } catch { /* la transacción ya fue cerrada */ }
+    throw error;
   }
 
   if (checkAbort()) {

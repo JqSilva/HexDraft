@@ -9,7 +9,7 @@ import { syncChampionsSemanticData } from '../scripts/sync-champions-cdrag.js';
 
 export const normalizeKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-// Mapeos especiales de nombres de dpm.lol / OP.GG a la base de datos de Riot
+// Mapeos especiales de nombres de LoLalytics / legacy / OP.GG a la base de datos de Riot
 const API_NAME_MAP: Record<string, string> = {
   "monkeyking": "wukong",
   "masteryi": "maestroyi",
@@ -47,15 +47,8 @@ function resolveChampionId(name: string, nameIdMap: Record<string, number>): num
 export function runMigration() {
   console.log("🏁 INICIANDO MIGRACIÓN A SQLITE...");
 
-  const synergiesPath = path.resolve(process.cwd(), 'src/lib/data/counter-synergies.json');
   const cachePath = path.resolve(process.cwd(), 'src/lib/data/meta-cache.json');
-
-  if (!fs.existsSync(synergiesPath)) {
-    console.error(`❌ Archivo de origen no encontrado en: ${synergiesPath}`);
-    return;
-  }
-
-  const counterSynergies = JSON.parse(fs.readFileSync(synergiesPath, 'utf-8'));
+  const counterSynergies: Record<string, any> = {};
   const metaCache = fs.existsSync(cachePath) ? JSON.parse(fs.readFileSync(cachePath, 'utf-8')) : {};
 
   // 1. Limpiar datos viejos
