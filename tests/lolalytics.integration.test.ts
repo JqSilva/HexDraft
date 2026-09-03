@@ -18,5 +18,19 @@ if (!record.defaultBuild || record.matchups.length === 0 || record.synergies.len
   throw new Error('El registro no conserva matchup/synergy');
 }
 
-console.log('[PASS] LoLalytics extrae y persiste histórico, duración, counters, synergies, skills y slots 4/5/6.');
+const persistedStats = JSON.parse(record.defaultBuild.special_notes).statsData;
+if (persistedStats.enemyMatchups || persistedStats.allyMatchups) {
+  throw new Error('Se volvió a persistir el JSON duplicado de matchups/synergies');
+}
+if (persistedStats.history?.byDate || (persistedStats.history?.dates?.length || 0) > 14) {
+  throw new Error('El histórico persistido no está compactado a la ventana esperada');
+}
+if (!persistedStats.header?.trend || !Number.isFinite(Number(persistedStats.header.trend.delta))) {
+  throw new Error('No se derivó la tendencia compacta del histórico');
+}
+if (record.matchups.some((m: any) => !('pickrate' in m) || !('delta1' in m)) || record.synergies.some((s: any) => !('games' in s))) {
+  throw new Error('Faltan métricas detalladas en el registro SQLite');
+}
+
+console.log('[PASS] LoLalytics conserva datos de motor, compacta históricos y persiste métricas detalladas sin duplicar JSON.');
 export {};

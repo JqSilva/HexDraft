@@ -181,6 +181,18 @@ export function calculateScore(
   if (centralPick.score >= 65) reasons.push("Meta estadístico: evidencia sólida (" + centralPick.score.toFixed(1) + "/100)");
   else if (centralPick.score <= 40) reasons.push("Riesgo estadístico: evidencia limitada (" + centralPick.score.toFixed(1) + "/100)");
 
+  // Tendencia compacta del histórico: señal secundaria, nunca sustituye la
+  // evidencia total del parche y queda limitada para no perseguir ruido diario.
+  const trendDelta = Number(sourceHeader.trend?.delta);
+  if (Number.isFinite(trendDelta)) {
+    const phaseFactor = phaseKey === 'pick1' ? 1.0 : phaseKey === 'pick5' ? 0.5 : 0.75;
+    const trendBonus = Math.max(-0.45, Math.min(0.45, trendDelta * 0.12 * phaseFactor));
+    score += trendBonus;
+    if (Math.abs(trendDelta) >= 0.35) {
+      reasons.push(`${trendDelta >= 0 ? 'Tendencia favorable' : 'Tendencia descendente'}: ${trendDelta >= 0 ? '+' : ''}${trendDelta.toFixed(2)} pp recientes`);
+    }
+  }
+
   // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
   if (phaseKey === 'pick1' && isFlexChampion(target)) {
     score += WEIGHTS.flex_value;

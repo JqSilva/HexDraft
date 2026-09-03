@@ -9,6 +9,84 @@ import type { championsRepo } from '../db/champions.repo.js';
 
 // --- UTILIDADES DEL SCRAPER Y TRANSFORMACIÓN DE RUNAS/ITEMS ---
 
+const HISTORY_WINDOW_DAYS = 14;
+
+/**
+ * Conserva una ventana corta del histórico para tendencias futuras sin guardar
+ * todas las series y el agregado diario completo dentro de cada build.
+ */
+export function compactHistory(history: any): any | undefined {
+  if (!history || typeof history !== 'object') return undefined;
+
+  const dates = Array.isArray(history.dates)
+    ? history.dates.slice(-HISTORY_WINDOW_DAYS)
+    : [];
+  const byTier: Record<string, any> = {};
+  const sourceByTier = history.byTier && typeof history.byTier === 'object'
+    ? history.byTier
+    : {};
+
+  for (const [metric, tierValues] of Object.entries(sourceByTier)) {
+    if (metric === 'dates' || !tierValues || typeof tierValues !== 'object') continue;
+    const compactMetric: Record<string, any> = {};
+    for (const [tier, values] of Object.entries(tierValues as Record<string, any>)) {
+      if (Array.isArray(values)) {
+        compactMetric[tier] = values.slice(-HISTORY_WINDOW_DAYS);
+      }
+    }
+    if (Object.keys(compactMetric).length > 0) byTier[metric] = compactMetric;
+  }
+
+  return { dates, byTier };
+}
+
+/** Resume la dirección del winrate reciente frente a la ventana anterior. */
+export function summarizeHistoryTrend(history: any): any | undefined {
+  const series = history?.byTier?.wr?.all || history?.byTier?.wrs?.all;
+  if (!Array.isArray(series) || series.length < 4) return undefined;
+
+  const recent = series.slice(-7).map(Number).filter(Number.isFinite);
+  const previous = series.slice(-14, -7).map(Number).filter(Number.isFinite);
+  if (recent.length < 2 || previous.length < 2) return undefined;
+
+  const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+  const recentWinrate = average(recent);
+  const previousWinrate = average(previous);
+  return {
+    recentWinrate: Number(recentWinrate.toFixed(2)),
+    previousWinrate: Number(previousWinrate.toFixed(2)),
+    delta: Number((recentWinrate - previousWinrate).toFixed(2)),
+    recentDays: recent.length,
+    previousDays: previous.length
+  };
+}
+
+/**
+ * Payload mínimo de LoLalytics que todavía necesita el motor para seleccionar
+ * builds, runas, items, habilidades y escalado. Counters y sinergias viven en
+ * sus tablas SQLite, por lo que no deben duplicarse aquí.
+ */
+export function compactStatsData(rawData: any): any {
+  const trend = summarizeHistoryTrend(rawData.history);
+  return {
+    sourceMetadata: rawData.sourceMetadata
+      ? { source: rawData.sourceMetadata.source, patch: rawData.sourceMetadata.patch }
+      : { source: 'lolalytics' },
+    coreBuilds: rawData.coreBuilds,
+    items: rawData.items,
+    boots: rawData.boots,
+    runes: rawData.runes,
+    summoners: rawData.summoners,
+    startItems: rawData.startItems,
+    header: { ...(rawData.header || {}), ...(trend ? { trend } : {}) },
+    winrateByGameTime: rawData.winrateByGameTime,
+    gameLengthDistribution: rawData.gameLengthDistribution,
+    history: compactHistory(rawData.history),
+    skillPriority: rawData.skillPriority,
+    skillOrders: rawData.skillOrders
+  };
+}
+
 export const getBestSummoners = (arr: any[]): [number, number] => {
   if (!arr || arr.length === 0) return [4, 11]; // Flash y Smite o similar
   const valid = arr.filter(i => i.pickrate > 0.3);
@@ -346,6 +424,9 @@ export function buildChampionRecord(
         xpDiff: xpValue.toFixed(0),
         csDiff: (m.csDiffAt15 || 0).toFixed(1),
         count: countValue,
+        pickrate: Number(m.pickrate || 0),
+        delta1: Number(m.delta1 || 0),
+        delta2: Number(m.delta2 || 0),
         laneTag: laneTag,
         dominanceScore: parseFloat(deltaScore.toFixed(1))
       };
@@ -374,6 +455,9 @@ export function buildChampionRecord(
         xpDiff: xpValue.toFixed(0),
         csDiff: (m.csDiffAt15 || 0).toFixed(1),
         count: countValue,
+        pickrate: Number(m.pickrate || 0),
+        delta1: Number(m.delta1 || 0),
+        delta2: Number(m.delta2 || 0),
         laneTag: laneTag,
         dominanceScore: parseFloat(deltaScore.toFixed(1))
       };
@@ -397,6 +481,13 @@ export function buildChampionRecord(
           return {
             name: a.championName,
             count: countValue,
+            winrate: Number(a.winrate || 0) > 1
+              ? `${Number(a.winrate).toFixed(1)}%`
+              : `${(Number(a.winrate || 0) * 100).toFixed(1)}%`,
+            pickrate: Number(a.pickrate || 0),
+            delta1: Number(a.delta1 || 0),
+            delta2: Number(a.delta2 || 0),
+            laneTag: Number(a.delta1 || 0) >= 0 ? 'Good Lane' : 'Bad Lane',
             delta: parseFloat((smoothedDelta * 100).toFixed(2))
           };
         })
@@ -481,21 +572,7 @@ export function buildChampionRecord(
       return [...(reliableSkills.length > 0 ? reliableSkills : skillCandidates)].sort((a: any, b: any) => evidenceScore(b) - evidenceScore(a))[0] || null;
     })(),
     statsData: {
-      sourceMetadata: rawData.sourceMetadata || { source: 'lolalytics' },
-      coreBuilds: rawData.coreBuilds,
-      items: rawData.items,
-      boots: rawData.boots,
-      runes: rawData.runes,
-      summoners: rawData.summoners,
-      startItems: rawData.startItems,
-      header: rawData.header,
-      history: rawData.history,
-      winrateByGameTime: rawData.winrateByGameTime,
-      gameLengthDistribution: rawData.gameLengthDistribution,
-      enemyMatchups: rawData.enemyMatchups,
-      allyMatchups: rawData.allyMatchups,
-      skillPriority: rawData.skillPriority,
-      skillOrders: rawData.skillOrders
+      ...compactStatsData(rawData)
     }
   };
 
@@ -534,7 +611,7 @@ export function buildChampionRecord(
   laneCounters.forEach((cnt: any) => {
     const opponentId = resolveChampionId(cnt.name, nameIdMap);
     if (opponentId) {
-      matchups.push({
+        matchups.push({
         champion_id: champId,
         opponent_id: opponentId,
         lane: lane,
@@ -543,6 +620,11 @@ export function buildChampionRecord(
         xp_diff: parseInt(cnt.xpDiff || 0),
         cs_diff: parseFloat(cnt.csDiff || 0.0),
         dominance_score: parseFloat(cnt.dominanceScore || 0.0),
+        pickrate: parseFloat(cnt.pickrate || 0),
+        games: parseInt(cnt.count || 0),
+        delta1: parseFloat(cnt.delta1 || 0),
+        delta2: parseFloat(cnt.delta2 || 0),
+        lane_tag: cnt.laneTag || '',
         matchup_type: 'counter'
       });
     }
@@ -560,6 +642,11 @@ export function buildChampionRecord(
         xp_diff: parseInt(god.xpDiff || 0),
         cs_diff: parseFloat(god.csDiff || 0.0),
         dominance_score: parseFloat(god.dominanceScore || 0.0),
+        pickrate: parseFloat(god.pickrate || 0),
+        games: parseInt(god.count || 0),
+        delta1: parseFloat(god.delta1 || 0),
+        delta2: parseFloat(god.delta2 || 0),
+        lane_tag: god.laneTag || '',
         matchup_type: 'god_matchup'
       });
     }
@@ -576,7 +663,13 @@ export function buildChampionRecord(
           champion_id: champId,
           partner_id: partnerId,
           lane: roleKey.toUpperCase(),
-          delta: parseFloat(syn.delta || 0.0)
+          delta: parseFloat(syn.delta || 0.0),
+          winrate: syn.winrate || '',
+          pickrate: parseFloat(syn.pickrate || 0),
+          games: parseInt(syn.count || 0),
+          delta1: parseFloat(syn.delta1 || 0),
+          delta2: parseFloat(syn.delta2 || 0),
+          lane_tag: syn.laneTag || ''
         });
       }
     });
@@ -590,7 +683,11 @@ export function buildChampionRecord(
     patch: dataPatch,
     summoners: JSON.stringify(laneBuildData.summoners || []),
     runes: JSON.stringify(laneBuildData.runes || {}),
-    items: JSON.stringify(laneBuildData.items || {}),
+    items: JSON.stringify({
+      ...(laneBuildData.items || {}),
+      // Las opciones históricas completas ya viven en statsData.items.
+      slotItems: undefined
+    }),
     skills: JSON.stringify(laneBuildData.skills || {}),
     tags: JSON.stringify(["Default", lane]),
     special_notes: JSON.stringify({ 
@@ -692,7 +789,7 @@ export function buildChampionRecord(
         boots: laneBuildData.items.boots,
         core: cand.itemIds,
         paths: candPaths,
-        slotItems: rawData.items
+        slotItems: undefined
       }),
       skills: JSON.stringify(laneBuildData.skills || {}),
       tags: JSON.stringify(tags),

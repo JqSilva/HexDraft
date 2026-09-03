@@ -40,6 +40,8 @@ export function checkpointDb() {
   try {
     if (db && typeof db.exec === 'function') {
       db.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+      db.exec('VACUUM;');
+      db.exec('PRAGMA optimize;');
       console.log(`🧹 WAL Checkpoint (TRUNCATE) ejecutado.`);
     }
   } catch (e) {
@@ -181,6 +183,11 @@ db.exec(`
     xp_diff INTEGER DEFAULT 0,
     cs_diff REAL DEFAULT 0.0,
     dominance_score REAL DEFAULT 0.0,
+    pickrate REAL DEFAULT 0.0,
+    games INTEGER DEFAULT 0,
+    delta1 REAL DEFAULT 0.0,
+    delta2 REAL DEFAULT 0.0,
+    lane_tag TEXT DEFAULT '',
     matchup_type TEXT CHECK(matchup_type IN ('counter', 'god_matchup')),
     PRIMARY KEY (champion_id, opponent_id, lane, matchup_type),
     FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE,
@@ -188,17 +195,60 @@ db.exec(`
   );
 `);
 
+// Métricas detalladas de LoLalytics que antes solo estaban disponibles en el
+// JSON crudo guardado dentro de cada build.
+try {
+  const tableInfo = db.prepare("PRAGMA table_info(matchups)").all() as any[];
+  const columns = new Set(tableInfo.map(c => c.name));
+  const newCols = {
+    pickrate: 'REAL DEFAULT 0.0',
+    games: 'INTEGER DEFAULT 0',
+    delta1: 'REAL DEFAULT 0.0',
+    delta2: 'REAL DEFAULT 0.0',
+    lane_tag: "TEXT DEFAULT ''"
+  };
+  for (const [name, type] of Object.entries(newCols)) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE matchups ADD COLUMN ${name} ${type}`);
+  }
+} catch (e) {
+  console.error('⚠️ Error en migración de métricas detalladas de matchups:', e);
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS synergies (
     champion_id INTEGER,
     partner_id INTEGER,
     lane TEXT,
     delta REAL DEFAULT 0.0,
+    winrate TEXT DEFAULT '',
+    pickrate REAL DEFAULT 0.0,
+    games INTEGER DEFAULT 0,
+    delta1 REAL DEFAULT 0.0,
+    delta2 REAL DEFAULT 0.0,
+    lane_tag TEXT DEFAULT '',
     PRIMARY KEY (champion_id, partner_id, lane),
     FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE,
     FOREIGN KEY (partner_id) REFERENCES champions(id) ON DELETE CASCADE
   );
 `);
+
+try {
+  const tableInfo = db.prepare("PRAGMA table_info(synergies)").all() as any[];
+  const columns = new Set(tableInfo.map(c => c.name));
+  const newCols = {
+    winrate: "TEXT DEFAULT ''",
+    pickrate: 'REAL DEFAULT 0.0',
+    games: 'INTEGER DEFAULT 0',
+    delta1: 'REAL DEFAULT 0.0',
+    delta2: 'REAL DEFAULT 0.0',
+    lane_tag: "TEXT DEFAULT ''"
+  };
+  for (const [name, type] of Object.entries(newCols)) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE synergies ADD COLUMN ${name} ${type}`);
+  }
+} catch (e) {
+  console.error('⚠️ Error en migración de métricas detalladas de synergies:', e);
+}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS builds (
