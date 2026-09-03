@@ -21,6 +21,9 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Generar tipos de Astro
+        run: npx astro sync
+
       - name: Validar parser y scoring LoLalytics
         run: |
           npx tsc --noEmit
