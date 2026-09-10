@@ -1,3 +1,4 @@
+import type { DraftContext } from '../draftContext.js';
 // src/lib/engine/picks/index.ts
 import { DATA_BY_LANE, ENRICHED_DB, initializeEngineData } from '../core/dataProvider.js';
 import { normalizeRole, getNameFromId } from '../core/constants.js';
@@ -30,7 +31,8 @@ export function getProcessedRecommendations(
   bannedIds: number[] = [],
   myRole: string = 'MIDDLE',
   myPickId?: number,
-  singleChampId?: number
+  singleChampId?: number,
+  context: DraftContext = {}
 ): Recommendation[] {
   let myTeamIds: number[];
   let enemies: number[];
@@ -40,6 +42,7 @@ export function getProcessedRecommendations(
   let singleId: number | undefined;
 
   if (!Array.isArray(myTeamIdsOrInput) && typeof myTeamIdsOrInput === 'object') {
+    context = myTeamIdsOrInput;
     myTeamIds = myTeamIdsOrInput.myTeamIds || [];
     enemies = myTeamIdsOrInput.theirTeamIds || [];
     bans = myTeamIdsOrInput.bannedIds || [];
@@ -64,7 +67,7 @@ export function getProcessedRecommendations(
 
   const targetLane = normalizeRole(role, 'MIDDLE');
 
-  const allyNames = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+  const allyNames = cleanMyTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
   const enemyNames = enemies.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
   let pool = DATA_BY_LANE[targetLane] || [];
@@ -85,7 +88,7 @@ export function getProcessedRecommendations(
 
   for (const c of pool) {
     if (!singleId && unavailableIds.includes(c.id)) continue;
-    const { score, reasons } = calculateScore(c, allyNames, enemyNames, unavailableIds);
+    const { score, reasons } = calculateScore(c, allyNames, enemyNames, unavailableIds, context);
 
     results.push({
       id: c.id,
@@ -96,5 +99,5 @@ export function getProcessedRecommendations(
     });
   }
 
-  return results.sort((a, b) => b.score - a.score).slice(0, 30);
+  return results.sort((a, b) => b.score - a.score || a.id - b.id).slice(0, 30);
 }

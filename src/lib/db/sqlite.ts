@@ -27,6 +27,7 @@ if (typeof window === 'undefined') {
   try {
     const sqliteMod = await import('node:sqlite');
     DatabaseSyncClass = sqliteMod.DatabaseSync;
+    dbPath = process.env.HEXDRAFT_DB_PATH ? path.resolve(process.env.HEXDRAFT_DB_PATH) : dbPath;
     console.log(`🔌 Conectando a base de datos SQLite en: ${dbPath}`);
     db = new DatabaseSyncClass(dbPath);
   } catch (e) {
@@ -248,6 +249,25 @@ try {
   }
 } catch (e) {
   console.error('⚠️ Error en migración de métricas detalladas de synergies:', e);
+}
+
+// A synergy depends on BOTH the candidate lane and the partner lane.
+// Legacy rows have unknown source lane; retain them without pretending otherwise.
+if (!(db.prepare('PRAGMA table_info(synergies)').all() as { name: string }[]).some(c => c.name === 'source_lane')) {
+  db.exec(`SAVEPOINT synergy_roles;
+    ALTER TABLE synergies RENAME TO synergies_legacy;
+    CREATE TABLE synergies (
+      champion_id INTEGER, partner_id INTEGER, lane TEXT, source_lane TEXT NOT NULL DEFAULT 'UNKNOWN',
+      delta REAL DEFAULT 0, winrate TEXT DEFAULT '', pickrate REAL DEFAULT 0, games INTEGER DEFAULT 0,
+      delta1 REAL DEFAULT 0, delta2 REAL DEFAULT 0, lane_tag TEXT DEFAULT '',
+      PRIMARY KEY (champion_id, partner_id, lane, source_lane),
+      FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE,
+      FOREIGN KEY (partner_id) REFERENCES champions(id) ON DELETE CASCADE
+    );
+    INSERT INTO synergies (champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag)
+      SELECT champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag FROM synergies_legacy;
+    DROP TABLE synergies_legacy;
+    RELEASE SAVEPOINT synergy_roles;`);
 }
 
 db.exec(`

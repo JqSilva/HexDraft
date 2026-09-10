@@ -9,7 +9,7 @@ const DEFAULT_PRIOR_GAMES = 250;
 function asPercent(value: number | undefined, fallback = 50): number {
   if (!Number.isFinite(value)) return fallback;
   const numeric = Number(value);
-  return numeric >= 0 && numeric <= 1 ? numeric * 100 : numeric;
+  return Math.max(0, Math.min(100, numeric));
 }
 
 /**
@@ -22,7 +22,7 @@ export function smoothedWinrate(
 ): number {
   const games = Math.max(0, Number(evidence.games || 0));
   const winrate = asPercent(evidence.winrate);
-  if (games <= 0) return winrate;
+  if (games <= 0) return evidence.games === undefined ? 50 + (winrate - 50) * 0.25 : 50;
   return ((winrate * games) + (50 * priorGames)) / (games + priorGames);
 }
 

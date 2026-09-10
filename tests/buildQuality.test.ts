@@ -1,4 +1,6 @@
 import { detectBuildClusters, selectRunesForCluster } from '../src/lib/engine/itemEngine.js';
+import { scoreContextualRunePage } from '../src/lib/engine/buildContext.js';
+import { initializeEngineData } from '../src/lib/engine/core/dataProvider.js';
 import { evidenceScore } from '../src/lib/engine/statisticalScoring.js';
 import { chooseSecondaryPair, isValidRunePage } from '../src/lib/engine/rune-validation.js';
 import assetsMap from '../src/lib/data/assets-map.json' with { type: 'json' };
@@ -29,6 +31,16 @@ const runeToStyle = (assetsMap as any).runeToStyle || {};
   });
   assert(clusters.length === 1, 'El detector elimina la variante de build con muestra insuficiente');
   assert(clusters[0].representativeCore[0] === 3118, 'El cluster ganador conserva la build estable');
+
+// Cuando solo existe coreItem2, el tercer objeto debe salir del slot observado.
+{
+  const pairClusters = detectBuildClusters({
+    coreBuilds: { coreItem2: [{ itemIds: [3118, 4645], pickrate: 35, winrate: 52, games: 4000 }] },
+    items: { item3: [{ id: 3157, pickrate: 20, winrate: 55, games: 2000 }] }
+  });
+  assert(pairClusters[0].representativeCore.length === 3, 'El fallback de coreItem2 completa el tercer objeto');
+  assert(pairClusters[0].representativeCore[2] === 3157, 'El tercer objeto proviene del slot observado');
+}
 }
 
 // Las p�ginas completas se conservan y deben ser v�lidas por �rbol y por fila.
@@ -66,4 +78,11 @@ const runeToStyle = (assetsMap as any).runeToStyle || {};
   assert(pair ? pair.some(r => Number(r.Id) === 8352) : false, 'El par secundario evita dos runas de la misma fila');
 }
 
+initializeEngineData([{id:9001,name:'PokeEnemy',lane:'MIDDLE',tags:['Poke'],tacticRole:'poke',lanesPickrate:{MIDDLE:20,TOP:80}}] as any);
+const runeContextPage = { selections: [8112,8139,8140,8444,8226,8210], pickrate: 10, winrate: 52, games: 1000 };
+const runeChampion = { id: 9002, lane: 'MIDDLE' } as any;
+const lowProbability = scoreContextualRunePage(runeContextPage, [3089], runeChampion, { enemies: ['PokeEnemy'] });
+assert(!lowProbability.reasons.some(r => r.includes('Segundo aire')), 'Una posibilidad remota de poke no cambia las runas');
+const assignedProbability = scoreContextualRunePage(runeContextPage, [3089], runeChampion, { enemies: ['PokeEnemy'], enemyRoles: { 9001: 'MIDDLE' } });
+assert(assignedProbability.reasons.some(r => r.includes('Segundo aire')), 'Un rival confirmado de poke sí adapta las runas');
 console.log('Pruebas de calidad de builds completadas.');

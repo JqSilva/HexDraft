@@ -3,7 +3,8 @@ import {
   scoreEvidence100,
   scoreItemOption,
   scorePickRecommendation,
-  scoreRunePage
+  scoreRunePage,
+  evidenceContextWeight
 } from '../src/lib/engine/recommendationScoring.js';
 
 function assert(condition: boolean, message: string): void {
@@ -49,6 +50,8 @@ const latePick = scorePickRecommendation(
   { phase: 'pick5', matchupFit: 90, compositionFit: 80 }
 );
 assert(latePick.score > earlyPick.score, 'El último pick aprovecha más la información de matchup y composición');
+
+assert(evidenceContextWeight(0) === 0.35 && evidenceContextWeight(1) === 1, 'La evidencia débil reduce los bonos heurísticos');
 
 console.log('Pruebas de recommendation scoring completadas.');
 

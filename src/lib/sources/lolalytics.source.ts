@@ -99,9 +99,15 @@ export function parseLolalyticsHtml(html: string): any {
   return decodeQwik(payload, rootIndex);
 }
 
+const LOLALYTICS_SLUG_OVERRIDES: Record<string, string> = {
+  // LoLalytics uses the human-facing slug for Wukong, while Data Dragon uses MonkeyKing.
+  MonkeyKing: 'wukong'
+};
+
 function normalizeSlug(champName: string): string {
   const internalName = API_NAME_MAP[champName] || champName;
-  return internalName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const sourceName = LOLALYTICS_SLUG_OVERRIDES[internalName] || internalName;
+  return sourceName.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function championName(id: number): string {

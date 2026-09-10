@@ -1,5 +1,7 @@
 // src/lib/engine/picks/types.ts
 export interface PickEngineInput {
+  allyRoles?: Record<number, string>;
+  enemyRoles?: Record<number, string>;
   myTeamIds: number[];
   theirTeamIds: number[];
   bannedIds: number[];
@@ -32,6 +34,7 @@ export interface SingleChampionBuildResult {
     items: {
       boots: any;
       core: any[];
+      buildOrder?: any[];
       starter: any[];
       paths: {
         snowball: any[];

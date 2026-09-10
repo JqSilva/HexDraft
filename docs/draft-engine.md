@@ -1,5 +1,7 @@
 # Motor de Recomendación de Picks (Draft Engine)
 
+> Referencia histórica: varias rutas, fórmulas y reglas de este documento ya no corresponden al motor actual. Para el comportamiento verificado, correcciones y limitaciones vigentes, consultar la [auditoría del 8 de septiembre de 2026](recommendation-audit-2026-09-08.md).
+
 Este documento detalla el funcionamiento del motor de recomendación de campeones y bans de HexDraft. Explica la lógica multi-capa del algoritmo de puntuación, la detección de arquetipos y la calibración fina del motor.
 
 ---

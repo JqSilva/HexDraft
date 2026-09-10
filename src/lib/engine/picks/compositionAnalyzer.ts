@@ -60,11 +60,11 @@ export function detectEnemyArchetype(enemies: EnrichedChampion[]): EnemyArchetyp
 
   const signals = {
     siege: enemies.filter(e => 
-      e.tags.includes('Siege') || e.tags.includes('Poke') || (e.tacticRole || e.tactic_role) === 'siege'
+      e.tags.includes('Siege') || (e.tacticRole || e.tactic_role) === 'siege'
     ).length,
 
     engage_heavy: enemies.filter(e => 
-      (e.tacticRole || e.tactic_role) === 'engage' || e.tags.includes('Knockup') || e.hasHardCC
+      (e.tacticRole || e.tactic_role) === 'engage' || e.tags.includes('Engage') || e.teamProvides?.includes('engage')
     ).length,
 
     scaling: enemies.filter(e => 
@@ -235,8 +235,8 @@ export function analyzeComposition(champNames: string[]): CompositionAnalysis {
     const role = champ.tacticRole || champ.tactic_role || 'teamfight';
     tacticRoleCounts[role] = (tacticRoleCounts[role] || 0) + 1;
     
-    if (role === 'engage') hasEngageInitiator = true;
-    if (role === 'peel' || role === 'utility') hasPeelForCarry = true;
+    if (role === 'engage' || champ.tags.includes('Engage') || champ.teamProvides?.includes('engage')) hasEngageInitiator = true;
+    if (role === 'peel' || champ.teamProvides?.includes('peel') || champ.tags.includes('Peel') || champ.tags.includes('Disengage')) hasPeelForCarry = true;
   });
   
   // Primary tactic role

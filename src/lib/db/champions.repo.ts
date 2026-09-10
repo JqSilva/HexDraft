@@ -51,6 +51,7 @@ export interface DbMatchup {
 }
 
 export interface DbSynergy {
+  source_lane?: string;
   champion_id: number;
   partner_id: number;
   lane: string;
@@ -158,7 +159,7 @@ export const championsRepo = {
   },
 
   clearSynergies(championId: number, lane: string): void {
-    db.prepare('DELETE FROM synergies WHERE champion_id = ? AND lane = ?').run(championId, lane);
+    db.prepare('DELETE FROM synergies WHERE champion_id = ? AND source_lane = ?').run(championId, lane);
   },
   // Guardar un matchup
   saveMatchup(matchup: DbMatchup) {
@@ -201,9 +202,9 @@ export const championsRepo = {
   saveSynergy(synergy: DbSynergy) {
     const stmt = db.prepare(`
       INSERT INTO synergies (
-        champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(champion_id, partner_id, lane) DO UPDATE SET
+        champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag, source_lane
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(champion_id, partner_id, lane, source_lane) DO UPDATE SET
         delta=excluded.delta,
         winrate=excluded.winrate,
         pickrate=excluded.pickrate,
@@ -222,7 +223,8 @@ export const championsRepo = {
       synergy.games ?? 0,
       synergy.delta1 ?? 0,
       synergy.delta2 ?? 0,
-      synergy.lane_tag ?? ''
+      synergy.lane_tag ?? '',
+      synergy.source_lane ?? 'UNKNOWN'
     );
   },
 
@@ -290,7 +292,7 @@ export const championsRepo = {
 
     // 2. Cargar todos los matchups, sinergias y builds de una sola vez
     const allMatchups = db.prepare('SELECT opponent_id, champion_id, lane, winrate, gold_diff, xp_diff, cs_diff, dominance_score, pickrate, games, delta1, delta2, lane_tag, matchup_type FROM matchups').all() as any[];
-    const allSynergies = db.prepare('SELECT partner_id, champion_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag FROM synergies').all() as any[];
+    const allSynergies = db.prepare('SELECT partner_id, champion_id, lane, source_lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag FROM synergies').all() as any[];
     const allBuilds = db.prepare('SELECT * FROM builds ORDER BY is_default DESC').all() as DbBuild[];
 
     // 3. Crear mapas de agrupación por champion_id
@@ -331,7 +333,7 @@ export const championsRepo = {
           goldDiff: String(m.gold_diff),
           xpDiff: String(m.xp_diff),
           csDiff: String(m.cs_diff),
-          count: m.games || 500,
+          count: m.games || 0,
           pickrate: m.pickrate || 0,
           delta1: m.delta1 || m.dominance_score || 0,
           delta2: m.delta2 || 0,
@@ -356,6 +358,7 @@ export const championsRepo = {
         synergies[pos].push({
           name: partnerName,
           delta: String(s.delta),
+          sourceLane: s.source_lane || 'UNKNOWN',
           winrate: s.winrate || '',
           pickrate: s.pickrate || 0,
           count: s.games || 0,
@@ -480,7 +483,7 @@ export const championsRepo = {
         goldDiff: String(m.gold_diff),
         xpDiff: String(m.xp_diff),
         csDiff: String(m.cs_diff),
-        count: m.games || 500,
+        count: m.games || 0,
         pickrate: m.pickrate || 0,
         delta1: m.delta1 || m.dominance_score || 0,
         delta2: m.delta2 || 0,
@@ -497,7 +500,7 @@ export const championsRepo = {
 
     // 2. Obtener sinergias
     const synergiesStmt = db.prepare(`
-      SELECT partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag
+      SELECT partner_id, lane, source_lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag
       FROM synergies 
       WHERE champion_id = ?
     `);
@@ -511,6 +514,7 @@ export const championsRepo = {
       synergies[pos].push({
         name: partnerName,
         delta: String(s.delta),
+          sourceLane: s.source_lane || 'UNKNOWN',
         winrate: s.winrate || '',
         pickrate: s.pickrate || 0,
         count: s.games || 0,

@@ -1,3 +1,4 @@
+import { rolesFromPlayers } from '../../lib/engine/draftContext';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { LcuPlayer } from './PlayerSlot';
 import type { Recommendation } from '../../lib/engine/picks/types';
@@ -219,14 +220,30 @@ export const DraftPage = () => {
                     initializePersonalStats(statsData);
                 }
 
-                // 4. Obtener y configurar Campeones Enriquecidos
-                const res = await fetch('/api/champions');
-                if (res.ok) {
-                    const data = await res.json();
+                // 4. Obtener y configurar Campeones Enriquecidos.
+                // La API puede estar terminando una migración al arrancar; reintentar evita
+                // que un fallo transitorio deje el motor vacío durante toda la sesión.
+                let championsRes: Response | undefined;
+                for (let attempt = 1; attempt <= 3; attempt += 1) {
+                    try {
+                        const candidate = await fetch('/api/champions');
+                        if (candidate.ok) {
+                            championsRes = candidate;
+                            break;
+                        }
+                        console.warn(`No se pudo obtener campeones (intento ${attempt}/3): HTTP ${candidate.status}`);
+                    } catch (error) {
+                        if (attempt === 3) throw error;
+                        console.warn(`No se pudo conectar con campeones (intento ${attempt}/3).`);
+                    }
+                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+                }
+                if (championsRes?.ok) {
+                    const data = await championsRes.json();
                     initializeEngineData(data);
                     console.log("🧬 Campeones enriquecidos sincronizados con el cliente.");
                 } else {
-                    console.warn("No se pudo obtener datos de SQLite, usando fallback estático.");
+                    console.warn("No se pudo obtener datos de SQLite después de 3 intentos; se reintentará al recargar la página.");
                 }
             } catch (e) {
                 console.error("Error cargando base de datos SQLite:", e);
@@ -291,7 +308,7 @@ export const DraftPage = () => {
 
                 // Nivel 2: Recalcular recomendaciones con el rol del jugador
                 if (targetId === 0) {
-                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
+                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, undefined, undefined, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                     const availablePicks = picks.filter(p => !allyHovered.includes(p.id));
                     if (availablePicks.length > 0) targetId = availablePicks[0].id;
                 }
@@ -299,7 +316,7 @@ export const DraftPage = () => {
                 // Nivel 3: Recalcular con roles de fallback si el rol actual fue inválido o vacío
                 if (targetId === 0) {
                     for (const fallbackRole of ["jungle", "middle", "top", "bottom", "utility"]) {
-                        const fallbackPicks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, fallbackRole);
+                        const fallbackPicks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, fallbackRole, undefined, undefined, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                         const available = fallbackPicks.filter(p => !allyHovered.includes(p.id));
                         if (available.length > 0) {
                             targetId = available[0].id;
@@ -328,7 +345,7 @@ export const DraftPage = () => {
 
                 // Nivel 2: Recalcular recomendaciones de ban
                 if (targetId === 0) {
-                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole);
+                    const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, undefined, undefined, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                     const bannedNames = bannedIds.map((id: number) => getNameFromId(id)).filter(Boolean) as string[];
                     const allyNames = data.myTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
                     const enemyNames = data.theirTeam.map((p: any) => getNameFromId(p.championId || p.championPickIntent || 0)).filter(Boolean) as string[];
@@ -462,7 +479,7 @@ export const DraftPage = () => {
                         if (statePicks.length > 0) testTargetId = statePicks[0].id;
 
                         if (testTargetId === 0) {
-                            const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole);
+                            const picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, myRole, undefined, undefined, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                             const available = picks.filter(p => !allyHovered.includes(p.id));
                             if (available.length > 0) testTargetId = available[0].id;
                         }
@@ -647,9 +664,9 @@ export const DraftPage = () => {
 
                     let picks: Recommendation[] = [];
                     if (myId > 0) {
-                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, [], currentRole, undefined, myId);
+                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, [], currentRole, undefined, myId, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                     } else {
-                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine);
+                        picks = getProcessedRecommendations(cleanMyTeam, cleanTheirTeam, unavailableIds, currentRole, activeIdForEngine, undefined, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                     }
 
                     if (myId > 0) {
@@ -660,17 +677,19 @@ export const DraftPage = () => {
                         }
 
                         // 1. Calcular y actualizar la build en la interfaz (React state)
-                        const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole);
+                        const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
                         if (buildData) {
                             const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
+                            const buildOrderIds = (buildData.build.items.buildOrder || buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
                             const runesIds = (buildData.build.runes.selections || []).map((r: any) => r.id || r).join(',');
                             const scoresStr = (buildData.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
-                            const currentSig = `${myId}-${buildData.name}-${coreIds}-${runesIds}-${scoresStr}`;
+                            const currentSig = `${myId}-${buildData.name}-${coreIds}-${buildOrderIds}-${runesIds}-${scoresStr}`;
 
                             const oldCoreIds = (currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
+                            const oldBuildOrderIds = (currentBuild?.build?.items?.buildOrder || currentBuild?.build?.items?.core || []).map((i: any) => i.id || i).join(',');
                             const oldRunesIds = (currentBuild?.build?.runes?.selections || []).map((r: any) => r.id || r).join(',');
                             const oldScoresStr = (currentBuild?.scoredClusters || []).map((c: any) => `${c.title}:${c.score}`).join(',');
-                            const prevSig = currentBuild ? `${currentBuild.id || myId}-${currentBuild.name}-${oldCoreIds}-${oldRunesIds}-${oldScoresStr}` : '';
+                            const prevSig = currentBuild ? `${currentBuild.id || myId}-${currentBuild.name}-${oldCoreIds}-${oldBuildOrderIds}-${oldRunesIds}-${oldScoresStr}` : '';
 
                             if (currentSig !== prevSig) {
                                 setCurrentBuild(buildData);
@@ -712,8 +731,9 @@ export const DraftPage = () => {
                                 : buildData.name;
 
                             const coreIds = (activeBuild.items.core || []).map((i: any) => i.id || i).join(',');
+                            const buildOrderIds = (activeBuild.items.buildOrder || activeBuild.items.core || []).map((i: any) => i.id || i).join(',');
                             const runesIds = (activeBuild.runes.selections || []).map((r: any) => r.id || r).join(',');
-                            const buildSig = `${myId}-${activeName}-${coreIds}-${runesIds}`;
+                            const buildSig = `${myId}-${activeName}-${coreIds}-${buildOrderIds}-${runesIds}`;
 
                             let triggerImport = false;
 
@@ -872,7 +892,7 @@ export const DraftPage = () => {
                             ? liveTheirTeamIds
                             : restoredTheirTeam.map(p => p.championId).filter(id => id > 0);
 
-                        const newBuild = getSingleChampionBuild(liveChampId, cleanMyTeam, cleanTheirTeam, restoredRole);
+                        const newBuild = getSingleChampionBuild(liveChampId, cleanMyTeam, cleanTheirTeam, restoredRole, { allyRoles: rolesFromPlayers(restoredMyTeam), enemyRoles: rolesFromPlayers(restoredTheirTeam) });
                         if (newBuild) {
                             activeBuild = newBuild;
                             setCurrentBuild(newBuild);

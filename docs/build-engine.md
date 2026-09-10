@@ -1,5 +1,7 @@
 # Motor de Builds, Items y Runas (Build Engine)
 
+> Referencia histórica: varias rutas, fórmulas y reglas de este documento ya no corresponden al motor actual. Para el comportamiento verificado, correcciones y limitaciones vigentes, consultar la [auditoría del 8 de septiembre de 2026](recommendation-audit-2026-09-08.md).
+
 Este documento explica en detalle el funcionamiento del motor de builds adaptativas de HexDraft. Describe la detección de clusters, el cálculo del score de viabilidad, la selección coherente de runas y las adaptaciones contextuales de ítems frente al draft de la partida.
 
 ---

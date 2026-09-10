@@ -1,10 +1,11 @@
+import { getRoleProbability, evidenceDelta, damageProfile, teamDamage, scalingStrength, type DraftContext } from '../draftContext.js';
 // src/lib/engine/picks/pickScoring.ts
 import { ENRICHED_DB } from '../core/dataProvider.js';
 import { normalizeKey, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFromId } from '../core/constants.js';
 import { hydrateAsset } from '../core/hydrator.js';
 import { getAdaptedBuild } from '../itemEngine.js';
 import type { EnrichedChampion } from '../core/types.js';
-import { scorePickRecommendation } from '../recommendationScoring.js';
+import { evidenceContextWeight, scoreEvidence100 } from '../recommendationScoring.js';
 import { 
   analyzeComposition, 
   detectEnemyArchetype, 
@@ -19,7 +20,7 @@ const COUNTER_MAP: Record<Exclude<EnemyArchetype, 'mixed'>, {
   bonus: number;
 }> = {
   siege:        { roles: ['siege', 'utility'], tags: ['ZoneControl', 'Disengage'], bonus: 1.5 },
-  engage_heavy: { roles: ['poke', 'disengage'], tags: ['Poke', 'Disengage', 'Shield', 'Shielding'], bonus: 1.3 },
+  engage_heavy: { roles: ['peel', 'disengage'], tags: ['Peel', 'Disengage', 'Shield', 'Shielding'], bonus: 1.3 },
   poke:         { roles: ['dive', 'engage'], tags: ['Dive', 'Gap Close', 'Tank', 'Frontline'], bonus: 1.2 },
   pick_comp:    { roles: ['peel', 'teamfight'], tags: ['Peel', 'Grouping', 'Frontline'], bonus: 1.0 },
   scaling:      { roles: ['skirmish', 'dive'], tags: ['EarlyPressure', 'Pick', 'Dive'], bonus: 1.2 },
@@ -121,7 +122,8 @@ export function calculateScore(
   target: EnrichedChampion, 
   allies: string[], 
   enemies: string[], 
-  unavailableIds: number[] = []
+  unavailableIds: number[] = [],
+  context: DraftContext = {}
 ): { score: number; reasons: string[] } {
   const pickedCount = allies.length;
   let phaseKey: 'pick1' | 'pick3' | 'pick5' = 'pick3';
@@ -168,15 +170,15 @@ export function calculateScore(
   };
 
   const targetLane = target.lane;
-  const sourceStats = target.buildData?.statsData || target.statsData || {};
+  const sourceStats = target.buildData?.special_notes?.statsData || target.buildData?.statsData || target.statsData || {};
   const sourceHeader = sourceStats.header || {};
   const metaEvidence = {
-    winrate: target.meta?.winRate ?? 50,
-    pickrate: sourceHeader.pickrate ?? sourceHeader.pickRate ?? (target.meta as any)?.pickRate,
+    winrate: sourceHeader.wr !== undefined ? 50 + Number(sourceHeader.wr) - Number(sourceHeader.avgWr ?? 50) : target.meta?.winRate ?? 50,
+    pickrate: sourceHeader.pickrate ?? sourceHeader.pickRate ?? sourceHeader.pr ?? (target.meta as any)?.pickRate,
     games: sourceHeader.games ?? sourceHeader.n ?? undefined
   };
-  const centralPick = scorePickRecommendation(metaEvidence, { phase: phaseKey });
-  let score = 5.0 + ((centralPick.score - 50) * 0.08);
+  const centralPick = scoreEvidence100(metaEvidence);
+  let score = 5.0 + ((centralPick.score - 50) * 0.04 * phase.meta_base);
   const reasons: string[] = [];
   if (centralPick.score >= 65) reasons.push("Meta estadístico: evidencia sólida (" + centralPick.score.toFixed(1) + "/100)");
   else if (centralPick.score <= 40) reasons.push("Riesgo estadístico: evidencia limitada (" + centralPick.score.toFixed(1) + "/100)");
@@ -192,6 +194,9 @@ export function calculateScore(
       reasons.push(`${trendDelta >= 0 ? 'Tendencia favorable' : 'Tendencia descendente'}: ${trendDelta >= 0 ? '+' : ''}${trendDelta.toFixed(2)} pp recientes`);
     }
   }
+
+  // Meta y tendencia forman la base; los bonos posteriores son heurísticos contextuales.
+  const preContextScore = score;
 
   // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
   if (phaseKey === 'pick1' && isFlexChampion(target)) {
@@ -237,56 +242,8 @@ export function calculateScore(
     }
   }
 
-  // --- CAPA 1: FORTALEZA INDIVIDUAL Y WIN RATE ---
-  const rank = target.meta?.tier || 50;
-  let metaBonus = 0.0;
-  if (rank === 1) {
-    metaBonus = 3.5;
-    reasons.push("Meta: Prioridad Máxima (Top 1 Global)");
-  } else if (rank <= 3) {
-    metaBonus = 2.8;
-    reasons.push("Meta: Selección muy fuerte (Top 3 Global)");
-  } else if (rank <= 6) {
-    metaBonus = 2.0;
-    reasons.push("Meta: Selección Top Tier sólida");
-  } else if (rank <= 12) {
-    metaBonus = 1.2;
-    reasons.push("Meta: Pick estable de la Tierlist");
-  } else if (rank <= 20) {
-    metaBonus = 0.6;
-    reasons.push("Análisis: Pick situacional viable");
-  } else if (rank > 30) {
-    metaBonus = -1.5;
-    reasons.push("Nota: Fuera del meta prioritario");
-  }
-
-  if (enemies.length >= 2 && metaBonus > 0) {
-    const enemyEnrichedForMeta = enemies
-      .map(name => ENRICHED_DB[name])
-      .filter(Boolean) as EnrichedChampion[];
-    
-    const detectedArch = detectEnemyArchetype(enemyEnrichedForMeta);
-    
-    if (detectedArch !== 'mixed') {
-      const counterMapCheck = COUNTER_MAP[detectedArch];
-      const candidateRole = target.tacticRole || target.tactic_role || 'teamfight';
-      const hasResponse = 
-        counterMapCheck.roles.includes(candidateRole) ||
-        (target.tags || []).some(t => counterMapCheck.tags.includes(t));
-      
-      if (!hasResponse) {
-        metaBonus *= 0.5;
-      }
-    }
-  }
-
-  score += metaBonus * WEIGHTS.META_BASE;
-  score += ((target.meta?.winRate ?? 50.0) - 50) * WEIGHTS.META_BASE;
-
-  if (pickedCount === 0 && enemies.length <= 1 && rank <= 6 && (target.meta?.winRate ?? 50) >= 51.5) {
-    score += 0.8;
-    reasons.push("Safe Pick: Excelente opción a ciegas para abrir el Draft");
-  }
+  // Meta already contributes once above. Tier and raw WR are not independent evidence.
+  if (centralPick.confidence < 0.5) reasons.push('Datos del rol: confianza limitada; valoración conservadora');
 
   // --- CAPA 1.1: PONDERACIÓN Y PENALIZACIÓN DE ROL SECUNDARIO / OFF-META ---
   if (target.isSecondaryLane || target.is_secondary_lane) {
@@ -305,43 +262,19 @@ export function calculateScore(
     }
   }
 
-  // --- CAPA 2: SINERGIAS CON PROXIMIDAD Y COMBO ---
-  allies.forEach(allyName => {
-    const allyData = ENRICHED_DB[allyName];
-    if (!allyData || !target.synergies) return;
-
-    for (const laneSynergies of Object.values(target.synergies)) {
-      const match = (laneSynergies as any[]).find(s => s.name === allyName);
-      
-      if (match) {
-        const delta = parseFloat(match.delta);
-        if (delta <= 0) continue;
-
-        const isCloseAlly = 
-          (target.lane === 'BOTTOM' && allyData.lane === 'UTILITY') ||
-          (target.lane === 'UTILITY' && allyData.lane === 'BOTTOM') ||
-          (target.lane === 'JUNGLE' && (allyData.lane === 'TOP' || allyData.lane === 'MIDDLE'));
-        
-        const mapMult = isCloseAlly ? 1.4 : 1.0;
-
-        let classMult = 1.0;
-        const isEngage = target.tags.includes("Tank") || target.tags.includes("Fighter");
-        const isFollowUp = allyData.tags.includes("Assassin") || allyData.tags.includes("Mage");
-        const isADC = allyData.tags.includes("Marksman");
-        const isPeel = target.tags.includes("Support") || target.tags.includes("Tank");
-
-        if (isEngage && isFollowUp) classMult += 0.2;
-        if (isADC && isPeel) classMult += 0.3;
-
-        const synergyBonus = (delta / 10) * WEIGHTS.SYNERGY * mapMult * classMult;
-        score += synergyBonus;
-
-        if (delta > 1.2) {
-          reasons.push(`Sinergia: +${delta}% con ${allyName} (${classMult > 1 ? 'Combo de Clase' : 'Estadística'})`);
-        }
-      }
+  for (const allyName of allies) {
+    const ally = ENRICHED_DB[allyName];
+    if (!ally) continue;
+    let expected = 0;
+    for (const [lane, entries] of Object.entries(target.synergies || {})) {
+      const matches = entries.filter((m: any) => m.name === allyName && (!m.sourceLane || m.sourceLane === targetLane));
+      const match = [...matches].sort((a: any,b: any) => Number(b.count || 0)-Number(a.count || 0))[0] as any;
+      if (match) expected += evidenceDelta(match.delta, match.count) * getRoleProbability(ally, lane, context.allyRoles);
     }
-  });
+    const contribution = Math.max(-1,Math.min(1,expected * 0.22)) * WEIGHTS.SYNERGY;
+    score += contribution;
+    if (Math.abs(contribution) >= 0.1) reasons.push(`${contribution > 0 ? 'Sinergia' : 'Antisinergia'} con ${allyName}: ${contribution > 0 ? '+' : ''}${contribution.toFixed(2)} (muestra y rol ponderados)`);
+  }
 
   // --- CAPA 2.5: RESPUESTA AL ARQUETIPO ENEMIGO ---
   let collectiveArchetypeBonus = 0.0;
@@ -366,23 +299,25 @@ export function calculateScore(
   }
   score += collectiveArchetypeBonus;
 
-  // --- CAPA 3: GOD MATCHUPS ---
-  enemies.forEach(enemyName => {
-    const godMatch = target.godMatchups?.find(m => normalizeKey(m.name) === normalizeKey(enemyName));
-    const enemyData = ENRICHED_DB[enemyName];
-    if (godMatch && enemyData) {
-      const isSameLane = enemyData.lane === targetLane;
-      const proximityMult = isSameLane ? 2.0 : 0.7;
-      const bonus = (godMatch.dominanceScore || 0) * WEIGHTS.MATCHUP * proximityMult;
-      score += bonus;
-      if (bonus > 0.5) {
-        reasons.push(`${isSameLane ? 'Línea' : 'Global'}: Dominancia vs ${enemyName}`);
-      }
-    }
-  });
+  // Lane matchup data must not be applied globally to an enemy assigned elsewhere.
+  for (const enemyName of enemies) {
+    const enemy = ENRICHED_DB[enemyName];
+    if (!enemy) continue;
+    const matches = [...(target.godMatchups || []), ...(target.counters || [])]
+      .filter(m => normalizeKey(m.name) === normalizeKey(enemyName) && (!m.lane || m.lane === targetLane))
+      .sort((a,b) => Number(b.count || 0)-Number(a.count || 0));
+    const match = matches[0];
+    if (!match) continue;
+    const probability = getRoleProbability(enemy, targetLane, context.enemyRoles);
+    const delta = evidenceDelta(match.dominanceScore, match.count);
+    const contribution = delta * probability * (delta >= 0 ? WEIGHTS.MATCHUP : WEIGHTS.COUNTER);
+    score += contribution;
+    if (Math.abs(contribution) >= 0.1) reasons.push(`${contribution > 0 ? 'Ventaja' : 'Riesgo'} de línea vs ${enemyName}: ${Math.round(probability*100)}% de probabilidad de rol, ${match.count} partidas (${contribution > 0 ? '+' : ''}${contribution.toFixed(2)})`);
+  }
 
   // --- CAPA 3.5: NEGACIÓN DE WIN CONDITION ENEMIGA ---
   let winCondNegationBonus = 0.0;
+  const enemyComposition = analyzeComposition(enemies);
   if (enemies.length >= 1) {
     enemies.forEach(enemyName => {
       const enemyData = ENRICHED_DB[enemyName];
@@ -396,11 +331,11 @@ export function calculateScore(
       }
 
       const enemyNeeds = enemyData.teamNeeds || [];
-      if (enemyNeeds.includes('peel') && (tacticRole === 'dive' || tacticRole === 'burst')) {
+      if (enemyNeeds.includes('peel') && !enemyComposition.hasPeelForCarry && (tacticRole === 'dive' || tacticRole === 'burst')) {
         winCondNegationBonus += 0.6;
         reasons.push(`Castigo: Explota la falta de peel enemigo (${enemyName})`);
       }
-      if (enemyNeeds.includes('engage') && (tacticRole === 'poke' || tacticRole === 'siege' || tacticRole === 'splitpush')) {
+      if (enemyNeeds.includes('engage') && !enemyComposition.hasEngageInitiator && (tacticRole === 'poke' || tacticRole === 'siege' || tacticRole === 'splitpush')) {
         winCondNegationBonus += 0.6;
         reasons.push(`Castigo: Explota la falta de iniciación enemiga (${enemyName})`);
       }
@@ -411,20 +346,6 @@ export function calculateScore(
       score += finalWinCondBonus;
     }
   }
-
-  // --- CAPA 4: COUNTERS ---
-  enemies.forEach(enemyName => {
-    const match = target.counters?.find(c => normalizeKey(c.name) === normalizeKey(enemyName));
-
-    if (match) {
-      const dScore = match.dominanceScore || 0;
-      const isBadLane = match.laneTag === "Bad Lane";
-      let penalty = Math.abs(dScore) * WEIGHTS.COUNTER;
-      if (isBadLane) penalty *= 1.4;
-      score -= penalty;
-      reasons.push(`Peligro: ${enemyName} (${isBadLane ? 'Fase de líneas crítica' : 'Dificultad media'})`);
-    }
-  });
 
   // --- CAPA 5: BALANCE DE EQUIPO (Utilidad/CC/Frontline) ---
   const alliesProvides = new Set<string>();
@@ -477,108 +398,41 @@ export function calculateScore(
     }
   }
 
-  // --- CAPA 5.5: SATURACIÓN DE ROL TÁCTICO DEDICADA ---
-  if (allies.length >= 1 && sameRoleAlliesCount >= 2) {
-    let penaltyBase = 0.5;
-    if (tacticRole === 'poke' || tacticRole === 'burst' || tacticRole === 'splitpush') {
-      penaltyBase = 1.2;
-    } else if (tacticRole === 'teamfight' || tacticRole === 'utility') {
-      penaltyBase = 0.3;
-    }
-    const scaledPenalty = (sameRoleAlliesCount - 1) * penaltyBase * phase.composition;
-    score -= scaledPenalty;
-    reasons.push(`Saturación Táctica: Exceso de campeones de tipo ${tacticRole.toUpperCase()} (-${scaledPenalty.toFixed(1)})`);
+  // Repeating poke/teamfight is a plan, not automatically a defect. Penalize only unmet needs.
+  if (allies.length >= 2 && sameRoleAlliesCount >= 2 && tacticRole === 'splitpush' && !allyComp.hasEngageInitiator) {
+    score -= 0.4 * phase.composition;
+    reasons.push('Plan dividido: falta una forma de forzar objetivos con el equipo');
   }
 
-  // --- CAPA 6: BALANCE DE DAÑO (AP/AD) ---
-  const damage = target.combat?.damageComposition || { physical: 50, magic: 50, true: 0 };
-  const teamAD = allies.filter(a => {
-    const d = ENRICHED_DB[a]?.combat?.damageComposition;
-    return d ? (d.physical / (d.physical + d.magic || 1)) * 100 > 65 : false;
-  }).length;
-  const teamAP = allies.filter(a => {
-    const d = ENRICHED_DB[a]?.combat?.damageComposition;
-    return d ? (d.magic / (d.physical + d.magic || 1)) * 100 > 65 : false;
-  }).length;
-
-  if ((damage.physical > 35 && damage.magic > 35) && allies.length > 0) {
-    if (teamAD >= 2 && teamAP === 0) {
-      score += 0.8;
-      reasons.push("Adaptabilidad: Necesidad de daño AP");
-    }
-  }
-
+  const alliedChampions = allies.map(a => ENRICHED_DB[a]).filter(Boolean);
+  const team = teamDamage(alliedChampions, context.allyRoles);
+  const damage = damageProfile(target, targetLane);
   if (allies.length >= 2) {
-    if (teamAD === allies.length && teamAP === 0) {
-      if (damage.magic > 65) {
-        score += 2.5;
-        reasons.push("Balance: Daño mágico faltante");
-      } else if (damage.physical > 65) {
-        score -= 3.0;
-        reasons.push("Riesgo: Hay mucho daño físico");
-      }
-    }
-    if (teamAP === allies.length && teamAD === 0) {
-      if (damage.physical > 65) {
-        score += 2.5;
-        reasons.push("Balance: Daño físico faltante");
-      } else if (damage.magic > 65) {
-        score -= 3.0;
-        reasons.push("Riesgo: Hay mucho daño mágico");
-      }
+    const dominant = Math.max(team.physical, team.magic);
+    if (dominant >= 0.7) {
+      const suppliesMissing = team.physical > team.magic ? damage.magic : damage.physical;
+      const contribution = (suppliesMissing - 0.5) * 4 * damage.weight;
+      score += contribution;
+      reasons.push(`${contribution >= 0 ? 'Balance' : 'Sobrecarga'}: daño ponderado por carries y recursos (${contribution >= 0 ? '+' : ''}${contribution.toFixed(2)})`);
     }
   }
-
-  // --- CAPA 7: ESCALADO PONDERADO POR ROL ---
-  const getScalingMetrics = (champ: any) => {
-    const curve = champ.combat?.winrateCurve || [];
-    const midGame = curve.find((p: any) => p.time === 1500)?.value ?? (typeof curve[4] === 'number' ? curve[4] : 50);
-    const lateGame = curve.find((p: any) => p.time === 2700)?.value ?? (typeof curve[7] === 'number' ? curve[7] : 50);
-    return { midGame, lateGame };
-  };
-
-  let totalWeight = 0;
-  let weightedLateSum = 0;
-  
-  enemies.forEach(enemyName => {
-    const enemyData = ENRICHED_DB[enemyName];
-    if (!enemyData) return;
-
-    const metrics = getScalingMetrics(enemyData);
-    let weight = 1.0;
-    if (enemyData.isHypercarry) {
-      weight = 2.5;
-    } else if (enemyData.class === 'Support' || enemyData.lane === 'UTILITY') {
-      weight = 0.5;
-    }
-
-    weightedLateSum += metrics.lateGame * weight;
-    totalWeight += weight;
-  });
-
-  const enemyLateAvg = totalWeight > 0 ? (weightedLateSum / totalWeight) : 50;
-  const targetMetrics = getScalingMetrics(target);
-
-  if (targetMetrics.lateGame > 53 && enemyLateAvg < 50) {
-    score += WEIGHTS.SCALING;
-    reasons.push(`Escalado: Superioridad en juego tardío (${targetMetrics.lateGame.toFixed(1)}% WR)`);
-  }
-
-  if (targetMetrics.lateGame < 47 && enemyLateAvg > 52) {
-    score -= WEIGHTS.SCALING * 0.7;
-    reasons.push("Riesgo: El enemigo escala mejor hacia el minuto 45");
-  }
-
-  if (targetMetrics.midGame > 54) {
-    score += 0.5;
-    reasons.push("Timing: Powerspike agresivo al minuto 25");
+  if (enemies.length) {
+    const targetScaling = scalingStrength(target);
+    const enemyChamps = enemies.map(e => ENRICHED_DB[e]).filter(Boolean);
+    const weights = enemyChamps.map(e => damageProfile(e, context.enemyRoles?.[e.id] || e.lane).weight);
+    const totalWeight = weights.reduce((a,b)=>a+b,0);
+    const enemyScaling = totalWeight ? enemyChamps.reduce((sum,e,i)=>sum+scalingStrength(e).strength*weights[i],0)/totalWeight : 0;
+    const bonus = Math.max(-0.7,Math.min(0.7,(targetScaling.strength-enemyScaling)*0.5))*WEIGHTS.SCALING;
+    score += bonus;
+    if (Math.abs(bonus) >= 0.15) reasons.push(`Escalado ${bonus > 0 ? 'favorable' : 'desfavorable'}: ${targetScaling.observed ? 'curva observada con muestra' : 'estimación cualitativa, sin WR inventado'}`);
   }
 
   // --- CAPA 9: FLEXIBILIDAD POST-PICK ---
-  const candidateNeeds = target.teamNeeds?.filter((n: string) => n !== 'none') || [];
-  if (candidateNeeds.length > 0) {
+  const candidateNeeds = target.teamNeeds?.filter((n: string) => n !== 'none' && !alliesProvides.has(n)) || [];
+  if (candidateNeeds.length > 0 && allies.length < 4 && phase.flex_bonus > 0) {
     const allChamps = Object.values(ENRICHED_DB) as EnrichedChampion[];
-    const availableChamps = allChamps.filter(c => !unavailableIds.includes(c.id));
+    const occupiedLanes = new Set([targetLane, ...allies.map(a => context.allyRoles?.[ENRICHED_DB[a]?.id]).filter(Boolean)]);
+    const availableChamps = allChamps.filter(c => c.id !== target.id && !unavailableIds.includes(c.id) && [c.lane, ...(c.playLanes || [])].some(l => !occupiedLanes.has(l)));
 
     let minProvidersCount = 999;
     candidateNeeds.forEach(need => {
@@ -603,9 +457,17 @@ export function calculateScore(
     }
   }
 
-  // --- CAPA 8: VARIABILIDAD (ANTITUNNELING) ---
-  const entropy = Math.random() * 0.3;
-  score += entropy;
+  // Identical drafts must produce identical scores; ties are resolved by ID.
+
+  // La heurística no debe rescatar una opción con evidencia de rol insuficiente.
+  const contextWeight = evidenceContextWeight(centralPick.confidence);
+  if (contextWeight < 1) {
+    const gatedScore = preContextScore + (score - preContextScore) * contextWeight;
+    if (Math.abs(gatedScore - score) >= 0.05) {
+      reasons.push(`Heurística limitada por confianza del rol (${Math.round(centralPick.confidence * 100)}%)`);
+    }
+    score = gatedScore;
+  }
 
   // --- AJUSTE FINAL (SOFT CAP) ---
   if (score > 8.0) {
@@ -625,9 +487,10 @@ export function getSingleChampionBuild(
   championId: number,
   myTeamIds: number[] = [],
   theirTeamIds: number[] = [],
-  myRole: string = 'jungle'
+  myRole: string = 'jungle',
+  context: DraftContext = {}
 ): any {
-  const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole);
+  const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole, context);
   if (adapted) return adapted;
 
   const name = getNameFromId(championId);

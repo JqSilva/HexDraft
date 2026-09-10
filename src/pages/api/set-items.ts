@@ -25,6 +25,7 @@ export const POST: APIRoute = async ({ request }) => {
         const summonerId = summoner.summonerId;
 
         const coreItems = items.core || [];
+        const recommendedItems = Array.isArray(items.buildOrder) && items.buildOrder.length > 0 ? items.buildOrder : coreItems;
         const starter = items.starter || [];
         const boots = items.boots;
 
@@ -41,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
         const mainBuildItemsSet = new Set<string>();
         const mainBuildItemsList: any[] = [];
 
-        (coreItems || []).forEach((i: any) => {
+        (recommendedItems || []).forEach((i: any) => {
             const id = getCleanId(i);
             if (id) {
                 mainBuildItemsSet.add(id);
@@ -72,7 +73,16 @@ export const POST: APIRoute = async ({ request }) => {
             "3156"  // Fauces de Malmortius (Resistencia Mágica/AD)
         ];
 
-        const situationalItems = COMMON_SITUATIONAL_IDS
+        const pathItems = [
+            ...(items.paths?.snowball || []),
+            ...(items.paths?.neutral || []),
+            ...(items.paths?.behind || [])
+        ];
+
+        const situationalItems = Array.from(new Set([
+            ...pathItems,
+            ...COMMON_SITUATIONAL_IDS
+        ].map(getCleanId).filter(Boolean) as string[]))
             .filter(id => !filterSet.has(id))
             .map(id => ({ id, count: 1 }));
 
@@ -142,7 +152,7 @@ export const POST: APIRoute = async ({ request }) => {
         console.log(`📤 [LCU EXPORT ITEMS] ${championName} (ID: ${championId})`);
         console.log(`   Starter:`, starter.map((i: any) => typeof i === 'object' ? (i.id || i.itemId) : i));
         console.log(`   Boots:`, typeof boots === 'object' ? (boots.id || boots.itemId) : boots);
-        console.log(`   Core:`, coreItems.map((i: any) => typeof i === 'object' ? (i.id || i.itemId) : i));
+        console.log(`   Ruta completa:`, recommendedItems.map((i: any) => typeof i === 'object' ? (i.id || i.itemId) : i));
 
         return new Response(JSON.stringify({
             success: true

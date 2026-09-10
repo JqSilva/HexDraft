@@ -70,7 +70,7 @@ export function compactStatsData(rawData: any): any {
   const trend = summarizeHistoryTrend(rawData.history);
   return {
     sourceMetadata: rawData.sourceMetadata
-      ? { source: rawData.sourceMetadata.source, patch: rawData.sourceMetadata.patch }
+      ? { source: rawData.sourceMetadata.source, patch: rawData.sourceMetadata.patch, roleEvidenceVersion: 2 }
       : { source: 'lolalytics' },
     coreBuilds: rawData.coreBuilds,
     items: rawData.items,
@@ -662,6 +662,7 @@ export function buildChampionRecord(
         synergiesList.push({
           champion_id: champId,
           partner_id: partnerId,
+          source_lane: lane,
           lane: roleKey.toUpperCase(),
           delta: parseFloat(syn.delta || 0.0),
           winrate: syn.winrate || '',

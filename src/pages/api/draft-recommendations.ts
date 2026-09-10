@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     // 1. Fase de PICKS (sin claves duplicadas)
     if (phaseParam === 'pick' || phaseParam === 'all') {
       const myChampId = myChampion ? NAME_TO_ID[myChampion] : undefined;
-      const picks = getProcessedRecommendations(myTeamIds, theirTeamIds, bannedIds, normalizedLane, myChampId);
+      const picks = getProcessedRecommendations(myTeamIds, theirTeamIds, bannedIds, normalizedLane, myChampId, undefined, { allyRoles: body.allyRoles, enemyRoles: body.enemyRoles });
       responsePayload.picks = picks;
     }
     

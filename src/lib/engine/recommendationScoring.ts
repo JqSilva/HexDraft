@@ -32,14 +32,14 @@ export interface BuildScoreContext {
 const clamp = (value: number, min = 0, max = 100): number =>
   Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
 
-function asPercent(value: unknown, fallback = 50): number {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return numeric >= 0 && numeric <= 1 ? numeric * 100 : numeric;
+/** Reduce la influencia de heurísticas contextuales cuando la muestra del rol es débil. */
+export function evidenceContextWeight(confidence: number | undefined): number {
+  const normalized = Math.max(0, Math.min(1, Number(confidence) || 0));
+  return Number((0.35 + normalized * 0.65).toFixed(3));
 }
 
 function pickrateScore(value: unknown, reference = 10): number {
-  const pickrate = Math.max(0, asPercent(value, 0));
+  const pickrate = Math.max(0, Number(value) || 0);
   return clamp((1 - Math.exp(-pickrate / reference)) * 100);
 }
 
@@ -49,7 +49,7 @@ function confidenceScore(games: unknown, pickrate: unknown): number {
   }
   // Si la fuente no entrega partidas, reducimos la confianza sin descartar
   // automáticamente la opción: algunas vistas agregadas sólo exponen PR/WR.
-  return clamp(Math.max(25, Math.min(65, asPercent(pickrate, 0) * 4)));
+  return Number(pickrate) > 0 ? 25 : 0;
 }
 
 /**
@@ -57,7 +57,8 @@ function confidenceScore(games: unknown, pickrate: unknown): number {
  * Devuelve 0..100 y evita que un WR extremo con pocas partidas domine.
  */
 export function scoreEvidence100(evidence: RecommendationEvidence): ScoreBreakdown {
-  const pickrate = Math.max(0, asPercent(evidence.pickrate, 0));
+  // Source adapters provide pickrate in percentage points: 1 means 1%, never 100%.
+  const pickrate = Math.max(0, Number(evidence.pickrate) || 0);
   const smoothed = smoothedWinrate({
     winrate: evidence.winrate,
     games: evidence.games
@@ -174,7 +175,7 @@ export function scoreRunePage(page: RecommendationEvidence): ScoreBreakdown {
   const base = scoreEvidence100(page);
   return {
     ...base,
-    score: Number((base.score * 1.05).toFixed(3))
+    score: Number(clamp(base.score * 1.05).toFixed(3))
   };
 }
 

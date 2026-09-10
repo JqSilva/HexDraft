@@ -1,12 +1,14 @@
+import { getRoleBuild, teamDamage, type DraftContext } from './draftContext.js';
+import { canAddItem, cleanInventory, itemContextFit, scoreContextualRunePage, reducibleControlCount, type RuneContext } from './buildContext.js';
 // src/lib/engine/itemEngine.ts
 import { ENRICHED_DB, ITEMS_DB } from './core/dataProvider.js';
-import { NAME_TO_ID } from './core/constants.js';
+import { NAME_TO_ID, normalizeRole } from './core/constants.js';
 import { hydrateAsset } from './core/hydrator.js';
 import { analyzeComposition } from './picks/compositionAnalyzer.js';
 import { calculateSkillMaxOrder } from './tacticalEngine.js';
 import { evidenceScore, isReliableVariant } from './statisticalScoring.js';
 import { scoreBuildVariant, scoreEvidence100, scoreItemOption, scoreRunePage } from './recommendationScoring.js';
-import { chooseSecondaryPair, isValidRunePage } from './rune-validation.js';
+import { chooseSecondaryPair, isValidRunePage, getRuneRow, normalizeShards } from './rune-validation.js';
 import type { EnrichedChampion } from './core/types.js';
 import assetsMap from '../data/assets-map.json' with { type: 'json' };
 
@@ -49,11 +51,15 @@ export interface BuildCluster {
   damageType: 'AD' | 'AP' | 'Hybrid';
 }
 
+export function isBootItem(id: number): boolean {
+  return ITEMS_DB[id]?.categories?.includes('Boots') || [1001, 3006, 3009, 3020, 3047, 3111, 3117, 3158].includes(id);
+}
+
 // Categorías de respaldo si ITEMS_DB no está cargado aún en el cliente
 const HARDCODED_CATEGORIES = {
   ARMOR_PEN: [3035, 3036, 3071, 6694, 3153, 6692, 3033, 223035, 223036, 223071, 226692, 226694, 223153, 223033],
   MAGIC_PEN: [3135, 6653, 3001, 3165, 3137, 223135, 226653, 223165, 223137],
-  GRIEVOUS_WOUNDS: [3033, 3165, 3075, 3181, 3011, 8020, 3123, 223033, 223165, 223075, 323075],
+  GRIEVOUS_WOUNDS: [3033, 3165, 3075, 6609, 3011, 3123, 223033, 223165, 223075, 323075],
   MAGIC_RESIST: [3156, 2504, 3065, 4401, 3001, 3102, 3140, 3111, 223156, 222504, 223065, 224401, 223111],
   ARMOR: [3110, 3047, 3143, 3075, 3026, 6333, 3053, 6662, 3157, 223110, 223047, 223143, 223075, 223026, 223157, 223053, 226662, 323075, 323110],
   TENACITY: [3111, 3140, 223111]
@@ -102,8 +108,6 @@ export const ITEM_CATEGORIES = {
 // Blacklists de ítems e incompatibilidades por cluster
 export const CLUSTER_ITEM_BLACKLIST: Record<string, number[]> = {
   AD: [
-    3071,  // Black Cleaver — bruiser, no asesino
-    3053,  // Sterak's Gage
     6653,  // Liandry's — AP, no AD
     3152,  // Hextech Rocketbelt — AP
     4645,  // Shadowflame — AP
@@ -114,12 +118,7 @@ export const CLUSTER_ITEM_BLACKLIST: Record<string, number[]> = {
     3040,  // Archangel's — AP
     3102,  // Banshee's Veil — AP
     3001,  // Abyssal Mask — AP/tank
-    3143,  // Randuin's Omen  
-    3110,  // Frozen Heart
-    3083,  // Warmog's Armor
     4632,  // Verdant Barrier
-    3190,  // Locket of the Iron Solari
-    2502,  // Unending Despair
   ],
   AP: [
     3071,  // Black Cleaver — AD bruiser
@@ -143,7 +142,6 @@ export const BOOTS_BLACKLIST: Record<string, number[]> = {
   ],
   AP: [
     3006,  // Berserker's Greaves
-    3047,  // Plated Steelcaps
   ],
   AD_FIGHTER: []
 };
@@ -153,11 +151,11 @@ export const KEYSTONE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
   // AD / Physical
   
   // AP / Magic
-  8229: 'AP',   // Arcane Comet
-  8214: 'AP',   // Phase Rush
-  8230: 'AP',   // Summon Aery
-  8351: 'AP',   // Glacial Augment
-  8360: 'AP',   // Unsealed Spellbook
+  8229: 'Hybrid',   // Arcane Comet
+  8214: 'Hybrid',   // Phase Rush
+  8230: 'Hybrid',   // Summon Aery
+  8351: 'Hybrid',   // Glacial Augment
+  8360: 'Hybrid',   // Unsealed Spellbook
   
   // Hybrid / Adaptive (usable by both AD and AP classes)
   8010: 'Hybrid', // Conqueror / Conquistador (adaptive force)
@@ -175,9 +173,9 @@ export const KEYSTONE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
 };
 
 export const RUNE_TREE_DAMAGE_TYPE: Record<number, 'AD' | 'AP' | 'Hybrid'> = {
-  8000: 'AD',     // Precision
+  8000: 'Hybrid',     // Precision
   8100: 'Hybrid', // Domination  
-  8200: 'AP',     // Sorcery
+  8200: 'Hybrid',     // Sorcery
   8300: 'Hybrid', // Inspiration
   8400: 'Hybrid', // Resolve
 };
@@ -354,54 +352,21 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
   const champClass = champ.class || '';
   const isAssassin = tacticRole === 'burst' || tacticRole === 'assassin' || champClass === 'Assassin';
 
-  // 1. Botas: filtrar si están blacklisteadas y reemplazarlas si es necesario
-  const bootId = typeof b.items?.boots === 'object'
-    ? (b.items.boots.id || b.items.boots.itemId)
-    : (Number(b.items?.boots) || 3047);
-
-  // Mismos filtros de selectBootsForCluster
-  const BOOTS_BLACKLIST_BY_ROLE: Record<string, number[]> = {
-    burst:    [3006],  // no attack speed en asesinos
-    dive:     [3006],
-    assassin: [3006],
-  };
-  const blacklisted = BOOTS_BLACKLIST_BY_ROLE[tacticRole] || [];
-  
-  let category = 'AD_FIGHTER';
-  if (damageType === 'AP') {
-    category = 'AP';
-  } else if (damageType === 'AD') {
-    category = isAssassin ? 'AD_ASSASSIN' : 'AD_FIGHTER';
-  }
-  const categoryBlacklist = BOOTS_BLACKLIST[category] || [];
-  const combinedBlacklist = [...new Set([...blacklisted, ...categoryBlacklist])];
-
-  let finalBootId = bootId;
-  let bootSelectionReason = "Botas estándar de tu build recomendada";
-  if (combinedBlacklist.includes(bootId)) {
-    if (category === 'AD_ASSASSIN') {
-      finalBootId = 3158; // Ionian Boots of Lucidity
-      bootSelectionReason = "Botas adaptadas: se evitaron Berserker's en asesino";
-    } else if (category === 'AP') {
-      finalBootId = 3020; // Sorcerer's Shoes
-      bootSelectionReason = "Botas adaptadas: se evitaron incompatibles en AP";
-    } else {
-      finalBootId = 3047; // Plated Steelcaps
-      bootSelectionReason = "Botas adaptadas: fallback seguro";
-    }
-  }
+  const bootId = Number(typeof b.items?.boots === 'object' ? b.items.boots.id || b.items.boots.itemId : b.items?.boots) || 0;
+  const finalBootId = champ.id === 69 ? 0 : bootId;
+  const bootSelectionReason = finalBootId ? 'Botas guardadas del rol; sin adaptación demostrada' : 'Sin botas recomendadas';
 
   // 2. Starter
   let starter = b.items?.starter || [];
   if (Array.isArray(starter)) {
     starter = starter.map((i: any) => typeof i === 'object' ? Number(i.id || i.itemId) : Number(i));
   }
-  if (myRole.toLowerCase() === 'utility' && !starter.includes(3858)) {
-    starter = [3858, ...starter.filter((id: number) => id !== 3858)];
+  if (normalizeRole(myRole) === 'UTILITY') {
+    starter = [3865, 2003, 2003];
   }
 
   // 3. Core Items: filtrar items incoherentes (AP en AD, Black Cleaver en asesino, etc.)
-  const cleanCoreIds = coreIds.filter((id: number) => isItemCoherentWithCluster(id, damageType as any));
+  const cleanCoreIds = cleanInventory(coreIds.filter((id: number) => !isBootItem(id) && isItemCoherentWithCluster(id, damageType as any)));
 
   // 4. Paths: filtrar y asegurar coherencia
   const paths = b.items?.paths;
@@ -419,70 +384,26 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
     .map(Number)
     .filter((id: number) => isItemCoherentWithCluster(id, damageType as any) && !cleanCoreIds.includes(id) && id !== finalBootId);
 
-  // Asegurar relleno de ramas
-  const fillBranch = (list: number[], type: 'offensive' | 'balanced' | 'defensive'): number[] => {
-    const uniqueList = [...new Set(list)];
-    const branchFallbacks = damageType === 'AP' 
-      ? AP_FALLBACKS[type] 
-      : (isAssassin ? AD_ASSASSIN_FALLBACKS[type] : AD_FIGHTER_FALLBACKS[type]);
-    
-    for (const item of branchFallbacks) {
-      if (uniqueList.length >= 2) break;
-      if (!cleanCoreIds.includes(item) && item !== finalBootId && !uniqueList.includes(item) && isItemCoherentWithCluster(item, damageType as any)) {
-        uniqueList.push(item);
-      }
-    }
-    return uniqueList.slice(0, 2);
-  };
+  const fillBranch = (list: number[], _type: string): number[] =>
+    list.filter(id => canAddItem(id, cleanCoreIds)).slice(0, 2);
 
   const finalCleanSnowball = fillBranch(cleanSnowball, 'offensive');
   const finalCleanNeutral = fillBranch(cleanNeutral, 'balanced');
   const finalCleanBehind = fillBranch(cleanBehind, 'defensive');
 
-  // Rellenar cleanCoreIds a 5 si quedó corto por el filtrado
-  for (const id of finalCleanNeutral) {
-    if (cleanCoreIds.length >= 5) break;
-    if (!cleanCoreIds.includes(id)) {
-      cleanCoreIds.push(id);
-    }
-  }
-  const fallbacks = damageType === 'AP' 
-    ? AP_FALLBACKS 
-    : (isAssassin ? AD_ASSASSIN_FALLBACKS : AD_FIGHTER_FALLBACKS);
-  const genericFallbacks = [...fallbacks.offensive, ...fallbacks.balanced];
-  for (const id of genericFallbacks) {
-    if (cleanCoreIds.length >= 5) break;
-    if (!cleanCoreIds.includes(id) && isItemCoherentWithCluster(id, damageType as any) && id !== finalBootId) {
-      cleanCoreIds.push(id);
-    }
-  }
+  const buildOrderIds = cleanInventory([
+    ...cleanCoreIds,
+    ...finalCleanNeutral,
+    ...finalCleanSnowball,
+    ...finalCleanBehind
+  ].filter((id: number) => !isBootItem(id)), 5);
+  const buildOrder = buildOrderIds.map((id: number) => hydrateAsset('items', id));
 
-  // 5. Runas y Shards: filtrar y sanitizar
-  let selections = (b.runes?.selections || []).map((id: any) => typeof id === 'object' ? Number(id.id) : Number(id));
-  let shards = (b.runes?.shards || []).map((id: any) => typeof id === 'object' ? Number(id.id) : Number(id));
-  const primaryStyle = b.runes?.primaryStyleId || 8000;
-  const secondaryStyle = b.runes?.subStyleId || 8400;
-
-  // Evitar runa Precision (9104, 9101) secundaria en asesinos
-  if (secondaryStyle === 8000 && isAssassin) {
-    const PRECISION_BLACKLIST_ASSASSIN = [9104, 9101];
-    selections = selections.map((runeId: number, idx: number) => {
-      if (idx >= 4 && PRECISION_BLACKLIST_ASSASSIN.includes(runeId)) {
-        const otherIdx = idx === 4 ? 5 : 4;
-        const otherRune = selections[otherIdx];
-        return otherRune === 8014 ? 9111 : 8014;
-      }
-      return runeId;
-    });
-  }
-
-  // Shards: evitar Attack Speed (5005) en asesinos y AP
-  shards = shards.map((shardId: number) => {
-    if (shardId === 5005 && (isAssassin || damageType === 'AP')) {
-      return 5008; // Adaptive Force
-    }
-    return shardId;
-  });
+  const fallbackRunes = selectRunesForCluster({}, {
+    pivotItem: coreIds[0] || 0, representativeCore: coreIds,
+    totalPickrate: 0, weightedWinrate: 50, damageType
+  }, { ...champ, buildData: b });
+  const { selections, shards, primaryStyleId: primaryStyle, subStyleId: secondaryStyle } = fallbackRunes;
 
   const supportEvolution = selectSupportItemEvolution(champ.name, myRole);
   let hydratedSupportEvolution = null;
@@ -495,6 +416,7 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
 
   return {
     name: champ.name,
+    evidence: { source: 'fallback', patch: b.patch || null, role: normalizeRole(myRole), games: null },
     isAdapted: finalBootId !== bootId || cleanCoreIds.some((id: number, idx: number) => {
       const orig = coreIds[idx];
       return orig !== id;
@@ -507,8 +429,10 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
     coreItemSwaps: [],
     scoredClusters: [], // Fallback: sin datos de clusters dinámicos
     build: {
-      summoners: b.summoners?.map((id: number) => hydrateAsset('summoners', id)) || [hydrateAsset('summoners', 4), hydrateAsset('summoners', 12)],
+      summoners: selectSummonersForCluster(b.summoners?.length === 2 ? [{ summonerId1: b.summoners[0], summonerId2: b.summoners[1], pickrate: 100, winrate: 50 }] : [], myRole).map(id => hydrateAsset('summoners', id)),
       runes: {
+        source: fallbackRunes.source,
+        reasons: fallbackRunes.reasons,
         primaryStyle,
         secondaryStyle,
         keystone: hydrateAsset('runes', selections[0] || 8010),
@@ -517,8 +441,9 @@ export function getFallbackStaticBuild(champ: any, myRole: string = 'jungle'): a
       },
       items: {
         starter: starter.map((id: number) => hydrateAsset('items', id)),
-        boots: hydrateAsset('items', finalBootId),
+        boots: finalBootId ? hydrateAsset('items', finalBootId) : null,
         core: cleanCoreIds.map((id: number) => hydrateAsset('items', id)),
+        buildOrder,
         paths: {
           snowball: finalCleanSnowball.map((id: number) => hydrateAsset('items', id)),
           neutral: finalCleanNeutral.map((id: number) => hydrateAsset('items', id)),
@@ -550,7 +475,7 @@ export function getPathsForBuild(
   adaptedBootId: number,
   isAssassin: boolean = false
 ): { snowball: number[], neutral: number[], behind: number[] } {
-  const itemPoolMap = new Map<number, { id: number, pickrate: number, winrate: number }>();
+  const itemPoolMap = new Map<number, { id: number, pickrate: number, winrate: number; games?: number }>();
 
   Object.keys(slotItems || {}).forEach(slotKey => {
     const arr = slotItems[slotKey] || [];
@@ -598,20 +523,8 @@ export function getPathsForBuild(
     else if (type === 'defensive') defensiveCandidates.push(cand.id);
   });
 
-  const fillBranch = (currentList: number[], type: 'offensive' | 'balanced' | 'defensive'): number[] => {
-    const list = [...new Set(currentList)];
-    const fallbacks = damageType === 'AP' 
-      ? AP_FALLBACKS[type] 
-      : (isAssassin ? AD_ASSASSIN_FALLBACKS[type] : AD_FIGHTER_FALLBACKS[type]);
-    
-    for (const item of fallbacks) {
-      if (list.length >= 2) break;
-      if (!coreSet.has(item) && item !== adaptedBootId && !list.includes(item) && isItemCoherentWithCluster(item, damageType as any)) {
-        list.push(item);
-      }
-    }
-    return list.slice(0, 2);
-  };
+  const fillBranch = (currentList: number[], _type: string): number[] =>
+    currentList.filter(id => canAddItem(id, coreItemIds) && id !== adaptedBootId).slice(0, 2);
 
   return {
     snowball: fillBranch(offensiveCandidates, 'offensive'),
@@ -649,7 +562,7 @@ export function getDynamicPaths(
   },
   isAssassin: boolean = false
 ): { snowball: number[], neutral: number[], behind: number[] } {
-  const candidatesMap = new Map<number, { id: number; pickrate: number; winrate: number }>();
+  const candidatesMap = new Map<number, { id: number; pickrate: number; winrate: number; games?: number }>();
 
   // Item 4/5/6 son alternativas contextuales; no se concatenan como core fijo.
   const slotsToCheck = ['item4', 'item5', 'item6', 'item3'];
@@ -665,7 +578,7 @@ export function getDynamicPaths(
       const winrate = parseFloat(item.winrate || item.winRate || 0);
       
       if (!existing || pickrate > existing.pickrate) {
-        candidatesMap.set(id, { id, pickrate, winrate });
+        candidatesMap.set(id, { id, pickrate, winrate, games: Number(item.games ?? item.count) || undefined });
       }
     });
   });
@@ -675,7 +588,7 @@ export function getDynamicPaths(
 
   // Filtramos los candidatos que son estructuralmente válidos y coherentes
   const eligibleCandidates = Array.from(candidatesMap.values()).filter(cand => {
-    if (coreSet.has(cand.id)) return false;
+    if (!canAddItem(cand.id, coreItemIds)) return false;
     if (bootSet.has(cand.id)) return false;
     if (!isItemCoherentWithCluster(cand.id, damageType as any)) return false;
     const asset = hydrateAsset('items', cand.id);
@@ -697,70 +610,7 @@ export function getDynamicPaths(
   const candidates: { id: number; pickrate: number; winrate: number; score: number }[] = [];
 
   prFiltered.forEach(cand => {
-    let score = scoreItemOption(cand).score;
-
-    // 1. Grievous Wounds
-    if (ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(cand.id)) {
-      if (enemyContext.enemyHealerCount >= 1) {
-        score += 15.0 * enemyContext.enemyHealerCount;
-      } else {
-        score -= 15.0;
-      }
-    }
-
-    // 2. Penetración
-    if (ITEM_CATEGORIES.ARMOR_PEN.includes(cand.id)) {
-      if (damageType === 'AD') {
-        const realTanksCount = enemyContext.realTanks !== undefined ? enemyContext.realTanks : enemyContext.enemyTankCount;
-        if (realTanksCount >= 2) {
-          score += 12.0 * realTanksCount;
-        } else {
-          score -= 10.0;
-        }
-      } else {
-        score -= 25.0;
-      }
-    }
-    if (ITEM_CATEGORIES.MAGIC_PEN.includes(cand.id)) {
-      if (damageType === 'AP') {
-        if (enemyContext.enemyTankCount >= 1) {
-          score += 12.0 * enemyContext.enemyTankCount;
-        } else {
-          score -= 5.0;
-        }
-      } else {
-        score -= 25.0;
-      }
-    }
-
-    // 3. Resistencia Mágica
-    if (ITEM_CATEGORIES.MAGIC_RESIST.includes(cand.id)) {
-      if (enemyContext.enemyAPCount >= 3) {
-        score += 15.0;
-      } else if (enemyContext.enemyAPCount === 2) {
-        score += 5.0;
-      } else {
-        score -= 10.0;
-      }
-    }
-
-    // 4. Armadura
-    if (ITEM_CATEGORIES.ARMOR.includes(cand.id)) {
-      if (enemyContext.enemyADCount >= 3) {
-        score += 15.0;
-      } else if (enemyContext.enemyADCount === 2) {
-        score += 5.0;
-      } else {
-        score -= 10.0;
-      }
-    }
-
-    // 5. Tenacidad
-    if (ITEM_CATEGORIES.TENACITY.includes(cand.id)) {
-      if (enemyContext.enemyCCCount >= 2) {
-        score += 10.0;
-      }
-    }
+    const score = scoreItemOption(cand, { matchupFit: itemContextFit(cand.id, enemyContext) }).score;
 
     candidates.push({ ...cand, score });
   });
@@ -798,6 +648,36 @@ export function getDynamicPaths(
     neutral: fillBranch(balanced, 'balanced'),
     behind: fillBranch(defensive, 'defensive')
   };
+}
+
+/**
+ * Elige una única continuación principal para la composición actual.
+ * Las ramas snowball/behind se conservan como alternativas visuales, pero no se mezclan
+ * dentro de la ruta que se importa al cliente.
+ */
+export function selectCompositionContinuation(
+  paths: { snowball: number[]; neutral: number[]; behind: number[] },
+  coreIds: number[],
+  bootsId: number,
+  enemyContext: { enemyADCount: number; enemyAPCount: number; enemyTankCount: number; enemyCCCount: number; enemyHealerCount: number; physicalShare?: number; magicShare?: number; reducibleCCCount?: number }
+): number[] {
+  const branchOrder = [paths.neutral || [], paths.snowball || [], paths.behind || []];
+  const candidates = new Map<number, { id: number; branch: number; index: number }>();
+  branchOrder.forEach((branch, branchIndex) => {
+    branch.forEach((id, index) => {
+      const normalized = Number(id);
+      if (normalized > 0 && !isBootItem(normalized) && normalized !== bootsId && canAddItem(normalized, coreIds) && !candidates.has(normalized)) {
+        candidates.set(normalized, { id: normalized, branch: branchIndex, index });
+      }
+    });
+  });
+  return [...candidates.values()]
+    .sort((a, b) => {
+      const fitDiff = itemContextFit(b.id, enemyContext) - itemContextFit(a.id, enemyContext);
+      return fitDiff || a.branch - b.branch || a.index - b.index;
+    })
+    .slice(0, 2)
+    .map(candidate => candidate.id);
 }
 
 // --- CONSTANTES Y CONFIGURACIÓN DE UMBRALES DE ADAPTACIÓN ---
@@ -859,7 +739,7 @@ export function isItemViableForChamp(
 
   // Recolectar todos los ítems de las ranuras históricas del campeón
   const allSlotItems = Object.values(champData.buildData?.slotItems || {}).flat();
-  const statsItems = Object.values(champData.buildData?.statsData?.items || {}).flat();
+  const statsItems = Object.values(champData.buildData?.special_notes?.statsData?.items || champData.buildData?.statsData?.items || {}).flat();
   const combinedItems = [...allSlotItems, ...statsItems];
 
   const inPool = combinedItems.find((i: any) => {
@@ -948,7 +828,7 @@ export function getCoreItemSwaps(
   if (!hasAntiHeal && enemyContext.enemyHealerCount >= ADAPTATION_THRESHOLDS.antiHeal.minHealerCount) {
     const antiHealCandidates = isAP
       ? [3165] // Morellonomicon
-      : (champProfile.class === 'Tank' ? [3075] : [3033, 3181, 3075]); // Mortal Reminder, Chempunk, Thornmail
+      : (champProfile.class === 'Tank' ? [3075] : [3033, 6609, 3075]); // Mortal Reminder, Chempunk, Thornmail
 
     const viableAntiHeal = antiHealCandidates.find(id =>
       !cleanCore.includes(id) &&
@@ -1132,7 +1012,36 @@ export function classifyItemsDamageType(itemIds: number[]): 'AD' | 'AP' | 'Hybri
   }
   if (apScore > 0) return 'AP';
   if (adScore > 0) return 'AD';
-  return 'AP';
+  return 'Hybrid';
+}
+
+function completeCoreItemIds(statsData: any, rawItemIds: any[]): number[] {
+  const initial = (Array.isArray(rawItemIds) ? rawItemIds : [])
+    .map(Number)
+    .filter(id => id > 0 && !isBootItem(id));
+  const core = cleanInventory(initial, 3);
+  if (core.length >= 3) return core;
+
+  const damageType = classifyItemsDamageType(core);
+  const slotItems = [
+    ...(statsData?.items?.item3 || []),
+    ...(statsData?.items?.item4 || []),
+    ...(statsData?.items?.item5 || [])
+  ];
+  const candidate = slotItems
+    .map((item: any) => ({
+      id: Number(item.Id || item.id || item.itemId),
+      pickrate: Number(item.pickrate || item.pickRate || 0),
+      winrate: Number(item.winrate || item.winRate || 50),
+      games: Number(item.games || item.count || 0)
+    }))
+    .filter(item => item.id > 0 && item.pickrate >= 10 && !isBootItem(item.id)
+      && canAddItem(item.id, core) && isItemCoherentWithCluster(item.id, damageType))
+    .sort((a, b) => scoreItemOption(b).score - scoreItemOption(a).score)[0];
+  const fallbackPool = damageType === 'AP' ? AP_FALLBACKS.offensive : AD_FIGHTER_FALLBACKS.offensive;
+  const fallback = fallbackPool.find(id => canAddItem(id, core) && isItemCoherentWithCluster(id, damageType));
+  const third = candidate?.id || fallback || 0;
+  return third ? cleanInventory([...core, third], 3) : core;
 }
 
 /**
@@ -1166,12 +1075,12 @@ export function detectBuildClusters(statsData: any): BuildCluster[] {
       });
 
     for (const c of sortedCore3) {
-      const representativeCore = c.itemIds.slice(0, 3);
+      const representativeCore = completeCoreItemIds(statsData, c.itemIds);
       const sig = [...representativeCore].sort().join('-');
       if (seenSignatures.has(sig)) continue;
       seenSignatures.add(sig);
 
-      const pivotItem = representativeCore[1] || representativeCore[0];
+      const pivotItem = representativeCore.find((id: number) => !isBootItem(id)) || representativeCore[0];
         const totalPickrate = c.pickrate || 0;
         const weightedWinrate = c.winrate || 50.0;
       const damageType = classifyItemsDamageType(representativeCore);
@@ -1205,32 +1114,9 @@ export function detectBuildClusters(statsData: any): BuildCluster[] {
 
     for (const pair of sortedCore2) {
       const pairIds = pair.itemIds.slice(0, 2);
-      const pivotItem = pairIds[1] || pairIds[0];
-      const damageType = classifyItemsDamageType(pairIds);
-
-      // Buscar 3er ítem viable en slotItems / statsData.items
-      let thirdItem = 0;
-      const slotItemsArr = [
-        ...(statsData.items?.item3 || []),
-        ...(statsData.items?.item4 || []),
-        ...(statsData.items?.item5 || [])
-      ];
-
-      const viable3rd = slotItemsArr
-        .filter((item: any) => {
-          const id = Number(item.Id || item.id);
-          return id && !pairIds.includes(id) && isItemCoherentWithCluster(id, damageType) && (item.pickrate || 0) >= 10.0;
-        })
-        .sort((a: any, b: any) => scoreItemOption(b).score - scoreItemOption(a).score);
-
-      if (viable3rd.length > 0) {
-        thirdItem = Number(viable3rd[0].Id || viable3rd[0].id);
-      } else {
-        const fallbacks = damageType === 'AP' ? AP_FALLBACKS.offensive : AD_FIGHTER_FALLBACKS.offensive;
-        thirdItem = fallbacks.find(id => !pairIds.includes(id)) || (damageType === 'AP' ? 3089 : 3031);
-      }
-
-      const representativeCore = [...pairIds, thirdItem];
+      const representativeCore = completeCoreItemIds(statsData, pairIds);
+      const pivotItem = representativeCore.find((id: number) => !isBootItem(id)) || representativeCore[0];
+      const damageType = classifyItemsDamageType(representativeCore);
       const sig = [...representativeCore].sort().join('-');
       if (seenSignatures.has(sig)) continue;
       seenSignatures.add(sig);
@@ -1296,13 +1182,13 @@ export function scoreClusterInContext(
   });
 
   // Healers bonus for AP
-  if (cluster.damageType === 'AP' && healersCount > 0) {
+  if (cluster.representativeCore.some(id => ITEM_CATEGORIES.GRIEVOUS_WOUNDS.includes(id)) && healersCount > 0) {
     let healerBonus = 0;
     if (healersCount === 1) healerBonus = 1.0;
     else if (healersCount === 2) healerBonus = 3.0;
     else healerBonus = 5.0;
     score += healerBonus;
-    bonuses.push({ label: `AP healer bonus (${healersCount} healers)`, value: healerBonus });
+    bonuses.push({ label: `Anti-heal response (${healersCount} healers)`, value: healerBonus });
   }
 
   // High MR penalty for AP
@@ -1435,43 +1321,15 @@ export function selectBootsForCluster(
   champClass?: string,
   champData?: EnrichedChampion
 ): number {
-  if (!Array.isArray(boots) || boots.length === 0) {
-    return 3047;
-  }
+  if (champData?.id === 69) return 0;
+  if (!Array.isArray(boots) || boots.length === 0) return 0;
+  const bootPool = boots.filter(b => isBootItem(Number(b.itemId || b.id || b.Id)));
 
-  const BOOTS_BLACKLIST_BY_ROLE: Record<string, number[]> = {
-    burst:    [3006],
-    dive:     [3006],
-    skirmish: [],
-    poke:     [3006],
-    siege:    [3006],
-  };
-
-  const champRole = champData?.tacticRole || tacticRole || 'teamfight';
-  const blacklisted = BOOTS_BLACKLIST_BY_ROLE[champRole] || [];
-
-  let category = 'AD_FIGHTER';
-  if (cluster.damageType === 'AP') {
-    category = 'AP';
-  } else if (cluster.damageType === 'AD') {
-    const isAssassin = tacticRole === 'burst' || tacticRole === 'assassin' || champClass === 'Assassin';
-    category = isAssassin ? 'AD_ASSASSIN' : 'AD_FIGHTER';
-  }
-
-  const categoryBlacklist = BOOTS_BLACKLIST[category] || [];
-  const combinedBlacklist = [...new Set([...blacklisted, ...categoryBlacklist])];
-
-  const filteredBoots = boots.filter(b => {
-    const id = Number(b.itemId || b.id);
-    return !combinedBlacklist.includes(id);
-  });
-  const bootPool = filteredBoots.length > 0 ? filteredBoots : boots;
-
-  let bestBootId = 3047;
+  let bestBootId = 0;
   let maxScore = -9999;
 
   bootPool.forEach(b => {
-    const id = Number(b.itemId || b.id);
+    const id = Number(b.itemId || b.id || b.Id);
     const wr = b.winrate || 50.0;
     const pr = b.pickrate || 0;
     
@@ -1498,8 +1356,11 @@ export function selectBootsForCluster(
 export function selectRunesForCluster(
   runesData: RunesData,
   cluster: BuildCluster,
-  champData?: EnrichedChampion
+  champData?: EnrichedChampion,
+  context: RuneContext = {}
 ): {
+  source: 'observed' | 'fallback';
+  reasons: string[];
   primaryStyleId: number;
   subStyleId: number;
   selections: number[];
@@ -1511,7 +1372,7 @@ export function selectRunesForCluster(
   const baseSubStyleId = Number(champData?.buildData?.runes?.subStyleId) || 0;
 
   const sourcePages = Array.isArray(runesData.pages) ? [...runesData.pages]
-    .sort((a, b) => scoreRunePage(b).score - scoreRunePage(a).score) : [];
+    .sort((a, b) => scoreContextualRunePage(b, cluster.representativeCore, champData, context).score - scoreContextualRunePage(a, cluster.representativeCore, champData, context).score) : [];
   for (const page of sourcePages) {
     if (!page.selections || page.selections.length < 6) continue;
     const pageKeystoneType = KEYSTONE_DAMAGE_TYPE[page.selections[0]] || 'Hybrid';
@@ -1525,10 +1386,12 @@ export function selectRunesForCluster(
       runeToStyle
     )) {
       return {
+        source: 'observed',
+        reasons: scoreContextualRunePage(page, cluster.representativeCore, champData, context).reasons,
         primaryStyleId: page.primaryStyleId,
         subStyleId: page.subStyleId,
         selections: page.selections.slice(0, 6),
-        shards: page.shards?.slice(0, 3) || [5008, 5008, 5002]
+        shards: normalizeShards(page.shards)
       };
     }
   }
@@ -1546,16 +1409,18 @@ export function selectRunesForCluster(
       const subStyleId = baseSubStyleId || 8400;
       const shards = (champData.buildData.runes.shards || [5008, 5008, 5002]).map((s: any) => typeof s === 'object' ? Number(s.id || s.Id) : Number(s));
       return {
+        source: 'fallback',
+        reasons: ['Página guardada del rol; sin evidencia conjunta de matchup/core'],
         primaryStyleId,
         subStyleId,
         selections: baseSelections,
-        shards
+        shards: normalizeShards(shards)
       };
     }
   }
 
   // 2. Extraer la keystone con mayor consensusScore coherente con el tipo de daño
-  const rawKeystones = runesData.primaryRuneId || [];
+  const rawKeystones = (runesData.primaryRuneId || []).filter(r => getRuneRow(Number(r.Id || r.id)) === 0);
   const filteredKeystones = rawKeystones.filter(r => {
     const id = Number(r.Id || r.id);
     const kType = KEYSTONE_DAMAGE_TYPE[id] || 'Hybrid';
@@ -1573,20 +1438,22 @@ export function selectRunesForCluster(
   const primaryStyleId = Number(runeToStyle[primaryRuneId]) || 8000;
 
   // 3. Extraer perks de las ranuras 2, 3 y 4 que pertenezcan estrictamente al árbol primario seleccionado
-  const selectSlotRune = (slotOptions: RuneOption[] | undefined): number => {
-    if (!Array.isArray(slotOptions) || slotOptions.length === 0) return 0;
-    const sameStyle = slotOptions.filter(r => {
+  const selectSlotRune = (slotOptions: RuneOption[] | undefined, row: number): number => {
+    const options = slotOptions || [];
+    const sameStyle = options.filter(r => {
       const id = Number(r.Id || r.id);
-      return Number(runeToStyle[id]) === primaryStyleId;
+      return Number(runeToStyle[id]) === primaryStyleId && getRuneRow(id) === row;
     });
-    const pool = sameStyle.length > 0 ? sameStyle : slotOptions;
+    const pool: RuneOption[] = sameStyle.length > 0 ? sameStyle : Object.keys(runeToStyle)
+      .map(Number).filter(id => Number(runeToStyle[id]) === primaryStyleId && getRuneRow(id) === row)
+      .map(id => ({ Id: id, winrate: 50, pickrate: 0 }));
     const sorted = [...pool].sort((a, b) => evidenceScore(b) - evidenceScore(a));
     return Number(sorted[0]?.Id || sorted[0]?.id || 0);
   };
 
-  const primaryRuneId2 = selectSlotRune(runesData.primaryRuneId2);
-  const primaryRuneId3 = selectSlotRune(runesData.primaryRuneId3);
-  const primaryRuneId4 = selectSlotRune(runesData.primaryRuneId4);
+  const primaryRuneId2 = selectSlotRune(runesData.primaryRuneId2, 1);
+  const primaryRuneId3 = selectSlotRune(runesData.primaryRuneId3, 2);
+  const primaryRuneId4 = selectSlotRune(runesData.primaryRuneId4, 3);
 
   // 4. Seleccionar árbol secundario cerrado: agrupar por estilo secundario, sumar consenso conjunto de sus 2 mejores runas
   const rawSecondary = runesData.secondaryRuneId || [];
@@ -1618,6 +1485,11 @@ export function selectRunesForCluster(
     }
   });
 
+  if (bestSubRunes.includes(0)) {
+    bestSubStyleId = primaryStyleId === 8400 ? 8200 : 8400;
+    bestSubRunes = bestSubStyleId === 8400 ? [8444, 8451] : [8210, 8236];
+  }
+
   // 5. Seleccionar shards por consenso
   const selectBestShard = (shardOpts: RuneOption[] | undefined, defaultShard: number): number => {
     if (!Array.isArray(shardOpts) || shardOpts.length === 0) return defaultShard;
@@ -1628,11 +1500,13 @@ export function selectRunesForCluster(
   const shards = [
     selectBestShard(runesData.perksStat1, 5008), // Adaptive Force
     selectBestShard(runesData.perksStat2, 5008), // Adaptive Force
-    selectBestShard(runesData.perksStat3, 5002)  // Armor
+    selectBestShard(runesData.perksStat3, 5001)  // Scaling health
   ];
 
   return {
     primaryStyleId,
+    source: 'fallback',
+    reasons: ['Página legal reconstruida: faltan datos de una página completa'],
     subStyleId: bestSubStyleId,
     selections: [
       primaryRuneId,
@@ -1642,7 +1516,7 @@ export function selectRunesForCluster(
       bestSubRunes[0],
       bestSubRunes[1]
     ],
-    shards
+    shards: normalizeShards(shards)
   };
 }
 
@@ -1678,36 +1552,15 @@ export function selectStarterForCluster(
 /**
  * Selecciona summoners según consenso.
  */
-export function selectSummonersForCluster(
-  summoners: any[],
-  role: string
-): number[] {
-  if (!Array.isArray(summoners) || summoners.length === 0) {
-    return [4, 12];
-  }
-
-  const filtered = summoners.filter(s => (s.pickrate || 0) >= 5.0);
-  const candidates = filtered.length > 0 ? filtered : summoners;
-
-  let bestSumms: number[] = [];
-  let maxScore = -9999;
-
-  candidates.forEach(s => {
-    const wr = s.winrate || 50.0;
-    const pr = s.pickrate || 0;
-    const score = consensusScore(pr, wr);
-
-    if (score > maxScore) {
-      maxScore = score;
-      bestSumms = [s.summonerId1, s.summonerId2];
-    }
+export function selectSummonersForCluster(summoners: any[], role: string): number[] {
+  const isJungle = normalizeRole(role) === 'JUNGLE';
+  const fallback = isJungle ? [4, 11] : [4, 12];
+  const pool = (Array.isArray(summoners) ? summoners : []).filter(s => {
+    const ids = [Number(s.summonerId1), Number(s.summonerId2)];
+    return ids.every(id => id > 0) && ids[0] !== ids[1] && (!isJungle || ids.includes(11));
   });
-
-  if (bestSumms.length < 2) {
-    bestSumms = [4, 12];
-  }
-
-  return bestSumms;
+  const best = pool.sort((a, b) => evidenceScore(b) - evidenceScore(a))[0];
+  return best ? [Number(best.summonerId1), Number(best.summonerId2)] : fallback;
 }
 
 function getPivotItemName(pivotId: number): string | null {
@@ -1768,11 +1621,12 @@ function buildOutputForCluster(
   enemyNames: string[],
   enemyContext: any,
   isAssassin: boolean,
-  defaultBuild: any
+  defaultBuild: any,
+  context: DraftContext = {}
 ): any {
-  const coreItemIds = c.representativeCore || [];
+  const coreItemIds = cleanInventory((c.representativeCore || []).filter((id: number) => !isBootItem(id)));
   const chosenBootId = selectBootsForCluster(rawBoots, c, enemyNames, champ.tacticRole || champ.tactic_role, champ.class, champ);
-  const chosenRunes = selectRunesForCluster(rawRunes, c, champ);
+  const chosenRunes = selectRunesForCluster(rawRunes, c, { ...champ, lane: normalizeRole(myRole), buildData: defaultBuild }, { ...context, enemies: enemyNames });
 
   const isSupport = myRole?.toUpperCase() === 'UTILITY' || myRole?.toUpperCase() === 'SUPPORT' || champUsesQuestItem(champ.name, myRole);
   const supportEvolution = selectSupportItemEvolution(champ.name, myRole);
@@ -1796,10 +1650,10 @@ function buildOutputForCluster(
   );
 
   const starter = chosenStarterIds.map((id: number) => hydrateAsset('items', id));
-  const boots = hydrateAsset('items', chosenBootId);
+  const boots = chosenBootId ? hydrateAsset('items', chosenBootId) : null;
 
   // Swaps de core items dinámicos
-  const swapsRaw = getCoreItemSwaps(coreItemIds, enemyContext, champ, enemyNames);
+  const swapsRaw = getCoreItemSwaps(coreItemIds, enemyContext, { ...champ, damageType: c.damageType }, enemyNames);
   const coreItemSwaps = swapsRaw.map(s => ({
     replaceItem: hydrateAsset('items', s.replaceItem),
     withItem: hydrateAsset('items', s.withItem),
@@ -1829,14 +1683,7 @@ function buildOutputForCluster(
       }
     }
   } else {
-    // Roles normales: completar a 5 finalizados
-    fullCoreIds = [...coreItemIds];
-    for (const id of dynamicPaths.neutral) {
-      if (fullCoreIds.length >= 5) break;
-      if (!fullCoreIds.includes(id)) {
-        fullCoreIds.push(id);
-      }
-    }
+    fullCoreIds = cleanInventory(coreItemIds);
   }
 
   const core = fullCoreIds.map((id: number) => hydrateAsset('items', id));
@@ -1847,6 +1694,15 @@ function buildOutputForCluster(
     behind: dynamicPaths.behind.map((id: number) => hydrateAsset('items', id))
   };
 
+  // Ruta principal: cinco objetos terminados sin contar botas (seis espacios con botas).
+  // Se elige una única continuación por ajuste a la composición; no se mezclan estados de partida.
+  const recommendedContinuation = selectCompositionContinuation(dynamicPaths, fullCoreIds, chosenBootId, enemyContext);
+  const buildOrderIds = cleanInventory([
+    ...fullCoreIds,
+    ...recommendedContinuation
+  ].filter((id: number) => !isBootItem(id)), 5);
+  const buildOrder = buildOrderIds.map((id: number) => hydrateAsset('items', id));
+
   const skillsData = defaultBuild?.skills || statsData?.skills || champ.buildData?.skills;
   const fullOrder = calculateSkillMaxOrder(skillsData);
 
@@ -1854,6 +1710,8 @@ function buildOutputForCluster(
     build: {
       summoners: chosenSummoners.map((id: number) => hydrateAsset('summoners', id)),
       runes: {
+        source: chosenRunes.source,
+        reasons: chosenRunes.reasons,
         primaryStyle: chosenRunes.primaryStyleId,
         secondaryStyle: chosenRunes.subStyleId,
         keystone: hydrateAsset('runes', chosenRunes.selections[0]),
@@ -1864,6 +1722,7 @@ function buildOutputForCluster(
         starter,
         boots,
         core,
+        buildOrder,
         paths
       },
       skillOrder: fullOrder
@@ -1898,7 +1757,8 @@ export function getAdaptedBuild(
   championId: number | string,
   myTeamIds: number[] = [],
   theirTeamIds: number[] = [],
-  myRole: string = 'jungle'
+  myRole: string = 'jungle',
+  context: DraftContext = {}
 ): any {
   let name = '';
   let champIdNum = 0;
@@ -1917,19 +1777,14 @@ export function getAdaptedBuild(
   const champClass = champ.class || '';
   const isAssassin = tacticRole === 'burst' || tacticRole === 'assassin' || champClass === 'Assassin';
 
-  const roleUpper = myRole?.toUpperCase() || '';
-  const defaultBuild = champ.builds?.find((b: any) => b.is_default && b.lane?.toUpperCase() === roleUpper && b.special_notes?.statsData)
-    || champ.builds?.find((b: any) => b.is_default && b.special_notes?.statsData)
-    || champ.builds?.find((b: any) => b.is_default && b.lane?.toUpperCase() === roleUpper)
-    || champ.builds?.find((b: any) => b.is_default)
-    || champ.buildData;
+  const roleUpper = normalizeRole(myRole);
+  const defaultBuild = getRoleBuild(champ, roleUpper);
+  const roleChamp = { ...champ, lane: roleUpper, buildData: defaultBuild };
   // La ruta varía según la fuente de datos:
   // - SQLite → special_notes.statsData (guardado por sync.service)
   // - SQLite → buildData.statsData (ruta directa del scraper)
-  const statsData = defaultBuild?.special_notes?.statsData
-    || champ.buildData?.special_notes?.statsData
-    || champ.buildData?.statsData  // ← ruta directa del JSON
-    || champ.statsData;
+  const statsData = defaultBuild?.special_notes?.statsData || defaultBuild?.statsData
+    || (defaultBuild === champ.buildData ? champ.statsData : undefined);
 
   console.log(`\n🔍 [ENGINE] getAdaptedBuild → ${name} (ID: ${champIdNum})`);
   console.log(`   tacticRole: ${tacticRole} | class: ${champClass} | isAssassin: ${isAssassin}`);
@@ -1939,19 +1794,19 @@ export function getAdaptedBuild(
   // Fallback si no hay statsData para campeones sin scrapeo completo
   if (!statsData || !statsData.coreBuilds) {
     console.log(`   ⚠️  Sin statsData → usando getFallbackStaticBuild`);
-    return getFallbackStaticBuild(champ, myRole);
+    return getFallbackStaticBuild(roleChamp, myRole);
   }
 
   const clusters = detectBuildClusters(statsData);
   if (clusters.length === 0) {
-    return getFallbackStaticBuild(champ, myRole);
+    return getFallbackStaticBuild(roleChamp, myRole);
   }
 
-  const allyNames = myTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
+  const allyNames = myTeamIds.filter(id => id !== champIdNum).map(id => getNameFromId(id)).filter(Boolean) as string[];
   const enemyNames = theirTeamIds.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
   const scoredClusters = clusters.map(cluster => {
-    const score = scoreClusterInContext(cluster, allyNames, enemyNames, champ);
+    const score = scoreClusterInContext(cluster, allyNames, enemyNames, roleChamp);
     return { ...cluster, score };
   });
 
@@ -2014,7 +1869,10 @@ export function getAdaptedBuild(
     enemyTankCount: enemyComp.tankCount,
     enemyCCCount: enemyComp.ccCount,
     enemyHealerCount: enemyComp.healerCount,
-    realTanks
+    realTanks,
+    physicalShare: teamDamage(enemyNames.map(n => ENRICHED_DB[n]).filter(Boolean), context.enemyRoles).physical,
+    magicShare: teamDamage(enemyNames.map(n => ENRICHED_DB[n]).filter(Boolean), context.enemyRoles).magic,
+    reducibleCCCount: reducibleControlCount(enemyNames)
   };
 
   // Filtrado de clusters similares (máximo 4)
@@ -2029,44 +1887,6 @@ export function getAdaptedBuild(
   const result: any[] = [];
   for (const c of scoredClusters) {
     if (result.length >= 4) break;
-
-    const cBootId = selectBootsForCluster(
-      rawBoots, c, enemyNames,
-      champ.tacticRole || champ.tactic_role,
-      champ.class, champ
-    );
-    const cDynamicPaths = getDynamicPaths(
-      statsData.items || {},
-      c.representativeCore,
-      c.damageType,
-      cBootId,
-      enemyContext,
-      isAssassin
-    );
-    let cFullCoreIds: number[] = [];
-    if (isSupport && supportEvolution) {
-      cFullCoreIds = [supportEvolution.itemId];
-      for (const id of c.representativeCore) {
-        if (cFullCoreIds.length >= 4) break;
-        if (!cFullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== cBootId) {
-          cFullCoreIds.push(id);
-        }
-      }
-      for (const id of cDynamicPaths.neutral) {
-        if (cFullCoreIds.length >= 3) break;
-        if (!cFullCoreIds.includes(id) && !SUPPORT_ITEM_IDS.includes(id) && id !== 3865 && id !== cBootId) {
-          cFullCoreIds.push(id);
-        }
-      }
-    } else {
-      cFullCoreIds = [...c.representativeCore];
-      for (const id of cDynamicPaths.neutral) {
-        if (cFullCoreIds.length >= 5) break;
-        if (!cFullCoreIds.includes(id)) {
-          cFullCoreIds.push(id);
-        }
-      }
-    }
 
     // FIX 1: comparar representativeCore original, NO fullCoreIds
     let isSimilar = false;
@@ -2085,7 +1905,7 @@ export function getAdaptedBuild(
       const clusterBuildOutput = buildOutputForCluster(
         c, champ, statsData, rawBoots, rawRunes,
         rawStarters, rawSummoners, myRole,
-        enemyNames, enemyContext, isAssassin, defaultBuild
+        enemyNames, enemyContext, isAssassin, defaultBuild, context
       );
       const title = getClusterTitle(c.representativeCore, c.damageType);
 
@@ -2098,7 +1918,7 @@ export function getAdaptedBuild(
         games: c.games,
         score: +(c.score.toFixed(2)),
         isWinner: false,
-        fullCoreIds: cFullCoreIds,
+        fullCoreIds: clusterBuildOutput.fullCoreIds,
         title,
         build: clusterBuildOutput.build,
         coreItemSwaps: clusterBuildOutput.coreItemSwaps,
@@ -2122,7 +1942,7 @@ if (filteredClusters.length <= 1 && scoredClusters.length > 1) {
     const clusterBuildOutput = buildOutputForCluster(
       c, champ, statsData, rawBoots, rawRunes,
       rawStarters, rawSummoners, myRole,
-      enemyNames, enemyContext, isAssassin, defaultBuild
+      enemyNames, enemyContext, isAssassin, defaultBuild, context
     );
     const title = getClusterTitle(c.representativeCore, c.damageType);
     return {
@@ -2213,38 +2033,14 @@ filteredClusters.forEach((c, i) => {
     ? (defaultBuild.items.boots.id || defaultBuild.items.boots.itemId)
     : (Number(defaultBuild?.items?.boots) || 3047);
 
-  // Validación de coherencia y reporte de errores en consola
-  if (winningClusterData.damageType === 'AD') {
-    const NEVER_IN_AD_RUNES = [8229, 8214, 8230];
-    const NEVER_IN_AD_ITEMS = [6653, 3152, 4645, 3135, 3165, 3071];
-    const NEVER_IN_ASSASSIN_SHARDS = [5005];
-
-    const selectedKeystone = Number(winningClusterData.build.runes.selections[0]?.id || 0);
-    const finalCoreIds = winningClusterData.fullCoreIds.map((id: any) => Number(id));
-    const firstShard = Number(winningClusterData.build.runes.shards[0]?.id || 0);
-
-    if (NEVER_IN_AD_RUNES.includes(selectedKeystone)) {
-      console.error(`❌ [COHERENCE] Keystone AP en cluster AD: ${selectedKeystone}`);
-    }
-    NEVER_IN_AD_ITEMS.forEach(id => {
-      if (finalCoreIds.includes(id)) {
-        console.error(`❌ [COHERENCE] Item incoherente en cluster AD: ${id}`);
-      }
-    });
-
-    const isAssassin = champ.tacticRole === 'burst' || champ.tacticRole === 'dive' || champ.class === 'Assassin';
-    if (isAssassin && NEVER_IN_ASSASSIN_SHARDS.includes(firstShard)) {
-      console.error(`❌ [COHERENCE] Shard incoherente para asesino: ${firstShard}`);
-    }
-  }
-
   return {
     id: championId,
     name: name,
+    evidence: { source: 'observed', patch: defaultBuild?.patch || statsData.header?.patch || null, role: roleUpper, games: winningClusterData.games || null },
     isAdapted: chosenBootId !== defaultBootId || winningClusterData.pivotItem !== (defaultBuild?.items?.core?.[0] || 0) || coreItemSwaps.length > 0,
     bootsSelection: {
       bootId: chosenBootId,
-      reason: chosenBootId === 3111 ? "CC crítico enemigo — Mercury adaptado" : (chosenBootId === 3047 ? "Composición AD pesada — Tabi adaptado" : "Botas coherentes con tu cluster")
+      reason: chosenBootId ? "Botas elegidas entre opciones observadas del rol y contexto disponible" : "Sin botas recomendadas"
     },
     supportEvolution: hydratedSupportEvolution,
     coreItemSwaps,

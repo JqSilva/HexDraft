@@ -92,7 +92,7 @@ const ClusterTab = ({
                     {keystone?.icon && coreItems.length > 0 && (
                         <div className="h-4 w-px bg-border-warm/30 mx-0.5"></div>
                     )}
-                    {coreItems.slice(0, 2).map((item: any, idx: number) => (
+                    {coreItems.slice(0, 3).map((item: any, idx: number) => (
                         <img
                             key={idx}
                             src={item.icon || getDDragonUrl('item', item.id)}
@@ -137,7 +137,7 @@ const ClusterTab = ({
                 {keystone?.icon && coreItems.length > 0 && (
                     <div className="h-4.5 w-px bg-border-warm/30 mx-0.5"></div>
                 )}
-                {coreItems.slice(0, 2).map((item: any, idx: number) => (
+                {coreItems.slice(0, 3).map((item: any, idx: number) => (
                     <img
                         key={idx}
                         src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
@@ -167,6 +167,7 @@ export const ItemBuild = memo(({
     const clampedIndex = Math.min(activePlaystyleIndex, scoredClusters.length - 1);
     const activeCluster = scoredClusters[clampedIndex] ?? scoredClusters[0];
     const build = activeCluster ? activeCluster.build : currentBuild.build;
+    const fullBuildItems = build?.items?.buildOrder?.length ? build.items.buildOrder : (build?.items?.core || []);
     const coreItemSwaps = activeCluster ? activeCluster.coreItemSwaps : currentBuild.coreItemSwaps;
 
     const situationalItemsList: any[] = [];
@@ -317,13 +318,13 @@ export const ItemBuild = memo(({
                             </div>
                         </div>
 
-                        {/* Bloque [1,0]: Core Build */}
+                        {/* Bloque [1,0]: Build completa */}
                         <div className="flex flex-col gap-2 min-w-0">
                             <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
-                                Core Build
+                                Build completa
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2.5 max-w-[210px] mx-auto w-full">
-                                {build?.items?.core?.map((item: any, idx: number) => {
+                                {fullBuildItems.map((item: any, idx: number) => {
                                     const suppEvol = currentBuild?.supportEvolution || build?.supportEvolution;
                                     const isSuppSlot = idx === 0 && (Boolean(suppEvol) || [3869, 3870, 3871, 3876, 3877].includes(item?.id));
                                     const tooltipText = isSuppSlot && suppEvol?.reason

@@ -23,7 +23,7 @@ export function getRuneRow(id: number): number {
 
 export function hasDistinctRows(ids: number[]): boolean {
   const rows = ids.map(getRuneRow);
-  return rows.every(row => row < 0) || new Set(rows.filter(row => row >= 0)).size === rows.filter(row => row >= 0).length;
+  return rows.every(row => row >= 0) && new Set(rows).size === rows.length;
 }
 
 export function isValidRunePage(
@@ -37,7 +37,9 @@ export function isValidRunePage(
   const secondary = selections.slice(4, 6);
   if (primary.some(id => Number(runeToStyle[id]) !== primaryStyleId)) return false;
   if (secondary.some(id => Number(runeToStyle[id]) !== secondaryStyleId)) return false;
-  return hasDistinctRows(primary) && hasDistinctRows(secondary);
+  return primary.every((id, row) => getRuneRow(id) === row)
+    && secondary.every(id => getRuneRow(id) > 0)
+    && hasDistinctRows(secondary);
 }
 
 export function chooseSecondaryPair<T extends { Id?: number; id?: number }>(
@@ -51,7 +53,7 @@ export function chooseSecondaryPair<T extends { Id?: number; id?: number }>(
     for (let j = i + 1; j < sorted.length; j++) {
       const a = Number(sorted[i].Id || sorted[i].id || 0);
       const b = Number(sorted[j].Id || sorted[j].id || 0);
-      if (a === b || !hasDistinctRows([a, b])) continue;
+      if (a === b || getRuneRow(a) <= 0 || getRuneRow(b) <= 0 || !hasDistinctRows([a, b])) continue;
       const pairScore = score(sorted[i]) + score(sorted[j]);
       if (pairScore > bestScore) {
         bestScore = pairScore;
@@ -60,4 +62,11 @@ export function chooseSecondaryPair<T extends { Id?: number; id?: number }>(
     }
   }
   return best;
+}
+
+// Summoner's Rift stat-mod slots (16.17 perkstyles). Legacy armor/MR are not selectable.
+export const SHARD_SLOTS = [[5008, 5005, 5007], [5008, 5010, 5001], [5011, 5013, 5001]];
+export function normalizeShards(shards: number[] = []): number[] {
+  const defaults = [5008, 5008, 5001];
+  return SHARD_SLOTS.map((allowed, row) => allowed.includes(Number(shards[row])) ? Number(shards[row]) : defaults[row]);
 }

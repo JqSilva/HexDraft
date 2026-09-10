@@ -1,3 +1,4 @@
+import { getRoleBuild } from '../draftContext.js';
 // src/lib/engine/core/dataProvider.ts
 import { normalizeRole } from './constants.js';
 import type { EnrichedChampion, ItemAsset } from './types.js';
@@ -11,7 +12,10 @@ export function initializeItemsData(itemsData: any) {
   
   if (itemsData) {
     Object.entries(itemsData).forEach(([id, item]: [string, any]) => {
-      ITEMS_DB[Number(id)] = item;
+      // Normalize Data Dragon tags to the engine vocabulary without losing source tags.
+      const aliases: Record<string, string> = { Armor: 'GivesArmor', SpellBlock: 'GivesMagicResist', Health: 'GivesHealth' };
+      const categories: string[] = item.categories || [];
+      ITEMS_DB[Number(id)] = { ...item, categories: [...new Set([...categories, ...categories.map(c => aliases[c]).filter(Boolean)])] };
     });
     console.log(`[CORE] ItemsDB listo: ${Object.keys(ITEMS_DB).length} items cargados en memoria.`);
   }
@@ -38,6 +42,7 @@ export function initializeEngineData(customChamps?: any[]) {
       const primaryChamp: EnrichedChampion = {
         ...champ,
         lane: primaryLane,
+        buildData: getRoleBuild(champ, primaryLane),
         isSecondaryLane: false,
         lanePickRate: lanesPickrate[primaryLane] ?? 100,
         meta: {
@@ -46,6 +51,7 @@ export function initializeEngineData(customChamps?: any[]) {
         }
       };
 
+      ENRICHED_DB[champ.name] = primaryChamp;
       if (DATA_BY_LANE[primaryLane]) {
         DATA_BY_LANE[primaryLane].push(primaryChamp);
       }
@@ -63,6 +69,7 @@ export function initializeEngineData(customChamps?: any[]) {
             const secondaryChamp: EnrichedChampion = {
               ...champ,
               lane: normL,
+              buildData: getRoleBuild(champ, normL),
               isSecondaryLane: true,
               lanePickRate: lanePr,
               meta: {
