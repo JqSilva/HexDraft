@@ -27,7 +27,7 @@ export const RecommendationCard = memo(({ name, score, id, reasons = [], isBan =
         >
         <img 
             src={`${imgBase}${id}.png`} 
-            className="w-full h-full object-cover rounded-md group-hover:opacity-20 transition-opacity" 
+            className="w-full h-full object-cover scale-[1.08] rounded-md group-hover:opacity-20 transition-opacity"
             alt={name}
             loading="lazy"
         />

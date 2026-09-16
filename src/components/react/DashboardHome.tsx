@@ -68,37 +68,22 @@ const getChampionRole = (name: string): string => {
   return roles[name] || "Luchador";
 };
 
-const getChampionGradient = (name: string): string => {
-  const colors: Record<string, string> = {
-    "Zed": "from-purple-600 to-indigo-600",
-    "Yasuo": "from-amber-600 to-yellow-500",
-    "Ahri": "from-teal-600 to-cyan-500",
-    "Jinx": "from-rose-600 to-pink-500",
-    "Lee Sin": "from-red-600 to-orange-500",
-    "Lux": "from-sky-500 to-blue-600",
-    "Garen": "from-emerald-600 to-teal-500",
-    "Viego": "from-violet-600 to-fuchsia-600",
-    "Yone": "from-crimson-600 to-red-500",
-  };
-  return colors[name] || "from-purple-500 to-pink-500";
-};
-
 // Datos por defecto (mock) cuando LCU está offline
 const DEFAULT_SUMMONER: SummonerData = {
   isConnected: false,
   gameVersion: "14.9.1",
-  summoner: "Alex Legend",
+  summoner: "Sin conexión",
   level: 128,
   xpPercent: 43,
   xpCurrent: 12450,
   xpMax: 28950,
   profileIconId: 29,
   ranked: {
-    tier: "CHALLENGER",
-    division: "I",
-    lp: 842,
-    wins: 142,
-    losses: 105
+    tier: "—",
+    division: "—",
+    lp: 0,
+    wins: 0,
+    losses: 0
   },
   rankedFlex: {
     tier: "DIAMOND",
@@ -161,7 +146,7 @@ export const DashboardHome = () => {
     switch (tier.toUpperCase()) {
       case 'CHALLENGER': return 'text-red-500';
       case 'GRANDMASTER': return 'text-rose-500';
-      case 'MASTER': return 'text-purple-400';
+      case 'MASTER': return 'text-purple-accent';
       case 'DIAMOND': return 'text-sky-400';
       case 'PLATINUM': return 'text-emerald-400';
       case 'EMERALD': return 'text-green-400';
@@ -174,11 +159,11 @@ export const DashboardHome = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">      
+    <div className="w-full h-full flex flex-col gap-7 p-6 md:p-9 animate-in fade-in duration-300 overflow-y-auto">
       {/* TOP BAR */}
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">BIENVENIDO DE NUEVO,</span>
+          <span className="text-xs tracking-wide font-medium text-slate-500">Resumen de tu cuenta</span>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-white uppercase tracking-tight">{summonerName}</h1>
             <RankBadge tier={ranked.tier} division={ranked.division} />
@@ -187,7 +172,7 @@ export const DashboardHome = () => {
 
         {/* LCU connection status indicator */}
         <div 
-          className={`flex items-center justify-center gap-3 mt-3 md:mt-0 px-3 py-1.5 bg-[#0f0f12] border border-border-warm rounded-sm text-[10px] uppercase tracking-widest font-black ${
+          className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-2 bg-panel-warm border border-border-warm rounded-lg text-xs tracking-wide font-medium ${
             data.isConnected ? 'text-green-500' : 'text-slate-400'
           } md:absolute md:-translate-x-1/2 md:-translate-y-1/2`}
           style={{
@@ -196,8 +181,8 @@ export const DashboardHome = () => {
             transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${data.isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`}></span>
-          {data.isConnected ? 'CONECTADO' : 'DESCONECTADO'}
+          <span className={`w-2 h-2 rounded-full ${data.isConnected ? 'bg-green-500' : 'bg-slate-600'}`}></span>
+          {isLcuChecking ? 'Comprobando conexión…' : data.isConnected ? 'Conectado al cliente' : 'Cliente no conectado'}
         </div>
 
         {/* Icons and profile */}
@@ -207,7 +192,7 @@ export const DashboardHome = () => {
             <img
               src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/profileicon/${profileIconId}.png`}
               alt="Summoner Icon"
-              className="w-10 h-10 rounded-full border border-border-warm bg-black select-none shadow-[0_0_12px_rgba(0,0,0,0.5)]"
+              className="w-10 h-10 rounded-full border border-border-warm bg-black object-cover scale-[1.06] select-none shadow-sm"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/favicon.svg";
               }}
@@ -221,58 +206,60 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
         {/* A. Hero Banner Card */}
-        <div className="md:col-span-7 lg:col-span-8 bg-[#0f0f13]/90 border border-border-warm rounded-sm relative overflow-hidden flex flex-row items-center justify-between p-6 md:p-8 min-h-[220px] tech-corners shadow-xl group">
-          {/* Background Grid Pattern & Ambient Glows */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#9055ff]/10 via-transparent to-transparent pointer-events-none z-0"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_100%_0%,rgba(144,85,255,0.06),transparent)] pointer-events-none z-0"></div>
+        <div className="md:col-span-7 lg:col-span-8 dashboard-hero border border-border-warm rounded-2xl relative overflow-hidden flex flex-row items-center justify-between p-7 md:p-10 min-h-[320px] md:min-h-[350px] group">
 
           {/* Left: Text Content & Actions */}
-          <div className="flex flex-col z-10 space-y-3 w-[65%] justify-center h-full">
-            <span className="self-start inline-block bg-[#9055ff]/15 border border-[#9055ff]/30 text-[#9055ff] text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm select-none">
-              SISTEMA DE ASISTENCIA
-            </span>
-            <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
-              HEXDRAFT <span className="text-[#9055ff]">TACTICAL</span>
+          <div className="flex flex-col z-10 gap-4 w-full md:w-[62%] justify-center h-full">
+            <div className="flex items-center gap-2 text-sm font-semibold text-purple-accent select-none">
+              <span className="w-5 h-px bg-purple-accent" aria-hidden="true"></span>
+              <span>Asistente de draft</span>
+            </div>
+            <h2 className="max-w-[12ch] text-4xl md:text-6xl font-semibold text-white tracking-[-0.035em] leading-[0.94]">
+              Decide con claridad
             </h2>
-            <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-400 mt-1">
-              Optimización de Composiciones // Runas & Builds Automáticas
+            <p className="text-sm md:text-base text-slate-300 leading-relaxed max-w-[42ch]">
+              Recomendaciones de picks, bans, runas y builds en un solo lugar.
             </p>
-            <p className="text-xs text-slate-300 leading-relaxed font-medium">
-              Sincroniza HexDraft con tu cliente de League of Legends para recibir análisis de matchups, prioridades de picks/bans y configuraciones óptimas directamente en tu cliente.
+            <p className="text-sm text-slate-400 leading-relaxed max-w-[48ch]">
+              Conecta HexDraft con tu cliente de League of Legends para entender el contexto de la partida y actuar sin perder tiempo.
             </p>
             <div className="relative z-10 flex flex-col sm:flex-row gap-3 pt-2 items-start sm:items-center">
               <a
                 href="/draft"
-                className="px-6 py-2.5 bg-[#9055ff] text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#7b3aff] transition-all duration-300 shadow-[0_0_15px_rgba(144,85,255,0.25)] hover:shadow-[0_0_20px_rgba(144,85,255,0.4)] rounded-sm cursor-pointer border border-[#9055ff]/50 text-center"
+                className="min-h-11 px-5 py-2.5 bg-purple-accent text-white text-sm font-semibold hover:bg-purple-accent-hover transition-colors duration-200 rounded-lg cursor-pointer border border-purple-accent text-center"
               >
-                INICIAR DRAFT HELPER
+                Abrir draft
               </a>
 
               <a
                 href="/actualizar"
-                className="px-5 py-2.5 bg-[#08080b] border border-border-warm hover:border-[#9055ff]/50 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 rounded-sm cursor-pointer text-center"
+                className="btn-quiet min-h-11 px-5 py-2.5 text-slate-300 hover:text-white text-sm font-medium cursor-pointer text-center"
               >
-                BASE DE DATOS
+                Actualizar datos
               </a>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-5 mt-1 border-t border-white/[0.08] text-[11px] text-slate-400">
+              <span><strong className="font-semibold text-slate-200">Picks y bans</strong> recomendados</span>
+              <span><strong className="font-semibold text-slate-200">Runas y builds</strong> situacionales</span>
+              <span><strong className="font-semibold text-slate-200">Contexto</strong> de partida</span>
             </div>
           </div>
 
           {/* Right: Centered Logo Illustration */}
-          <div className="flex items-center justify-center w-[30%] relative select-none z-10 h-full">
-            <div className="absolute w-32 h-32 bg-[#9055ff]/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="flex items-center justify-center w-[34%] relative select-none z-10 h-full">
             <img 
               src="/favicon.svg" 
               alt="HexDraft Logo" 
-              className="w-24 h-24 md:w-36 md:h-36 block relative transition-transform duration-500 hover:scale-105"
+              className="w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 object-contain block relative transition-transform duration-500 hover:scale-105"
             />
           </div>
         </div>
 
         {/* B. Top Champions / Collection List */}
-        <div className="md:col-span-5 lg:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 flex flex-col justify-between tech-corners shadow-xl min-h-[220px]">
+        <div className="md:col-span-5 lg:col-span-4 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[320px] md:min-h-[350px]">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">MAESTRÍA DE CAMPEONES</span>
-            <a href="#" onClick={(e) => e.preventDefault()} className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER TODOS</a>
+            <span className="text-sm font-semibold text-white">Maestría de campeones</span>
+            <a href="/champions" className="text-xs font-medium text-purple-accent hover:text-purple-accent-hover hover:underline">Ver todos</a>
           </div>
 
           {/* List of 4 champions */}
@@ -283,7 +270,6 @@ export const DashboardHome = () => {
               const lvl = m.level;
               const name = getNameFromId(champId) || "Campeón";
               const role = getChampionRole(name);
-              const gradient = getChampionGradient(name);
               const progressWidth = index === 0 ? 92 : index === 1 ? 72 : index === 2 ? 61 : 48;
 
               return (
@@ -291,27 +277,27 @@ export const DashboardHome = () => {
                   <img
                     src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                     alt={name}
-                    className="w-9 h-9 rounded-sm border border-border-warm select-none object-cover shadow-lg group-hover:border-[#9055ff]/40 transition-colors duration-300"
+                    className="w-9 h-9 rounded-lg border border-border-warm select-none object-cover scale-[1.06] shadow-sm group-hover:border-purple-accent/50 transition-colors duration-200"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/favicon.svg";
                     }}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
-                      <span className="text-xs font-black text-white tracking-wider group-hover:text-[#9055ff] transition-colors duration-200">{name}</span>
+                      <span className="text-sm font-semibold text-white group-hover:text-purple-accent-hover transition-colors duration-200">{name}</span>
                       <span className="text-[10px] font-mono font-bold text-slate-400">{points.toLocaleString()} PTS</span>
                     </div>
-                    <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">{role}</span>
+                    <span className="block text-xs text-slate-500 tracking-wide font-medium mb-1">{role}</span>
                     {/* Horizontal progress bar */}
-                    <div className="w-full bg-[#15151a] h-1 rounded-full overflow-hidden border border-[#22222b] relative">
+                    <div className="w-full bg-input-warm h-1 rounded-full overflow-hidden border border-border-warm relative">
                       <div
-                        className={`bg-gradient-to-r ${gradient} h-full rounded-full transition-all duration-1000 ease-out`}
+                        className="bg-purple-accent h-full rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progressWidth}%` }}
                       ></div>
                     </div>
                   </div>
                   {/* Mastery Level Badge */}
-                  <div className="w-6 h-6 flex items-center justify-center rounded border border-[#9055ff]/20 bg-[#9055ff]/5 text-[9px] font-mono font-black text-[#9055ff] group-hover:bg-[#9055ff]/10 transition-colors duration-200 select-none shadow">
+                  <div className="w-7 h-7 flex items-center justify-center rounded-md border border-purple-accent/30 bg-purple-accent/10 text-xs font-mono font-semibold text-purple-accent-hover group-hover:bg-purple-accent/15 transition-colors duration-200 select-none">
                     L{lvl}
                   </div>
                 </div>
@@ -325,10 +311,10 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-4">
 
         {/* A. Recent Matches (Bottom Left Grid) */}
-        <div className="md:col-span-12 lg:col-span-5 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between">
+        <div className="md:col-span-12 lg:col-span-5 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">HISTORIAL RECIENTE</span>
-            <a href="/history" className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest">VER PARTIDAS</a>
+            <span className="text-sm font-semibold text-white">Historial reciente</span>
+            <a href="/history" className="text-xs font-medium text-purple-accent hover:text-purple-accent-hover hover:underline">Ver partidas</a>
           </div>
 
           {/* Matches list */}
@@ -348,11 +334,11 @@ export const DashboardHome = () => {
                   </div>
 
                   {/* Champion portrait icon */}
-                  <div className="w-10 h-10 rounded-full border border-border-warm overflow-hidden mb-1.5 mt-1.5 shadow-lg group-hover:border-[#9055ff]/40 group-hover:scale-105 transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl border border-border-warm overflow-hidden mb-1.5 mt-1.5 shadow-sm group-hover:border-purple-accent/50 group-hover:scale-105 transition-all duration-200">
                     <img
                       src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                       alt={name}
-                      className="w-full h-full object-cover select-none"
+                      className="w-full h-full object-cover scale-[1.08] select-none"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/favicon.svg";
                       }}
@@ -374,7 +360,7 @@ export const DashboardHome = () => {
         </div>
 
         {/* B. Player Profile Details (Center Bottom) */}
-        <div className="md:col-span-6 lg:col-span-4 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between min-h-[300px]">
+        <div className="md:col-span-6 lg:col-span-4 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">DATOS DEL INVOCADOR</span>
             <span className="text-[11px] font-bold text-slate-400 font-mono">ESTE MES</span>
@@ -385,14 +371,14 @@ export const DashboardHome = () => {
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <div className="relative flex items-center justify-center">
                 {/* Outer animated rotating orbit ring */}
-                <div className="absolute w-16 h-16 border border-dashed border-[#9055ff]/40 rounded-full animate-[spin_20s_linear_infinite]"></div>
-                <div className="absolute w-14 h-14 border-2 border-t-transparent border-r-[#9055ff] border-b-transparent border-l-[#9055ff] rounded-full animate-[spin_8s_linear_infinite]"></div>
+                <div className="absolute w-20 h-20 border border-purple-accent/30 rounded-full"></div>
+                <div className="absolute w-[68px] h-[68px] border border-purple-accent/60 rounded-full"></div>
 
                 {/* Summoner Icon inside orbit */}
                 <img
                   src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/profileicon/${profileIconId}.png`}
                   alt="Avatar"
-                  className="w-12 h-12 rounded-full border-2 border-[#9055ff] bg-black select-none z-10"
+                  className="w-14 h-14 rounded-full border-2 border-purple-accent/70 bg-black object-cover scale-[1.08] select-none z-10"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = "/favicon.svg";
                   }}
@@ -448,10 +434,10 @@ export const DashboardHome = () => {
         </div>
 
         {/* C. Campeones Fuertes (Bottom Right Grid) */}
-        <div className="md:col-span-6 lg:col-span-3 bg-[#0f0f13]/90 border border-border-warm rounded-sm p-4 tech-corners shadow-xl flex flex-col justify-between min-h-[300px]">
+        <div className="md:col-span-6 lg:col-span-3 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
           <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
             <span className="text-xs font-black uppercase tracking-[0.2em] text-white">META: CAMPEONES FUERTES</span>
-            <span className="text-[10px] font-bold text-[#9055ff] hover:underline uppercase tracking-widest font-mono">P{data.gameVersion || "14.9.1"}</span>
+            <span className="text-xs font-medium text-purple-accent font-mono">Parche {data.gameVersion || "14.9.1"}</span>
           </div>
 
           {/* Role Meta List */}
@@ -478,7 +464,7 @@ export const DashboardHome = () => {
                           <img 
                             src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${cdnName}.png`} 
                             alt={name} 
-                            className="w-6 h-6 rounded-full border border-border-warm hover:border-[#9055ff]/60 transition-all duration-200" 
+                            className="w-6 h-6 rounded-full border border-border-warm hover:border-purple-accent/60 transition-all duration-200"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = "/favicon.svg";
                             }}

@@ -46,7 +46,7 @@ const DAMAGE_COLORS: Record<string, { accent: string; title: string }> = {
     },
     Hybrid: {
         accent: 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/60',
-        title: 'text-purple-400'
+        title: 'text-purple-accent'
     },
 };
 
@@ -67,7 +67,7 @@ const ClusterTab = ({
     const colors = DAMAGE_COLORS[typeKey] || DAMAGE_COLORS.Hybrid;
 
     const tabStyle = isActive
-        ? 'border rounded-sm border-border-warm/50 border-b-transparent tech-corners rounded-t-sm z-20 font-bold'
+        ? 'border rounded-lg border-border-warm/50 border-b-transparent rounded-t-lg z-20 font-semibold'
         : 'bg-panel-warm border border-border-warm rounded-t-sm opacity-65 hover:opacity-100';
 
     const keystone = cluster.build?.runes?.keystone;
@@ -379,7 +379,7 @@ export const ItemBuild = memo(({
                         {coreItemSwaps && coreItemSwaps.length > 0 && (
                             <div className="col-span-1 md:col-span-2 border-t border-border-warm/30 pt-2 flex flex-col gap-1.5">
                                 <span className="text-[9px] text-amber-400/90 font-extrabold uppercase tracking-widest block text-center select-none">
-                                    Swaps Tácticos Adaptativos
+                                    Cambios adaptativos
                                 </span>
                                 <div className="flex flex-col gap-1 max-w-md mx-auto w-full">
                                     {coreItemSwaps.slice(0, 2).map((swap: any, sIdx: number) => (
@@ -422,7 +422,7 @@ export const ItemBuild = memo(({
                                     build: build,
                                     coreItemSwaps: coreItemSwaps
                                 })}
-                                className="px-6 py-2 bg-panel-warm tech-corners rounded-sm border border-border-warm/60 hover:bg-[#9055ff]/10 hover:border-[#9055ff]/80 hover:text-[#d3c0ff] text-slate-200 font-extrabold uppercase text-[10px] tracking-widest transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
+                                className="btn-quiet min-h-11 px-5 py-2 text-slate-200 font-medium text-sm transition-colors duration-200 cursor-pointer active:scale-95 shrink-0"
                             >
                                 Re-Importar
                             </button>

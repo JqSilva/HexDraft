@@ -124,6 +124,7 @@ export const NAME_TO_ID: Record<string, number> = {
   "Lee Sin": 64,
   "Leona": 89,
   "Lillia": 876,
+  "Locke": 805,
   "Lissandra": 127,
   "Lucian": 236,
   "Lulu": 117,
@@ -133,10 +134,11 @@ export const NAME_TO_ID: Record<string, number> = {
   "Maokai": 57,
   "Maestro Yi": 11,
   "Milio": 902,
+  "Mel": 800,
   "Miss Fortune": 21,
   "Mordekaiser": 82,
   "Morgana": 25,
-  "Naafiri": 895,
+  "Naafiri": 950,
   "Nami": 267,
   "Nasus": 75,
   "Nautilus": 111,
@@ -224,6 +226,26 @@ export const NAME_TO_ID: Record<string, number> = {
   "Zyra": 143
 };
 
+// El catálogo de SQLite puede incluir campeones publicados después de este
+// archivo. El motor registra esos nombres al cargar la instantánea actual.
+const RUNTIME_NAME_TO_ID = new Map<string, number>();
+const RUNTIME_ID_TO_NAME = new Map<number, string>();
+const normalizeChampionLookupKey = (name: string): string => name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+export function registerChampionNames(champions: Array<{ id?: number; name?: string }> = []): void {
+  RUNTIME_NAME_TO_ID.clear();
+  RUNTIME_ID_TO_NAME.clear();
+  for (const champion of champions) {
+    const id = Number(champion.id);
+    const name = typeof champion.name === 'string' ? champion.name.trim() : '';
+    if (!id || !name) continue;
+    const key = normalizeChampionLookupKey(name);
+    if (!key) continue;
+    RUNTIME_NAME_TO_ID.set(key, id);
+    if (!RUNTIME_ID_TO_NAME.has(id)) RUNTIME_ID_TO_NAME.set(id, name);
+  }
+}
+
 const CHAMPION_ALIASES: Record<string, number> = {
   "monkeyking": 62,
   "wukong": 62,
@@ -262,14 +284,12 @@ const CHAMPION_ALIASES: Record<string, number> = {
 
 export function getIdFromName(name: string): number {
   if (!name) return 0;
-  const clean = name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  if (CHAMPION_ALIASES[clean]) {
-    return CHAMPION_ALIASES[clean];
-  }
+  const clean = normalizeChampionLookupKey(name);
+  if (CHAMPION_ALIASES[clean]) return CHAMPION_ALIASES[clean];
+  const runtimeId = RUNTIME_NAME_TO_ID.get(clean);
+  if (runtimeId) return runtimeId;
   for (const [key, id] of Object.entries(NAME_TO_ID)) {
-    if (key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === clean) {
-      return id;
-    }
+    if (normalizeChampionLookupKey(key) === clean) return id;
   }
   return 0;
 }
@@ -277,6 +297,8 @@ export function getIdFromName(name: string): number {
 export function getNameFromId(id: number | string): string {
   const numId = Number(id);
   if (isNaN(numId) || numId <= 0) return '';
+  const runtimeName = RUNTIME_ID_TO_NAME.get(numId);
+  if (runtimeName) return runtimeName;
   for (const [name, champId] of Object.entries(NAME_TO_ID)) {
     if (champId === numId) return name;
   }

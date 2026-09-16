@@ -40,6 +40,7 @@ export interface BuildItems {
   starter?: number[];
   boots?: any;
   core?: any[];
+  buildOrder?: any[];
   coreSlots?: any[];
   paths?: {
     snowball?: any[];

@@ -1,6 +1,6 @@
 // src/lib/engine/bans/index.ts
 import { ENRICHED_DB, initializeEngineData } from '../core/dataProvider.js';
-import { normalizeRole, NAME_TO_ID, normalizeKey } from '../core/constants.js';
+import { normalizeRole, getIdFromName, normalizeKey } from '../core/constants.js';
 import type { EnrichedChampion } from '../core/types.js';
 import type { BanEngineInput, BansRecommendation, BanRecommendation } from './types.js';
 import { evaluateLaneThreat, isChampionInLane } from './laneThreatEvaluator.js';
@@ -52,7 +52,7 @@ export function getBanRecommendations(
 
   for (const name of availableCandidates) {
     const candidate = ENRICHED_DB[name];
-    const champId = NAME_TO_ID[name];
+    const champId = getIdFromName(name);
     if (!candidate || !champId) continue;
 
     // 1. Evaluación de Línea Directa (65%)

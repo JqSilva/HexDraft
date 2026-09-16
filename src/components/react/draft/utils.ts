@@ -79,7 +79,7 @@ export const importToClient = async (buildData: any) => {
         }
 
         const runePayload = {
-            name: `HexDraft: ${name}`,
+            name: `HexDraft - ${name}`,
             primaryStyleId: build.runes.primaryStyle,
             subStyleId: build.runes.secondaryStyle,
             selectedPerkIds: [
@@ -87,7 +87,7 @@ export const importToClient = async (buildData: any) => {
                 ...build.runes.shards.map((s: any) => s.id || s)
             ]
         };
-        await Promise.all([
+        const responses = await Promise.all([
             fetch('/api/set-runes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runePayload) }),
             fetch('/api/set-items', {
                 method: 'POST',
@@ -106,6 +106,10 @@ export const importToClient = async (buildData: any) => {
                 body: JSON.stringify({ spell1Id, spell2Id })
             })
         ]);
+        const failedResponse = responses.find(response => !response.ok);
+        if (failedResponse) {
+            throw new Error('Importación rechazada por LCU/API (HTTP ' + failedResponse.status + ')');
+        }
         console.log("✅ Configuración enviada al LCU");
     } catch (e) {
         console.error("❌ Error importando:", e);

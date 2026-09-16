@@ -35,8 +35,8 @@ export const posLabels: Record<string, string> = {
 
 // Mapear rank a Tier
 export const getTierInfo = (tierNum: number) => {
-  if (tierNum <= 5) return { label: 'S+', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
-  if (tierNum <= 12) return { label: 'S', color: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10' };
+  if (tierNum <= 5) return { label: 'S+', color: 'text-purple-accent border-purple-accent/30 bg-purple-accent/10' };
+  if (tierNum <= 12) return { label: 'S', color: 'text-purple-accent border-purple-accent/30 bg-purple-accent/10' };
   if (tierNum <= 22) return { label: 'A', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
   if (tierNum <= 35) return { label: 'B', color: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' };
   if (tierNum <= 48) return { label: 'C', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
@@ -272,13 +272,13 @@ export const RUNE_TREES: Record<number, {
 
 export const getTreeColors = (styleId: number) => {
   const mapping: Record<number, { border: string; bg: string; shadow: string }> = {
-    8000: { border: 'border-yellow-500/80', bg: 'bg-yellow-500/20', shadow: 'shadow-[0_0_12px_rgba(234,179,8,0.4)]' },
-    8100: { border: 'border-red-500/80', bg: 'bg-red-500/20', shadow: 'shadow-[0_0_12px_rgba(239,68,68,0.4)]' },
-    8200: { border: 'border-blue-500/80', bg: 'bg-blue-500/20', shadow: 'shadow-[0_0_12px_rgba(59,130,246,0.4)]' },
-    8400: { border: 'border-emerald-500/80', bg: 'bg-emerald-500/20', shadow: 'shadow-[0_0_12px_rgba(16,185,129,0.4)]' },
-    8300: { border: 'border-cyan-400/80', bg: 'bg-cyan-400/20', shadow: 'shadow-[0_0_12px_rgba(34,211,238,0.4)]' }
+    8000: { border: 'border-yellow-500/80', bg: 'bg-yellow-500/20', shadow: 'shadow-sm' },
+    8100: { border: 'border-red-500/80', bg: 'bg-red-500/20', shadow: 'shadow-sm' },
+    8200: { border: 'border-blue-500/80', bg: 'bg-blue-500/20', shadow: 'shadow-sm' },
+    8400: { border: 'border-emerald-500/80', bg: 'bg-emerald-500/20', shadow: 'shadow-sm' },
+    8300: { border: 'border-purple-accent/80', bg: 'bg-purple-accent/20', shadow: 'shadow-sm' }
   };
-  return mapping[styleId] || { border: 'border-purple-accent', bg: 'bg-purple-accent/20', shadow: 'shadow-[0_0_10px_rgba(144,85,255,0.3)]' };
+  return mapping[styleId] || { border: 'border-purple-accent', bg: 'bg-purple-accent/20', shadow: 'shadow-sm' };
 };
 
 export const SHARDS_ROWS = [

@@ -1,6 +1,7 @@
 // src/lib/db/sqlite.ts
 import path from 'path';
 import fs from 'node:fs';
+import { ensureRuntimeSchema } from './runtimeSchema.js';
 
 let dbPath = '';
 let db: any = null;
@@ -51,10 +52,15 @@ export function checkpointDb() {
 }
 
 export function closeDb() {
+  const currentDb = db;
+  // Mark the handle as unavailable before closing it. If a downloaded
+  // database fails migration, callers must not keep using a stale closed
+  // connection while the backup is restored.
+  db = null;
   try {
-    if (db && typeof db.close === 'function') {
-      db.close();
-      console.log(`🔒 Conexión a la base de datos cerrada.`);
+    if (currentDb && typeof currentDb.close === 'function') {
+      currentDb.close();
+      console.log('🔒 Conexión a la base de datos cerrada.');
     }
   } catch (e) {
     console.error('❌ Error al cerrar la base de datos:', e);
@@ -62,19 +68,30 @@ export function closeDb() {
 }
 
 export function reopenDb() {
+  let reopenedDb: any = null;
   try {
     if (DatabaseSyncClass) {
-      db = new DatabaseSyncClass(dbPath);
-      db.exec('PRAGMA foreign_keys = ON;');
-      db.exec('PRAGMA journal_mode = WAL;');
-      db.exec('PRAGMA synchronous = NORMAL;');
-      console.log(`🔌 Conexión a la base de datos reabierta.`);
+      reopenedDb = new DatabaseSyncClass(dbPath);
+      reopenedDb.exec('PRAGMA foreign_keys = ON;');
+      reopenedDb.exec('PRAGMA journal_mode = WAL;');
+      reopenedDb.exec('PRAGMA synchronous = NORMAL;');
+      // A downloaded DB can come from an older schema. Reopening alone does
+      // not rerun module-level migrations, so repair it before publishing the
+      // new handle to the rest of the app.
+      ensureRuntimeSchema(reopenedDb);
+      db = reopenedDb;
+      console.log('🔌 Conexión a la base de datos reabierta.');
     }
   } catch (e) {
+    try {
+      if (reopenedDb && typeof reopenedDb.close === 'function') reopenedDb.close();
+    } catch {
+      // Preserve the migration/open error below.
+    }
     console.error('❌ Error al reabrir la base de datos:', e);
+    throw e;
   }
 }
-
 // Configuración inicial de rendimiento y restricciones
 db.exec('PRAGMA foreign_keys = ON;');
 db.exec('PRAGMA journal_mode = WAL;'); // Habilita Write-Ahead Logging para escrituras concurrentes rápidas
@@ -251,25 +268,6 @@ try {
   console.error('⚠️ Error en migración de métricas detalladas de synergies:', e);
 }
 
-// A synergy depends on BOTH the candidate lane and the partner lane.
-// Legacy rows have unknown source lane; retain them without pretending otherwise.
-if (!(db.prepare('PRAGMA table_info(synergies)').all() as { name: string }[]).some(c => c.name === 'source_lane')) {
-  db.exec(`SAVEPOINT synergy_roles;
-    ALTER TABLE synergies RENAME TO synergies_legacy;
-    CREATE TABLE synergies (
-      champion_id INTEGER, partner_id INTEGER, lane TEXT, source_lane TEXT NOT NULL DEFAULT 'UNKNOWN',
-      delta REAL DEFAULT 0, winrate TEXT DEFAULT '', pickrate REAL DEFAULT 0, games INTEGER DEFAULT 0,
-      delta1 REAL DEFAULT 0, delta2 REAL DEFAULT 0, lane_tag TEXT DEFAULT '',
-      PRIMARY KEY (champion_id, partner_id, lane, source_lane),
-      FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE,
-      FOREIGN KEY (partner_id) REFERENCES champions(id) ON DELETE CASCADE
-    );
-    INSERT INTO synergies (champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag)
-      SELECT champion_id, partner_id, lane, delta, winrate, pickrate, games, delta1, delta2, lane_tag FROM synergies_legacy;
-    DROP TABLE synergies_legacy;
-    RELEASE SAVEPOINT synergy_roles;`);
-}
-
 db.exec(`
   CREATE TABLE IF NOT EXISTS builds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -299,6 +297,11 @@ try {
 } catch (e) {
   console.error("⚠️ Error en migración dinámica de columnas builds:", e);
 }
+
+// Ejecutar también la migración estructural robusta en el arranque. Esto
+// cubre bases creadas por workflows antiguos y valida la PK de synergies,
+// no sólo la existencia superficial de source_lane.
+ensureRuntimeSchema(db);
 
 // Creación de la tabla de configuraciones
 db.exec(`

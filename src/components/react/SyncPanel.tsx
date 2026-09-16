@@ -159,43 +159,42 @@ export const SyncPanel = () => {
   const needsPublish = publishStatus?.pendingPublish ?? false;
 
   return (
-    <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
+    <div className="w-full flex flex-col p-5 md:p-8 text-slate-200 animate-in fade-in duration-300">
       <header className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-warm pb-5 mb-6">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.25em] font-black text-slate-500 block mb-2">
+          <span className="text-xs tracking-wide font-medium text-slate-500 block mb-2">
             Mantenimiento de datos
           </span>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-black text-white tracking-tight">
+            <h1 className="text-2xl font-semibold text-white tracking-tight">
               Estado de <span className="text-purple-accent">sincronización</span>
             </h1>
             {modeLoaded && (
-              <span className={`px-2 py-0.5 text-[9px] uppercase font-black tracking-wider border rounded-sm ${
-                isAdmin ? 'bg-purple-950/40 border-purple-500/40 text-purple-300' : 'bg-slate-900 border-slate-700 text-slate-400'
+                <span className={`px-2.5 py-1 text-xs font-medium border rounded-md ${
+                isAdmin ? 'bg-purple-accent/10 border-purple-accent/40 text-purple-accent' : 'bg-slate-900 border-slate-700 text-slate-400'
               }`}>
                 Modo: {mode}
               </span>
             )}
           </div>
-          <p className="max-w-2xl mt-2 text-[11px] text-slate-400 leading-relaxed">
+          <p className="max-w-2xl mt-2 text-sm text-slate-400 leading-relaxed">
             La base de datos se actualiza automáticamente mediante GitHub Actions. Esta pantalla muestra el estado local y la última publicación disponible.
           </p>
         </div>
-        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+        <span className="text-sm text-slate-500 font-mono">
           {loadingStatus ? 'Consultando estado...' : `Fuente del parche: ${syncStatus?.version_source || 'local'}`}
         </span>
       </header>
 
       <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-5">
-        <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 h-28 w-28 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <section className="bg-panel-warm border border-border-warm rounded-xl p-5 md:p-6 relative overflow-hidden shadow-sm">
           <div className="mb-5">
-            <h2 className="text-xs text-purple-accent font-black uppercase tracking-[0.18em] mb-1">Estado actual</h2>
-            <p className="text-[11px] text-slate-400">Comparación entre el parche instalado, los datos locales y el calendario automático.</p>
+            <h2 className="text-base text-purple-accent font-semibold mb-1">Estado actual</h2>
+            <p className="text-sm text-slate-400">Comparación entre el parche instalado, los datos locales y el calendario automático.</p>
           </div>
           <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <div className="lg:border-r border-border-warm-hover/40 pr-4">
-              <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Parche activo</span>
+              <span className="block text-xs text-slate-500 tracking-wide font-medium mb-1">Parche activo</span>
               <span className="text-base font-mono font-black text-white">{activePatch}</span>
             </div>
             <div className="lg:border-r border-border-warm-hover/40 pr-4">
@@ -214,7 +213,7 @@ export const SyncPanel = () => {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-5">
-          <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6">
+          <section className="bg-panel-warm border border-border-warm rounded-xl p-5 md:p-6 shadow-sm">
             <div className="mb-5">
               <h2 className="text-sm font-black text-white">Proceso automático</h2>
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
@@ -223,7 +222,7 @@ export const SyncPanel = () => {
             </div>
             <div className="divide-y divide-border-warm/50 border-y border-border-warm/50">
               <div className="flex items-center gap-3 py-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400/10 text-[10px] font-mono font-black text-cyan-300">1</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-accent/10 text-[10px] font-mono font-semibold text-purple-accent">1</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-200">Estructura de carriles</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">Última ejecución: {formatTimestamp(syncStatus?.last_lane_sync_timestamp || '-')}</p>
@@ -231,7 +230,7 @@ export const SyncPanel = () => {
                 <span className={`text-[9px] uppercase tracking-wider font-black ${needsLaneSync ? 'text-amber-400' : 'text-emerald-400'}`}>{statusLabel(needsLaneSync)}</span>
               </div>
               <div className="flex items-center gap-3 py-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-accent/10 text-[10px] font-mono font-black text-purple-300">2</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-accent/10 text-[10px] font-mono font-semibold text-purple-accent">2</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-200">Meta y Builds</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">Última ejecución: {formatTimestamp(syncStatus?.last_sync_timestamp || '-')}</p>
@@ -253,10 +252,10 @@ export const SyncPanel = () => {
                   <button
                     onClick={handleManualSync}
                     disabled={syncingNow || actionState === "publishing"}
-                    className={`flex-1 min-w-[220px] px-5 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-colors border ${
+                    className={`flex-1 min-w-[220px] min-h-11 px-5 py-3 font-semibold text-sm transition-colors ${
                       syncingNow
                         ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed'
-                        : 'bg-purple-950/30 border-purple-500/40 hover:border-purple-400 text-purple-300 hover:text-white cursor-pointer'
+                        : 'btn-quiet text-slate-200 cursor-pointer'
                     }`}
                   >
                     {syncingNow ? 'Sincronizando...' : 'Sincronizar ahora'}
@@ -264,13 +263,13 @@ export const SyncPanel = () => {
                   {syncingNow && (
                     <button
                       onClick={handleCancelSync}
-                      className="px-4 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm border border-rose-500/30 text-rose-300 hover:border-rose-400 hover:text-white"
+                      className="min-h-11 px-4 py-3 font-semibold text-sm rounded-lg border bg-panel-warm border-rose-500/60 text-rose-300 hover:bg-rose-900/30 hover:border-rose-400 hover:text-white"
                     >
                       Cancelar
                     </button>
                   )}
                 </div>
-                {syncProgress && <p className="mt-2 text-[10px] text-purple-300 font-mono">{syncProgress}</p>}
+                {syncProgress && <p className="mt-2 text-[10px] text-purple-accent font-mono">{syncProgress}</p>}
                 {statusMessage && <p className="mt-2 text-[10px] text-slate-300 leading-relaxed">{statusMessage}</p>}
               </div>
             )}
@@ -297,10 +296,10 @@ export const SyncPanel = () => {
                 <button
                   onClick={handlePublishGithub}
                   disabled={actionState === 'publishing' || syncingNow}
-                  className={`w-full px-5 py-3 font-black uppercase text-[9.5px] tracking-widest rounded-sm transition-colors border ${
+                  className={`w-full min-h-11 px-5 py-3 font-semibold text-sm rounded-lg transition-colors border ${
                     actionState === 'publishing'
                       ? 'bg-border-warm border-border-warm text-slate-500 cursor-not-allowed'
-                      : 'bg-[#0e1c14] border-emerald-500/30 hover:border-emerald-500 text-emerald-300 hover:text-white cursor-pointer'
+                      : 'bg-emerald-600 border-emerald-500 hover:bg-emerald-500 text-white cursor-pointer'
                   }`}
                 >
                   {actionState === 'publishing' ? 'Publicando...' : 'Publicar base de datos'}

@@ -1,33 +1,78 @@
-<section class="relative min-h-screen flex flex-col justify-center items-center">
-  <div class="relative z-10 text-center px-4 flex flex-col items-center">
-    
-    <div class="mb-10">
-      <img 
-        src="/favicon.svg" 
-        alt="HexDraft Logo" 
-        class="w-24 h-24 md:w-32 md:h-32 block select-none"
-      />
-    </div>
+<section class="landing-hero relative min-h-full overflow-hidden flex items-center px-6 py-12 md:px-10 lg:px-16">
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+    <div class="absolute -right-24 top-1/2 w-[34rem] h-[34rem] rounded-full border border-purple-accent/10 -translate-y-1/2"></div>
+    <div class="absolute right-10 top-1/2 w-[24rem] h-[24rem] rounded-full border border-purple-accent/10 -translate-y-1/2"></div>
+  </div>
 
-    <div class="mb-12">
-      <h1 class="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none">
-        HEX<span class="text-[#9055ff]">DRAFT</span>
+  <div class="relative z-10 w-full max-w-6xl mx-auto grid lg:grid-cols-[1.08fr_0.92fr] gap-12 xl:gap-20 items-center">
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-4 mb-10">
+        <img
+          src="/favicon.svg"
+          alt="HexDraft"
+          class="w-20 h-20 md:w-24 md:h-24 object-contain select-none"
+        />
+        <div>
+          <span class="block text-xl font-semibold tracking-[-0.03em] text-white">
+            Hex<span class="text-purple-accent">Draft</span>
+          </span>
+          <span class="block mt-1 text-[10px] text-slate-500 uppercase tracking-[0.18em] font-semibold">
+            Análisis de composición
+          </span>
+        </div>
+      </div>
+
+      <h1 class="max-w-[11ch] text-5xl md:text-7xl xl:text-[5.5rem] font-semibold text-white tracking-[-0.035em] leading-[0.92]">
+        Decide con <span class="text-purple-accent">claridad.</span>
       </h1>
-      <div class="h-1 w-24 bg-[#9055ff] mx-auto mt-4"></div>
-    </div>
-    
-    <p class="text-slate-400 max-w-lg mx-auto text-xs uppercase tracking-[0.3em] font-medium mb-12">
-      Sistemas de Análisis de Composición // Optimización de Datos
-    </p>
 
-    <div class="flex flex-col md:flex-row gap-4 justify-center">
-      <a href="/draft" class="px-12 py-4 bg-[#9055ff] hover:bg-[#7b3aff] text-white font-bold uppercase text-[11px] tracking-widest transition-all duration-200 border border-[#9055ff] cursor-pointer rounded-sm">
-        Iniciar Análisis
-      </a>
-      
-      <a href="/actualizar" class="px-12 py-4 bg-transparent border border-border-warm hover:border-[#9055ff] text-slate-400 hover:text-white font-bold uppercase text-[11px] tracking-widest transition-all duration-200 cursor-pointer rounded-sm">
-        Base de Datos
-      </a>
+      <p class="mt-7 max-w-xl text-base md:text-lg text-slate-300 leading-relaxed">
+        Análisis claro para tomar mejores decisiones en cada draft, desde el contexto de la partida hasta la última build.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3 mt-9">
+        <a href="/draft" class="inline-flex min-h-12 items-center justify-center px-6 py-3 bg-purple-accent hover:bg-purple-accent-hover text-white font-semibold text-sm transition-colors duration-200 border border-purple-accent cursor-pointer rounded-lg">
+          Abrir draft
+        </a>
+
+        <a href="/actualizar" class="inline-flex min-h-12 items-center justify-center px-6 py-3 bg-transparent border border-border-warm hover:border-purple-accent text-slate-300 hover:text-white font-medium text-sm transition-colors duration-200 cursor-pointer rounded-lg">
+          Actualizar datos
+        </a>
+      </div>
+
+      <dl class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-14 pt-6 border-t border-border-warm/70 max-w-2xl">
+        <div>
+          <dt class="text-sm font-semibold text-white">Picks y bans</dt>
+          <dd class="mt-1 text-xs text-slate-500 leading-relaxed">Recomendaciones según el estado del draft.</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-semibold text-white">Runas y builds</dt>
+          <dd class="mt-1 text-xs text-slate-500 leading-relaxed">Opciones adaptadas a cada partida.</dd>
+        </div>
+        <div>
+          <dt class="text-sm font-semibold text-white">Contexto local</dt>
+          <dd class="mt-1 text-xs text-slate-500 leading-relaxed">Datos sincronizados con tu cliente.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="relative min-h-[340px] md:min-h-[480px] flex items-center justify-center select-none">
+      <img
+        src="/favicon.svg"
+        alt=""
+        aria-hidden="true"
+        class="w-56 h-56 md:w-[22rem] md:h-[22rem] xl:w-[26rem] xl:h-[26rem] object-contain drop-shadow-[0_18px_28px_rgba(108,20,213,0.2)] transition-transform duration-500 hover:scale-[1.03]"
+      />
+
+      <div class="absolute top-[18%] right-[3%] hidden md:block pl-3 border-l border-purple-accent/50">
+        <span class="block text-[10px] font-mono font-semibold text-purple-accent tracking-[0.18em]">CONTEXT</span>
+        <span class="block mt-1 text-xs text-slate-500">Partida en lectura</span>
+      </div>
+
+      <div class="absolute bottom-[16%] left-[2%] hidden md:block pl-3 border-l border-purple-accent/50">
+        <span class="block text-[10px] font-mono font-semibold text-purple-accent tracking-[0.18em]">DECISIÓN</span>
+        <span class="block mt-1 text-xs text-slate-500">Picks, bans y builds</span>
+      </div>
     </div>
   </div>
 </section>

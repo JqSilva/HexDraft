@@ -1,7 +1,7 @@
 import { getRoleProbability, evidenceDelta, damageProfile, teamDamage, scalingStrength, type DraftContext } from '../draftContext.js';
 // src/lib/engine/picks/pickScoring.ts
 import { ENRICHED_DB } from '../core/dataProvider.js';
-import { normalizeKey, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFromId } from '../core/constants.js';
+import { normalizeKey, normalizeRole, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFromId } from '../core/constants.js';
 import { hydrateAsset } from '../core/hydrator.js';
 import { getAdaptedBuild } from '../itemEngine.js';
 import type { EnrichedChampion } from '../core/types.js';
@@ -197,6 +197,9 @@ export function calculateScore(
 
   // Meta y tendencia forman la base; los bonos posteriores son heurísticos contextuales.
   const preContextScore = score;
+  // El matchup directo confirmado es una señal de línea, no una heurística
+  // blanda: conserva su peso aunque falte evidencia meta del rol.
+  let directMatchupContribution = 0;
 
   // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
   if (phaseKey === 'pick1' && isFlexChampion(target)) {
@@ -304,15 +307,27 @@ export function calculateScore(
     const enemy = ENRICHED_DB[enemyName];
     if (!enemy) continue;
     const matches = [...(target.godMatchups || []), ...(target.counters || [])]
-      .filter(m => normalizeKey(m.name) === normalizeKey(enemyName) && (!m.lane || m.lane === targetLane))
+      .filter(m => normalizeKey(m.name) === normalizeKey(enemyName) && (!m.lane || normalizeRole(m.lane, 'UNKNOWN' as any) === targetLane))
       .sort((a,b) => Number(b.count || 0)-Number(a.count || 0));
     const match = matches[0];
     if (!match) continue;
     const probability = getRoleProbability(enemy, targetLane, context.enemyRoles);
+    const assignedEnemyLane = context.enemyRoles?.[enemy.id]
+      ? normalizeRole(context.enemyRoles[enemy.id], 'UNKNOWN' as any)
+      : null;
+    const directConfirmed = assignedEnemyLane === targetLane;
+    const directSignal = directConfirmed || probability >= 0.90;
+    const directMultiplier = directConfirmed ? 1.35 : probability >= 0.75 ? 1.10 : 1;
     const delta = evidenceDelta(match.dominanceScore, match.count);
-    const contribution = delta * probability * (delta >= 0 ? WEIGHTS.MATCHUP : WEIGHTS.COUNTER);
+    // Un counter directo debe ser al menos tan importante como una ventaja
+    // equivalente; antes el peso negativo por defecto era menor que el positivo.
+    const matchupWeight = delta >= 0
+      ? WEIGHTS.MATCHUP
+      : Math.max(WEIGHTS.COUNTER, WEIGHTS.MATCHUP * 1.25);
+    const contribution = delta * probability * directMultiplier * matchupWeight;
     score += contribution;
-    if (Math.abs(contribution) >= 0.1) reasons.push(`${contribution > 0 ? 'Ventaja' : 'Riesgo'} de línea vs ${enemyName}: ${Math.round(probability*100)}% de probabilidad de rol, ${match.count} partidas (${contribution > 0 ? '+' : ''}${contribution.toFixed(2)})`);
+    if (directSignal) directMatchupContribution += contribution;
+    if (Math.abs(contribution) >= 0.1) reasons.push(`${directConfirmed ? 'Matchup directo confirmado' : contribution > 0 ? 'Ventaja' : 'Riesgo'} vs ${enemyName}: ${Math.round(probability*100)}% de probabilidad de rol, ${match.count} partidas (${contribution > 0 ? '+' : ''}${contribution.toFixed(2)})`);
   }
 
   // --- CAPA 3.5: NEGACIÓN DE WIN CONDITION ENEMIGA ---
@@ -462,7 +477,10 @@ export function calculateScore(
   // La heurística no debe rescatar una opción con evidencia de rol insuficiente.
   const contextWeight = evidenceContextWeight(centralPick.confidence);
   if (contextWeight < 1) {
-    const gatedScore = preContextScore + (score - preContextScore) * contextWeight;
+    const softContextDelta = score - preContextScore - directMatchupContribution;
+    const gatedScore = preContextScore
+      + directMatchupContribution
+      + softContextDelta * contextWeight;
     if (Math.abs(gatedScore - score) >= 0.05) {
       reasons.push(`Heurística limitada por confianza del rol (${Math.round(centralPick.confidence * 100)}%)`);
     }

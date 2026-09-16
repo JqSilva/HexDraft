@@ -8,8 +8,9 @@ const activePath = Astro.url.pathname;
 <aside
   id="sidebar"
   transition:persist
-  class="h-screen bg-[#0a0a0d] border-r border-[#1b1b1f] flex flex-col justify-between p-4 transition-all duration-300 w-64 select-none shrink-0 relative z-20 overflow-hidden"
+  class="h-screen bg-bg-warm border-r border-border-warm flex flex-col justify-between p-3 md:p-4 transition-all duration-300 w-60 select-none shrink-0 relative z-20 overflow-hidden"
 >
+  <div id="sidebar-expanded-content" class="h-full flex flex-col justify-between transition-all duration-300">
   <!-- Top / Logo and Navigation -->
   <div class="flex flex-col gap-6">
     <!-- Brand Header -->
@@ -19,28 +20,24 @@ const activePath = Astro.url.pathname;
         id="sidebar-logo-link"
         class="flex items-center gap-3 overflow-hidden transition-all duration-300"
       >
-        <!-- Hood/Assassin App Icon -->
-        <div
+        <!-- Brand mark, intentionally transparent so the logo belongs to the shell. -->
+        <img
           id="logo-hexdraft"
-          class="relative w-10 h-10 flex items-center justify-center rounded-lg shadow-[0_0_15px_rgba(144,85,255,0.2)] shrink-0"
-        >
-          <img
-            src="/favicon.svg"
-            alt="Hood-icon"
-            class="w-full h-full object-cover rounded-lg"
-          />
-        </div>
+          src="/favicon.svg"
+          alt="HexDraft"
+          class="w-10 h-10 object-contain shrink-0"
+        />
         <!-- Logo Text -->
         <div
           id="sidebar-logo-text"
           class="text-left whitespace-nowrap transition-all duration-300"
         >
           <span
-            class="text-base font-black uppercase tracking-[0.2em] text-white"
-            >Hex<span class="text-[#9055ff]">Draft</span></span
+            class="text-base font-semibold tracking-[-0.02em] text-white"
+            >Hex<span class="text-purple-accent">Draft</span></span
           >
           <span
-            class="block text-[7px] text-slate-400 uppercase tracking-widest font-semibold"
+            class="block text-[8px] text-slate-400 uppercase tracking-[0.14em] font-semibold leading-none"
             >Análisis Composición</span
           >
         </div>
@@ -49,11 +46,14 @@ const activePath = Astro.url.pathname;
       <!-- Collapse Toggle Button -->
       <button
         id="sidebar-toggle-btn"
-        class="p-1.5 rounded bg-[#15151e]/80 border border-[#1b1b1f] text-slate-400 hover:text-white hover:border-[#9055ff]/40 transition-colors duration-200 cursor-pointer shrink-0"
+        data-sidebar-toggle
+        aria-label="Contraer navegación"
+        aria-expanded="true"
+        class="btn-quiet inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-slate-400 hover:text-white transition-colors duration-200 cursor-pointer shrink-0 leading-none"
       >
         <svg
           id="toggle-icon-arrow"
-          class="w-4 h-4 transition-transform duration-300"
+          class="block w-4 h-4 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           stroke-width="2.5"
@@ -72,7 +72,7 @@ const activePath = Astro.url.pathname;
     <nav class="flex flex-col gap-1 w-full">
       <a
         href="/"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <svg
           class="w-4 h-4 shrink-0"
@@ -93,7 +93,7 @@ const activePath = Astro.url.pathname;
 
       <a
         href="/dashboard"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/dashboard" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/dashboard" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <svg
           class="w-4 h-4 shrink-0"
@@ -116,7 +116,7 @@ const activePath = Astro.url.pathname;
 
       <a
         href="/history"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/history" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/history" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <svg
           class="w-4 h-4 shrink-0"
@@ -133,7 +133,7 @@ const activePath = Astro.url.pathname;
 
       <a
         href="/champions"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/champions" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/champions" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <ChampionsIcon class="w-5 h-5"/>
         <span class="sidebar-text transition-all duration-200">Campeones</span>
@@ -141,7 +141,7 @@ const activePath = Astro.url.pathname;
 
       <a
         href="/draft"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/draft" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/draft" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <svg
           class="w-4 h-4 shrink-0"
@@ -165,7 +165,7 @@ const activePath = Astro.url.pathname;
       {appConfig.mode === 'admin' && (
         <a
           href="/actualizar"
-          class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/actualizar" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+          class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/actualizar" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
         >
           <svg
             class="w-4 h-4 shrink-0"
@@ -190,7 +190,7 @@ const activePath = Astro.url.pathname;
 
       <a
         href="/settings"
-        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-md text-[11px] uppercase tracking-wider font-bold transition-all duration-300 ${activePath === "/settings" ? "bg-[#9055ff]/20 text-white shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]" : "text-slate-400 hover:text-white hover:bg-white/[0.02]"}`}
+        class={`sidebar-item flex items-center gap-3 px-3 py-3 rounded-lg text-sm leading-5 font-semibold transition-all duration-200 ${activePath === "/settings" ? "bg-purple-accent/10 text-white ring-1 ring-inset ring-purple-accent/30" : "text-slate-300 hover:text-white hover:bg-white/[0.03]"}`}
       >
         <svg
           class="w-4 h-4 shrink-0"
@@ -218,7 +218,7 @@ const activePath = Astro.url.pathname;
   <!-- Bottom / Level and XP bar -->
   <div
     id="sidebar-level-section"
-    class="border-t border-[#1b1b1f] pt-4 transition-all duration-300 overflow-hidden shrink-0 h-[72px]"
+    class="border-t border-border-warm pt-4 transition-all duration-300 overflow-hidden shrink-0 h-[76px]"
   >
     <!-- Ícono colapsado (solo visible en modo compacto) -->
     <div
@@ -230,8 +230,8 @@ const activePath = Astro.url.pathname;
       >
         <img
           src="/favicon.svg"
-          alt="Hood-icon"
-          class="w-full h-full object-cover"
+          alt="HexDraft"
+          class="w-full h-full object-contain"
         />
       </div>
     </div>
@@ -240,34 +240,95 @@ const activePath = Astro.url.pathname;
     <div id="sidebar-xp-tracker">
       <div class="flex justify-between items-center mb-1">
         <span
-          class="text-[10px] uppercase font-bold tracking-widest text-[#9055ff]"
+          class="text-xs font-medium tracking-wide text-purple-accent"
           >Nivel <span id="sidebar-level-val">128</span></span
         >
-        <span id="sidebar-xp-pct" class="text-[9px] font-mono text-slate-400"
+        <span id="sidebar-xp-pct" class="text-[10px] font-mono text-slate-400 leading-none"
           >43%</span
         >
       </div>
       <div
-        class="w-full bg-[#15151a] h-1.5 rounded-full overflow-hidden border border-[#22222b] relative"
+        class="w-full bg-input-warm h-1.5 rounded-full overflow-hidden border border-border-warm relative"
       >
         <div
           id="sidebar-level-fill"
-          class="bg-gradient-to-r from-[#9055ff] to-purple-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(144,85,255,0.7)]"
+          class="bg-purple-accent h-full rounded-full transition-all duration-500 ease-out"
           style="width: 43%"
         >
         </div>
       </div>
       <div class="flex justify-between items-center mt-1.5">
         <span
-          class="text-[7px] uppercase tracking-wider font-semibold text-slate-500"
+          class="text-[8px] uppercase tracking-[0.12em] font-semibold text-slate-500 leading-none"
           >PROGRESO XP</span
         >
         <span
           id="sidebar-xp-vals"
-          class="text-[7px] font-mono font-bold text-slate-400"
+          class="text-[8px] font-mono font-bold text-slate-400 leading-none"
           >12,450 / 28,950 XP</span
         >
       </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Compact face: remains spatially stable while the expanded face fades out. -->
+  <div id="sidebar-compact-content" aria-hidden="true" class="sidebar-compact-content">
+    <div class="flex flex-col items-center gap-3">
+      <a href="/dashboard" aria-label="Ir al panel general" title="Panel general" class="w-11 h-11 flex items-center justify-center">
+        <img src="/favicon.svg" alt="HexDraft" class="w-10 h-10 object-contain" />
+      </a>
+      <button
+        id="sidebar-compact-toggle-btn"
+        data-sidebar-toggle
+        type="button"
+        aria-label="Expandir navegación"
+        aria-expanded="false"
+        title="Expandir navegación"
+        class="btn-quiet inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-slate-500 hover:text-white transition-colors duration-200 cursor-pointer leading-none"
+      >
+        <svg class="block w-4 h-4 rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav aria-label="Navegación compacta" class="flex flex-1 flex-col items-center gap-1.5 mt-5 pt-4 border-t border-border-warm">
+      <a href="/" title="Inicio" aria-label="Inicio" class={`sidebar-compact-item ${activePath === "/" ? "is-active" : ""}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75" /></svg>
+      </a>
+      <a href="/dashboard" title="Panel general" aria-label="Panel general" class={`sidebar-compact-item ${activePath === "/dashboard" ? "is-active" : ""}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.75" y="3.75" width="7" height="7" rx="2" /><rect x="13.25" y="3.75" width="7" height="7" rx="2" /><rect x="3.75" y="13.25" width="7" height="7" rx="2" /><rect x="13.25" y="13.25" width="7" height="7" rx="2" /></svg>
+      </a>
+      <a href="/history" title="Historial" aria-label="Historial" class={`sidebar-compact-item ${activePath === "/history" ? "is-active" : ""}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" /></svg>
+      </a>
+      <a href="/champions" title="Campeones" aria-label="Campeones" class={`sidebar-compact-item ${activePath === "/champions" ? "is-active" : ""}`}>
+        <ChampionsIcon class="w-5 h-5" />
+      </a>
+      <a href="/draft" title="Draft en vivo" aria-label="Draft en vivo" class={`sidebar-compact-item ${activePath === "/draft" ? "is-active" : ""}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+      </a>
+      {appConfig.mode === 'admin' && (
+        <a href="/actualizar" title="Sincronización" aria-label="Sincronización" class={`sidebar-compact-item sidebar-compact-item--sync ${activePath === "/actualizar" ? "is-active" : ""}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.5 10a8.5 8.5 0 0 0-14.8-4.7L3.5 7.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 3.5v4h4" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 14a8.5 8.5 0 0 0 14.8 4.7l2.2-2.2" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.5 20.5v-4h-4" />
+          </svg>
+        </a>
+      )}
+      <a href="/settings" title="Ajustes" aria-label="Ajustes" class={`sidebar-compact-item sidebar-compact-item--settings ${activePath === "/settings" ? "is-active" : ""}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.25" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.43 15a1.65 1.65 0 0 0 .33 1.83l.06.06-1.82 1.82-.06-.06a1.65 1.65 0 0 0-1.83-.33 1.65 1.65 0 0 0-1 1.52V20h-2.22v-.16a1.65 1.65 0 0 0-1-1.52 1.65 1.65 0 0 0-1.83.33L10 18.7l-1.82-1.82.06-.06A1.65 1.65 0 0 0 8.57 15a1.65 1.65 0 0 0-1.52-1H6.9v-2.22h.15a1.65 1.65 0 0 0 1.52-1 1.65 1.65 0 0 0-.33-1.83l-.06-.06L10 7.07l.06.06a1.65 1.65 0 0 0 1.83.33 1.65 1.65 0 0 0 1-1.52V5.8h2.22v.14a1.65 1.65 0 0 0 1 1.52 1.65 1.65 0 0 0 1.83-.33L18 7.07l1.82 1.82-.06.06a1.65 1.65 0 0 0-.33 1.83 1.65 1.65 0 0 0 1.52 1h.15V14h-.15a1.65 1.65 0 0 0-1.52 1Z" />
+        </svg>
+      </a>
+    </nav>
+
+    <div class="pt-4 flex justify-center">
+      <span class="w-1.5 h-1.5 rounded-full bg-violet-solid" title="HexDraft activo"></span>
     </div>
   </div>
 </aside>
@@ -275,12 +336,22 @@ const activePath = Astro.url.pathname;
 <script>
   const sidebar = document.getElementById("sidebar");
   const toggleBtn = document.getElementById("sidebar-toggle-btn");
+  const compactToggleBtn = document.getElementById("sidebar-compact-toggle-btn");
   const toggleIcon = document.getElementById("toggle-icon-arrow");
   const xpTracker = document.getElementById("sidebar-xp-tracker");
   const collapsedIcon = document.getElementById("sidebar-collapsed-icon");
+  const expandedView = document.getElementById("sidebar-expanded-content");
+  const compactView = document.getElementById("sidebar-compact-content");
 
   function updateSidebarState(isCollapsed: boolean) {
-    if (!sidebar || !toggleIcon || !xpTracker || !collapsedIcon) return;
+    if (!sidebar || !toggleIcon || !xpTracker || !collapsedIcon || !expandedView || !compactView) return;
+    toggleBtn?.setAttribute("aria-expanded", String(!isCollapsed));
+    toggleBtn?.setAttribute("aria-label", isCollapsed ? "Expandir navegación" : "Contraer navegación");
+    compactToggleBtn?.setAttribute("aria-expanded", String(!isCollapsed));
+    compactToggleBtn?.setAttribute("aria-label", isCollapsed ? "Expandir navegación" : "Contraer navegación");
+    compactToggleBtn?.setAttribute("title", isCollapsed ? "Expandir navegación" : "Contraer navegación");
+    expandedView.setAttribute("aria-hidden", String(isCollapsed));
+    compactView.setAttribute("aria-hidden", String(!isCollapsed));
 
     if (isCollapsed) {
       sidebar.classList.add("collapsed");
@@ -315,38 +386,57 @@ const activePath = Astro.url.pathname;
 
       if (isActive) {
         item.classList.add(
-          "bg-[#9055ff]/20",
+          "bg-purple-accent/10",
           "text-white",
-          "shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]",
+          "ring-1",
+          "ring-inset",
+          "ring-purple-accent/30",
         );
         item.classList.remove(
-          "text-slate-400",
+          "text-slate-300",
           "hover:text-white",
           "hover:bg-white/[0.02]",
         );
       } else {
         item.classList.remove(
-          "bg-[#9055ff]/20",
+          "bg-purple-accent/10",
           "text-white",
-          "shadow-[inset_4px_0_12px_rgba(144,85,255,0.08)]",
+          "ring-1",
+          "ring-inset",
+          "ring-purple-accent/30",
         );
         item.classList.add(
-          "text-slate-400",
+          "text-slate-300",
           "hover:text-white",
           "hover:bg-white/[0.02]",
         );
       }
+    });
+
+    const compactItems = document.querySelectorAll(".sidebar-compact-item");
+    compactItems.forEach((item) => {
+      const href = item.getAttribute("href");
+      const isActive =
+        href === "/"
+          ? currentPath === "/"
+          : href
+            ? currentPath === href || currentPath.startsWith(href + "/")
+            : false;
+      item.classList.toggle("is-active", isActive);
     });
   }
 
   let collapsed = localStorage.getItem("sidebar-collapsed") === "true";
   updateSidebarState(collapsed);
 
-  toggleBtn?.addEventListener("click", () => {
+  const toggleSidebar = () => {
     collapsed = !collapsed;
     localStorage.setItem("sidebar-collapsed", String(collapsed));
     updateSidebarState(collapsed);
-  });
+  };
+
+  toggleBtn?.addEventListener("click", toggleSidebar);
+  compactToggleBtn?.addEventListener("click", toggleSidebar);
 
   async function fetchSidebarProfile() {
     try {
@@ -398,9 +488,89 @@ const activePath = Astro.url.pathname;
       padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .sidebar-item {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  #sidebar-expanded-content,
+  #sidebar-compact-content {
+    transition: opacity 220ms ease, visibility 0s linear 220ms;
+  }
+
+  #sidebar-compact-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4.5rem;
+    bottom: 0;
+    padding: 0.75rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  #sidebar.collapsed #sidebar-expanded-content {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  #sidebar.collapsed #sidebar-compact-content {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 80ms;
+  }
+
+  .sidebar-compact-item {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    border-radius: 0.875rem;
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
     position: relative;
+  }
+
+  .sidebar-compact-item svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
+    flex: none;
+    stroke-width: 1.9;
+    shape-rendering: geometricPrecision;
+  }
+
+  .sidebar-compact-item:hover {
+    color: var(--text-strong);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--ink-600);
+  }
+
+  .sidebar-compact-item.is-active {
+    color: #f1e7ff;
+    background: var(--violet-wash);
+    border-color: rgba(108, 20, 213, 0.62);
+    box-shadow: inset 0 0 0 1px rgba(167, 77, 230, 0.12);
+  }
+
+  .sidebar-compact-item.is-active::after {
+    content: "";
+    position: absolute;
+    right: -0.75rem;
+    width: 2px;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: var(--violet-solid);
+  }
+
+  .sidebar-item {
+    transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    position: relative;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* Smooth text scale/opacity transition to prevent wrapping */
@@ -430,44 +600,9 @@ const activePath = Astro.url.pathname;
 
   /* Collapsed layout overrides */
   #sidebar.collapsed {
-    width: 4rem !important; /* w-16 */
+    width: 4.5rem !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
 
-  #sidebar.collapsed #sidebar-logo-link {
-    display: none;
-  }
-
-  #sidebar.collapsed #brand-header {
-    justify-content: center;
-  }
-
-  #sidebar.collapsed .sidebar-item {
-    justify-content: center;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 2.5rem !important; /* w-10 (40px) */
-    height: 2.5rem !important; /* h-10 (40px) */
-    gap: 0 !important; /* Disables flex gap so the icon is centered perfectly */
-  }
-
-  #sidebar.collapsed .sidebar-text {
-    max-width: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  #sidebar.collapsed #sidebar-logo-text {
-    max-width: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  #sidebar.collapsed #sidebar-sync-badge {
-    position: absolute;
-    top: 0.375rem;
-    right: 0.375rem;
-    margin-left: 0 !important;
-  }
 </style>

@@ -193,13 +193,13 @@ export const HistoryPage = () => {
   if (loading) {
     return (
       <div className="w-full flex-1 flex flex-col items-center justify-center min-h-[500px]">
-        <div className="relative w-12 h-12 flex items-center justify-center">
-          <div className="absolute w-full h-full border border-dashed border-[#9055ff]/40 rounded-full animate-spin"></div>
-          <div className="absolute w-10 h-10 border-2 border-t-transparent border-r-[#9055ff] border-b-transparent border-l-[#9055ff] rounded-full animate-[spin_3s_linear_infinite]"></div>
+          <div className="relative w-12 h-12 flex items-center justify-center">
+          <div className="absolute w-full h-full border border-purple-accent/30 rounded-full"></div>
+          <div className="absolute w-10 h-10 border border-purple-accent/70 rounded-full"></div>
           <img src="/favicon.svg" alt="Loading" className="w-6 h-6 object-cover" />
         </div>
-        <span className="mt-4 text-[10px] uppercase tracking-[0.25em] font-black text-slate-400 animate-pulse">
-          Sincronizando Historial...
+        <span className="mt-4 text-sm font-medium text-slate-400">
+          Cargando historial…
         </span>
       </div>
     );
@@ -208,27 +208,27 @@ export const HistoryPage = () => {
   const groupedGroups = groupMatchesByDate(matches);
 
   return (
-    <div className="w-full h-full flex flex-col gap-5 p-4 md:p-6 animate-in fade-in duration-500 overflow-y-auto">
+    <div className="w-full h-full flex flex-col gap-6 p-5 md:p-8 animate-in fade-in duration-300 overflow-y-auto">
       {/* TOP HEADER */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500">RESUMEN GENERAL</span>
+          <span className="text-xs tracking-wide font-medium text-slate-500">Actividad reciente</span>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-black text-white uppercase tracking-tight">
-                <span className="text-purple-accent">Historial</span> de Partidas
+            <h1 className="text-2xl font-semibold text-white tracking-tight">
+                <span className="text-purple-accent">Historial</span> de partidas
               </h1>
           </div>
         </div>
         
-        <div className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
-          PARCHE: <span className="text-[#9055ff] font-bold">{gameVersion}</span>
+        <div className="text-sm text-slate-400 font-mono">
+          Parche <span className="text-purple-accent font-semibold">{gameVersion}</span>
         </div>
       </header>
 
       {/* MATCH LIST CONTAINER */}
       <div className="flex flex-col gap-6 max-w-[1200px] w-full mx-auto select-none">
         {groupedGroups.length === 0 ? (
-          <div className="bg-[#0f0f13]/90 border border-border-warm rounded-sm p-12 text-center tech-corners shadow-xl">
+          <div className="bg-panel-warm border border-border-warm rounded-xl p-12 text-center shadow-sm">
             <span className="text-xs uppercase tracking-widest text-slate-500 font-bold">
               No se han encontrado partidas recientes
             </span>
@@ -240,7 +240,7 @@ export const HistoryPage = () => {
               <div className="flex items-center justify-between border-b border-slate-900 pb-1.5 px-0.5">
                 <h3 className="text-sm font-black text-white tracking-wider uppercase font-mono">{group.dateKey}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="bg-[#9055ff]/10 border border-[#9055ff]/30 text-[#9055ff] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
+                  <span className="bg-purple-accent/10 border border-purple-accent/30 text-purple-accent-hover text-xs font-medium px-2 py-1 rounded-md">
                     Hex Score : {group.stats.averageHexScore}
                   </span>
                   <span className="bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm">
@@ -268,10 +268,10 @@ export const HistoryPage = () => {
 
                   // Colors configuration: solid very dark background, subtle win/loss borders
                   const cardBg = match.win 
-                    ? "bg-[#08080b] hover:bg-[#0c0d12] border-cyan-500/20 hover:border-cyan-500/40" 
+                    ? "bg-panel-warm hover:bg-input-warm border-purple-accent/20 hover:border-purple-accent/40"
                     : "bg-[#08080b] hover:bg-[#0c0d12] border-rose-500/20 hover:border-rose-500/40";
                     
-                  const leftIndicatorColor = match.win ? "bg-cyan-500" : "bg-rose-500";
+                  const leftIndicatorColor = match.win ? "bg-success" : "bg-rose-500";
                   
                   // Lane identification
                   const playerLane = match.lane || "MID";
@@ -317,7 +317,7 @@ export const HistoryPage = () => {
 
                   // Progress ring circle color: Accent purple for MVP/Good performance, cyan for average, slate for others
                   const progressColor = score >= 75 
-                    ? "stroke-[#9055ff]" 
+                    ? "stroke-purple-accent"
                     : score >= 50 
                       ? "stroke-cyan-500" 
                       : "stroke-slate-500";
@@ -379,7 +379,7 @@ export const HistoryPage = () => {
                           
                           {/* Stats details directly under KDA */}
                           <div className="mt-1 flex flex-row items-center gap-1 text-[9.5px] font-mono font-bold text-slate-400 leading-none">
-                            <span className={`shrink-0 ${match.win ? "text-cyan-400 font-extrabold" : "text-rose-400 font-extrabold"}`}>
+                            <span className={`shrink-0 ${match.win ? "text-success font-semibold" : "text-rose-400 font-semibold"}`}>
                               {match.deaths === 0 ? "KDA Perfecto" : `${kdaRatio} KDA`}
                             </span>
                             <span className="text-slate-600 shrink-0">•</span>
@@ -453,7 +453,7 @@ export const HistoryPage = () => {
                             {topRowItems.map((itemId, i) => (
                               <div 
                                 key={`top-${i}`} 
-                                className={`w-[22px] h-[22px] bg-[#07080f]/70 border border-slate-800 flex items-center justify-center overflow-hidden rounded-sm ${i === 3 ? 'border-cyan-800/40 bg-cyan-950/15' : ''}`}
+                                className={`w-[22px] h-[22px] bg-input-warm/70 border border-slate-800 flex items-center justify-center overflow-hidden rounded-md ${i === 3 ? 'border-purple-accent/40 bg-purple-accent/10' : ''}`}
                               >
                                 {itemId > 0 ? (
                                   <img 

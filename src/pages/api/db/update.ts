@@ -8,38 +8,49 @@ import { appConfig } from '../../../lib/services/config.service.js';
 
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-async function swapDbFilesWithRetry(tempPath: string, targetPath: string, maxRetries = 3, delayMs = 200) {
+async function swapDbFilesWithRetry(
+  tempPath: string,
+  targetPath: string,
+  maxRetries = 3,
+  delayMs = 200
+): Promise<{ backupPath: string | null }> {
   let lastError: any = null;
   const backupPath = `${targetPath}.bak`;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let movedExisting = false;
     try {
-      // Limpiar backup anterior si existe
+      // Mantener una copia del archivo anterior hasta que la nueva conexión
+      // haya pasado las migraciones. Así se puede revertir un asset inválido.
       if (fs.existsSync(backupPath)) {
-        try { fs.unlinkSync(backupPath); } catch {}
+        try { fs.unlinkSync(backupPath); } catch { /* best effort cleanup */ }
       }
 
-      // Si el archivo destino existe, intentar eliminarlo o moverlo a backup
       if (fs.existsSync(targetPath)) {
-        try {
-          fs.unlinkSync(targetPath);
-        } catch {
-          fs.renameSync(targetPath, backupPath);
-        }
+        fs.renameSync(targetPath, backupPath);
+        movedExisting = true;
       }
 
-      // Mover archivo temporal a la ruta destino
       fs.renameSync(tempPath, targetPath);
 
-      // Limpiar archivos WAL/SHM satélite del destino
+      // Una BD descargada debe empezar sin WAL/SHM heredados.
       const targetWal = `${targetPath}-wal`;
       const targetShm = `${targetPath}-shm`;
-      if (fs.existsSync(targetWal)) { try { fs.unlinkSync(targetWal); } catch {} }
-      if (fs.existsSync(targetShm)) { try { fs.unlinkSync(targetShm); } catch {} }
+      if (fs.existsSync(targetWal)) { try { fs.unlinkSync(targetWal); } catch { /* best effort cleanup */ } }
+      if (fs.existsSync(targetShm)) { try { fs.unlinkSync(targetShm); } catch { /* best effort cleanup */ } }
 
-      return; // Swap exitoso
+      return { backupPath: movedExisting ? backupPath : null };
     } catch (err: any) {
       lastError = err;
+      // Dejar el sistema en el estado anterior antes de reintentar.
+      if (movedExisting) {
+        if (fs.existsSync(targetPath)) {
+          try { fs.unlinkSync(targetPath); } catch { /* best effort cleanup */ }
+        }
+        if (!fs.existsSync(targetPath) && fs.existsSync(backupPath)) {
+          try { fs.renameSync(backupPath, targetPath); } catch { /* best effort cleanup */ }
+        }
+      }
       console.warn(`[DB-UPDATE] Intento ${attempt}/${maxRetries} de swap falló con error ${err?.code || err?.name}: ${err?.message}`);
       if (attempt < maxRetries) {
         await sleep(delayMs);
@@ -49,7 +60,6 @@ async function swapDbFilesWithRetry(tempPath: string, targetPath: string, maxRet
 
   throw lastError || new Error('Fallo al reemplazar el archivo de base de datos tras reintentos');
 }
-
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { downloadUrl, expectedChecksum, manifest } = await request.json();
@@ -74,6 +84,10 @@ export const POST: APIRoute = async ({ request }) => {
         };
 
         let writer: fs.WriteStream | null = null;
+        let dbClosed = false;
+        let swapCompleted = false;
+        let dbReopened = false;
+        let backupPathToRemove: string | null = null;
 
         try {
           sendEvent({ status: 'starting', progress: 0, message: 'Iniciando descarga de la base de datos...' });
@@ -81,9 +95,9 @@ export const POST: APIRoute = async ({ request }) => {
           // Asegurar que no quede un archivo temporal corrupto anterior ni sus satélites
           const initialTempWal = `${tempDbPath}-wal`;
           const initialTempShm = `${tempDbPath}-shm`;
-          if (fs.existsSync(tempDbPath)) { try { fs.unlinkSync(tempDbPath); } catch {} }
-          if (fs.existsSync(initialTempWal)) { try { fs.unlinkSync(initialTempWal); } catch {} }
-          if (fs.existsSync(initialTempShm)) { try { fs.unlinkSync(initialTempShm); } catch {} }
+          if (fs.existsSync(tempDbPath)) { try { fs.unlinkSync(tempDbPath); } catch { /* best effort cleanup */ } }
+          if (fs.existsSync(initialTempWal)) { try { fs.unlinkSync(initialTempWal); } catch { /* best effort cleanup */ } }
+          if (fs.existsSync(initialTempShm)) { try { fs.unlinkSync(initialTempShm); } catch { /* best effort cleanup */ } }
 
           // Descargar usando Axios
           writer = fs.createWriteStream(tempDbPath);
@@ -147,16 +161,19 @@ export const POST: APIRoute = async ({ request }) => {
           checkpointDb();
 
           // 2. Cerrar y reemplazar con reintentos y reapertura garantizada
-          try {
-            closeDb();
-            await swapDbFilesWithRetry(tempDbPath, dbPath, 3, 200);
-          } finally {
-            // CRÍTICO: Garantizar SIEMPRE que la base de datos se reabre, incluso si el swap falló
-            reopenDb();
-          }
+          closeDb();
+          dbClosed = true;
+          const swapResult = await swapDbFilesWithRetry(tempDbPath, dbPath, 3, 200);
+          swapCompleted = true;
+          backupPathToRemove = swapResult.backupPath;
+          reopenDb();
+          dbReopened = true;
 
           // 3. Guardar manifest en data/db-version.json
           fs.writeFileSync(appConfig.dbVersionPath, JSON.stringify(manifest, null, 2), 'utf-8');
+          if (backupPathToRemove && fs.existsSync(backupPathToRemove)) {
+            fs.unlinkSync(backupPathToRemove);
+          }
 
           sendEvent({ status: 'done', message: '¡Base de datos actualizada con éxito!' });
           controller.close();
@@ -175,22 +192,31 @@ export const POST: APIRoute = async ({ request }) => {
           const dbBak = `${dbPath}.bak`;
 
           if (fs.existsSync(tempDbPath)) {
-            try { fs.unlinkSync(tempDbPath); } catch {}
+            try { fs.unlinkSync(tempDbPath); } catch { /* best effort cleanup */ }
           }
           if (fs.existsSync(tempWal)) {
-            try { fs.unlinkSync(tempWal); } catch {}
+            try { fs.unlinkSync(tempWal); } catch { /* best effort cleanup */ }
           }
           if (fs.existsSync(tempShm)) {
-            try { fs.unlinkSync(tempShm); } catch {}
+            try { fs.unlinkSync(tempShm); } catch { /* best effort cleanup */ }
           }
 
-          // Si dbPath principal quedó ausente pero existe el .bak tras un fallo en swap, restaurarlo
-          if (!fs.existsSync(dbPath) && fs.existsSync(dbBak)) {
+          // Si la nueva BD no supera la migración al reabrirse, descartar
+          // el archivo nuevo y restaurar la copia anterior completa.
+          if (dbClosed && !dbReopened) {
             try {
-              fs.renameSync(dbBak, dbPath);
-              console.log('[DB-UPDATE] Se restauró hexdraft.db desde backup tras fallo de instalación.');
+              if (swapCompleted && fs.existsSync(dbBak)) {
+                if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+                fs.renameSync(dbBak, dbPath);
+                console.log('[DB-UPDATE] Se restauró hexdraft.db desde backup tras fallo de instalación.');
+              } else if (!fs.existsSync(dbPath) && fs.existsSync(dbBak)) {
+                fs.renameSync(dbBak, dbPath);
+                console.log('[DB-UPDATE] Se restauró hexdraft.db desde backup tras fallo de swap.');
+              }
+              reopenDb();
+              dbReopened = true;
             } catch (restoreErr) {
-              console.error('[DB-UPDATE] Error al restaurar backup:', restoreErr);
+              console.error('[DB-UPDATE] Error al restaurar o reabrir la base de datos:', restoreErr);
             }
           }
 

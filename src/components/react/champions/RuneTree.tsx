@@ -86,7 +86,7 @@ export const ShardsTree = ({ selections }: { selections: number[] }) => {
                   key={shardId}
                   className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 cursor-default
                     ${isActive 
-                      ? 'border-yellow-500/50 bg-yellow-500/10 shadow-[0_0_6px_rgba(234,179,8,0.25)] scale-110' 
+                      ? 'border-yellow-500/50 bg-yellow-500/10 shadow-sm scale-110'
                       : 'border-slate-800/40 bg-black/20 opacity-30 grayscale hover:opacity-60 hover:border-slate-700/40'}`}
                   title={s?.name}
                 >

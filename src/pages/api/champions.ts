@@ -40,8 +40,9 @@ export const GET: APIRoute = async ({ url }) => {
       });
     }
 
-    // Retornar lista completa de campeones altamente optimizada (agrupación en memoria en <20ms)
-    const enrichedList = championsRepo.getAllEnrichedChampions();
+    const summary = url.searchParams.get('summary') === 'true';
+    // La pantalla de campeones solo necesita estadísticas de lista; el motor usa el listado enriquecido completo.
+    const enrichedList = summary ? championsRepo.getBasicChampionsList() : championsRepo.getAllEnrichedChampions();
 
     return new Response(JSON.stringify(enrichedList), {
       status: 200,

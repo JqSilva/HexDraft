@@ -2,8 +2,8 @@
 import type { APIRoute } from 'astro';
 import { getProcessedRecommendations, analyzeComposition } from '../../lib/engine/picks/index.js';
 import { getBanRecommendations } from '../../lib/engine/bans/index.js';
-import { NAME_TO_ID, normalizeRole } from '../../lib/engine/core/constants.js';
-import { initializeEngineData } from '../../lib/engine/core/dataProvider.js';
+import { getIdFromName, normalizeRole } from '../../lib/engine/core/constants.js';
+import { ENRICHED_DB, initializeEngineData } from '../../lib/engine/core/dataProvider.js';
 import { championsRepo } from '../../lib/db/champions.repo.js';
 
 export const POST: APIRoute = async ({ request, url }) => {
@@ -33,19 +33,19 @@ export const POST: APIRoute = async ({ request, url }) => {
       alliedPicks = [],
       enemyPicks = [],
       bannedChamps = [],
-      allAvailableChamps = Object.keys(NAME_TO_ID)
+      allAvailableChamps = Object.keys(ENRICHED_DB)
     } = body;
     
     // Convertir nombres a IDs para el motor de picks
-    const myTeamIds = alliedPicks.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
-    const theirTeamIds = enemyPicks.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
-    const bannedIds = bannedChamps.map((name: string) => NAME_TO_ID[name]).filter(Boolean) as number[];
+    const myTeamIds = alliedPicks.map((name: string) => getIdFromName(name)).filter(Boolean) as number[];
+    const theirTeamIds = enemyPicks.map((name: string) => getIdFromName(name)).filter(Boolean) as number[];
+    const bannedIds = bannedChamps.map((name: string) => getIdFromName(name)).filter(Boolean) as number[];
     
     const responsePayload: Record<string, any> = {};
 
     // 1. Fase de PICKS (sin claves duplicadas)
     if (phaseParam === 'pick' || phaseParam === 'all') {
-      const myChampId = myChampion ? NAME_TO_ID[myChampion] : undefined;
+      const myChampId = myChampion ? getIdFromName(myChampion) || undefined : undefined;
       const picks = getProcessedRecommendations(myTeamIds, theirTeamIds, bannedIds, normalizedLane, myChampId, undefined, { allyRoles: body.allyRoles, enemyRoles: body.enemyRoles });
       responsePayload.picks = picks;
     }

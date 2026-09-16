@@ -18,13 +18,13 @@ export const TeamSidebar = memo(({ team, isEnemy = false, isPlaying, isCompact }
         <div className={sidebarClass}>
             {!isPlaying && (
                 isEnemy ? (
-                    <h3 className="text-red-400 font-black text-xs uppercase tracking-widest border-b border-border-warm pb-3 flex items-center justify-end gap-2">
+                    <h3 className="text-slate-300 font-semibold text-sm border-b border-border-warm pb-3 flex items-center justify-end gap-2">
                         {!isCompact && "Enemigos"}
-                        <span className="w-2.5 h-px bg-red-400"></span>
+                        <span className="w-2 h-2 rounded-full bg-red-400"></span>
                     </h3>
                 ) : (
-                    <h3 className="text-cyan-400 font-black text-xs uppercase tracking-widest border-b border-border-warm pb-3 flex items-center gap-2">
-                        <span className="w-2.5 h-px bg-cyan-400"></span>
+                    <h3 className="text-purple-accent-hover font-semibold text-sm border-b border-border-warm pb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-accent"></span>
                         {!isCompact && "Tu Equipo"}
                     </h3>
                 )

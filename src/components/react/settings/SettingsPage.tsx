@@ -148,7 +148,7 @@ export const SettingsPage = () => {
 
     const getConcurrencyMessage = () => {
         if (puppeteerConcurrency <= 2) return { text: "Seguro y estable. Ideal para conexiones sencillas.", color: "text-slate-500 font-mono text-[9px]" };
-        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Súper rápido. Recomendado para FlareSolverr.", color: "text-purple-400 font-mono text-[9px]" };
+        if (puppeteerConcurrency <= 4) return { text: "Balanceado. Súper rápido. Recomendado para FlareSolverr.", color: "text-purple-accent font-mono text-[9px]" };
         return { text: "Extremo. Requiere alta capacidad en tu FlareSolverr local.", color: "text-red-500 font-bold font-mono text-[9px]" };
     };
 
@@ -164,21 +164,21 @@ export const SettingsPage = () => {
     const concurrencyMsg = getConcurrencyMessage();
 
     return (
-        <div className="w-full flex flex-col p-4 md:p-6 text-slate-200 animate-in fade-in duration-300">
+        <div className="w-full flex flex-col p-5 md:p-8 text-slate-200 animate-in fade-in duration-300">
             <form onSubmit={handleSave} className="w-full flex flex-col">
 
                 {/* Cabecera Táctica (Ocupa todo el ancho) */}
                 <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
                     <div>
-                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
-                            SISTEMA // PANEL DE CONFIGURACIÓN GLOBAL
+                        <span className="text-xs tracking-wide font-medium text-slate-500 block mb-1">
+                            Preferencias de la aplicación
                         </span>
-                        <h1 className="text-xl font-black text-white uppercase tracking-tight">
-                            Panel de <span className="text-purple-accent">Ajustes</span>
+                        <h1 className="text-2xl font-semibold text-white tracking-tight">
+                            Ajustes de <span className="text-purple-accent">HexDraft</span>
                         </h1>
                     </div>
-                    <div className="flex flex-row gap-4 text-[12px] text-slate-400 uppercase tracking-widest font-mono select-none">
-                        <div>VERSION APP: <span className="text-[#9055ff] font-bold text-right">{APP_VERSION}  </span></div>
+                    <div className="flex flex-row gap-4 text-sm text-slate-400 font-mono select-none">
+                        <div>Versión <span className="text-purple-accent font-semibold text-right">{APP_VERSION}</span></div>
 
                     </div>
                 </header>
@@ -190,21 +190,21 @@ export const SettingsPage = () => {
                         <div className={isAdmin ? "lg:col-span-8 flex flex-col gap-6" : "lg:col-span-12 flex flex-col gap-6"}>
 
                             {/* Tarjeta 1: Integración con League & LCU */}
-                            <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl relative overflow-hidden flex flex-col gap-6">
+                            <div className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm relative overflow-hidden flex flex-col gap-6">
                                 <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
 
                                 <div>
-                                    <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
+                                    <h3 className="text-base text-purple-accent font-semibold mb-1">
                                         Integración del Cliente (LCU)
                                     </h3>
-                                    <p className="text-[9.5px] text-slate-500 uppercase tracking-widest font-extrabold">
+                                    <p className="text-sm text-slate-500">
                                         Enlace activo con el juego y automatización
                                     </p>
                                 </div>
 
                                 {/* Ruta de LoL */}
                                 <div className="space-y-2.5">
-                                    <label className="block text-[9.5px] uppercase font-black tracking-widest text-slate-300">
+                                    <label className="block text-sm font-medium text-slate-300">
                                         Ruta de League of Legends
                                     </label>
                                     <input
@@ -212,7 +212,7 @@ export const SettingsPage = () => {
                                         name="lolPath"
                                         defaultValue={lolPath}
                                         placeholder="C:\Riot Games\League of Legends\lockfile"
-                                        className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-3 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                        className="w-full bg-input-warm border border-border-warm focus:border-purple-accent text-sm font-mono text-slate-200 rounded-lg px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-accent/20"
                                     />
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed">
                                         Indica la ruta absoluta hacia el archivo <code className="text-white lowercase font-mono">lockfile</code> de Riot Games para habilitar la lectura de fases en vivo.
@@ -223,11 +223,11 @@ export const SettingsPage = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                     <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                         ${autoPick
-                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]'
+                                            ? 'bg-purple-accent/10 border-purple-accent/50'
                                             : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Pick</span>
-                                            <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Fija automáticamente el recomendado</span>
+                                            <span className="text-sm font-semibold text-slate-200">Auto-pick</span>
+                                            <span className="text-xs text-slate-500 mt-0.5">Fija automáticamente el recomendado</span>
                                         </div>
                                         <input
                                             type="checkbox"
@@ -242,7 +242,7 @@ export const SettingsPage = () => {
 
                                     <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                         ${autoBan
-                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]'
+                                            ? 'bg-purple-accent/10 border-purple-accent/50'
                                             : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Ban</span>
@@ -292,7 +292,7 @@ export const SettingsPage = () => {
                                 <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                     <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99] w-full sm:w-1/2
                                         ${autoAcceptEnabled
-                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]'
+                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
                                             : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Aceptar Partida</span>
@@ -341,7 +341,7 @@ export const SettingsPage = () => {
 
                                         <label className={`flex items-center justify-between p-2 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                             ${telegramNotificationsEnabled
-                                                ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]'
+                                                ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
                                                 : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
                                             <input
                                                 type="checkbox"
@@ -387,7 +387,7 @@ export const SettingsPage = () => {
                                                         type="button"
                                                         onClick={handleTestTelegram}
                                                         disabled={testSending || !telegramBotToken || !telegramChatId}
-                                                        className="px-3 bg-black/40 border border-border-warm hover:border-purple-accent/50 text-slate-300 hover:text-white disabled:opacity-30 text-[9px] uppercase tracking-wider font-black transition-all rounded-sm cursor-pointer shrink-0"
+                                                        className="btn-quiet btn-quiet--compact px-3 text-slate-300 hover:text-white disabled:opacity-30 text-[9px] uppercase tracking-wider font-black cursor-pointer shrink-0"
                                                     >
                                                         {testSending ? 'Enviando...' : testSuccess ? '¡Enviado! ✓' : 'Probar'}
                                                     </button>
@@ -402,7 +402,7 @@ export const SettingsPage = () => {
                                                     </div>
                                                     <label className={`flex items-center justify-between p-1.5 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                                         ${telegramDeduplicateEnabled
-                                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-[0_0_15px_rgba(144,85,255,0.05)]'
+                                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
                                                             : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
                                                         <input
                                                             type="checkbox"
@@ -422,8 +422,7 @@ export const SettingsPage = () => {
                             </div>
 
                             {/* Tarjeta 2: Tiempos y Concurrencia */}
-                            <div className={`bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl relative overflow-hidden ${isAdmin ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'flex flex-col gap-6'}`}>
-                                <div className="absolute top-0 right-0 h-32 w-32 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+                            <div className={`bg-panel-warm border border-border-warm p-6 rounded-xl shadow-sm relative overflow-hidden ${isAdmin ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'flex flex-col gap-6'}`}>
 
                                 {/* Segundos de autoejecución */}
                                 <div className="space-y-3">
@@ -472,7 +471,7 @@ export const SettingsPage = () => {
                         {/* Columna Derecha: Periodicidad de Sincronización (4 col) */}
                         {isAdmin && (
                             <div className="lg:col-span-4 flex flex-col gap-6">
-                                <div className="bg-[#0b0b0f] border border-border-warm p-6 rounded-sm tech-corners shadow-2xl flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
+                                <div className="bg-panel-warm border border-border-warm p-6 rounded-xl shadow-sm flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
 
                                     <div>
@@ -515,8 +514,8 @@ export const SettingsPage = () => {
                             type="submit"
                             disabled={saving}
                             className={`px-8 py-3.5 rounded-sm text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 active:scale-95 ${saveSuccess
-                                    ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500'
-                                    : 'bg-purple-accent hover:bg-purple-accent/90 text-white shadow-[0_0_15px_rgba(144,85,255,0.25)] border border-purple-accent'
+                                    ? 'bg-emerald-600 text-white shadow-sm border border-emerald-500'
+                                    : 'bg-purple-accent hover:bg-purple-accent/90 text-white shadow-sm border border-purple-accent'
                                 }`}
                         >
                             {saving ? 'Guardando...' : (saveSuccess ? '✓ Ajustes Guardados' : 'Guardar Ajustes')}

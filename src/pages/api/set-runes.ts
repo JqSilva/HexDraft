@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
         // 3. Preparamos el payload con los IDs forzados a números
         const updatedPage = {
             ...editablePage,
-            name: body.name || "HexDraft Build",
+            name: String(body.name || "HexDraft - Build").trim().slice(0, 40),
             primaryStyleId: Number(body.primaryStyleId),
             subStyleId: Number(body.subStyleId),
             selectedPerkIds: body.selectedPerkIds.map((id: any) => Number(id)),
@@ -51,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
             return new Response(JSON.stringify({ error: "Error al actualizar", details: errorText }), { status: 400 });
         }
 
-        console.log(`📤 [LCU EXPORT RUNES] ${body.name || "HexDraft Build"}`);
+        console.log(`📤 [LCU EXPORT RUNES] ${String(body.name || "HexDraft - Build").trim().slice(0, 40)}`);
         console.log(`   Primary Style ID: ${body.primaryStyleId}`);
         console.log(`   Sub Style ID: ${body.subStyleId}`);
         console.log(`   Selected Perks:`, body.selectedPerkIds);

@@ -64,7 +64,7 @@ export const ChampionsStats = ({
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const championsRes = await fetch('/api/champions', { cache: 'no-store' });
+        const championsRes = await fetch('/api/champions?summary=true', { cache: 'no-store' });
         if (!championsRes.ok) {
           throw new Error('No se pudo cargar la lista de campeones desde SQLite');
         }
@@ -382,7 +382,7 @@ export const ChampionsStats = ({
         <p className="text-xs text-slate-400 max-w-md mt-2 font-mono">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-6 px-6 py-2.5 bg-purple-accent hover:bg-purple-accent-hover text-xs uppercase font-black tracking-widest rounded-sm transition-all duration-200 cursor-pointer border-none active:scale-95"
+          className="btn-quiet mt-6 px-6 py-2.5 text-xs uppercase font-black tracking-widest cursor-pointer active:scale-95"
         >
           Reintentar Carga
         </button>

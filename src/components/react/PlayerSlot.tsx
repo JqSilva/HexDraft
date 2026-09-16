@@ -35,18 +35,17 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
   if (compact) {
     return (
       <div
-        className={`w-16 h-16 bg-panel-warm border border-border-warm hover:border-purple-accent flex items-center justify-center rounded-sm transition-all duration-200 relative group cursor-default select-none ${isEnemy ? 'border-r-4 border-r-red-500' : 'border-l-4 border-l-cyan-500'
-          }`}
+        className="w-16 h-16 bg-panel-warm border border-border-warm hover:border-purple-accent flex items-center justify-center rounded-xl transition-all duration-200 relative group cursor-default select-none"
         title={`${player.displayName || player.gameName || (isEnemy ? "Enemigo" : "Invocador")} - ${position || "Sin rol"}`}
       >
         {/* Imagen del Campeón */}
-        <div className="w-full h-full bg-input-warm overflow-hidden rounded-sm relative">
+        <div className="w-full h-full bg-input-warm overflow-hidden rounded-xl relative">
           {hasChampion ? (
             <img
               src={`${IMG_BASE}${cid}.png`}
-              className="w-full h-full object-cover z-10 relative transition-opacity duration-300"
+              className="w-full h-full object-cover scale-[1.12] z-10 relative transition-opacity duration-300"
               style={{ opacity: isLocked ? 1 : 0.4 }}
-              alt="champion"
+              alt={`Campeón de ${player.displayName || player.gameName || (isEnemy ? "enemigo" : "tu equipo")}`}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-[#070709]/60 transition-all duration-300">
@@ -86,7 +85,7 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
               style={{
                 filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)'
               }}
-              alt="role"
+              alt={`Posición: ${position || "sin asignar"}`}
             />
           </div>
         )}
@@ -95,18 +94,17 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
   }
 
   return (
-    <div className={`h-20 bg-panel-warm border border-border-warm flex items-center px-3 rounded-sm transition-all duration-200 overflow-hidden relative group cursor-default ${isEnemy ? 'border-r-4 border-r-red-500 flex-row-reverse' : 'border-l-4 border-l-cyan-500'
-      }`}>
+    <div className="h-20 bg-panel-warm border border-border-warm flex items-center px-3 rounded-xl transition-all duration-200 overflow-hidden relative group cursor-default">
 
       {/* Imagen del Campeón */}
-      <div className="relative w-14 h-14 bg-input-warm border border-border-warm shrink-0 rounded-sm">
-        <div className="w-full h-full overflow-hidden rounded-sm relative">
+      <div className="relative w-14 h-14 bg-input-warm border border-border-warm shrink-0 rounded-lg overflow-hidden">
+        <div className="w-full h-full overflow-hidden rounded-lg relative">
           {hasChampion ? (
             <img
               src={`${IMG_BASE}${cid}.png`}
-              className="w-full h-full object-cover z-10 relative transition-opacity duration-300"
+              className="w-full h-full object-cover scale-[1.12] z-10 relative transition-opacity duration-300"
               style={{ opacity: isLocked ? 1 : 0.5 }}
-              alt="champion"
+              alt={`Campeón de ${player.displayName || player.gameName || (isEnemy ? "enemigo" : "tu equipo")}`}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-[#070709]/60 transition-all duration-300">
@@ -146,7 +144,7 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
               style={{
                 filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)'
               }}
-              alt="role"
+              alt={`Posición: ${position || "sin asignar"}`}
             />
           </div>
         )}
@@ -154,7 +152,7 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
 
       {/* Textos del Invocador */}
       <div className={`flex flex-col min-w-0 ${isEnemy ? 'mr-3 text-right' : 'ml-3'}`}>
-        <span className={`text-xs font-black uppercase tracking-wider truncate w-36 ${isEnemy ? 'text-red-400' : 'text-cyan-400'}`}>
+        <span className={`text-xs font-medium truncate w-36 ${isEnemy ? 'text-red-400' : 'text-purple-accent'}`}>
           {player.displayName || player.gameName || (isEnemy ? "Enemigo" : "Buscando...")}
         </span>
         <span className={`text-[10px] uppercase font-black italic tracking-wider truncate ${isLocked ? 'text-slate-200' : 'text-[#DAD9FF]'}`}>

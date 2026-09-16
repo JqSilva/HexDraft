@@ -59,20 +59,18 @@ export const UpdatePopup = () => {
       <div className="w-full max-w-md p-8 border border-purple-500/30 bg-[#0c0c10] shadow-[0_4px_30px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col items-center">
         
         {/* Adorno superior morado */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#9055ff]" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-purple-accent" />
 
         {/* Logo de HexDraft en el centro */}
         <div className="flex flex-col items-center gap-3 mb-6">
-          <div className="w-16 h-16 flex items-center justify-center rounded-lg shadow-[0_0_20px_rgba(144,85,255,0.25)] bg-[#07070a] p-1">
-            <img
-              src="/favicon.svg"
-              alt="HexDraft Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
+          <img
+            src="/favicon.svg"
+            alt="HexDraft Logo"
+            className="w-20 h-20 object-contain"
+          />
           <div className="text-center">
             <span className="text-xl font-black uppercase tracking-[0.25em] text-white">
-              Hex<span className="text-[#9055ff]">Draft</span>
+              Hex<span className="text-purple-accent">Draft</span>
             </span>
             <span className="block text-[8px] text-slate-400 uppercase tracking-widest font-bold mt-0.5">
               Análisis de Composición en Tiempo Real
@@ -91,7 +89,7 @@ export const UpdatePopup = () => {
               La base de datos local ha sido actualizada con éxito. Recargando la aplicación...
             </p>
           ) : downloading ? (
-            <p className="text-[11px] text-purple-400 uppercase tracking-wide font-bold leading-relaxed animate-pulse">
+            <p className="text-xs text-purple-accent tracking-wide font-medium leading-relaxed">
               {message}
             </p>
           ) : (
@@ -121,11 +119,11 @@ export const UpdatePopup = () => {
             <div className="flex flex-col gap-2.5">
               <div className="w-full bg-slate-950 border border-purple-500/20 h-3 rounded-none overflow-hidden relative">
                 <div 
-                  className="bg-[#9055ff] h-full transition-all duration-300 ease-out" 
+                  className="bg-purple-accent h-full transition-all duration-300 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] font-mono font-bold text-purple-400 uppercase">
+              <div className="flex justify-between text-[10px] font-mono font-semibold text-purple-accent">
                 <span>Instalando...</span>
                 <span>{progress}%</span>
               </div>
@@ -164,7 +162,7 @@ export const UpdatePopup = () => {
               </button>
               <button 
                 onClick={startUpdate}
-                className="flex-1 py-3 bg-[#1d1233] border border-purple-500/40 hover:border-purple-500 text-purple-300 hover:text-white text-[10px] uppercase tracking-widest font-black transition-all duration-200 rounded-none cursor-pointer shadow-[0_0_15px_rgba(144,85,255,0.1)]"
+                className="flex-1 min-h-11 py-3 bg-purple-accent/10 border border-purple-500/40 hover:border-purple-500 text-purple-300 hover:text-white text-sm font-medium transition-colors duration-200 rounded-lg cursor-pointer shadow-sm"
               >
                 Actualizar
               </button>

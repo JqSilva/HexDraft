@@ -69,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
             "3036", // Recuerdos de Lord Dominik (Penetración AD)
             "3157", // Reloj de Arena de Zhonya (Defensa/AP)
             "3026", // Ángel Guardián (Defensa/AD)
-            "6657", // Rookern Kaénico (Resistencia Mágica)
+            "2504", // Rookern Kaénico (Resistencia Mágica)
             "3156"  // Fauces de Malmortius (Resistencia Mágica/AD)
         ];
 

@@ -25,12 +25,12 @@ const ENEMY_WIN_COND_DETAILS: Record<string, { label: string; advice: string; co
     'poke_siege': {
         label: 'Desgaste y Asedio',
         advice: 'Inicia directo (hard engage). Evita desgaste pasivo bajo torre.',
-        color: 'text-cyan-400 border-cyan-500/15 bg-cyan-950/10'
+        color: 'text-purple-accent border-purple-accent/20 bg-purple-accent/10'
     },
     'dive_backline': {
         label: 'Foco a Retaguardia (Dive)',
         advice: 'Protege a los carries. Guarda CC para los asesinos cuando salten.',
-        color: 'text-purple-400 border-purple-500/15 bg-purple-950/10'
+        color: 'text-purple-accent border-purple-accent/20 bg-purple-accent/10'
     },
     'scaling': {
         label: 'Escalado Tardío',
@@ -103,7 +103,7 @@ export const CombatDirectivesPanel = memo(({
             label: 'Early Game Bully'
         },
         Mid: {
-            bg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+            bg: 'bg-slate-400/10 border-slate-400/20 text-slate-300',
             label: 'Mid Game Spike'
         },
         Late: {
@@ -115,13 +115,13 @@ export const CombatDirectivesPanel = memo(({
     const scalingStyle = scalingColors[scalingType] || scalingColors.Mid;
 
     return (
-        <div className={`p-5 md:p-6 bg-bg-warm/30 border border-border-warm/50 rounded-sm h-full tech-corners flex flex-col gap-4 ${
+        <div className={`p-5 md:p-6 bg-input-warm/20 border border-border-warm/50 rounded-xl shadow-sm h-full flex flex-col gap-4 ${
             hideTitle ? 'rounded-tl-none' : ''
         }`}>
             {!hideTitle && (
                 <div className="flex justify-between items-center shrink-0 border-b border-border-warm/25 pb-2.5">
                     <h4 className="text-xs md:text-sm text-slate-150 font-black uppercase tracking-[0.2em] italic">
-                        Directivas Tácticas
+                        Lectura de la partida
                     </h4>
                     <div className={`px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border rounded-sm ${scalingStyle.bg}`}>
                         {scalingStyle.label}
@@ -149,10 +149,10 @@ export const CombatDirectivesPanel = memo(({
                             <div className="flex items-center gap-2.5 max-w-[280px]">
                                 <span className="text-[9px] font-bold text-red-400/80 shrink-0">AD {myTeamAnalysis.damageProfile?.physicalPct ?? 50}%</span>
                                 <div className="h-1.5 flex-1 bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/15">
-                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.physicalPct ?? 50}%` }} className="bg-gradient-to-r from-red-600 to-orange-500 h-full" />
-                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.magicPct ?? 50}%` }} className="bg-gradient-to-r from-cyan-600 to-blue-500 h-full" />
+                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.physicalPct ?? 50}%` }} className="bg-amber-500/80 h-full" />
+                                    <div style={{ width: `${myTeamAnalysis.damageProfile?.magicPct ?? 50}%` }} className="bg-purple-accent/80 h-full" />
                                 </div>
-                                <span className="text-[9px] font-bold text-cyan-400/80 shrink-0">AP {myTeamAnalysis.damageProfile?.magicPct ?? 50}%</span>
+                                <span className="text-[9px] font-bold text-purple-accent/80 shrink-0">AP {myTeamAnalysis.damageProfile?.magicPct ?? 50}%</span>
                             </div>
                         </div>
                     </div>
@@ -188,9 +188,9 @@ export const CombatDirectivesPanel = memo(({
 
                 {/* 3. SINERGIAS FUERTES */}
                 {synergies && synergies.length > 0 && (
-                    <div className="flex flex-col gap-2 border-l-2 border-cyan-500/50 pl-3">
-                        <div className="flex items-center gap-2 text-cyan-400">
-                            <svg className="w-3.5 h-3.5 text-cyan-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <div className="flex flex-col gap-2 border-l-2 border-purple-accent/50 pl-3">
+                        <div className="flex items-center gap-2 text-purple-accent">
+                            <svg className="w-3.5 h-3.5 text-purple-accent/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                             <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest">
@@ -202,7 +202,7 @@ export const CombatDirectivesPanel = memo(({
                                 <div key={`synergy-${idx}`} className="relative group select-none cursor-help" title={`${s.name} (Sinergia)`}>
                                     <img 
                                         src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${getChampionCdnName(s.name)}.png`}
-                                        className="w-[34px] h-[34px] rounded-sm border border-cyan-950/70 hover:border-cyan-400 transition-all duration-150 cursor-pointer"
+                                        className="w-[34px] h-[34px] rounded-lg border border-purple-accent/20 hover:border-purple-accent transition-colors duration-150 cursor-pointer"
                                         alt={s.name}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src = "/favicon.svg";
@@ -217,7 +217,7 @@ export const CombatDirectivesPanel = memo(({
                 {/* 4. VENTANA DE PODER */}
                 <div className="flex flex-col gap-2.5 border-l-2 border-purple-accent/50 pl-3">
                     <div className="flex items-center gap-2 text-purple-accent">
-                        <svg className="w-3.5 h-3.5 text-purple-400/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="w-3.5 h-3.5 text-purple-accent/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="text-purple-accent font-black tracking-widest uppercase text-[10px] md:text-[11px]">
@@ -237,7 +237,7 @@ export const CombatDirectivesPanel = memo(({
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 .364l-.707 .707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                             </svg>
                             <span className="text-amber-500/90 font-black tracking-widest uppercase text-[10px] md:text-[11px]">
-                                Consejo Táctico
+                                Consejo de la partida
                             </span>
                         </div>
                         <p className="text-[12.5px] md:text-[13px] text-slate-200 leading-relaxed font-semibold">
@@ -290,7 +290,7 @@ export const MatchupAnalysisPanel = memo(({
     const hasContent = synergies.length > 0 || matchups.threats.length > 0 || matchups.advantages.length > 0;
 
     return (
-        <div className="p-3.5 bg-bg-warm/30 border border-border-warm/50 rounded-sm h-full tech-corners flex flex-col gap-2.5">
+        <div className="p-3.5 bg-input-warm/20 border border-border-warm/50 rounded-xl shadow-sm h-full flex flex-col gap-2.5">
             <h4 className="text-[10px] text-slate-200 font-black uppercase tracking-[0.3em] italic shrink-0">
                 Enfrentamientos
             </h4>
@@ -343,14 +343,14 @@ export const MatchupAnalysisPanel = memo(({
                 {/* VENTAJAS */}
                 {matchups.advantages.length > 0 && (
                     <div className="space-y-1.5">
-                        <span className="text-[8px] text-cyan-400 font-black uppercase tracking-widest block">
+                        <span className="text-xs text-purple-accent font-medium tracking-wide block">
                             Ventajas
                         </span>
                         {matchups.advantages.slice(0, 1).map((adv, idx) => (
-                            <div key={idx} className="pl-2.5 border-l-2 border-cyan-500/30 space-y-1">
+                            <div key={idx} className="pl-2.5 border-l-2 border-purple-accent/30 space-y-1">
                                 <div className="flex justify-between items-center">
                                     <span className="text-[10px] font-black text-white">{adv.name}</span>
-                                    <span className="text-[8px] font-mono font-bold text-cyan-400">
+                                    <span className="text-[8px] font-mono font-bold text-purple-accent">
                                         WR: {adv.winrate}
                                     </span>
                                 </div>

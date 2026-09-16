@@ -1,5 +1,5 @@
 // src/components/react/PlayerCard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { getChampionCdnName } from '../../lib/championMapper.js';
 import { hydrateAsset } from '../../lib/engine/core/hydrator.js';
 import { getNameFromId } from '../../lib/engine/core/constants.js';
@@ -220,16 +220,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   }
 
   const displayTags = filterTagsByMode(computedTagItems, maxTags ?? mode);
-  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-
-  useEffect(() => {
-    setImageLoaded(false);
-  }, [skinLoadingUrl]);
+  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null);
+  const imageLoaded = loadedImageUrl === skinLoadingUrl;
 
   return (
     <div
       key={p.puuid || `${displayName}-${index}`}
-      className="bg-[#0b0c10] overflow-hidden border border-white/10 py-3.5 px-3 rounded-lg w-full max-w-[280px] flex min-h-[380px] max-h-[460px] flex-col justify-between items-center relative select-none shadow-2xl group"
+      className="bg-panel-warm overflow-hidden border border-border-warm py-3.5 px-3 rounded-xl w-full max-w-[280px] flex min-h-[380px] max-h-[460px] flex-col justify-between items-center relative select-none shadow-lg group"
     >
       {/* 1. FONDO SPLASH ART CON GRADIENTES EXACTOS */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#090a0f]">
@@ -244,10 +241,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <img
           src={skinLoadingUrl}
           alt={displayChampName}
-          className={`h-full w-full object-cover object-top transition-opacity duration-300 ${
-            imageLoaded ? 'opacity-85' : 'opacity-0'
+          className={`h-full w-full object-cover scale-[1.06] object-[center_18%] transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-95' : 'opacity-0'
           }`}
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => setLoadedImageUrl(skinLoadingUrl)}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             if (!target.dataset.triedBase && target.src !== baseLoadingUrl) {
@@ -273,7 +270,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           <div className="flex gap-1.5 items-center font-normal text-slate-100 text-[11.5px]">
             {champStat ? (
               <>
-                {champGames} games - <span className="text-purple-400 font-bold">{champWr}% WR</span>
+                {champGames} games - <span className="text-purple-accent font-semibold">{champWr}% WR</span>
               </>
             ) : (
               <span className="text-slate-400 font-normal">Sin partidas SoloQ</span>
@@ -309,7 +306,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           <hr className="absolute left-0 w-full border-t border-white/10 pointer-events-none z-0" />
           <div className="flex gap-1.5 items-center justify-center z-10">
             <div
-              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700 flex items-center justify-center shadow-md"
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-input-warm border border-border-warm flex items-center justify-center shadow-sm"
               title={spell1?.name || 'Hechizo 1'}
             >
               {spell1?.icon ? (
@@ -319,7 +316,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               )}
             </div>
             <div
-              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700 flex items-center justify-center shadow-md"
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-input-warm border border-border-warm flex items-center justify-center shadow-sm"
               title={spell2?.name || 'Hechizo 2'}
             >
               {spell2?.icon ? (
@@ -332,20 +329,20 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
           {/* Posición / Línea central */}
           <div
-            className="w-[32px] h-[32px] rounded-md bg-[#12131a]/90  flex items-center justify-center p-1 shadow-md z-10"
+            className="w-[32px] h-[32px] rounded-lg bg-input-warm border border-border-warm flex items-center justify-center shadow-sm z-10"
             title={`Línea: ${roleName}`}
           >
             <img
               src={roleIconUrl}
               alt={roleName}
-              className="w-8 h-8 object-contain brightness-125 opacity-90"
+              className="w-full h-full object-contain brightness-125 opacity-95"
             />
           </div>
 
           {/* Runas (Keystone + SubStyle) */}
           <div className="flex items-center justify-center gap-1.5 z-10">
             <div
-              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-amber-500/40 p-0.5 flex items-center justify-center shadow-md"
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-input-warm border border-amber-500/40 p-0.5 flex items-center justify-center shadow-sm"
               title={keystoneAsset?.name || 'Runa Principal'}
             >
               {keystoneAsset?.icon ? (
@@ -355,7 +352,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               )}
             </div>
             <div
-              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-black/80 border border-slate-700/80 p-0.5 flex items-center justify-center shadow-md"
+              className="w-[26px] h-[26px] rounded-full overflow-hidden bg-input-warm border border-border-warm p-0.5 flex items-center justify-center shadow-sm"
               title={`Árbol Secundario: ${secondaryStyleId || ''}`}
             >
               {secondaryStyleIconUrl ? (

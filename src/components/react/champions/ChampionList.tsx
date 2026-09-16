@@ -26,25 +26,24 @@ export const ChampionList = ({
   timeAgoText
 }: ChampionListProps) => {
   return (
-    <div className="w-full flex flex-col p-4 md:p-6 animate-in fade-in duration-300">
+    <div className="w-full flex flex-col p-5 md:p-8 animate-in fade-in duration-300">
       
-      {/* Cabecera Táctica (Ocupa todo el ancho) */}
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
         <div>
-          <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-500 block mb-1">
-            FILTRO GLOBAL DE META // ANÁLISIS DE DESEMPEÑO
+          <span className="text-xs tracking-wide font-medium text-slate-500 block mb-1">
+            Datos de rendimiento
           </span>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-black text-white uppercase tracking-tight">
-              Estadísticas de <span className="text-purple-accent">Campeones</span>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">
+              Estadísticas de <span className="text-purple-accent">campeones</span>
             </h1>
           </div>
         </div>
       
         {lastUpdated && lastUpdated !== '-' && (
-          <div className="flex flex-row gap-4 text-[12px] text-slate-400 uppercase tracking-widest font-mono select-none">
-            <div>META: <span className="text-[#9055ff] font-bold text-right">Diamante  </span></div>
-            <div>ACTUALIZADO: <span className="text-[#9055ff] font-bold">{timeAgoText}</span></div>
+          <div className="flex flex-row gap-4 text-sm text-slate-400 font-mono select-none">
+            <div>Meta <span className="text-purple-accent font-semibold text-right">Diamante</span></div>
+            <div>Actualizado <span className="text-purple-accent font-semibold">{timeAgoText}</span></div>
           </div>
         )}
       </header>
@@ -64,9 +63,9 @@ export const ChampionList = ({
                 <button
                   key={lane}
                   onClick={() => setSelectedLane(lane)}
-                  className={`flex items-center gap-2 px-4 py-2 border rounded-sm font-black text-xs tracking-widest uppercase transition-all duration-200 cursor-pointer active:scale-95
+                  className={`flex items-center gap-2 min-h-11 px-4 py-2 border rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer active:scale-95
                     ${isActive 
-                      ? "bg-purple-accent/20 border-purple-accent text-white shadow-[0_0_15px_rgba(144,85,255,0.15)]" 
+                      ? "bg-purple-accent/10 border-purple-accent text-white"
                       : "bg-panel-warm border-border-warm text-slate-400 hover:text-slate-200 hover:border-border-warm-hover"
                     }`}
                 >
@@ -92,15 +91,15 @@ export const ChampionList = ({
           <div className="relative w-full md:w-72">
             <input
               type="text"
-              placeholder="BUSCAR CAMPEÓN..."
+              placeholder="Buscar campeón…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#060608] border border-border-warm rounded-sm px-4 py-2 text-xs font-black tracking-wider text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-accent focus:ring-1 focus:ring-purple-accent/30 transition-all duration-300 uppercase"
+              className="w-full bg-input-warm border border-border-warm rounded-lg px-4 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-accent focus:ring-2 focus:ring-purple-accent/30 transition-colors duration-200"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-wider"
+                className="absolute right-3 top-1/2 -translate-y-1/2 min-h-11 px-2 text-slate-400 hover:text-white text-sm font-medium"
               >
                 Limpiar
               </button>
@@ -109,11 +108,11 @@ export const ChampionList = ({
         </div>
 
         {/* Tabla de Estadísticas */}
-        <div className="bg-panel-warm border border-border-warm rounded-sm tech-corners shadow-xl overflow-hidden flex flex-col">
+        <div className="bg-panel-warm border border-border-warm rounded-xl shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse select-none">
               <thead>
-                <tr className="border-b border-border-warm text-slate-300 font-extrabold uppercase text-[10px] tracking-wider bg-black/50">
+                <tr className="border-b border-border-warm text-slate-300 font-semibold text-xs tracking-wide bg-black/20">
                   <th className="py-3 px-4 text-center w-14">#</th>
                   <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('name')}>
                     Campeón {renderSortIndicator('name')}
@@ -163,7 +162,7 @@ export const ChampionList = ({
                               }}
                               alt={champ.name}
                             />
-                            <span className="font-extrabold text-xs text-slate-200 group-hover:text-white transition-colors uppercase tracking-wide">
+                            <span className="font-semibold text-sm text-slate-200 group-hover:text-white transition-colors">
                               {champ.name}
                             </span>
                           </div>
@@ -179,7 +178,7 @@ export const ChampionList = ({
                                 style={{ filter: 'hue-rotate(200deg) saturate(180%) brightness(1.4)' }}
                                 alt={champ.lane}
                               />
-                              <span className="text-[11px] font-bold uppercase text-slate-300 tracking-wider">
+                              <span className="text-sm font-medium text-slate-300">
                                 {posLabels[champ.lane.toUpperCase()]}
                               </span>
                               <span className="text-[9px] font-mono text-slate-550">

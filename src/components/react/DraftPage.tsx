@@ -829,7 +829,9 @@ export const DraftPage = () => {
                                 liveTheirTeamIds = liveData.theirTeam.map((p: any) => p.championId).filter((id: number) => id > 0);
                             }
                         }
-                    } catch (_e) {}
+                    } catch (error) {
+                        console.warn('No se pudo restaurar el estado vivo del draft:', error);
+                    }
 
                     // 2. Restaurar equipos y rol de localStorage si están vacíos
                     let restoredRole = myRole || 'top';
@@ -987,17 +989,17 @@ export const DraftPage = () => {
     }, [inDraft, view, currentBuild]);
 
     return (
-        <div className={`h-full w-full max-w-[1550px] mx-auto px-4 flex flex-col justify-center overflow-hidden relative min-h-0 ${isCompact ? 'py-1.5' : 'py-3'}`}>
+        <div className={`h-full w-full max-w-[1440px] mx-auto px-4 md:px-6 flex flex-col justify-center overflow-hidden relative min-h-0 ${isCompact ? 'py-1.5' : 'py-4'}`}>
             {/* TOAST DE CONEXIÓN */}
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-sm shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 duration-350 select-none
+                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-xl shadow-lg animate-in slide-in-from-bottom-5 duration-250 select-none
                     ${toast.type === 'success'
                         ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40'
                         : 'bg-red-950/85 border-red-500/40 text-red-200 shadow-red-950/40'
                     }`}
                 >
-                    <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
+                    <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-red-500'}`} />
+                    <span className="text-sm font-medium">{toast.message}</span>
                 </div>
             )}
 
@@ -1023,28 +1025,28 @@ export const DraftPage = () => {
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
                     }`}>
-                    <div className={`bg-panel-warm border border-border-warm rounded-sm h-full min-h-0 relative overflow-hidden flex flex-col tech-corners ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
+                    <div className={`bg-panel-warm border border-border-warm rounded-xl h-full min-h-0 relative overflow-hidden flex flex-col ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
                         }`}>
 
                         {/* ALERTA DE AUTO-PICK SI HUBO ERROR O NO SE DETECTÓ EL ROL */}
                         {autoPickAlert.active && (
-                            <div className="w-full bg-[#1c0808] border-2 border-red-500/80 text-red-100 p-3.5 rounded-sm shadow-2xl flex items-center justify-between gap-4 mb-3 animate-pulse shrink-0">
+                            <div className="w-full bg-red-950/30 border border-red-500/50 text-red-100 p-3.5 rounded-lg flex items-center justify-between gap-4 mb-3 shrink-0">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-xl">[ERROR]</span>
+                                    <span className="text-sm font-semibold text-red-300">Atención</span>
                                     <div>
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-red-400">
+                                        <h4 className="text-sm font-semibold text-red-300">
                                             {autoPickAlert.message}
                                         </h4>
-                                        <p className="text-[10.5px] font-bold text-red-200 leading-tight">
+                                        <p className="text-sm text-red-100 leading-tight">
                                             {autoPickAlert.submessage}
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setAutoPickAlert({ active: false, message: '' })}
-                                    className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 border border-red-400 text-red-200 text-[10px] font-black uppercase tracking-wider rounded-sm cursor-pointer"
+                                    className="min-h-11 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-400/60 text-red-100 text-sm font-medium rounded-lg cursor-pointer"
                                 >
-                                    Entendido ✕
+                                    Entendido
                                 </button>
                             </div>
                         )}
@@ -1053,19 +1055,25 @@ export const DraftPage = () => {
                         <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div>
-                                    <h2 className="text-lg md:text-xl font-black uppercase tracking-[0.3em] text-white italic leading-tight">
+                                    <h2 className="text-xl md:text-2xl font-semibold text-white leading-tight">
                                         {isBuildOrReasonsView && currentBuild ? (
-                                            <>Análisis <span className="text-[#9055ff]">Táctico:</span></>
+                                            <>Análisis <span className="text-purple-accent">de build</span></>
                                         ) : (
                                             view === 'bans' ? (
-                                                <><span className="text-[#9055ff]">Bans</span> Recomendados</>
+                                                <>Bans <span className="text-purple-accent">recomendados</span></>
                                             ) : (
-                                                <>Hex<span className="text-[#9055ff]">Draft</span></>
+                                                <>Hex<span className="text-purple-accent">Draft</span></>
                                             )
                                         )}
                                     </h2>
-                                    <p className="text-[8px] md:text-[9px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-0.5">
+                                    <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
                                         {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
+                                        {gamePhase !== 'Offline' && (
+                                            <>
+                                                <span className="text-slate-600" aria-hidden="true">·</span>
+                                                <span className="text-slate-300">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
+                                            </>
+                                        )}
                                     </p>
                                 </div>
                             </div>
@@ -1073,14 +1081,16 @@ export const DraftPage = () => {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => setManualOverrideLoadingScreen(!showLoadingScreenPanel)}
-                                    className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none border-purple-500/40 bg-black/70 text-purple-300 hover:bg-[#12101e] transition-colors"
+                                    aria-label={showLoadingScreenPanel ? 'Ver análisis del draft' : 'Ver pantalla de carga'}
+                                    title={showLoadingScreenPanel ? 'Ver análisis del draft' : 'Ver pantalla de carga'}
+                                    className="btn-quiet min-h-11 min-w-11 px-3 py-2 select-none text-slate-300 hover:text-white transition-colors"
                                 >
-                                    {showLoadingScreenPanel ? 'VER VISTA IN-GAME' : 'PANTALLA DE CARGA'}
+                                    <svg className="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="13" rx="2" />
+                                        <path strokeLinecap="round" d="M8 21h8M12 17v4" />
+                                    </svg>
+                                    <span className="sr-only">{showLoadingScreenPanel ? 'Ver análisis del draft' : 'Ver pantalla de carga'}</span>
                                 </button>
-                                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 border rounded-sm select-none ${isPlaying ? 'text-green-500 border-green-950/30 bg-green-950/10' : 'text-[#9055ff] border-[#9055ff]/20 bg-[#9055ff]/10'
-                                    }`}>
-                                    Fase: <span className="text-white">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
-                                </div>
                             </div>
                         </header>
                         <div className={`relative flex-1 min-h-0 ${isBuildOrReasonsView && (currentBuild || myId > 0) ? 'overflow-hidden pr-1' : 'overflow-y-auto scrollbar-thin pr-1'}`}>
@@ -1097,33 +1107,37 @@ export const DraftPage = () => {
                                     <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0 ">
                                         {/* Columna 1: Tarjeta de Campeón (Izquierda) */}
                                         {currentBuild && !isCompact && (
-                                            <div className="w-[250px] shrink-0 flex flex-col gap-4 select-none text-left rounded-tl-none pt-3 pr-4.5 pl-4.5 relative h-full min-h-0">
-                                                {/* Badges de Clase y Daño */}
-                                                <div className="text-center md:text-center">
-                                                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2 select-all">
-                                                        {champData?.name || currentBuild.name}
-                                                    </h2>
-                                                    <div className="flex flex-wrap items-center justify-center gap-2 mb-1.5">
-                                                        <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-xs font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-sm">
-                                                            {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
-                                                        </span>
-                                                        <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-xs font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-sm">
-                                                            {champData?.damageType || "Adaptive"}
-                                                        </span>
+                                            <div className="w-[250px] shrink-0 flex flex-col min-h-0 select-none text-left">
+                                                {/* La identidad del campeón comparte el mismo lenguaje de pestañas que el resto del análisis. */}
+                                                <div className="flex items-end h-[52px] shrink-0 -mb-px">
+                                                    <div className="h-[52px] w-full min-w-0 bg-panel-warm border border-border-warm border-b-transparent rounded-t-lg z-20 flex items-center justify-between gap-3 px-4">
+                                                        <h2 className="min-w-0 text-[17px] font-black text-white uppercase tracking-[0.14em] leading-none truncate select-all">
+                                                            {champData?.name || currentBuild.name}
+                                                        </h2>
+                                                        <div className="shrink-0 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] leading-none">
+                                                            <span className="text-slate-500">
+                                                                {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
+                                                            </span>
+                                                            <span className="text-slate-700" aria-hidden="true">/</span>
+                                                            <span className="text-purple-accent">{champData?.damageType || "Adaptive"}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                {/* Imagen Vertical del Campeón */}
-                                                <div className="flex-1 min-h-0 w-full rounded-sm overflow-hidden bg-black shrink-0 relative">
+
+                                                {/* La ilustración ocupa toda la card para que el campeón sea el elemento protagonista. */}
+                                                <div className="flex-1 min-h-0 w-full overflow-hidden bg-bg-warm/30 shrink-0 relative border border-border-warm/60 rounded-sm rounded-tl-none">
                                                     <img
                                                         src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`}
                                                         alt={currentBuild.name}
-                                                        className="w-full h-full object-cover scale-110 object-top"
+                                                        className="w-full h-full object-cover scale-[1.07] object-[center_18%]"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).src = "/favicon.svg";
                                                         }}
                                                     />
-                                                    {/* Gradient Overlay y Rol/Score en la zona inferior */}
-                                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-3 px-3 flex items-center justify-center gap-3 z-10 select-none">
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-[#07080c]/95 via-[#07080c]/15 to-transparent pointer-events-none" />
+
+                                                    {/* Rol y score integrados en la card, sin añadir una segunda cabecera flotante. */}
+                                                    <div className="absolute inset-x-0 bottom-0 pt-12 pb-3 px-3 flex items-center justify-center gap-3 z-10 select-none">
                                                         <div className="flex items-center gap-1.5">
                                                             <img
                                                                 src={`${POS_BASE}${posMapping[myRole.toUpperCase()]}`}
@@ -1172,7 +1186,7 @@ export const DraftPage = () => {
                                                                 <img
                                                                     src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${myId}.png`}
                                                                     alt={currentBuild.name}
-                                                                    className="w-full h-full object-cover scale-115"
+                                                                    className="w-full h-full object-cover scale-[1.15]"
                                                                     onError={(e) => {
                                                                         (e.target as HTMLImageElement).src = "/favicon.svg";
                                                                     }}
@@ -1182,13 +1196,12 @@ export const DraftPage = () => {
                                                                 <h2 className="text-base md:text-xl lg:text-xl font-black text-white uppercase tracking-wider leading-none mb-1.5 truncate max-w-[140px] md:max-w-[240px] lg:max-w-none">
                                                                     {currentBuild.name}
                                                                 </h2>
-                                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                                    <span className="inline-block bg-purple-accent/15 border border-purple-accent/30 text-purple-accent text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
+                                                                <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] leading-none">
+                                                                    <span className="text-slate-500">
                                                                         {getFriendlyRoleName(champData?.class || "CAMPEÓN").toUpperCase()}
                                                                     </span>
-                                                                    <span className="inline-block bg-[#0f0f13] border border-border-warm text-slate-300 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm">
-                                                                        {champData?.damageType || "Adaptive"}
-                                                                    </span>
+                                                                    <span className="text-slate-700" aria-hidden="true">/</span>
+                                                                    <span className="text-purple-accent">{champData?.damageType || "Adaptive"}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1210,7 +1223,7 @@ export const DraftPage = () => {
 
                                                             <div className="flex items-center gap-1.5 bg-[#0f0f13]/60 border border-border-warm px-2.5 py-1 rounded-sm">
                                                                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">SCORE:</span>
-                                                                <span className="text-xs font-mono font-black text-[#9055ff]">
+                                                                <span className="text-xs font-mono font-semibold text-purple-accent-hover">
                                                                     {championScore !== undefined ? championScore.toFixed(1) : '9.5'}
                                                                 </span>
                                                             </div>
@@ -1234,12 +1247,12 @@ export const DraftPage = () => {
                                             {/* Cabecera / Pestaña Simulada para Alineación Estética */}
                                             <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
                                                 <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
-                                                    <span className={`bg-[#12131a] border border-border-warm/50 border-b-transparent tech-corners-sup rounded-t-sm z-20 font-extrabold uppercase text-purple-accent select-none h-[52px] flex items-center justify-center
+                                                    <span className={`bg-panel-warm border border-border-warm border-b-transparent rounded-t-lg z-20 font-semibold text-purple-accent select-none h-[52px] flex items-center justify-center
                                                         ${isCompact
                                                             ? 'px-3 tracking-[0.1em] text-[9.5px]'
                                                             : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
                                                         }`}>
-                                                        {isCompact ? 'Directivas' : 'Directivas Tácticas'}
+                                                        {isCompact ? 'Lectura' : 'Lectura de la partida'}
                                                     </span>
                                                 </div>
                                                 {/* Badge de Escalado Táctico alineado en la fila superior */}
@@ -1250,7 +1263,7 @@ export const DraftPage = () => {
                                                     }
                                                     ${tacticalDirectives.scalingType === 'Early' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                                                         tacticalDirectives.scalingType === 'Late' ? 'bg-purple-accent/10 border-purple-accent/20 text-purple-accent' :
-                                                            'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
+                                                            'bg-slate-400/10 border-slate-400/20 text-slate-300'
                                                     }`}>
                                                     {tacticalDirectives.scalingType === 'Early' ? 'Early Game Bully' :
                                                         tacticalDirectives.scalingType === 'Late' ? 'Late Game Wincon' :
@@ -1311,15 +1324,15 @@ export const DraftPage = () => {
                         {/* MODAL DE SELECCIÓN MANUAL DE ROL */}
                         {showRoleModal && inDraft && (
                             <div className="fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center p-4 backdrop-blur-none animate-in fade-in duration-200">
-                                <div className="bg-[#0b0b0f] border border-purple-500/50 rounded-sm p-6 max-w-sm w-full text-slate-200 shadow-2xl relative overflow-hidden flex flex-col gap-5 tech-corners">
+                                <div className="bg-panel-warm border border-border-warm rounded-xl p-6 max-w-sm w-full text-slate-200 shadow-lg relative overflow-hidden flex flex-col gap-5">
                                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-purple-accent" />
 
                                     <div>
                                         <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
-                                            <span className="text-purple-accent font-mono">[AVISO]</span> Error al detectar Línea
+                                            <span className="text-purple-accent font-mono">Selección manual</span>
                                         </h3>
                                         <p className="text-xs text-slate-400 font-bold uppercase tracking-wider leading-relaxed mt-2">
-                                            Porfavor selecciona tu carril:
+                                            Por favor selecciona tu carril:
                                         </p>
                                     </div>
 
@@ -1332,7 +1345,7 @@ export const DraftPage = () => {
                                                     type="button"
                                                     onClick={() => setSelectedRoleKey(roleKey)}
                                                     className={`w-full py-2.5 px-4 text-xs font-mono font-black uppercase tracking-widest rounded-sm border transition-all duration-200 flex items-center justify-between cursor-pointer select-none ${isSelected
-                                                            ? 'bg-purple-accent/20 border-purple-accent text-white shadow-[0_0_12px_rgba(144,85,255,0.2)]'
+                                                            ? 'bg-purple-accent/20 border-purple-accent text-white shadow-sm'
                                                             : 'bg-[#111116] border-border-warm text-slate-400 hover:text-white hover:border-slate-700'
                                                         }`}
                                                 >

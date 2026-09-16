@@ -273,7 +273,7 @@ export const ChampionDetail = ({
       </div>
 
       {/* Cabecera Premium */}
-      <div className="relative border border-border-warm rounded-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 tech-corners shadow-2xl min-h-[160px]">
+      <div className="relative border border-border-warm rounded-xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 shadow-sm min-h-[160px]">
         {/* Fondo Splash Art Blurred */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none scale-105"
@@ -388,7 +388,7 @@ export const ChampionDetail = ({
                       onClick={() => setActiveBuildIdx(idx)}
                       className={`flex items-center gap-4 px-4 py-2.5 border rounded-sm transition-all duration-200 cursor-pointer active:scale-98 text-left min-w-[210px] max-w-[260px] flex-1
                         ${isActive 
-                          ? "bg-purple-accent/10 border-purple-accent text-white shadow-[0_0_15px_rgba(144,85,255,0.1)]" 
+                          ? "bg-purple-accent/10 border-purple-accent text-white shadow-sm"
                           : "bg-[#0c0c0f]/80 border-border-warm hover:border-slate-800 text-slate-400 hover:text-slate-300"
                         }`}
                     >
@@ -422,7 +422,7 @@ export const ChampionDetail = ({
 
             {/* Dashboard Unificado */}
             {activeBuild ? (
-              <div className="bg-[#0b0b0f] border border-border-warm rounded-sm p-6 tech-corners shadow-2xl grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
+              <div className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
                 
                 {/* Sección 1: Runas (Izquierda) */}
                 <div className="xl:col-span-4 flex flex-row gap-16 items-start pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-6 justify-center">
@@ -498,20 +498,21 @@ export const ChampionDetail = ({
                     onClick={async () => {
                       try {
                         const name = champ.name;
+                        const runeConfig = activeBuild.runes as Build['runes'] & { primaryStyle?: number; secondaryStyle?: number };
                         const runePayload = {
-                          name: `HexDraft: ${name}`,
-                          primaryStyleId: activeBuild.runes.primaryStyleId,
-                          subStyleId: activeBuild.runes.subStyleId,
+                          name: `HexDraft - ${name}`,
+                          primaryStyleId: runeConfig.primaryStyle ?? runeConfig.primaryStyleId,
+                          subStyleId: runeConfig.secondaryStyle ?? runeConfig.subStyleId,
                           selectedPerkIds: [
-                            ...activeBuild.runes.selections,
-                            ...(activeBuild.runes.shards || [])
+                            ...(runeConfig.selections || []).map((r: any) => Number(r?.id || r)),
+                            ...(runeConfig.shards || []).map((s: any) => Number(s?.id || s))
                           ]
                         };
 
                         const spell1 = activeBuild.summoners?.[0] || 4;
                         const spell2 = activeBuild.summoners?.[1] || 12;
 
-                        await Promise.all([
+                        const responses = await Promise.all([
                           fetch('/api/set-runes', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -527,6 +528,7 @@ export const ChampionDetail = ({
                                 starter: activeBuild.items.starter,
                                 boots: activeBuild.items.boots,
                                 core: activeBuild.items.core,
+                                buildOrder: activeBuild.items.buildOrder,
                                 paths: activeBuild.items.paths
                               },
                               skillOrder: fallbackOrder
@@ -538,13 +540,17 @@ export const ChampionDetail = ({
                             body: JSON.stringify({ spell1Id: spell1, spell2Id: spell2 })
                           })
                         ]);
+                        const failedResponse = responses.find(response => !response.ok);
+                        if (failedResponse) {
+                          throw new Error('Importación rechazada por LCU/API (HTTP ' + failedResponse.status + ')');
+                        }
                         alert(`¡Playstyle "${activeBuild.build_name}" (Runas + Items) importados con éxito!`);
                       } catch (err) {
                         console.error("Error importando playstyle:", err);
                         alert("Error al intentar importar. Abre el cliente de League of Legends.");
                       }
                     }}
-                    className="w-full py-2 bg-purple-accent/20 border border-purple-accent text-purple-200 hover:bg-purple-accent hover:text-white transition-all text-xs font-black uppercase tracking-widest rounded-sm cursor-pointer select-none shadow-[0_0_10px_rgba(144,85,255,0.2)] active:scale-98"
+                    className="btn-quiet w-full min-h-11 py-2 text-white hover:text-white transition-colors text-sm font-medium cursor-pointer select-none active:scale-98"
                   >
                     Importar Build Completa
                   </button>
@@ -661,13 +667,13 @@ export const ChampionDetail = ({
               
               {/* Evolución de Habilidades */}
               <div className="lg:col-span-8 flex flex-col gap-6">
-                <div className="bg-panel-warm border border-border-warm rounded-sm p-5 tech-corners shadow-xl">
+                <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-sm text-cyan-400 font-black uppercase tracking-[0.3em] italic">
+                    <h3 className="text-sm text-purple-accent font-medium tracking-wide">
                       Evolución de Habilidades
                     </h3>
                     {tacticalLoading && (
-                      <span className="text-[10px] font-black uppercase text-cyan-400 tracking-widest animate-pulse">
+                      <span className="text-xs font-medium text-purple-accent tracking-wide">
                         Actualizando de OP.GG...
                       </span>
                     )}
@@ -675,7 +681,7 @@ export const ChampionDetail = ({
 
                   {tacticalLoading ? (
                     <div className="w-full py-6 flex flex-col items-center justify-center gap-3">
-                      <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-5 h-5 border-2 border-purple-accent/60 border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-xs uppercase tracking-widest font-black text-slate-500">Extrayendo datos de habilidades en tiempo real...</span>
                     </div>
                   ) : tacticalData?.skills ? (
@@ -688,7 +694,7 @@ export const ChampionDetail = ({
                             <span className="text-[10px] font-bold text-slate-500 font-mono">{lvl}</span>
                             <div className={`w-full aspect-square border flex items-center justify-center font-black text-xs md:text-sm rounded-sm transition-all
                               ${isUlt
-                                ? 'bg-purple-accent/15 border-purple-accent text-purple-accent shadow-[0_0_8px_rgba(144,85,255,0.15)]'
+                                ? 'bg-purple-accent/15 border-purple-accent text-purple-accent shadow-sm'
                                 : 'bg-input-warm border-border-warm text-slate-300 hover:border-slate-700'}
                             `}>
                               {skill}
@@ -709,7 +715,7 @@ export const ChampionDetail = ({
 
               {/* Composición de Daño */}
               <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="bg-panel-warm border border-border-warm rounded-sm p-5 tech-corners shadow-xl select-none">
+                <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm select-none">
                   <h3 className="text-sm text-purple-accent font-black uppercase tracking-[0.3em] italic mb-6">
                     Composición de Daño
                   </h3>
@@ -724,21 +730,21 @@ export const ChampionDetail = ({
                     <div className="w-full bg-[#15151a] h-2.5 rounded-full overflow-hidden border border-[#22222b] flex">
                       {physicalDamage > 0 && (
                         <div 
-                          className="bg-orange-500 h-full rounded-l-full transition-all duration-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" 
+                          className="bg-amber-500/80 h-full rounded-l-full transition-all duration-300"
                           style={{ width: `${physicalDamage}%` }}
                           title={`Físico: ${physicalDamage}%`}
                         />
                       )}
                       {magicDamage > 0 && (
                         <div 
-                          className="bg-cyan-500 h-full transition-all duration-500 shadow-[0_0_8px_rgba(6,182,212,0.4)]" 
+                          className="bg-purple-accent h-full transition-all duration-300"
                           style={{ width: `${magicDamage}%` }}
                           title={`Mágico: ${magicDamage}%`}
                         />
                       )}
                       {trueDamage > 0 && (
                         <div 
-                          className="bg-white h-full rounded-r-full transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.4)]" 
+                          className="bg-purple-accent/80 h-full rounded-r-full transition-all duration-300"
                           style={{ width: `${trueDamage}%` }}
                           title={`Verdadero: ${trueDamage}%`}
                         />
@@ -747,7 +753,7 @@ export const ChampionDetail = ({
 
                     <div className="flex justify-between font-mono text-xs text-slate-500 mt-1">
                       <span className="text-orange-400 font-bold">{physicalDamage}% physical</span>
-                      <span className="text-cyan-400 font-bold">{magicDamage}% magic</span>
+                      <span className="text-purple-accent font-medium">{magicDamage}% magic</span>
                       {trueDamage > 0 && <span className="text-white font-bold">{trueDamage}% true</span>}
                     </div>
                   </div>
@@ -760,7 +766,7 @@ export const ChampionDetail = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               
               {/* Counters */}
-              <div className="bg-panel-warm border border-border-warm rounded-sm p-5 tech-corners shadow-xl">
+              <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
                 <h3 className="text-sm text-red-500 font-black uppercase tracking-[0.3em] italic mb-6">
                   Fuerte Contra {champ.name} (Counters)
                 </h3>
@@ -815,8 +821,8 @@ export const ChampionDetail = ({
               </div>
 
               {/* Sinergias */}
-              <div className="bg-panel-warm border border-border-warm rounded-sm p-5 tech-corners shadow-xl">
-                <h3 className="text-sm text-cyan-400 font-black uppercase tracking-[0.3em] italic mb-6">
+              <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
+                <h3 className="text-sm text-purple-accent font-medium tracking-wide mb-6">
                   Mejores Aliados (Sinergias)
                 </h3>
                 
@@ -849,12 +855,12 @@ export const ChampionDetail = ({
                         return (
                           <div 
                             key={syn.name}
-                            className="flex items-center justify-between p-3 bg-black/20 border border-border-warm rounded-sm hover:border-cyan-500/20 hover:bg-black/40 transition-all duration-150 group"
+                            className="flex items-center justify-between p-3 bg-input-warm/30 border border-border-warm rounded-lg hover:border-purple-accent/30 hover:bg-input-warm/50 transition-colors duration-150 group"
                           >
                             <div className="flex items-center gap-3">
                               <img 
                                 src={`https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/champion/${mappedName}.png`}
-                                className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-cyan-500/40 transition-colors"
+                                className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-purple-accent/40 transition-colors"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = "/favicon.svg";
                                 }}
@@ -865,7 +871,7 @@ export const ChampionDetail = ({
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="block text-xs font-mono font-extrabold text-cyan-400">
+                              <span className="block text-xs font-mono font-semibold text-purple-accent">
                                 +{syn.delta.toFixed(2)}% Delta
                               </span>
                             </div>

@@ -370,7 +370,7 @@ export const PlayerCardSandbox: React.FC = () => {
           : 'w-0 p-0 overflow-hidden border-0 pointer-events-none'
       }`}>
         <div className="pb-2 border-b border-purple-900/40 flex justify-between items-center">
-          <h2 className="font-black text-sm text-white uppercase tracking-wider text-purple-400 font-mono">
+          <h2 className="font-semibold text-sm text-white tracking-wide font-mono">
             [LABORATORIO DE CARDS]
           </h2>
           <button
@@ -383,7 +383,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
         {/* MODO DE VISTA */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Modo de Vista</label>
+          <label className="font-medium text-purple-accent tracking-wide text-xs font-mono">Modo de vista</label>
           <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={() => setViewMode('single')}
@@ -402,7 +402,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
         {/* ENTORNO Y TAMAÑO */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Fondo del Entorno</label>
+            <label className="font-medium text-purple-accent tracking-wide text-xs font-mono">Fondo del entorno</label>
           <div className="grid grid-cols-3 gap-1.5">
             {(['blank', 'dark', 'grid'] as const).map(b => (
               <button
@@ -417,7 +417,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
           {viewMode === 'single' && (
             <>
-              <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono mt-1">Ancho de Tarjeta</label>
+              <label className="font-medium text-purple-accent tracking-wide text-xs font-mono mt-1">Ancho de tarjeta</label>
               <div className="grid grid-cols-4 gap-1">
                 {(['sm', 'md', 'lg', 'full'] as const).map(w => (
                   <button
@@ -436,7 +436,7 @@ export const PlayerCardSandbox: React.FC = () => {
         {/* ADMINISTRADOR DE TAGS PERSONALIZADOS */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/40">
           <div className="flex justify-between items-center">
-            <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Tags y Prioridades</label>
+            <label className="font-medium text-purple-accent tracking-wide text-xs font-mono">Tags y prioridades</label>
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] text-slate-400 font-mono">{useCustomTags ? 'Manuales' : 'Calculados'}</span>
               <input
@@ -477,7 +477,7 @@ export const PlayerCardSandbox: React.FC = () => {
                   {t}
                   <button
                     onClick={() => handleRemoveTag(t)}
-                    className="text-purple-400 hover:text-white font-black ml-0.5 cursor-pointer"
+                    className="text-purple-accent hover:text-white font-medium ml-0.5 cursor-pointer"
                   >
                     x
                   </button>
@@ -508,7 +508,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
         {/* INVOCADOR, CAMPEÓN Y SKIN */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Invocador, Campeón y Skin ({viewMode === '5v5' ? 'Ally MID' : 'Modo 1'})</label>
+          <label className="font-medium text-purple-accent tracking-wide text-xs font-mono">Invocador, campeón y skin ({viewMode === '5v5' ? 'Ally MID' : 'Modo 1'})</label>
           
           <div className="flex flex-col gap-1">
             <span className="text-[10px] text-slate-400">Nombre / Riot ID</span>
@@ -573,7 +573,7 @@ export const PlayerCardSandbox: React.FC = () => {
 
         {/* SESIÓN DEL DÍA / RACHAS */}
         <div className="flex flex-col gap-2 bg-[#141221] p-2.5 rounded border border-purple-900/30">
-          <label className="font-bold text-purple-400 uppercase tracking-wider text-[10px] font-mono">Sesión Hoy & Racha</label>
+          <label className="font-medium text-purple-accent tracking-wide text-xs font-mono">Sesión de hoy y racha</label>
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-slate-300">¿Ha jugado hoy?</span>
             <input
@@ -627,7 +627,7 @@ export const PlayerCardSandbox: React.FC = () => {
         {viewMode === 'single' ? (
           <div className="w-full flex flex-col items-center justify-center gap-4">
             <div className="text-center">
-              <h1 className="text-base font-black text-purple-400 uppercase font-mono tracking-wider">
+              <h1 className="text-base font-semibold text-purple-accent font-mono tracking-wide">
                 Preview Individual
               </h1>
               <p className="text-[11px] text-slate-400 font-mono">
@@ -650,7 +650,7 @@ export const PlayerCardSandbox: React.FC = () => {
           <div className="w-full max-w-[1400px] flex flex-col justify-between h-full min-h-[580px] p-2 xl:p-4 text-slate-200">
             {/* EQUIPO AZUL */}
             <div className="flex-1 min-h-0 py-1">
-              <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase mb-1">Equipo Aliado (Ordenado por Rol)</div>
+              <div className="text-[10px] font-mono text-purple-accent font-medium mb-1">Equipo aliado (ordenado por rol)</div>
               <div className="grid grid-cols-5 gap-2 xl:gap-3 flex-1 min-h-0 w-full items-stretch h-full">
                 {mockAllyTeam.map((p, idx) => (
                   <PlayerCard
@@ -669,7 +669,7 @@ export const PlayerCardSandbox: React.FC = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-purple-900/60" />
               </div>
-              <div className="relative px-4 py-0.5 bg-[#0e0a1a] border border-purple-600/50 rounded-sm text-purple-400 font-black text-xs xl:text-base italic tracking-widest shadow-lg select-none">
+              <div className="relative px-4 py-0.5 bg-purple-accent/10 border border-purple-accent/40 rounded-md text-purple-accent font-semibold text-xs xl:text-base tracking-wide shadow-sm select-none">
                 VS
               </div>
             </div>

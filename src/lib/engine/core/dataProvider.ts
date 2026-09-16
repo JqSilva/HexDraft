@@ -1,6 +1,6 @@
 import { getRoleBuild } from '../draftContext.js';
 // src/lib/engine/core/dataProvider.ts
-import { normalizeRole } from './constants.js';
+import { normalizeRole, registerChampionNames } from './constants.js';
 import type { EnrichedChampion, ItemAsset } from './types.js';
 
 export const ENRICHED_DB: Record<string, EnrichedChampion> = {};
@@ -30,6 +30,7 @@ export function initializeEngineData(customChamps?: any[]) {
   Object.keys(ENRICHED_DB).forEach(key => delete ENRICHED_DB[key]);
   
   if (customChamps && Array.isArray(customChamps)) {
+    registerChampionNames(customChamps);
     console.log(`[CORE] Cargando datos al motor desde SQLite (${customChamps.length} campeones)...`);
     customChamps.forEach((champ) => {
       ENRICHED_DB[champ.name] = champ;

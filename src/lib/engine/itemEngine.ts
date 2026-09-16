@@ -2,7 +2,7 @@ import { getRoleBuild, teamDamage, type DraftContext } from './draftContext.js';
 import { canAddItem, cleanInventory, itemContextFit, scoreContextualRunePage, reducibleControlCount, type RuneContext } from './buildContext.js';
 // src/lib/engine/itemEngine.ts
 import { ENRICHED_DB, ITEMS_DB } from './core/dataProvider.js';
-import { NAME_TO_ID, normalizeRole } from './core/constants.js';
+import { normalizeRole, getIdFromName, getNameFromId } from './core/constants.js';
 import { hydrateAsset } from './core/hydrator.js';
 import { analyzeComposition } from './picks/compositionAnalyzer.js';
 import { calculateSkillMaxOrder } from './tacticalEngine.js';
@@ -221,10 +221,6 @@ const AP_FALLBACKS = {
   defensive: [2504, 3065, 3110, 3143]  // Kaenic, Apariencia Espiritual, Corazón de Hielo, Randuin
 };
 
-// Helper para obtener nombre del campeón por ID
-export function getNameFromId(id: number): string | undefined {
-  return Object.keys(NAME_TO_ID).find(key => NAME_TO_ID[key] === id);
-}
 
 /**
  * Valida si un ítem en particular es coherente con el tipo de daño del cluster activo (AD o AP).
@@ -908,6 +904,22 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
   const damageType = champ.damageType || 'AD';
   const champClass = champ.class || '';
 
+  // La función del soporte tiene prioridad sobre el tipo de daño: un
+  // frontliner AD sigue necesitando iniciar o absorber daño.
+  if (tacticRole === 'engage' || champ.teamProvides?.includes('engage') || (champ.isFrontline && champ.hasHardCC) || champClass === 'Vanguard') {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.SOLSTICE.id,
+      reason: "Soporte de iniciación — Trineo del Solsticio aporta aceleración y vida extra al aplicar CC"
+    };
+  }
+
+  if (champClass === 'Tank' || champ.isFrontline) {
+    return {
+      itemId: SUPPORT_EVOLUTIONS.CELESTIAL.id,
+      reason: "Tanque / Frontline — Oposición Celestial aporta reducción masiva de daño inicial"
+    };
+  }
+
   // 1. AD / Asesinos / Skirmish / Tiradores en soporte (Senna, Pyke, Pantheon, Ashe, etc.)
   if (damageType === 'AD' || champ.tags?.includes('Assassin') || champClass === 'Assassin' || champClass === 'Marksman' || tacticRole === 'skirmish') {
     return {
@@ -921,22 +933,6 @@ export function selectSupportItemEvolution(champName: string, myRole: string): {
     return {
       itemId: SUPPORT_EVOLUTIONS.ZAZZAK.id,
       reason: "Soporte mágico / Poke — Púa de Zaz'Zak maximiza el hostigamiento y daño porcentual"
-    };
-  }
-
-  // 3. Iniciación / Tanque de Engage con CC (Nautilus, Leona, Rell, Alistar, Blitzcrank, Thresh, Rakan)
-  if (tacticRole === 'engage' || champ.teamProvides?.includes('engage') || (champ.isFrontline && champ.hasHardCC) || champClass === 'Vanguard') {
-    return {
-      itemId: SUPPORT_EVOLUTIONS.SOLSTICE.id,
-      reason: "Soporte de iniciación — Trineo del Solsticio aporta aceleración y vida extra al aplicar CC"
-    };
-  }
-
-  // 4. Tanques / Frontline defensiva pura (Braum, Taric, Tahm Kench, Shen, Poppy)
-  if (champClass === 'Tank' || champ.isFrontline) {
-    return {
-      itemId: SUPPORT_EVOLUTIONS.CELESTIAL.id,
-      reason: "Tanque / Frontline — Oposición Celestial aporta reducción masiva de daño inicial"
     };
   }
 
@@ -1152,10 +1148,12 @@ export function scoreClusterInContext(
   const pr = Math.max(0, cluster.totalPickrate || 0);
   const wr = cluster.weightedWinrate || 50.0;
 
-  // Pesa con prioridad de consenso meta (Pickrate dominante)
-  const prContrib = pr * 0.75;
-  const wrContrib = (wr - 50.0) * 0.5;
-  const baseScore = scoreBuildVariant({ pickrate: pr, winrate: wr, games: cluster.games }).score;
+  // La evidencia estadística es la base; el contexto se aplica después
+  // como ajuste acotado para que una sola heurística no fuerce una build
+  // off-meta cuando la muestra del parche es sólida.
+  const evidenceBreakdown = scoreEvidence100({ pickrate: pr, winrate: wr, games: cluster.games });
+  const buildEvidence = scoreBuildVariant({ pickrate: pr, winrate: wr, games: cluster.games });
+  const baseScore = buildEvidence.score;
   let score = baseScore;
 
   const bonuses: { label: string; value: number }[] = [];
@@ -1242,15 +1240,28 @@ export function scoreClusterInContext(
     bonuses.push({ label: `AP ally overload penalty (${allyComp.apCount} AP allies)`, value: penalty });
   }
 
+  // El contexto adapta la ruta, pero nunca puede borrar por completo la
+  // evidencia observada ni desplazarla sin límite.
+  const rawContextDelta = score - baseScore;
+  const contextWeight = 0.65 + (buildEvidence.confidence * 0.35);
+  const boundedContextDelta = Math.max(-8, Math.min(8, rawContextDelta * contextWeight));
+  if (Math.abs(rawContextDelta - boundedContextDelta) >= 0.05) {
+    bonuses.push({
+      label: 'Ajuste contextual limitado para proteger la evidencia meta',
+      value: boundedContextDelta - rawContextDelta
+    });
+  }
+  score = baseScore + boundedContextDelta;
   // Adjuntar desglose al objeto retornado para debug
   (cluster as any).__scoreDebug = {
-    wrContrib: +wrContrib.toFixed(3),
-    prContrib: +prContrib.toFixed(3),
+    evidence: evidenceBreakdown.components,
     baseScore: +baseScore.toFixed(3),
+    rawContextDelta: +rawContextDelta.toFixed(3),
+    contextWeight: +contextWeight.toFixed(3),
+    contextAdjustment: +boundedContextDelta.toFixed(3),
     bonuses,
     finalScore: +score.toFixed(3)
   };
-
   return score;
 }
 
@@ -1767,7 +1778,7 @@ export function getAdaptedBuild(
     name = getNameFromId(championId) || '';
   } else {
     name = championId;
-    champIdNum = NAME_TO_ID[name] || 0;
+    champIdNum = getIdFromName(name);
   }
   if (!name) return null;
   const champ = ENRICHED_DB[name];
@@ -1818,8 +1829,8 @@ export function getAdaptedBuild(
     const d = (c as any).__scoreDebug || {};
     const winner = i === 0 ? '🏆 GANADOR' : '  ';
     console.log(`║ ${winner} Cluster ${c.damageType} (pivot: ${c.pivotItem})`);
-    console.log(`║    WR: ${c.weightedWinrate.toFixed(2)}% → wrContrib: ${(d.wrContrib ?? 0).toFixed(3)}`);
-    console.log(`║    PR: ${c.totalPickrate.toFixed(2)}% → prContrib: ${(d.prContrib ?? 0).toFixed(3)}`);
+    console.log(`║    WR: ${c.weightedWinrate.toFixed(2)}% → componente: ${(d.evidence?.winrate ?? 0).toFixed(3)}`);
+    console.log(`║    PR: ${c.totalPickrate.toFixed(2)}% → componente: ${(d.evidence?.pickrate ?? 0).toFixed(3)}`);
     console.log(`║    baseScore: ${(d.baseScore ?? 0).toFixed(3)}`);
     if (d.bonuses && d.bonuses.length > 0) {
       d.bonuses.forEach((b: any) => {

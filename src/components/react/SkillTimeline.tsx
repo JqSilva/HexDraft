@@ -12,16 +12,16 @@ export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelinePr
         : (skillOrder || 'Q > W > E');
 
     return (
-        <div className="p-3 bg-bg-warm/30 border border-border-warm/50 rounded-sm w-full relative tech-corners flex flex-col gap-2">
+        <div className="p-3 bg-input-warm/20 border border-border-warm/50 rounded-lg w-full relative flex flex-col gap-2">
             <div className="flex justify-between items-center">
-                <h4 className="text-[11px] text-cyan-400 font-black uppercase tracking-[0.3em] italic">
+                <h4 className="text-xs text-purple-accent font-medium tracking-wide">
                     Evolución de Habilidades
                 </h4>
                 
                 {/* ORDEN DE MAXEO GLOBAL */}
                 {computedSkillOrder && (
                     <div className="flex items-center gap-2 px-3 py-1 bg-input-warm/40 border border-border-warm/30 rounded-sm">
-                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">MAXEO:</span>
+                        <span className="text-[10px] text-purple-accent font-medium tracking-wide">Orden:</span>
                         <span className="text-[10px] text-white font-black tracking-widest uppercase font-mono">
                             {computedSkillOrder}
                         </span>
@@ -50,7 +50,7 @@ export const SkillTimeline = memo(({ skillOrder, tacticalData }: SkillTimelinePr
                     })
                 ) : (
                     <div className="w-full py-3 text-center">
-                        <p className="text-slate-400 text-xs tracking-widest uppercase animate-pulse">
+                        <p className="text-slate-400 text-xs tracking-wide">
                             Obteniendo orden de habilidades...
                         </p>
                     </div>

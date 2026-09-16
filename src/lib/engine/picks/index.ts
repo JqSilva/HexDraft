@@ -89,12 +89,15 @@ export function getProcessedRecommendations(
   for (const c of pool) {
     if (!singleId && unavailableIds.includes(c.id)) continue;
     const { score, reasons } = calculateScore(c, allyNames, enemyNames, unavailableIds, context);
+    const finalReasons = reasons.length > 0
+      ? reasons
+      : [`Opción viable en ${targetLane}; no se detectó una ventaja contextual fuerte`];
 
     results.push({
       id: c.id,
       name: c.name,
       score: score,
-      reasons: reasons,
+      reasons: finalReasons,
       lane: targetLane
     });
   }

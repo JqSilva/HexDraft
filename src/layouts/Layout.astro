@@ -20,10 +20,22 @@ const { title = "HexDraft" } = Astro.props;
 		<link rel="icon" type="image/x-icon" href="/app-icon.ico?v=999" />
 		
 		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content="HexDraft: análisis claro para tomar mejores decisiones en cada draft." />
 		<title>{title}</title>
 		<ClientRouter />
 	</head>
-	<body class="relative h-full text-slate-200 overflow-hidden font-sans bg-[#08080b]">
+	<body class="relative h-full text-slate-200 overflow-hidden font-sans bg-bg-warm">
+		<!--
+			THESIS: HexDraft is a quiet precision instrument for draft decisions, not a tactical HUD.
+			OWN-WORLD: Neutral charcoal surfaces, soft violet signals, calm typography, no neon or grid chrome.
+			STORY: The player sees the current state, understands the recommendation, and acts with confidence.
+			FIRST VIEWPORT: A restrained shell with connection state, one clear next action, and dense data only where useful.
+			FORM: Quiet Arcana, grounded in an abyssal matte palette and Apple-like product restraint.
+			FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+		-->
+		<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[10001] focus:rounded-lg focus:bg-panel-warm focus:px-4 focus:py-3 focus:text-sm focus:text-white focus:shadow-xl">
+			Saltar al contenido
+		</a>
 		<div id="app-layout" class="flex h-full w-full overflow-hidden">
 			<!-- Global Astro Sidebar -->
 			<Sidebar />
@@ -41,7 +53,7 @@ const { title = "HexDraft" } = Astro.props;
 		<AppUpdatePopup client:only="react" />
 
 		<!-- Barra de progreso superior para transiciones (sin blur, fluida, con resplandor) -->
-		<div id="global-page-loader" class="fixed top-0 left-0 h-[3px] z-[10000] bg-purple-accent shadow-[0_1px_10px_rgba(144,85,255,0.8)] transition-all duration-300 ease-out" style="width: 0%; opacity: 0;"></div>
+		<div id="global-page-loader" class="fixed top-0 left-0 h-[2px] z-[10000] bg-purple-accent transition-all duration-300 ease-out" style="width: 0%; opacity: 0;"></div>
 
 		<script is:inline>
 			const getLoader = () => document.getElementById('global-page-loader');
