@@ -3,10 +3,11 @@ import { normalizeRole } from '../core/constants.js';
 import type { EnrichedChampion } from '../core/types.js';
 import type { ThreatEvaluationResult } from './types.js';
 import { isChampionInLane } from './laneThreatEvaluator.js';
+import { getTopPickRank } from '../../meta/probuildstatsTopPicks.js';
 
 /**
  * Bloque Meta Global (20% del Threat Score total).
- * Evalúa la fuerza estadística bruta en el meta del parche actual.
+ * Usa exclusivamente la posición del campeón en el top 20 de Probuildstats.
  */
 export function evaluateMetaThreat(
   candidate: EnrichedChampion,
@@ -22,34 +23,10 @@ export function evaluateMetaThreat(
     return { score: 0.0, reasons: [] };
   }
 
-  const targetLaneStats = candidate.lanesStats?.[normalizedTargetLane];
-  const tier = targetLaneStats?.tier ?? candidate.meta?.tier ?? 5;
-  const winRate = targetLaneStats?.winRate ?? candidate.meta?.winRate ?? 50.0;
-
-  // 1. Escala por Tier
-  if (tier <= 1) {
-    if (winRate >= 52.0) {
-      score += 2.5;
-      reasons.push(`Meta OP: Tier ${tier} dominante con ${winRate.toFixed(1)}% Win Rate`);
-    } else {
-      score += 1.8;
-      reasons.push(`Meta Tier 1: Prioridad alta global en el parche actual`);
-    }
-  } else if (tier === 2) {
-    score += 1.2;
-    reasons.push(`Meta Sólido: Tier 2 con rendimiento consistente (${winRate.toFixed(1)}% WR)`);
-  } else if (tier === 3) {
-    score += 0.4;
-  } else if (tier >= 4) {
-    score -= 1.5; // Penaliza score sin emitir texto negativo
-  }
-
-  // 2. Desviación directa del Win Rate (50.0% como pivote neutro)
-  const wrDelta = winRate - 50.0;
-  if (wrDelta > 0) {
-    score += wrDelta * 0.45;
-  } else {
-    score += wrDelta * 0.25;
+  const rank = getTopPickRank(candidate.id, normalizedTargetLane);
+  if (rank !== null) {
+    score = 2.5 - ((rank - 1) / 19) * 1.5;
+    reasons.push(`Top Probuildstats ${normalizedTargetLane} #${rank}`);
   }
 
   return {

@@ -14,6 +14,9 @@ export const SettingsPage = () => {
     const [autoAcceptDelayPct, setAutoAcceptDelayPct] = useState<number>(80);
     const [puppeteerConcurrency, setPuppeteerConcurrency] = useState<number>(3);
     const [metaSyncFrequency, setMetaSyncFrequency] = useState<number>(2);
+    const [preferredPickIds, setPreferredPickIds] = useState<number[]>([]);
+    const [preferredBanIds, setPreferredBanIds] = useState<number[]>([]);
+    const [championCatalog, setChampionCatalog] = useState<Array<{ id: number; name: string }>>([]);
     const [telegramNotificationsEnabled, setTelegramNotificationsEnabled] = useState<boolean>(false);
     const [telegramBotToken, setTelegramBotToken] = useState<string>('');
     const [telegramChatId, setTelegramChatId] = useState<string>('');
@@ -50,6 +53,8 @@ export const SettingsPage = () => {
                     setAutoAcceptDelayPct(data.auto_accept_delay_pct || 80);
                     setPuppeteerConcurrency(data.puppeteer_concurrency);
                     setMetaSyncFrequency(data.meta_sync_frequency !== undefined ? data.meta_sync_frequency : 2);
+                    setPreferredPickIds(Array.isArray(data.preferred_pick_champion_ids) ? data.preferred_pick_champion_ids : []);
+                    setPreferredBanIds(Array.isArray(data.preferred_ban_champion_ids) ? data.preferred_ban_champion_ids : []);
                     setTelegramNotificationsEnabled(data.telegram_notifications_enabled);
                     setTelegramBotToken(data.telegram_bot_token || '');
                     setTelegramChatId(data.telegram_chat_id || '');
@@ -66,6 +71,11 @@ export const SettingsPage = () => {
         };
 
         fetchConfigs();
+
+        fetch('/api/champions?summary=true')
+            .then(res => res.ok ? res.json() : [])
+            .then(data => setChampionCatalog(Array.isArray(data) ? data.map((champ: any) => ({ id: Number(champ.id), name: String(champ.name) })) : []))
+            .catch(error => console.warn('No se pudo cargar el catálogo de campeones para las preferencias.', error));
     }, []);
 
     // --- GUARDAR AJUSTES ---
@@ -100,13 +110,18 @@ export const SettingsPage = () => {
                     telegram_deduplicate_enabled: telegramDeduplicateEnabled,
                     puppeteer_concurrency: puppeteerConcurrency,
                     meta_sync_frequency: metaSyncFrequency,
-                    engine_weights: weights
+                    engine_weights: weights,
+                    preferred_pick_champion_ids: preferredPickIds,
+                    preferred_ban_champion_ids: preferredBanIds
                 })
             });
 
             if (res.ok) {
                 setLolPath(lolPathVal);
                 setEngineWeights(weights);
+                window.dispatchEvent(new CustomEvent('hexdraft:preferences-updated', {
+                    detail: { preferredPickIds, preferredBanIds }
+                }));
                 setSaveSuccess(true);
                 setTimeout(() => setSaveSuccess(false), 3000);
             } else {
@@ -162,6 +177,10 @@ export const SettingsPage = () => {
     }
 
     const concurrencyMsg = getConcurrencyMessage();
+    const preferencePools = [
+        { key: 'pick', title: 'Campeones preferidos para pickear', description: 'Reciben un impulso pequeño cuando aparecen en el top 20 de su línea.', ids: preferredPickIds, setIds: setPreferredPickIds },
+        { key: 'ban', title: 'Campeones que prefieres banear', description: 'Reciben un impulso pequeño entre las amenazas elegibles de la línea.', ids: preferredBanIds, setIds: setPreferredBanIds }
+    ];
 
     return (
         <div className="w-full flex flex-col p-5 md:p-8 text-slate-200 animate-in fade-in duration-300">
@@ -185,6 +204,52 @@ export const SettingsPage = () => {
 
                 {/* Contenido Principal Centrado */}
                 <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
+                    <section className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm">
+                        <div className="mb-5">
+                            <h2 className="text-base text-purple-accent font-semibold mb-1">Pool personal</h2>
+                            <p className="text-sm text-slate-500">Tus preferencias influyen suavemente en el orden y no cambian el pool de picks del top 20 de Probuildstats.</p>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            {preferencePools.map(pool => (
+                                <div key={pool.key} className="min-w-0 rounded-lg border border-border-warm bg-black/15 p-4">
+                                    <label htmlFor={`preferred-${pool.key}`} className="block text-sm font-semibold text-slate-200 mb-1">{pool.title}</label>
+                                    <p className="text-xs text-slate-500 mb-3">{pool.description}</p>
+                                    <select
+                                        id={`preferred-${pool.key}`}
+                                        value=""
+                                        disabled={championCatalog.length === 0}
+                                        onChange={event => {
+                                            const id = Number(event.target.value);
+                                            if (Number.isInteger(id) && id > 0 && !pool.ids.includes(id)) pool.setIds(current => [...current, id]);
+                                        }}
+                                        className="w-full bg-[#060608]/90 border border-border-warm text-sm text-white p-3 rounded-md focus:outline-none focus:border-purple-accent disabled:opacity-50"
+                                    >
+                                        <option value="">{championCatalog.length ? 'Añadir campeón…' : 'Cargando campeones…'}</option>
+                                        {championCatalog.filter(champ => !pool.ids.includes(champ.id)).map(champ => (
+                                            <option key={champ.id} value={champ.id}>{champ.name}</option>
+                                        ))}
+                                    </select>
+                                    <div className="flex flex-wrap gap-2 mt-3 min-h-8">
+                                        {pool.ids.map(id => {
+                                            const champ = championCatalog.find(item => item.id === id);
+                                            return (
+                                                <span key={id} className="inline-flex items-center gap-2 rounded-full border border-purple-accent/30 bg-purple-accent/10 px-3 py-1 text-xs text-slate-200">
+                                                    {champ?.name || `Campeón ${id}`}
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Quitar ${champ?.name || `campeón ${id}`}`}
+                                                        onClick={() => pool.setIds(current => current.filter(existingId => existingId !== id))}
+                                                        className="font-bold text-slate-400 hover:text-white"
+                                                    >×</button>
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                         {/* Columna Izquierda: Integración y Rendimiento (8 col o 12 col si no es admin) */}
                         <div className={isAdmin ? "lg:col-span-8 flex flex-col gap-6" : "lg:col-span-12 flex flex-col gap-6"}>
@@ -499,7 +564,7 @@ export const SettingsPage = () => {
                                                 <option value={24}>Cada 24 horas</option>
                                             </select>
                                             <span className="block text-[8.5px] text-slate-500 font-bold uppercase tracking-wider">
-                                                Frecuencia de la sincronización ligera de tiers y estadísticas de OP.GG.
+                                                Frecuencia de estadísticas complementarias de OP.GG; las recomendaciones de picks usan el top 20 de Probuildstats.
                                             </span>
                                         </div>
                                     </div>

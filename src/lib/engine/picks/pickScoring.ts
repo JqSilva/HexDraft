@@ -1,11 +1,10 @@
 import { getRoleProbability, evidenceDelta, damageProfile, teamDamage, scalingStrength, type DraftContext } from '../draftContext.js';
 // src/lib/engine/picks/pickScoring.ts
 import { ENRICHED_DB } from '../core/dataProvider.js';
-import { normalizeKey, normalizeRole, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFromId } from '../core/constants.js';
+import { normalizeKey, normalizeRole, isFlexChampion, engineWeights, PERSONAL_STATS, getNameFromId, isPreferredPick } from '../core/constants.js';
 import { hydrateAsset } from '../core/hydrator.js';
 import { getAdaptedBuild } from '../itemEngine.js';
 import type { EnrichedChampion } from '../core/types.js';
-import { evidenceContextWeight, scoreEvidence100 } from '../recommendationScoring.js';
 import { 
   analyzeComposition, 
   detectEnemyArchetype, 
@@ -170,36 +169,17 @@ export function calculateScore(
   };
 
   const targetLane = target.lane;
-  const sourceStats = target.buildData?.special_notes?.statsData || target.buildData?.statsData || target.statsData || {};
-  const sourceHeader = sourceStats.header || {};
-  const metaEvidence = {
-    winrate: sourceHeader.wr !== undefined ? 50 + Number(sourceHeader.wr) - Number(sourceHeader.avgWr ?? 50) : target.meta?.winRate ?? 50,
-    pickrate: sourceHeader.pickrate ?? sourceHeader.pickRate ?? sourceHeader.pr ?? (target.meta as any)?.pickRate,
-    games: sourceHeader.games ?? sourceHeader.n ?? undefined
-  };
-  const centralPick = scoreEvidence100(metaEvidence);
-  let score = 5.0 + ((centralPick.score - 50) * 0.04 * phase.meta_base);
+  const metaRank = Math.max(1, Math.min(20, Number(target.metaRank) || 20));
+  const rankPercentile = (20 - metaRank) / 19;
+  let score = 5.0 + (rankPercentile * 1.2 * phase.meta_base);
   const reasons: string[] = [];
-  if (centralPick.score >= 65) reasons.push("Meta estadístico: evidencia sólida (" + centralPick.score.toFixed(1) + "/100)");
-  else if (centralPick.score <= 40) reasons.push("Riesgo estadístico: evidencia limitada (" + centralPick.score.toFixed(1) + "/100)");
+  reasons.push(`Top Probuildstats ${targetLane} #${metaRank}`);
+  const preferredPick = isPreferredPick(target.id);
+  if (preferredPick) reasons.push('Pool personal: pequeño impulso por campeón preferido (+0.45)');
 
-  // Tendencia compacta del histórico: señal secundaria, nunca sustituye la
-  // evidencia total del parche y queda limitada para no perseguir ruido diario.
-  const trendDelta = Number(sourceHeader.trend?.delta);
-  if (Number.isFinite(trendDelta)) {
-    const phaseFactor = phaseKey === 'pick1' ? 1.0 : phaseKey === 'pick5' ? 0.5 : 0.75;
-    const trendBonus = Math.max(-0.45, Math.min(0.45, trendDelta * 0.12 * phaseFactor));
-    score += trendBonus;
-    if (Math.abs(trendDelta) >= 0.35) {
-      reasons.push(`${trendDelta >= 0 ? 'Tendencia favorable' : 'Tendencia descendente'}: ${trendDelta >= 0 ? '+' : ''}${trendDelta.toFixed(2)} pp recientes`);
-    }
-  }
-
-  // Meta y tendencia forman la base; los bonos posteriores son heurísticos contextuales.
-  const preContextScore = score;
-  // El matchup directo confirmado es una señal de línea, no una heurística
-  // blanda: conserva su peso aunque falte evidencia meta del rol.
-  let directMatchupContribution = 0;
+  // El puesto de Probuildstats es la base; el matchup y la composición deciden
+  // cuál de los veinte candidatos encaja mejor en este draft.
+  // Un matchup confirmado conserva su peso frente a una estimación de rol.
 
   // --- CAPA 0.5: FLEX PICK BONUS (SÓLO FASE 1) ---
   if (phaseKey === 'pick1' && isFlexChampion(target)) {
@@ -242,26 +222,6 @@ export function calculateScore(
     if (gaps.includes(tacticRole as any)) {
       score += WEIGHTS.tactic_role_bonus;
       reasons.push(`Balance: Aporta el rol táctico faltante (${tacticRole.toUpperCase()})`);
-    }
-  }
-
-  // Meta already contributes once above. Tier and raw WR are not independent evidence.
-  if (centralPick.confidence < 0.5) reasons.push('Datos del rol: confianza limitada; valoración conservadora');
-
-  // --- CAPA 1.1: PONDERACIÓN Y PENALIZACIÓN DE ROL SECUNDARIO / OFF-META ---
-  if (target.isSecondaryLane || target.is_secondary_lane) {
-    const lanePickRate = typeof target.lanePickRate === 'number' 
-      ? target.lanePickRate 
-      : (typeof target.lane_pick_rate === 'number' ? target.lane_pick_rate : 0);
-
-    if (lanePickRate >= 5 && lanePickRate < 15) {
-      score -= 1.8;
-      reasons.push(`Pick de Nicho: Rol secundario con baja presencia (${lanePickRate.toFixed(1)}%)`);
-    } else if (lanePickRate >= 15 && lanePickRate < 25) {
-      score -= 1.0;
-      reasons.push(`Pick Secundario: Presencia moderada en carril (${lanePickRate.toFixed(1)}%)`);
-    } else if (lanePickRate >= 25 && lanePickRate < 35) {
-      score -= 0.4;
     }
   }
 
@@ -316,7 +276,6 @@ export function calculateScore(
       ? normalizeRole(context.enemyRoles[enemy.id], 'UNKNOWN' as any)
       : null;
     const directConfirmed = assignedEnemyLane === targetLane;
-    const directSignal = directConfirmed || probability >= 0.90;
     const directMultiplier = directConfirmed ? 1.35 : probability >= 0.75 ? 1.10 : 1;
     const delta = evidenceDelta(match.dominanceScore, match.count);
     // Un counter directo debe ser al menos tan importante como una ventaja
@@ -326,7 +285,6 @@ export function calculateScore(
       : Math.max(WEIGHTS.COUNTER, WEIGHTS.MATCHUP * 1.25);
     const contribution = delta * probability * directMultiplier * matchupWeight;
     score += contribution;
-    if (directSignal) directMatchupContribution += contribution;
     if (Math.abs(contribution) >= 0.1) reasons.push(`${directConfirmed ? 'Matchup directo confirmado' : contribution > 0 ? 'Ventaja' : 'Riesgo'} vs ${enemyName}: ${Math.round(probability*100)}% de probabilidad de rol, ${match.count} partidas (${contribution > 0 ? '+' : ''}${contribution.toFixed(2)})`);
   }
 
@@ -474,18 +432,7 @@ export function calculateScore(
 
   // Identical drafts must produce identical scores; ties are resolved by ID.
 
-  // La heurística no debe rescatar una opción con evidencia de rol insuficiente.
-  const contextWeight = evidenceContextWeight(centralPick.confidence);
-  if (contextWeight < 1) {
-    const softContextDelta = score - preContextScore - directMatchupContribution;
-    const gatedScore = preContextScore
-      + directMatchupContribution
-      + softContextDelta * contextWeight;
-    if (Math.abs(gatedScore - score) >= 0.05) {
-      reasons.push(`Heurística limitada por confianza del rol (${Math.round(centralPick.confidence * 100)}%)`);
-    }
-    score = gatedScore;
-  }
+  if (preferredPick) score += 0.45;
 
   // --- AJUSTE FINAL (SOFT CAP) ---
   if (score > 8.0) {

@@ -5,6 +5,9 @@ import { getBanRecommendations } from '../../lib/engine/bans/index.js';
 import { getIdFromName, normalizeRole } from '../../lib/engine/core/constants.js';
 import { ENRICHED_DB, initializeEngineData } from '../../lib/engine/core/dataProvider.js';
 import { championsRepo } from '../../lib/db/champions.repo.js';
+import { configRepo } from '../../lib/db/config.repo.js';
+import { initializeChampionPreferences } from '../../lib/engine/core/constants.js';
+import { getCurrentProbuildstatsTopPicks } from '../../lib/meta/probuildstatsTopPicks.repo.js';
 
 export const POST: APIRoute = async ({ request, url }) => {
   try {
@@ -13,7 +16,11 @@ export const POST: APIRoute = async ({ request, url }) => {
 
     // Las recomendaciones siempre trabajan con la misma instantánea enriquecida
     // que entrega SQLite al resto de la aplicación.
-    initializeEngineData(championsRepo.getAllEnrichedChampions());
+    initializeChampionPreferences({
+      preferredPickIds: configRepo.getConfigObject<number[]>('preferred_pick_champion_ids') || [],
+      preferredBanIds: configRepo.getConfigObject<number[]>('preferred_ban_champion_ids') || []
+    });
+    initializeEngineData(championsRepo.getAllEnrichedChampions(), getCurrentProbuildstatsTopPicks());
     
     // Captura tolerante de carril/rol en body o query params
     const rawLane = body.assignedLane || 

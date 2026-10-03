@@ -3,6 +3,7 @@ import { ENRICHED_DB, DATA_BY_LANE } from '../core/dataProvider.js';
 import { normalizeKey, normalizeRole, PERSONAL_STATS, getNameFromId } from '../core/constants.js';
 import type { EnrichedChampion } from '../core/types.js';
 import type { ThreatEvaluationResult } from './types.js';
+import { getChampionTopRoleRanks } from '../../meta/probuildstatsTopPicks.js';
 
 /**
  * Extrae el pickrate real del carril desde lanesPickrate o lanes_pickrate.
@@ -27,6 +28,9 @@ export function getLanePickrate(candidate: EnrichedChampion, targetLane: string)
  */
 export function isChampionInLane(candidate: EnrichedChampion, targetLane: string): boolean {
   const normTarget = normalizeRole(targetLane, 'MIDDLE');
+  const topRoles = getChampionTopRoleRanks(candidate.id);
+  if (topRoles.length) return topRoles.some(({ lane }) => lane === normTarget);
+
   const primaryLane = normalizeRole(candidate.lane, 'UNKNOWN' as any);
   if (primaryLane === normTarget) return true;
   
@@ -61,9 +65,6 @@ export function evaluateLaneThreat(
   }
 
   const candidateName = candidate.name;
-  const targetLaneStats = candidate.lanesStats?.[normalizedTargetLane] || candidate.meta;
-  const targetLanePickrate = getLanePickrate(candidate, normalizedTargetLane);
-
   // -------------------------------------------------------------
   // BIFURCACIÓN 1: MODO HOVER (Hay un campeón marcado por el usuario)
   // -------------------------------------------------------------
@@ -117,15 +118,7 @@ export function evaluateLaneThreat(
         reasons.push(`Presión en Línea: Matchup de fase temprana débil frente a hostigador con burst`);
       }
 
-      // 3. Modificador de Pickrate en la línea
-      if (targetLanePickrate >= 10.0) {
-        score *= 1.2;
-        reasons.push(`Alta Frecuencia: Pickrate popular en ${normalizedTargetLane} (${targetLanePickrate.toFixed(1)}%)`);
-      } else if (targetLanePickrate < 3.0 && score > 0) {
-        score = Math.max(0, score - 1.5);
-      }
-
-      // 4. Gank Setup & Dive
+      // 3. Gank Setup & Dive
       const candidateRole = candidate.tacticRole || candidate.tactic_role || 'teamfight';
       const hasHardCC = candidate.hasHardCC || candidate.has_hard_cc === 1;
       if (hasHardCC && (candidateRole === 'engage' || candidateRole === 'dive')) {
@@ -138,27 +131,14 @@ export function evaluateLaneThreat(
   // BIFURCACIÓN 2: MODO BLIND BAN (Sin hover marcado)
   // -------------------------------------------------------------
   else {
-    const laneWr = targetLaneStats?.winRate || candidate.meta?.winRate || 50.0;
-    const lanePr = targetLanePickrate;
-
-    // 1. Presencia Opresiva en Línea
-    const wrBonus = Math.max(0, (laneWr - 50.0) * 0.8);
-    const prBonus = lanePr * 0.35;
-    const oppressivePresence = wrBonus + prBonus + 1.0;
-
-    if (oppressivePresence > 1.2) {
-      score += oppressivePresence;
-      reasons.push(`Presencia Opresiva: ${laneWr.toFixed(1)}% WR y ${lanePr.toFixed(1)}% Pickrate en ${normalizedTargetLane}`);
-    }
-
-    // 2. Pool Histórico: Evaluación contra los 3 campeones con mayor maestría del usuario en ese rol
+    // Pool Histórico: Evaluación contra los 3 campeones con mayor maestría del usuario en ese rol
     const masteryChamps = Object.entries(PERSONAL_STATS)
       .map(([idStr, stats]) => ({
         id: Number(idStr),
         name: getNameFromId(Number(idStr)),
         stats
       }))
-      .filter(entry => entry.name && normalizeRole(ENRICHED_DB[entry.name]?.lane, 'UNKNOWN' as any) === normalizedTargetLane)
+      .filter(entry => entry.name && ENRICHED_DB[entry.name] && isChampionInLane(ENRICHED_DB[entry.name], normalizedTargetLane))
       .sort((a, b) => (b.stats.gamesPlayed * (b.stats.winRate / 100)) - (a.stats.gamesPlayed * (a.stats.winRate / 100)))
       .slice(0, 3);
 
@@ -185,7 +165,7 @@ export function evaluateLaneThreat(
       }
     }
 
-    // 3. Gatekeeper de Línea: Conteo de dominanceScore > 0 frente al pool viable del carril
+    // Gatekeeper de Línea: Conteo de dominanceScore > 0 frente al pool viable del carril
     const lanePool = DATA_BY_LANE[normalizedTargetLane] || [];
     let positiveMatchupCount = 0;
     

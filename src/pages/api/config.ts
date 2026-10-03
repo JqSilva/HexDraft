@@ -5,6 +5,15 @@ import { configRepo } from '../../lib/db/config.repo.js';
 export const GET: APIRoute = async () => {
   try {
     const rawConfigs = configRepo.getAllConfigs();
+    const parseChampionIds = (raw: string | undefined): number[] => {
+      try {
+        const values = JSON.parse(raw || '[]');
+        if (!Array.isArray(values)) return [];
+        return [...new Set(values.map(Number).filter((id: number) => Number.isInteger(id) && id > 0))];
+      } catch {
+        return [];
+      }
+    };
     
     // Parsear campos complejos para retornar tipos de datos adecuados al cliente
     const parsedConfigs = {
@@ -22,7 +31,9 @@ export const GET: APIRoute = async () => {
       telegram_bot_token: rawConfigs.telegram_bot_token || '',
       telegram_chat_id: rawConfigs.telegram_chat_id || '',
       telegram_deduplicate_enabled: rawConfigs.telegram_deduplicate_enabled !== 'false',
-      engine_weights: JSON.parse(rawConfigs.engine_weights || '{}')
+      engine_weights: JSON.parse(rawConfigs.engine_weights || '{}'),
+      preferred_pick_champion_ids: parseChampionIds(rawConfigs.preferred_pick_champion_ids),
+      preferred_ban_champion_ids: parseChampionIds(rawConfigs.preferred_ban_champion_ids)
     };
 
     return new Response(JSON.stringify(parsedConfigs), {
@@ -41,6 +52,10 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const payload = await request.json();
     const updates: Record<string, string> = {};
+    const sanitizeChampionIds = (value: unknown): number[] => {
+      if (!Array.isArray(value)) return [];
+      return [...new Set(value.map(Number).filter(id => Number.isInteger(id) && id > 0))];
+    };
 
     // Mapeamos los campos del cliente hacia strings para guardarlos en SQLite
     if (payload.lol_path !== undefined) updates.lol_path = String(payload.lol_path);
@@ -97,6 +112,13 @@ export const POST: APIRoute = async ({ request }) => {
     
     if (payload.engine_weights !== undefined) {
       updates.engine_weights = JSON.stringify(payload.engine_weights);
+    }
+
+    if (payload.preferred_pick_champion_ids !== undefined) {
+      updates.preferred_pick_champion_ids = JSON.stringify(sanitizeChampionIds(payload.preferred_pick_champion_ids));
+    }
+    if (payload.preferred_ban_champion_ids !== undefined) {
+      updates.preferred_ban_champion_ids = JSON.stringify(sanitizeChampionIds(payload.preferred_ban_champion_ids));
     }
 
     if (Object.keys(updates).length > 0) {

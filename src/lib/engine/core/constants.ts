@@ -336,6 +336,34 @@ export function setEngineWeights(weights: Partial<EngineWeights>) {
 
 export const PERSONAL_STATS: Record<number, PersonalStats> = {};
 
+export const PREFERRED_PICK_IDS = new Set<number>();
+export const PREFERRED_BAN_IDS = new Set<number>();
+
+export function initializeChampionPreferences(preferences: {
+  preferredPickIds?: unknown;
+  preferredBanIds?: unknown;
+} = {}) {
+  PREFERRED_PICK_IDS.clear();
+  PREFERRED_BAN_IDS.clear();
+  const addValidIds = (target: Set<number>, values: unknown) => {
+    if (!Array.isArray(values)) return;
+    for (const value of values) {
+      const id = Number(value);
+      if (Number.isInteger(id) && id > 0) target.add(id);
+    }
+  };
+  addValidIds(PREFERRED_PICK_IDS, preferences.preferredPickIds);
+  addValidIds(PREFERRED_BAN_IDS, preferences.preferredBanIds);
+}
+
+export function isPreferredPick(championId: number): boolean {
+  return PREFERRED_PICK_IDS.has(Number(championId));
+}
+
+export function isPreferredBan(championId: number): boolean {
+  return PREFERRED_BAN_IDS.has(Number(championId));
+}
+
 export function initializePersonalStats(stats: Array<{ championId: number; gamesPlayed: number; winRate: number }>) {
   Object.keys(PERSONAL_STATS).forEach(k => delete PERSONAL_STATS[Number(k)]);
   if (stats && Array.isArray(stats)) {

@@ -1,6 +1,7 @@
 // src/lib/services/roleAssignment.service.ts
 import metaPositionsJson from '../data/meta-positions.json';
-import { getNameFromId } from '../engine/core/constants.js';
+import { getIdFromName, getNameFromId } from '../engine/core/constants.js';
+import { getChampionTopRoleRanks } from '../meta/probuildstatsTopPicks.js';
 
 export type RoleName = 'TOP' | 'JNG' | 'MID' | 'ADC' | 'SUPP';
 
@@ -40,6 +41,15 @@ export function getChampionPreferredRoles(championNameOrId: string | number): Ro
     : championNameOrId;
 
   if (!champName) return ['MID'];
+
+  const championId = typeof championNameOrId === 'number' ? championNameOrId : getIdFromName(champName);
+  const rankedRoles = getChampionTopRoleRanks(championId);
+  if (rankedRoles.length) {
+    return rankedRoles.flatMap(({ lane }) => {
+      const role = POSITION_MAP[lane];
+      return role ? [role] : [];
+    });
+  }
 
   const rawPositions = metaPositions[champName] || [];
   const roles: RoleName[] = [];

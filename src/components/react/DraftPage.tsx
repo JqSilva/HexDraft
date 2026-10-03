@@ -5,8 +5,9 @@ import type { Recommendation } from '../../lib/engine/picks/types';
 import type { BansRecommendation } from '../../lib/engine/bans/types';
 import { getProcessedRecommendations, getSingleChampionBuild } from '../../lib/engine/picks/index';
 import { getProcessedBans } from '../../lib/engine/bans/index';
-import { getNameFromId, setEngineWeights, initializePersonalStats } from '../../lib/engine/core/constants';
+import { getNameFromId, setEngineWeights, initializePersonalStats, initializeChampionPreferences } from '../../lib/engine/core/constants';
 import { ENRICHED_DB, initializeEngineData, initializeItemsData } from '../../lib/engine/core/dataProvider';
+import { getProbuildstatsTopPicksSnapshot } from '../../lib/meta/probuildstatsTopPicks';
 import { CombatDirectivesPanel } from './TacticalDirectives';
 import { getTacticalDirectives } from '../../lib/engine/tacticalEngine';
 import { analyzeComposition } from '../../lib/engine/picks/compositionAnalyzer';
@@ -95,6 +96,7 @@ export const DraftPage = () => {
     const activeActionRef = useRef<any>(null);
     const lastActionKeyRef = useRef<string>("none");
     const lastFingerprintRef = useRef<string>("");
+    const championDataRef = useRef<any[] | null>(null);
     const lastImportedIdRef = useRef<number>(0);
     const lastImportedSignatureRef = useRef<string>("");
     const lastEveryonePickedRef = useRef<boolean>(false);
@@ -189,6 +191,10 @@ export const DraftPage = () => {
                 const configRes = await fetch('/api/config');
                 if (configRes.ok) {
                     const config = await configRes.json();
+                    initializeChampionPreferences({
+                        preferredPickIds: config.preferred_pick_champion_ids,
+                        preferredBanIds: config.preferred_ban_champion_ids
+                    });
                     if (config.engine_weights) {
                         setEngineWeights(config.engine_weights);
                         console.log("⚖️ Pesos del motor sincronizados.");
@@ -220,6 +226,15 @@ export const DraftPage = () => {
                     initializePersonalStats(statsData);
                 }
 
+                // El ranking de Probuildstats fija el pool y el puesto inicial de cada rol.
+                let topPicksSnapshot: any;
+                try {
+                    const metaRes = await fetch('/api/meta/top-picks');
+                    if (metaRes.ok) topPicksSnapshot = await metaRes.json();
+                } catch (error) {
+                    console.warn('No se pudo cargar el snapshot de Probuildstats; se usa el incluido en la app.', error);
+                }
+
                 // 4. Obtener y configurar Campeones Enriquecidos.
                 // La API puede estar terminando una migración al arrancar; reintentar evita
                 // que un fallo transitorio deje el motor vacío durante toda la sesión.
@@ -240,8 +255,23 @@ export const DraftPage = () => {
                 }
                 if (championsRes?.ok) {
                     const data = await championsRes.json();
-                    initializeEngineData(data);
+                    championDataRef.current = data;
+                    initializeEngineData(data, topPicksSnapshot);
                     console.log("🧬 Campeones enriquecidos sincronizados con el cliente.");
+
+                    // Mostrar el último snapshot guardado sin bloquear el inicio; si cambió,
+                    // reemplazar el pool en memoria para el siguiente recálculo del draft.
+                    void fetch('/api/meta/top-picks?refresh=1')
+                        .then(res => res.ok ? res.json() : null)
+                        .then(latest => {
+                            if (!latest || latest.version === topPicksSnapshot?.version) return;
+                            topPicksSnapshot = latest;
+                            initializeEngineData(data, latest);
+                            lastFingerprintRef.current = '';
+                            window.dispatchEvent(new Event('hexdraft:meta-updated'));
+                            console.log(`📈 Ranking Probuildstats actualizado al parche ${latest.patch}.`);
+                        })
+                        .catch(error => console.warn('No se pudo comprobar si hay un nuevo ranking Probuildstats.', error));
                 } else {
                     console.warn("No se pudo obtener datos de SQLite después de 3 intentos; se reintentará al recargar la página.");
                 }
@@ -250,6 +280,40 @@ export const DraftPage = () => {
             }
         };
         loadDb();
+    }, []);
+
+    useEffect(() => {
+        const applyPreferences = (event: Event) => {
+            const detail = (event as CustomEvent).detail || {};
+            initializeChampionPreferences({
+                preferredPickIds: detail.preferredPickIds,
+                preferredBanIds: detail.preferredBanIds
+            });
+            lastFingerprintRef.current = '';
+        };
+        window.addEventListener('hexdraft:preferences-updated', applyPreferences);
+        return () => window.removeEventListener('hexdraft:preferences-updated', applyPreferences);
+    }, []);
+
+    useEffect(() => {
+        const refreshMetaSnapshot = async () => {
+            if (!championDataRef.current) return;
+            try {
+                const response = await fetch('/api/meta/top-picks?refresh=1');
+                if (!response.ok) return;
+                const latest = await response.json();
+                if (!latest?.version || latest.version === getProbuildstatsTopPicksSnapshot().version) return;
+                initializeEngineData(championDataRef.current, latest);
+                lastFingerprintRef.current = '';
+                window.dispatchEvent(new Event('hexdraft:meta-updated'));
+                console.log(`📈 Ranking Probuildstats actualizado al parche ${latest.patch}.`);
+            } catch (error) {
+                console.warn('No se pudo actualizar el ranking Probuildstats en segundo plano.', error);
+            }
+        };
+
+        const interval = window.setInterval(() => void refreshMetaSnapshot(), 6 * 60 * 60 * 1000);
+        return () => window.clearInterval(interval);
     }, []);
 
     // Hook para detectar responsividad en el lado del cliente

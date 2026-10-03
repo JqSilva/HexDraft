@@ -48,6 +48,10 @@ export interface EnrichedChampion extends ChampionData {
     winRate: number;
     tier: number;
   };
+  /** Posición ordinal publicada por Probuildstats para el rol asignado. */
+  metaRank?: number;
+  /** Posiciones y rangos del snapshot Probuildstats para este campeón. */
+  metaRanksByRole?: Record<string, number>;
   scalingType: ScalingType;
   buildData?: any;
   builds?: any[];

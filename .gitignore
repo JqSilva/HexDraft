@@ -78,6 +78,11 @@ data/db-version.json
 # --- Cache de LCU ---
 src/lib/data/lcu-cache.json
 
+# Bundled, versioned Probuildstats top-20 seed used by the recommendation engine.
+!src/lib/data/
+src/lib/data/*
+!src/lib/data/probuildstats-top-picks.json
+
 # --- Test & Simulation System ---
 scripts/simulate-draft.js
 src/lib/scripts/test-engine.ts

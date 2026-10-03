@@ -1,5 +1,6 @@
 import type { EnrichedChampion } from './core/types.js';
 import { normalizeRole } from './core/constants.js';
+import { getChampionTopRoleRanks } from '../meta/probuildstatsTopPicks.js';
 
 export interface DraftContext {
   allyRoles?: Record<number, string>;
@@ -20,6 +21,12 @@ export function getRoleProbability(champ: EnrichedChampion, lane: string, assign
   if (assigned[champ.id]) return normalizeRole(assigned[champ.id]) === target ? 1 : 0;
   const occupied = new Set(Object.entries(assigned).filter(([id]) => Number(id) !== champ.id).map(([, role]) => normalizeRole(role)));
   if (occupied.has(target)) return 0;
+  const rankedRoles = getChampionTopRoleRanks(champ.id).filter(role => !occupied.has(role.lane));
+  if (rankedRoles.length) {
+    const totalRankWeight = rankedRoles.reduce((sum, role) => sum + 1 / role.rank, 0);
+    const targetWeight = rankedRoles.find(role => role.lane === target);
+    return targetWeight ? (1 / targetWeight.rank) / totalRankWeight : 0;
+  }
   const rates = champ.lanesPickrate || champ.lanes_pickrate || {};
   const candidates = Object.entries(rates).map(([role, value]) => [normalizeRole(role), Math.max(0, Number(value) || 0)] as const)
     .filter(([role]) => !occupied.has(role));

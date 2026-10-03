@@ -1,8 +1,7 @@
 import type { DraftContext } from '../draftContext.js';
 // src/lib/engine/picks/index.ts
-import { DATA_BY_LANE, ENRICHED_DB, initializeEngineData } from '../core/dataProvider.js';
+import { DATA_BY_LANE, initializeEngineData } from '../core/dataProvider.js';
 import { normalizeRole, getNameFromId } from '../core/constants.js';
-import type { EnrichedChampion } from '../core/types.js';
 import type { Recommendation, PickRecommendation, PickEngineInput } from './types.js';
 import { calculateScore, getSingleChampionBuild } from './pickScoring.js';
 
@@ -71,18 +70,9 @@ export function getProcessedRecommendations(
   const enemyNames = enemies.map(id => getNameFromId(id)).filter(Boolean) as string[];
 
   let pool = DATA_BY_LANE[targetLane] || [];
-  if (pool.length === 0) {
-    pool = (Object.values(ENRICHED_DB) as EnrichedChampion[]).filter(c => {
-      const primary = normalizeRole(c.lane, 'UNKNOWN' as any);
-      if (primary === targetLane) return true;
-      const playLanes: string[] = c.playLanes || c.play_lanes || [];
-      return Array.isArray(playLanes) && playLanes.map(l => normalizeRole(l, 'UNKNOWN' as any)).includes(targetLane);
-    });
-  }
 
   if (singleId) {
-    const targetChamp = pool.find(c => c.id === singleId) || 
-                        (Object.values(ENRICHED_DB) as EnrichedChampion[]).find(c => c.id === singleId);
+    const targetChamp = pool.find(c => c.id === singleId);
     pool = targetChamp ? [targetChamp] : [];
   }
 

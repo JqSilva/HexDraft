@@ -1,6 +1,6 @@
 // src/lib/engine/bans/index.ts
 import { ENRICHED_DB, initializeEngineData } from '../core/dataProvider.js';
-import { normalizeRole, getIdFromName, normalizeKey } from '../core/constants.js';
+import { normalizeRole, getIdFromName, normalizeKey, isPreferredBan } from '../core/constants.js';
 import type { EnrichedChampion } from '../core/types.js';
 import type { BanEngineInput, BansRecommendation, BanRecommendation } from './types.js';
 import { evaluateLaneThreat, isChampionInLane } from './laneThreatEvaluator.js';
@@ -76,10 +76,17 @@ export function getBanRecommendations(
       scaledScore = 8.5 + (scaledScore - 8.5) * 0.65;
     }
 
+    const preferredBonus = isPreferredBan(champId) ? 0.45 : 0;
+    scaledScore += preferredBonus;
     const finalScore = parseFloat(Math.min(9.8, Math.max(1.0, scaledScore)).toFixed(1));
 
     // Consolidar razones positivas
-    const allReasons = [...laneResult.reasons, ...metaResult.reasons, ...compResult.reasons];
+    const allReasons = [
+      ...(preferredBonus > 0 ? ['Preferencia personal: pequeño impulso por campeón que prefieres banear (+0.45)'] : []),
+      ...laneResult.reasons,
+      ...metaResult.reasons,
+      ...compResult.reasons
+    ];
     const uniqueReasons = Array.from(new Set(allReasons)).filter(Boolean);
     if (uniqueReasons.length === 0) {
       uniqueReasons.push(`Selección común en ${targetLane} con presencia constante`);
