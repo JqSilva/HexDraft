@@ -1155,7 +1155,7 @@ export const DraftPage = () => {
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
                     }`}>
-                    <div className={`bg-panel-warm border border-border-warm rounded-xl h-full min-h-0 relative overflow-hidden flex flex-col ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
+                    <div className={`bg-ink-900 rounded-2xl h-full min-h-0 relative overflow-hidden flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.65)] ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
                         }`}>
 
                         {/* ALERTA DE AUTO-PICK SI HUBO ERROR O NO SE DETECTÓ EL ROL */}
@@ -1182,10 +1182,10 @@ export const DraftPage = () => {
                         )}
 
                         {/* CABECERA DINÁMICA */}
-                        <header className="mb-3 flex justify-between items-center border-b border-border-warm pb-3 shrink-0">
+                        <header className="mb-4 flex justify-between items-center border-b border-ink-800/80 pb-3.5 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div>
-                                    <h2 className="text-xl md:text-2xl font-semibold text-white leading-tight">
+                                    <h2 className="text-xl md:text-2xl font-semibold text-text-strong leading-tight tracking-tight">
                                         {isBuildOrReasonsView && currentBuild ? (
                                             <>Análisis <span className="text-purple-accent">de build</span></>
                                         ) : (
@@ -1196,12 +1196,12 @@ export const DraftPage = () => {
                                             )
                                         )}
                                     </h2>
-                                    <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
+                                    <p className="text-xs md:text-sm text-text-muted mt-1 flex items-center gap-2">
                                         {isPlaying ? 'Monitor de partida activo' : 'Motor de recomendación en línea'}
                                         {gamePhase !== 'Offline' && (
                                             <>
-                                                <span className="text-slate-600" aria-hidden="true">·</span>
-                                                <span className="text-slate-300">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
+                                                <span className="text-ink-600" aria-hidden="true">·</span>
+                                                <span className="text-text-secondary">{PHASE_TRANSLATIONS[gamePhase] || gamePhase}</span>
                                             </>
                                         )}
                                     </p>
@@ -1240,7 +1240,7 @@ export const DraftPage = () => {
                                             <div className="w-[250px] shrink-0 flex flex-col min-h-0 select-none text-left">
                                                 {/* La identidad del campeón comparte el mismo lenguaje de pestañas que el resto del análisis. */}
                                                 <div className="flex items-end h-[52px] shrink-0 -mb-px">
-                                                    <div className="h-[52px] w-full min-w-0 bg-panel-warm border border-border-warm border-b-transparent rounded-t-lg z-20 flex items-center justify-between gap-3 px-4">
+                                                    <div className="h-[52px] w-full min-w-0 bg-ink-850 border border-ink-800/80 border-b-transparent rounded-t-lg z-20 flex items-center justify-between gap-3 px-4">
                                                         <h2 className="min-w-0 text-[17px] font-black text-white uppercase tracking-[0.14em] leading-none truncate select-all">
                                                             {champData?.name || currentBuild.name}
                                                         </h2>
@@ -1255,7 +1255,7 @@ export const DraftPage = () => {
                                                 </div>
 
                                                 {/* La ilustración ocupa toda la card para que el campeón sea el elemento protagonista. */}
-                                                <div className="flex-1 min-h-0 w-full overflow-hidden bg-bg-warm/30 shrink-0 relative border border-border-warm/60 rounded-sm rounded-tl-none">
+                                                <div className="flex-1 min-h-0 w-full overflow-hidden bg-ink-950/40 shrink-0 relative border border-ink-800/60 rounded-sm rounded-tl-none">
                                                     <img
                                                         src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${getChampionCdnName(currentBuild.name)}_0.jpg`}
                                                         alt={currentBuild.name}
@@ -1377,7 +1377,7 @@ export const DraftPage = () => {
                                             {/* Cabecera / Pestaña Simulada para Alineación Estética */}
                                             <div className="flex justify-between items-end gap-3 shrink-0 h-[52px] -mb-px">
                                                 <div className="flex gap-1 items-end flex-1 min-w-0 -mb-px z-10">
-                                                    <span className={`bg-panel-warm border border-border-warm border-b-transparent rounded-t-lg z-20 font-semibold text-purple-accent select-none h-[52px] flex items-center justify-center
+                                                    <span className={`bg-ink-850 border border-ink-800/80 border-b-transparent rounded-t-lg z-20 font-semibold text-purple-accent select-none h-[52px] flex items-center justify-center
                                                         ${isCompact
                                                             ? 'px-3 tracking-[0.1em] text-[9.5px]'
                                                             : 'px-5 tracking-[0.25em] text-[10px] md:text-[11px]'
@@ -1386,7 +1386,7 @@ export const DraftPage = () => {
                                                     </span>
                                                 </div>
                                                 {/* Badge de Escalado Táctico alineado en la fila superior */}
-                                                <div className={`border border-border-warm/50 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center
+                                                <div className={`border border-ink-800/60 border-b-transparent rounded-t-sm select-none z-20 flex items-center justify-center
                                                     ${isCompact
                                                         ? 'px-2 py-1.5 text-[12px] tracking-[0.1em] font-bold h-[30px] uppercase '
                                                         : 'px-3 py-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-widest h-[32px]'
