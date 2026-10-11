@@ -13,14 +13,14 @@ export const DraftDamageBalance = ({ allyNames, myTeamAnalysis }: DraftDamageBal
   const isBalanced = myTeamAnalysis.damageProfile.isBalanced;
 
   return (
-    <div className="p-4 border border-border-warm/30 mb-4 bg-input-warm/20 rounded-lg">
+    <div className="p-4 border border-ink-800/60 mb-4 bg-ink-850/50 rounded-lg">
       {/* Fila de balance de Daño */}
       <div className="space-y-1.5">
-        <div className="flex justify-between text-xs font-medium text-slate-400">
+        <div className="flex justify-between text-xs font-medium text-text-secondary">
           <span>Daño Físico (AD): {physicalPct}%</span>
           <span>Daño Mágico (AP): {magicPct}%</span>
         </div>
-        <div className="h-2 w-full bg-slate-950 rounded-sm overflow-hidden flex border border-border-warm/40">
+        <div className="h-2 w-full bg-ink-950 rounded-sm overflow-hidden flex border border-ink-800/60">
           <div
             style={{ width: `${physicalPct}%` }}
             className={`bg-amber-500/80 h-full transition-all duration-300 ${allyNames.length === 0 ? 'opacity-30' : ''}`}
@@ -36,7 +36,7 @@ export const DraftDamageBalance = ({ allyNames, myTeamAnalysis }: DraftDamageBal
           </span>
         )}
         {allyNames.length === 0 && (
-          <span className="text-xs text-slate-500 font-medium block">
+          <span className="text-xs text-text-muted font-medium block">
             Esperando selecciones de campeones...
           </span>
         )}
