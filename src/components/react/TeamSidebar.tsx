@@ -20,7 +20,7 @@ export const TeamSidebar = memo(({ team, isEnemy = false, isPlaying, isCompact }
         isEnemy ? (
           <div className="flex items-center justify-end gap-2 px-1 pb-1">
             {!isCompact && (
-              <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider font-sans">
+              <span className="text-text-primary text-xs font-semibold uppercase tracking-wider font-sans">
                 Enemigos
               </span>
             )}
