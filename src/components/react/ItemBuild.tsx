@@ -37,16 +37,16 @@ const COMMON_SITUATIONAL_ITEMS = [
 
 const DAMAGE_COLORS: Record<string, { accent: string; title: string }> = {
     AD: {
-        accent: 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60',
+        accent: 'border-amber-500/25 bg-amber-500/5 hover:border-amber-500/50',
         title: 'text-amber-400'
     },
     AP: {
-        accent: 'border-blue-500/30 bg-blue-500/5 hover:border-blue-500/60',
-        title: 'text-blue-400'
+        accent: 'border-indigo-400/25 bg-indigo-500/5 hover:border-indigo-400/50',
+        title: 'text-indigo-300'
     },
     Hybrid: {
-        accent: 'border-purple-500/30 bg-purple-500/5 hover:border-purple-500/60',
-        title: 'text-purple-accent'
+        accent: 'border-violet-muted/30 bg-violet-muted/5 hover:border-violet-muted/60',
+        title: 'text-violet'
     },
 };
 
@@ -67,8 +67,8 @@ const ClusterTab = ({
     const colors = DAMAGE_COLORS[typeKey] || DAMAGE_COLORS.Hybrid;
 
     const tabStyle = isActive
-        ? 'border rounded-lg border-border-warm/50 border-b-transparent rounded-t-lg z-20 font-semibold'
-        : 'bg-panel-warm border border-border-warm rounded-t-sm opacity-65 hover:opacity-100';
+        ? 'bg-ink-900 border-t border-l border-r border-ink-700/80 rounded-t-lg z-20 font-medium text-text-strong'
+        : 'bg-ink-950/70 border-t border-l border-r border-transparent hover:border-ink-800 rounded-t-lg opacity-70 hover:opacity-100 text-text-secondary transition-colors';
 
     const keystone = cluster.build?.runes?.keystone;
     const coreItems = cluster.build?.items?.core || [];
@@ -84,25 +84,25 @@ const ClusterTab = ({
                     {keystone?.icon && (
                         <img
                             src={keystone.icon}
-                            className="w-[20px] h-[20px] rounded-full bg-slate-950 border border-purple-accent/30"
+                            className="w-[20px] h-[20px] rounded-full bg-ink-950 border border-violet-muted/40"
                             alt="keystone"
                             title={keystone.name}
                         />
                     )}
                     {keystone?.icon && coreItems.length > 0 && (
-                        <div className="h-4 w-px bg-border-warm/30 mx-0.5"></div>
+                        <div className="h-4 w-px bg-ink-700/50 mx-0.5"></div>
                     )}
                     {coreItems.slice(0, 3).map((item: any, idx: number) => (
                         <img
                             key={idx}
                             src={item.icon || getDDragonUrl('item', item.id)}
-                            className="w-[20px] h-[20px] rounded-sm border border-border-warm/60"
+                            className="w-[20px] h-[20px] rounded-md border border-ink-700/60"
                             alt="core item"
                             title={item.name}
                         />
                     ))}
                 </div>
-                <span className="text-[10px] font-mono font-black text-slate-300 tabular-nums border-l border-border-warm/30 pl-2">
+                <span className="text-[10px] font-mono font-bold text-text-secondary tabular-nums border-l border-ink-700/40 pl-2">
                     {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(1)}
                 </span>
             </button>
@@ -116,10 +116,10 @@ const ClusterTab = ({
             className={`flex flex-col gap-0.5 p-1.5 px-2.5 transition-all duration-200 cursor-pointer text-left w-[145px] shrink-0 ${tabStyle}`}
         >
             <div className="flex justify-between items-center w-full gap-1.5">
-                <span className={`text-[10px] font-black uppercase tracking-wider ${colors.title} truncate max-w-[90px]`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${colors.title} truncate max-w-[90px]`}>
                     {cluster.title || (isAp ? 'AP' : isAd ? 'AD' : 'Híbrido')}
                 </span>
-                <span className="text-[10.5px] font-mono font-black text-slate-400 tabular-nums">
+                <span className="text-[10.5px] font-mono font-bold text-text-muted tabular-nums">
                     {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(2)}
                 </span>
             </div>
@@ -129,19 +129,19 @@ const ClusterTab = ({
                 {keystone?.icon && (
                     <img
                         src={keystone.icon}
-                        className="w-[22px] h-[22px] rounded-full bg-slate-950 border border-purple-accent/30"
+                        className="w-[22px] h-[22px] rounded-full bg-ink-950 border border-violet-muted/40"
                         alt="keystone"
                         title={keystone.name}
                     />
                 )}
                 {keystone?.icon && coreItems.length > 0 && (
-                    <div className="h-4.5 w-px bg-border-warm/30 mx-0.5"></div>
+                    <div className="h-4.5 w-px bg-ink-700/50 mx-0.5"></div>
                 )}
                 {coreItems.slice(0, 3).map((item: any, idx: number) => (
                     <img
                         key={idx}
                         src={item.icon || `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`}
-                        className="w-[22px] h-[22px] rounded-sm border border-border-warm/60"
+                        className="w-[22px] h-[22px] rounded-md border border-ink-700/60"
                         alt="core item"
                         title={item.name}
                     />
@@ -220,8 +220,8 @@ export const ItemBuild = memo(({
             </div>
 
             {/* Panel de Contenido de la Build Activa */}
-            <div className={`flex-grow p-3 md:p-4 bg-bg-warm/30 border border-border-warm/50 rounded-sm rounded-tl-none flex flex-col gap-4 overflow-hidden`}>
-                <div className={`flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2 flex flex-col  gap-5 pb-4 ${isCompact ? '' : "justify-center"}`}>
+            <div className={`flex-grow p-3 md:p-4 bg-ink-900 border border-ink-700/70 rounded-lg rounded-tl-none flex flex-col gap-4 overflow-hidden`}>
+                <div className={`flex-1 min-h-0 overflow-y-auto scrollbar-tactical pr-2 flex flex-col gap-5 pb-4 ${isCompact ? '' : "justify-center"}`}>
 
                     {/* Grid 2x2 Responsivo */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
@@ -229,7 +229,7 @@ export const ItemBuild = memo(({
                         {/* Bloque [0,0]: Runas */}
                         {build?.runes && (
                             <div className="flex flex-col gap-2 min-w-0">
-                                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block text-center pb-1 mb-1 select-none font-sans">
                                     Runas
                                 </span>
                                 <div className="flex flex-wrap justify-center items-center gap-1.5 max-w-[225px] mx-auto w-full">
@@ -237,48 +237,48 @@ export const ItemBuild = memo(({
                                         <div className="relative group shrink-0" title={build.runes.keystone.name}>
                                             <img
                                                 src={build.runes.keystone.icon}
-                                                className="w-10 h-10 rounded-full border border-purple-accent bg-slate-950 p-0.5 hover:scale-105 transition-transform duration-250"
+                                                className="w-10 h-10 rounded-full border border-violet/70 bg-ink-950 p-0.5 hover:scale-105 transition-transform duration-200"
                                                 alt="keystone"
                                             />
                                         </div>
                                     )}
 
-                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+                                    <div className="h-6 w-px bg-ink-700/40 shrink-0"></div>
 
                                     <div className="flex gap-1 justify-center shrink-0">
                                         {build.runes.selections?.slice(1, 4).map((rune: any, idx: number) => rune && (
                                             <div key={`prim-${idx}`} className="relative group w-[30px] h-[30px]" title={rune.name}>
                                                 <img
                                                     src={rune.icon}
-                                                    className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
+                                                    className="w-full h-full rounded-full border border-ink-700/50 bg-ink-950/60 p-0.5 hover:border-violet/70 transition-colors"
                                                     alt="primary rune"
                                                 />
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+                                    <div className="h-6 w-px bg-ink-700/40 shrink-0"></div>
 
                                     <div className="flex gap-1 justify-center shrink-0">
                                         {build.runes.selections?.slice(4, 6).map((rune: any, idx: number) => rune && (
                                             <div key={`sec-${idx}`} className="relative group w-[30px] h-[30px]" title={rune.name}>
                                                 <img
                                                     src={rune.icon}
-                                                    className="w-full h-full rounded-full border border-border-warm/40 bg-slate-950/40 p-0.5 hover:border-purple-accent transition-colors"
+                                                    className="w-full h-full rounded-full border border-ink-700/50 bg-ink-950/60 p-0.5 hover:border-violet/70 transition-colors"
                                                     alt="secondary rune"
                                                 />
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="h-6 w-px bg-border-warm/20 shrink-0"></div>
+                                    <div className="h-6 w-px bg-ink-700/40 shrink-0"></div>
 
                                     <div className="flex gap-0.5 justify-center shrink-0">
                                         {build.runes.shards?.map((shard: any, idx: number) => shard && (
                                             <div key={`shard-${idx}`} className="relative group w-[24px] h-[24px]" title={shard.name}>
                                                 <img
                                                     src={shard.icon}
-                                                    className="w-full h-full rounded-full border border-border-warm/30 bg-slate-950/80 p-0.5 hover:border-purple-accent transition-colors"
+                                                    className="w-full h-full rounded-full border border-ink-700/40 bg-ink-950/80 p-0.5 hover:border-violet/70 transition-colors"
                                                     alt="shard"
                                                 />
                                             </div>
@@ -290,7 +290,7 @@ export const ItemBuild = memo(({
 
                         {/* Bloque [0,1]: Objetos de Inicio y Botas */}
                         <div className="flex flex-col gap-2 min-w-0">
-                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block text-center pb-1 mb-1 select-none font-sans">
                                 Objetos de Inicio y Botas
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
@@ -298,7 +298,7 @@ export const ItemBuild = memo(({
                                     <div key={`starter-${idx}`} className="relative group w-[40px] h-[40px]" title={item?.name || 'Objeto inicial'}>
                                         <img
                                             src={item?.icon || getDDragonUrl('item', item?.id)}
-                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            className="w-full h-full border border-ink-700/70 rounded-md hover:border-violet/70 transition-colors cursor-default"
                                             alt={item?.name || 'starter item'}
                                         />
                                     </div>
@@ -307,10 +307,10 @@ export const ItemBuild = memo(({
                                     <div className="relative w-[40px] h-[40px]" title={build.items.boots.name}>
                                         <img
                                             src={build.items.boots.icon || getDDragonUrl('item', build.items.boots.id)}
-                                            className="w-full h-full border border-border-warm/60 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            className="w-full h-full border border-ink-700/70 rounded-md hover:border-violet/70 transition-colors cursor-default"
                                             alt="boots"
                                         />
-                                        <div className="absolute -top-1.5 -right-1.5 bg-input-warm border border-border-warm/60 text-[8px] font-black px-1 py-0.5 rounded-sm text-slate-400 select-none">
+                                        <div className="absolute -top-1.5 -right-1.5 bg-ink-950 border border-ink-700/70 text-[8px] font-mono font-bold px-1 py-0.5 rounded text-text-muted select-none">
                                             B
                                         </div>
                                     </div>
@@ -320,7 +320,7 @@ export const ItemBuild = memo(({
 
                         {/* Bloque [1,0]: Build completa */}
                         <div className="flex flex-col gap-2 min-w-0">
-                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block text-center pb-1 mb-1 select-none font-sans">
                                 Build completa
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2.5 max-w-[210px] mx-auto w-full">
@@ -335,18 +335,18 @@ export const ItemBuild = memo(({
                                         <div key={`core-${idx}`} className="relative w-[40px] h-[40px] group" title={tooltipText}>
                                             <img
                                                 src={item?.icon || getDDragonUrl('item', item?.id)}
-                                                className={`w-full h-full rounded-sm transition-colors cursor-default ${
+                                                className={`w-full h-full rounded-md transition-colors cursor-default ${
                                                     isSuppSlot
                                                         ? 'border-2 border-amber-400/90'
-                                                        : 'border border-border-warm/60 hover:border-purple-accent'
+                                                        : 'border border-ink-700/70 hover:border-violet/70'
                                                 }`}
                                                 alt={item?.name || 'core item'}
                                             />
                                             <div
-                                                className={`absolute -top-1.5 -right-1.5 border text-[7.5px] font-black px-1 py-0.2 rounded-sm select-none tracking-tight ${
+                                                className={`absolute -top-1.5 -right-1.5 border text-[7.5px] font-mono font-bold px-1 py-0.2 rounded select-none tracking-tight ${
                                                     isSuppSlot
                                                         ? 'bg-amber-950/90 border-amber-400/80 text-amber-300'
-                                                        : 'bg-input-warm border-border-warm/60 text-slate-400'
+                                                        : 'bg-ink-950 border-ink-700/70 text-text-muted'
                                                 }`}
                                             >
                                                 {isSuppSlot ? 'SUPP' : `0${idx + 1}`}
@@ -359,7 +359,7 @@ export const ItemBuild = memo(({
 
                         {/* Bloque [1,1]: Objetos Situacionales */}
                         <div className="flex flex-col gap-2 min-w-0">
-                            <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block text-center border-b border-border-warm/20 pb-1.5 mb-1 select-none">
+                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block text-center pb-1 mb-1 select-none font-sans">
                                 Objetos Situacionales
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
@@ -367,7 +367,7 @@ export const ItemBuild = memo(({
                                     <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={item?.name}>
                                         <img
                                             src={item?.icon || getDDragonUrl('item', item?.id)}
-                                            className="w-full h-full border border-border-warm/40 rounded-sm hover:border-purple-accent transition-colors cursor-default"
+                                            className="w-full h-full border border-ink-700/60 rounded-md hover:border-violet/70 transition-colors cursor-default"
                                             alt={item?.name || 'situational item'}
                                         />
                                     </div>
@@ -377,32 +377,32 @@ export const ItemBuild = memo(({
 
                         {/* Bloque Swaps Situacionales Recomendados (si existen) */}
                         {coreItemSwaps && coreItemSwaps.length > 0 && (
-                            <div className="col-span-1 md:col-span-2 border-t border-border-warm/30 pt-2 flex flex-col gap-1.5">
-                                <span className="text-[9px] text-amber-400/90 font-extrabold uppercase tracking-widest block text-center select-none">
+                            <div className="col-span-1 md:col-span-2 border-t border-ink-700/40 pt-2.5 flex flex-col gap-1.5">
+                                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest block text-center select-none font-sans">
                                     Cambios adaptativos
                                 </span>
-                                <div className="flex flex-col gap-1 max-w-md mx-auto w-full">
+                                <div className="flex flex-col gap-1.5 max-w-md mx-auto w-full">
                                     {coreItemSwaps.slice(0, 2).map((swap: any, sIdx: number) => (
                                         <div
                                             key={`swap-${sIdx}`}
-                                            className="flex items-center justify-between gap-2 p-1.5 bg-input-warm/50 border border-border-warm/40 rounded-sm text-[10px]"
+                                            className="flex items-center justify-between gap-2 p-2 bg-ink-850/80 border border-ink-700/60 rounded-md text-[10px]"
                                         >
                                             <div className="flex items-center gap-1.5 shrink-0">
                                                 <img
                                                     src={swap.replaceItem?.icon || getDDragonUrl('item', swap.replaceItem?.id)}
-                                                    className="w-[22px] h-[22px] rounded-sm border border-red-500/50 opacity-80"
+                                                    className="w-[22px] h-[22px] rounded-md border border-status-danger/60 opacity-85"
                                                     title={`Reemplazar: ${swap.replaceItem?.name}`}
                                                     alt="replace item"
                                                 />
-                                                <span className="text-slate-500 font-bold">→</span>
+                                                <span className="text-text-muted font-bold">→</span>
                                                 <img
                                                     src={swap.withItem?.icon || getDDragonUrl('item', swap.withItem?.id)}
-                                                    className="w-[22px] h-[22px] rounded-sm border border-emerald-500/80"
+                                                    className="w-[22px] h-[22px] rounded-md border border-status-success/70"
                                                     title={`Equipar: ${swap.withItem?.name}`}
                                                     alt="with item"
                                                 />
                                             </div>
-                                            <span className="text-slate-300 text-[9.5px] truncate font-medium flex-1 pl-1">
+                                            <span className="text-text-secondary text-[10px] truncate font-sans font-medium flex-1 pl-1">
                                                 {swap.reason}
                                             </span>
                                         </div>

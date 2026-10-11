@@ -30,6 +30,7 @@ import { DraftDamageBalance } from './draft/DraftDamageBalance';
 import {
     getFriendlyRoleName,
     executeLcuAction,
+    preselectLcuChampion,
     importToClient,
     PHASE_TRANSLATIONS,
     POS_BASE,
@@ -58,6 +59,8 @@ export const DraftPage = () => {
     const [prevConnected, setPrevConnected] = useState<boolean | null>(null);
     const [activePlaystyleIndex, setActivePlaystyleIndex] = useState<number>(0);
     const [localPlayerCellId, setLocalPlayerCellId] = useState<number>(0);
+    const [pendingPreselectId, setPendingPreselectId] = useState<number | null>(null);
+    const [preselectedChampId, setPreselectedChampId] = useState<number | null>(null);
 
     // --- CONFIGURACIÓN ---
     const [autoPick, setAutoPick] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem('autoPick:v1') === 'true' : false));
@@ -1038,9 +1041,59 @@ export const DraftPage = () => {
         }
     }, [currentBuild]);
 
-    const handleSelectChamp = useCallback((rec: any) => {
-        setPreviewChamp(rec);
+    const toastTimerRef = useRef<any>(null);
+
+    const showFeedbackToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'info', durationMs = 2500) => {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setToast({ message, type });
+        toastTimerRef.current = setTimeout(() => {
+            setToast(null);
+        }, durationMs);
     }, []);
+
+    const handleSelectChamp = useCallback(async (rec: any) => {
+        if (!rec || !rec.id) return;
+        const isBan = view === 'bans';
+        const champName = rec.name || getNameFromId(rec.id) || `Campeón ${rec.id}`;
+
+        // Durante el draft activo en LoL, preseleccionar provisionalmente sin bloquear
+        if (inDraft) {
+            setPendingPreselectId(rec.id);
+            try {
+                const result = await preselectLcuChampion({
+                    championId: rec.id,
+                    isBan,
+                    sessionData: currentDataRef.current
+                });
+
+                if (result.success) {
+                    setPreselectedChampId(rec.id);
+                    const feedback = result.actionType === 'intent'
+                        ? `Intención registrada: ${champName}`
+                        : (isBan ? `Preseleccionado bloqueo: ${champName}` : `Preseleccionado: ${champName}`);
+                    showFeedbackToast(feedback, 'success', 2000);
+                } else {
+                    // Retroalimentación discreta y no intrusiva
+                    if (result.reason === 'NOT_YOUR_TURN') {
+                        showFeedbackToast(result.message, 'info', 2200);
+                    } else if (result.reason === 'ALREADY_LOCKED') {
+                        showFeedbackToast(result.message, 'info', 2200);
+                    } else if (result.reason === 'CHAMPION_UNAVAILABLE') {
+                        showFeedbackToast(result.message, 'error', 2500);
+                    } else if (result.reason === 'IN_FLIGHT') {
+                        // Ignorado silenciosamente para evitar sobrecarga visual
+                    } else {
+                        showFeedbackToast(result.message, 'error', 2500);
+                    }
+                }
+            } finally {
+                setPendingPreselectId(null);
+            }
+        } else {
+            // Fuera de sesión activa, conservar visualización informativa
+            setPreviewChamp(rec);
+        }
+    }, [inDraft, view, showFeedbackToast]);
 
     const handleCloseModal = useCallback(() => {
         setPreviewChamp(null);
@@ -1052,18 +1105,31 @@ export const DraftPage = () => {
         return inDraft && (view === 'build' || view === 'reasons') && currentBuild !== null;
     }, [inDraft, view, currentBuild]);
 
+    const activePreselectedId = useMemo(() => {
+        if (view === 'bans') {
+            const activeAction = activeActionRef.current;
+            return activeAction?.type === 'ban' && activeAction.championId > 0
+                ? activeAction.championId
+                : preselectedChampId;
+        }
+        const myPlayer = myTeam.find((p: any) => p.cellId === localPlayerCellId);
+        const myHover = myPlayer?.championPickIntent || 0;
+        const activeAction = activeActionRef.current;
+        if (activeAction?.type === 'pick' && activeAction.championId > 0) {
+            return activeAction.championId;
+        }
+        return myHover > 0 ? myHover : preselectedChampId;
+    }, [view, myTeam, localPlayerCellId, preselectedChampId]);
+
     return (
         <div className={`h-full w-full max-w-[1440px] mx-auto px-4 md:px-6 flex flex-col justify-center overflow-hidden relative min-h-0 ${isCompact ? 'py-1.5' : 'py-4'}`}>
-            {/* TOAST DE CONEXIÓN */}
+            {/* TOAST DE FEEDBACK Y ESTADO DISCRETO (QUIET ARCANA) */}
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 py-3 px-5 border rounded-xl shadow-lg animate-in slide-in-from-bottom-5 duration-250 select-none
-                    ${toast.type === 'success'
-                        ? 'bg-emerald-950/85 border-emerald-500/40 text-emerald-200 shadow-emerald-950/40'
-                        : 'bg-red-950/85 border-red-500/40 text-red-200 shadow-red-950/40'
-                    }`}
-                >
-                    <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-red-500'}`} />
-                    <span className="text-sm font-medium">{toast.message}</span>
+                <div className="fixed bottom-6 right-6 z-[9999] flex items-center gap-2.5 py-2 px-3.5 rounded-lg bg-ink-900 border border-ink-700 text-text-primary shadow-xl shadow-black/80 animate-in slide-in-from-bottom-2 duration-150 select-none">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${
+                        toast.type === 'success' ? 'bg-status-success' : toast.type === 'info' ? 'bg-violet' : 'bg-status-danger'
+                    }`} />
+                    <span className="text-xs font-sans text-text-secondary">{toast.message}</span>
                 </div>
             )}
 
@@ -1369,6 +1435,8 @@ export const DraftPage = () => {
                                             recommendations={view === 'bans' ? banRecommendations : recommendations}
                                             onSelectChampion={handleSelectChamp}
                                             isBan={view === 'bans'}
+                                            pendingChampionId={pendingPreselectId}
+                                            preselectedChampionId={activePreselectedId}
                                         />
                                     </div>
                                 )
