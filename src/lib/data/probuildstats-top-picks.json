@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "source": "https://probuildstats.com/top-picks",
   "patch": "16.20",
-  "updatedAt": "2026-10-11T02:26:14+00:00",
-  "version": "ec7ba0a8ed5a98eb726723969147367dbb33e770d7f30275ff8a7d3771d09c33",
+  "updatedAt": "2026-10-11T02:48:11+00:00",
+  "version": "c39f165bf1d04c482b3ffb3a10934fd907108d55df6a16c5303842d3f94934de",
   "roles": {
     "TOP": [
       {
@@ -363,11 +363,11 @@
         "rank": 7
       },
       {
-        "championId": 43,
+        "championId": 526,
         "rank": 8
       },
       {
-        "championId": 526,
+        "championId": 43,
         "rank": 9
       },
       {
