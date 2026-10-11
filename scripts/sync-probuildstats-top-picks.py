@@ -7,19 +7,23 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import re
 import shutil
 import subprocess
+import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
 PAGE_URL = "https://probuildstats.com/top-picks"
 API_URL = "https://u.gg/api"
 DDRAGON_VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json"
+FLARESOLVERR_BASE_URL = os.environ.get("FLARESOLVERR_URL", "http://127.0.0.1:8191").rstrip("/")
 
 BROWSER_HEADERS = {
     "User-Agent": (
@@ -93,6 +97,69 @@ class TitleParser(HTMLParser):
             self.parts.append(data)
 
 
+def is_flaresolverr_available(base_url: str = FLARESOLVERR_BASE_URL) -> bool:
+    """Verifica si FlareSolverr está respondiendo en el puerto configurado."""
+    try:
+        req = Request(f"{base_url}/", headers={"User-Agent": "HexDraft-Sync"})
+        with urlopen(req, timeout=3) as resp:
+            return resp.status in (200, 404)
+    except Exception:
+        return False
+
+
+def extract_json_from_html(raw_content: str | bytes | dict) -> dict:
+    """Extrae el objeto JSON incluso si Chromium/FlareSolverr lo envolvió en etiquetas HTML <pre> o <body>."""
+    if isinstance(raw_content, dict):
+        return raw_content
+    if isinstance(raw_content, bytes):
+        text = raw_content.decode("utf-8", "replace").strip()
+    else:
+        text = str(raw_content).strip()
+
+    if not text:
+        raise ValueError("Respuesta vacía recibida.")
+
+    # Si empieza con formato JSON directamente
+    if text.startswith("{") or text.startswith("["):
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+    # Si Chromium envolvió el JSON en una etiqueta <pre>
+    pre_match = re.search(r"<pre[^>]*>([\s\S]*?)</pre>", text, re.IGNORECASE)
+    if pre_match:
+        try:
+            return json.loads(html.unescape(pre_match.group(1)).strip())
+        except json.JSONDecodeError:
+            pass
+
+    # Si está dentro de <body>
+    body_match = re.search(r"<body[^>]*>([\s\S]*?)</body>", text, re.IGNORECASE)
+    if body_match:
+        cleaned = re.sub(r"<[^>]*>", "", body_match.group(1)).strip()
+        try:
+            return json.loads(html.unescape(cleaned))
+        except json.JSONDecodeError:
+            pass
+
+    # Si es una página de bloqueo de Cloudflare WAF
+    lower = text.lower()
+    if "cloudflare" in lower or "challenge" in lower or "just a moment" in lower:
+        raise RuntimeError("Cloudflare WAF bloqueó la petición con una pantalla de desafío HTML.")
+
+    raise RuntimeError(f"No se pudo extraer JSON de la respuesta: {text[:150]}...")
+
+
+def build_u_gg_api_url(patch: str) -> str:
+    params = urlencode({
+        "operationName": "TopProChampionPicks",
+        "variables": json.dumps({"version": patch.replace(".", "_")}),
+        "query": QUERY,
+    })
+    return f"{API_URL}?{params}"
+
+
 def request_bytes_curl(url: str, *, data: bytes | None = None, headers: dict[str, str] | None = None) -> bytes:
     curl_path = shutil.which("curl")
     if not curl_path:
@@ -121,13 +188,68 @@ def request_bytes(url: str, *, data: bytes | None = None, headers: dict[str, str
                 raise RuntimeError(f"HTTP {response.status} al consultar {url}")
             return response.read()
     except (HTTPError, URLError) as err:
-        # Si urllib fue bloqueado (ej. HTTP 403 por WAF de Cloudflare en runners), reintentar con curl si está disponible
+        # Si urllib fue bloqueado (ej. HTTP 403 por WAF de Cloudflare), reintentar con curl si está disponible
         if shutil.which("curl"):
             try:
                 return request_bytes_curl(url, data=data, headers=effective_headers)
             except Exception as curl_err:
                 raise RuntimeError(f"Fallo en urllib ({err}) y en fallback curl ({curl_err}) al consultar {url}") from err
         raise RuntimeError(f"HTTP error al consultar {url}: {err}") from err
+
+
+def fetch_records_via_flaresolverr(patch: str, base_url: str = FLARESOLVERR_BASE_URL) -> list[dict]:
+    target_url = build_u_gg_api_url(patch)
+    payload = json.dumps({
+        "cmd": "request.get",
+        "url": target_url,
+        "maxTimeout": 60000,
+    }).encode("utf-8")
+
+    endpoint = f"{base_url}/v1"
+    req = Request(
+        endpoint,
+        data=payload,
+        headers={"Content-Type": "application/json", "User-Agent": "HexDraft-Sync"},
+        method="POST",
+    )
+    with urlopen(req, timeout=75) as resp:
+        if resp.status != 200:
+            raise RuntimeError(f"FlareSolverr HTTP {resp.status} al consultar {endpoint}")
+        res_data = json.loads(resp.read().decode("utf-8"))
+        if res_data.get("status") != "ok":
+            raise RuntimeError(f"FlareSolverr retornó estado '{res_data.get('status')}': {res_data.get('message')}")
+        raw_response = res_data.get("solution", {}).get("response", "")
+        parsed = extract_json_from_html(raw_response)
+        records = parsed.get("data", {}).get("getTopProChampionPicks")
+        if isinstance(records, list):
+            return records
+        return []
+
+
+def fetch_records_direct(patch: str) -> list[dict]:
+    # 1. Intentar GET (mismo formato con que consulta la web de U.GG)
+    try:
+        get_url = build_u_gg_api_url(patch)
+        raw_bytes = request_bytes(get_url, headers=API_HEADERS)
+        parsed = extract_json_from_html(raw_bytes)
+        records = parsed.get("data", {}).get("getTopProChampionPicks")
+        if isinstance(records, list):
+            return records
+    except Exception as get_err:
+        print(f"[WARN] Consulta GET directa falló ({get_err}), intentando POST...")
+
+    # 2. Fallback a POST
+    request_body = json.dumps({
+        "operationName": "TopProChampionPicks",
+        "variables": {"version": patch.replace(".", "_")},
+        "query": QUERY,
+    }).encode("utf-8")
+    raw_bytes = request_bytes(API_URL, data=request_body, headers=API_HEADERS)
+    parsed = extract_json_from_html(raw_bytes)
+    records = parsed.get("data", {}).get("getTopProChampionPicks")
+    if isinstance(records, list):
+        return records
+    return []
 
 
 def to_short_patch(full_version: str) -> str:
@@ -150,9 +272,22 @@ def fetch_patch_candidates() -> tuple[str, str | None]:
     except Exception as e:
         print(f"[WARN] No se pudo obtener el parche desde DataDragon: {e}")
 
-    # 2. Fallback a Probuildstats HTML
+    # 2. Fallback a Probuildstats HTML (usando FlareSolverr si está disponible)
     try:
-        page_html = request_bytes(PAGE_URL, headers=BROWSER_HEADERS).decode("utf-8", "replace")
+        if is_flaresolverr_available():
+            payload = json.dumps({"cmd": "request.get", "url": PAGE_URL, "maxTimeout": 60000}).encode("utf-8")
+            req = Request(
+                f"{FLARESOLVERR_BASE_URL}/v1",
+                data=payload,
+                headers={"Content-Type": "application/json", "User-Agent": "HexDraft-Sync"},
+                method="POST",
+            )
+            with urlopen(req, timeout=75) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                page_html = res_data.get("solution", {}).get("response", "")
+        else:
+            page_html = request_bytes(PAGE_URL, headers=BROWSER_HEADERS).decode("utf-8", "replace")
+
         parser = TitleParser()
         parser.feed(page_html)
         title = html.unescape(" ".join(parser.parts))
@@ -166,16 +301,16 @@ def fetch_patch_candidates() -> tuple[str, str | None]:
 
 
 def fetch_records_for_patch(patch: str) -> list[dict]:
-    request_body = json.dumps({
-        "operationName": "TopProChampionPicks",
-        "variables": {"version": patch.replace(".", "_")},
-        "query": QUERY,
-    }).encode("utf-8")
-    payload = json.loads(request_bytes(API_URL, data=request_body, headers=API_HEADERS).decode("utf-8"))
-    records = payload.get("data", {}).get("getTopProChampionPicks")
-    if isinstance(records, list):
-        return records
-    return []
+    if is_flaresolverr_available():
+        print(f"[INFO] FlareSolverr disponible en {FLARESOLVERR_BASE_URL}. Obteniendo datos para parche {patch}...")
+        try:
+            return fetch_records_via_flaresolverr(patch)
+        except Exception as flare_err:
+            print(f"[WARN] FlareSolverr falló ({flare_err}). Intentando conexión directa como respaldo...")
+            return fetch_records_direct(patch)
+    else:
+        print(f"[INFO] FlareSolverr no detectado. Obteniendo datos mediante conexión directa para parche {patch}...")
+        return fetch_records_direct(patch)
 
 
 def fetch_records(current_patch: str, fallback_patch: str | None = None) -> tuple[str, list[dict]]:

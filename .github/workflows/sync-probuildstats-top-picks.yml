@@ -15,6 +15,15 @@ concurrency:
 jobs:
   update-snapshot:
     runs-on: ubuntu-latest
+    services:
+      flaresolverr:
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        ports:
+          - 8191:8191
+        env:
+          LOG_LEVEL: info
+          PORT: 8191
+          TZ: UTC
     steps:
       - name: Checkout del repo
         uses: actions/checkout@v4
@@ -25,6 +34,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Esperar a que FlareSolverr esté listo
+        run: |
+          echo "Verificando disponibilidad de FlareSolverr en http://127.0.0.1:8191..."
+          for i in {1..30}; do
+            if curl -s -f http://127.0.0.1:8191/ > /dev/null; then
+              echo "FlareSolverr está listo y respondiendo en el puerto 8191."
+              exit 0
+            fi
+            echo "Esperando a FlareSolverr ($i/30)..."
+            sleep 2
+          done
+          echo "Advertencia: FlareSolverr no respondió en 60s, el script continuará con modo directo si es posible."
 
       - name: Consultar y validar los cinco top 20
         run: python scripts/sync-probuildstats-top-picks.py
