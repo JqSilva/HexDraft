@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "source": "https://probuildstats.com/top-picks",
   "patch": "16.21",
-  "updatedAt": "2026-10-22T12:03:34+00:00",
-  "version": "fd7cf7082453ed6e0fa16681ea4492475404e5585fcf9f71fe9b6107e6009563",
+  "updatedAt": "2026-10-23T11:48:54+00:00",
+  "version": "a09c776495e2467223795531784eef15d311165228bcc89cf3ce91bd4d0ef255",
   "roles": {
     "TOP": [
       {
@@ -15,67 +15,67 @@
         "rank": 2
       },
       {
-        "championId": 799,
+        "championId": 80,
         "rank": 3
       },
       {
-        "championId": 164,
+        "championId": 799,
         "rank": 4
       },
       {
-        "championId": 80,
+        "championId": 164,
         "rank": 5
       },
       {
-        "championId": 897,
+        "championId": 777,
         "rank": 6
       },
       {
-        "championId": 777,
+        "championId": 897,
         "rank": 7
       },
       {
-        "championId": 85,
+        "championId": 24,
         "rank": 8
       },
       {
-        "championId": 24,
+        "championId": 85,
         "rank": 9
       },
       {
-        "championId": 429,
+        "championId": 39,
         "rank": 10
       },
       {
-        "championId": 34,
+        "championId": 266,
         "rank": 11
       },
       {
-        "championId": 39,
+        "championId": 41,
         "rank": 12
       },
       {
-        "championId": 41,
+        "championId": 58,
         "rank": 13
       },
       {
-        "championId": 805,
+        "championId": 68,
         "rank": 14
       },
       {
-        "championId": 887,
+        "championId": 79,
         "rank": 15
       },
       {
-        "championId": 58,
+        "championId": 429,
         "rank": 16
       },
       {
-        "championId": 68,
+        "championId": 14,
         "rank": 17
       },
       {
-        "championId": 79,
+        "championId": 34,
         "rank": 18
       },
       {
@@ -93,11 +93,11 @@
         "rank": 1
       },
       {
-        "championId": 126,
+        "championId": 246,
         "rank": 2
       },
       {
-        "championId": 246,
+        "championId": 126,
         "rank": 3
       },
       {
@@ -105,39 +105,39 @@
         "rank": 4
       },
       {
-        "championId": 59,
+        "championId": 254,
         "rank": 5
       },
       {
-        "championId": 163,
+        "championId": 59,
         "rank": 6
       },
       {
-        "championId": 254,
+        "championId": 163,
         "rank": 7
       },
       {
-        "championId": 517,
+        "championId": 121,
         "rank": 8
       },
       {
-        "championId": 31,
+        "championId": 104,
         "rank": 9
       },
       {
-        "championId": 104,
+        "championId": 517,
         "rank": 10
       },
       {
-        "championId": 120,
+        "championId": 31,
         "rank": 11
       },
       {
-        "championId": 121,
+        "championId": 56,
         "rank": 12
       },
       {
-        "championId": 56,
+        "championId": 120,
         "rank": 13
       },
       {
@@ -145,27 +145,27 @@
         "rank": 14
       },
       {
-        "championId": 5,
+        "championId": 107,
         "rank": 15
       },
       {
-        "championId": 107,
+        "championId": 203,
         "rank": 16
       },
       {
-        "championId": 200,
+        "championId": 876,
         "rank": 17
       },
       {
-        "championId": 203,
+        "championId": 91,
         "rank": 18
       },
       {
-        "championId": 62,
+        "championId": 950,
         "rank": 19
       },
       {
-        "championId": 238,
+        "championId": 427,
         "rank": 20
       }
     ],
@@ -179,19 +179,19 @@
         "rank": 2
       },
       {
-        "championId": 61,
+        "championId": 13,
         "rank": 3
       },
       {
-        "championId": 13,
+        "championId": 163,
         "rank": 4
       },
       {
-        "championId": 84,
+        "championId": 61,
         "rank": 5
       },
       {
-        "championId": 163,
+        "championId": 84,
         "rank": 6
       },
       {
@@ -207,31 +207,31 @@
         "rank": 9
       },
       {
-        "championId": 126,
+        "championId": 103,
         "rank": 10
       },
       {
-        "championId": 4,
+        "championId": 236,
         "rank": 11
       },
       {
-        "championId": 69,
+        "championId": 4,
         "rank": 12
       },
       {
-        "championId": 103,
+        "championId": 7,
         "rank": 13
       },
       {
-        "championId": 112,
+        "championId": 69,
         "rank": 14
       },
       {
-        "championId": 236,
+        "championId": 126,
         "rank": 15
       },
       {
-        "championId": 7,
+        "championId": 893,
         "rank": 16
       },
       {
@@ -239,15 +239,15 @@
         "rank": 17
       },
       {
-        "championId": 96,
+        "championId": 110,
         "rank": 18
       },
       {
-        "championId": 110,
+        "championId": 112,
         "rank": 19
       },
       {
-        "championId": 238,
+        "championId": 268,
         "rank": 20
       }
     ],
@@ -261,7 +261,7 @@
         "rank": 2
       },
       {
-        "championId": 18,
+        "championId": 110,
         "rank": 3
       },
       {
@@ -269,31 +269,31 @@
         "rank": 4
       },
       {
-        "championId": 110,
+        "championId": 498,
         "rank": 5
       },
       {
-        "championId": 145,
+        "championId": 18,
         "rank": 6
       },
       {
-        "championId": 523,
+        "championId": 145,
         "rank": 7
       },
       {
-        "championId": 21,
+        "championId": 804,
         "rank": 8
       },
       {
-        "championId": 498,
+        "championId": 236,
         "rank": 9
       },
       {
-        "championId": 236,
+        "championId": 21,
         "rank": 10
       },
       {
-        "championId": 804,
+        "championId": 523,
         "rank": 11
       },
       {
@@ -305,27 +305,27 @@
         "rank": 13
       },
       {
-        "championId": 119,
+        "championId": 222,
         "rank": 14
       },
       {
-        "championId": 222,
+        "championId": 119,
         "rank": 15
       },
       {
-        "championId": 115,
+        "championId": 42,
         "rank": 16
       },
       {
-        "championId": 42,
+        "championId": 115,
         "rank": 17
       },
       {
-        "championId": 15,
+        "championId": 163,
         "rank": 18
       },
       {
-        "championId": 157,
+        "championId": 15,
         "rank": 19
       },
       {
@@ -335,11 +335,11 @@
     ],
     "UTILITY": [
       {
-        "championId": 12,
+        "championId": 432,
         "rank": 1
       },
       {
-        "championId": 432,
+        "championId": 12,
         "rank": 2
       },
       {
@@ -351,23 +351,23 @@
         "rank": 4
       },
       {
-        "championId": 555,
+        "championId": 164,
         "rank": 5
       },
       {
-        "championId": 526,
+        "championId": 78,
         "rank": 6
       },
       {
-        "championId": 164,
+        "championId": 526,
         "rank": 7
       },
       {
-        "championId": 888,
+        "championId": 555,
         "rank": 8
       },
       {
-        "championId": 78,
+        "championId": 43,
         "rank": 9
       },
       {
@@ -375,43 +375,43 @@
         "rank": 10
       },
       {
-        "championId": 497,
+        "championId": 888,
         "rank": 11
       },
       {
-        "championId": 43,
+        "championId": 497,
         "rank": 12
       },
       {
-        "championId": 89,
+        "championId": 267,
         "rank": 13
       },
       {
-        "championId": 267,
+        "championId": 53,
         "rank": 14
       },
       {
-        "championId": 350,
+        "championId": 80,
         "rank": 15
       },
       {
-        "championId": 902,
+        "championId": 350,
         "rank": 16
       },
       {
-        "championId": 53,
+        "championId": 518,
         "rank": 17
       },
       {
-        "championId": 80,
+        "championId": 89,
         "rank": 18
       },
       {
-        "championId": 147,
+        "championId": 902,
         "rank": 19
       },
       {
-        "championId": 72,
+        "championId": 60,
         "rank": 20
       }
     ]
