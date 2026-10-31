@@ -28,7 +28,7 @@ export const ChampionList = ({
   return (
     <div className="w-full flex flex-col p-5 md:p-8 animate-in fade-in duration-300">
       
-      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
+      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 mb-7">
         <div>
           <span className="text-xs tracking-wide font-medium text-slate-500 block mb-1">
             Datos de rendimiento
@@ -66,7 +66,7 @@ export const ChampionList = ({
                   className={`flex items-center gap-2 min-h-11 px-4 py-2 border rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer active:scale-95
                     ${isActive 
                       ? "bg-purple-accent/10 border-purple-accent text-white"
-                      : "bg-panel-warm border-border-warm text-slate-400 hover:text-slate-200 hover:border-border-warm-hover"
+                      : "bg-ink-900 border-transparent text-slate-400 hover:text-slate-200 hover:bg-ink-800"
                     }`}
                 >
                   {mappedIcon && (
@@ -108,11 +108,11 @@ export const ChampionList = ({
         </div>
 
         {/* Tabla de Estadísticas */}
-        <div className="bg-panel-warm border border-border-warm rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-ink-900 rounded-xl overflow-hidden flex flex-col">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse select-none">
               <thead>
-                <tr className="border-b border-border-warm text-slate-300 font-semibold text-xs tracking-wide bg-black/20">
+                <tr className="border-b border-white/[0.08] text-slate-300 font-semibold text-xs tracking-wide bg-ink-850/70">
                   <th className="py-3 px-4 text-center w-14">#</th>
                   <th className="py-3 px-4 cursor-pointer hover:text-white transition-colors duration-150" onClick={() => toggleSort('name')}>
                     Campeón {renderSortIndicator('name')}
@@ -144,7 +144,7 @@ export const ChampionList = ({
                           const laneParam = champ.lane?.toLowerCase() || "unknown";
                           window.location.href = `/champion/${nameSlug}/buildbuild?lane=${laneParam}`;
                         }}
-                        className="border-b border-border-warm/60 hover:bg-white/[0.02] transition-colors duration-100 cursor-pointer group text-slate-300 font-bold text-xs"
+                        className="border-b border-white/[0.06] last:border-0 hover:bg-ink-800/45 transition-colors duration-150 cursor-pointer group text-slate-300 font-bold text-xs"
                       >
                         {/* Rango */}
                         <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">
@@ -156,7 +156,7 @@ export const ChampionList = ({
                           <div className="flex items-center gap-3">
                             <img
                               src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${champ.id}.png`}
-                              className="w-8 h-8 rounded-sm border border-border-warm group-hover:border-purple-accent/60 transition-colors object-cover"
+                              className="w-8 h-8 rounded-md bg-ink-800 object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = "/favicon.svg";
                               }}
@@ -192,7 +192,7 @@ export const ChampionList = ({
 
                         {/* Tier */}
                         <td className="py-2.5 px-4 text-center">
-                          <span className={`inline-block px-2.5 py-0.5 border text-[10px] font-black rounded-sm shadow-inner uppercase tracking-wider ${tierInfo.color}`}>
+                          <span className={`inline-block px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase tracking-wider ${tierInfo.color}`}>
                             {tierInfo.label}
                           </span>
                         </td>

@@ -273,7 +273,7 @@ export const ChampionDetail = ({
       </div>
 
       {/* Cabecera Premium */}
-      <div className="relative border border-border-warm rounded-xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 shadow-sm min-h-[160px]">
+      <div className="relative rounded-2xl bg-ink-900 p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden mb-6 shadow-sm min-h-[160px]">
         {/* Fondo Splash Art Blurred */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none scale-105"
@@ -327,7 +327,7 @@ export const ChampionDetail = ({
               <span className="text-slate-700 font-bold">|</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">TIER:</span>
-                <span className={`px-2 py-0.5 border text-xs font-black rounded-sm tracking-wider ${tierInfo.color}`}>
+                <span className={`px-2 py-0.5 text-xs font-black rounded-md tracking-wider ${tierInfo.color}`}>
                   {tierInfo.label}
                 </span>
               </div>
@@ -336,7 +336,7 @@ export const ChampionDetail = ({
         </div>
 
         {/* Stats de Meta Destacados */}
-        <div className="relative z-10 grid grid-cols-3 gap-5 bg-black/50 border border-border-warm/40 p-4 rounded-sm backdrop-blur-md max-w-sm w-full md:self-center">
+        <div className="relative z-10 grid grid-cols-3 gap-5 bg-ink-950/85 p-4 rounded-xl max-w-sm w-full md:self-center">
           <div className="text-center">
             <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-black mb-1">Win Rate</span>
             <span className={`text-base font-mono font-black ${winRateVal >= 50 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -422,7 +422,7 @@ export const ChampionDetail = ({
 
             {/* Dashboard Unificado */}
             {activeBuild ? (
-              <div className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
+              <div className="bg-ink-900 rounded-xl p-6 shadow-sm grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
                 
                 {/* Sección 1: Runas (Izquierda) */}
                 <div className="xl:col-span-4 flex flex-row gap-16 items-start pb-6 xl:pb-0 border-b xl:border-b-0 xl:border-r border-border-warm/50 xl:pr-6 justify-center">
@@ -667,7 +667,7 @@ export const ChampionDetail = ({
               
               {/* Evolución de Habilidades */}
               <div className="lg:col-span-8 flex flex-col gap-6">
-                <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
+                <div className="bg-ink-900 rounded-xl p-5 shadow-sm">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-sm text-purple-accent font-medium tracking-wide">
                       Evolución de Habilidades
@@ -715,7 +715,7 @@ export const ChampionDetail = ({
 
               {/* Composición de Daño */}
               <div className="lg:col-span-4 flex flex-col gap-6">
-                <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm select-none">
+                <div className="bg-ink-900 rounded-xl p-5 shadow-sm select-none">
                   <h3 className="text-sm text-purple-accent font-black uppercase tracking-[0.3em] italic mb-6">
                     Composición de Daño
                   </h3>
@@ -766,7 +766,7 @@ export const ChampionDetail = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               
               {/* Counters */}
-              <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
+              <div className="bg-ink-900 rounded-xl p-5 shadow-sm">
                 <h3 className="text-sm text-red-500 font-black uppercase tracking-[0.3em] italic mb-6">
                   Fuerte Contra {champ.name} (Counters)
                 </h3>
@@ -783,12 +783,12 @@ export const ChampionDetail = ({
                         return (
                           <div 
                             key={cnt.name}
-                            className="flex items-center justify-between p-3 bg-black/20 border border-border-warm rounded-sm hover:border-red-500/20 hover:bg-black/40 transition-all duration-150 group"
+                            className="flex items-center justify-between p-3 bg-ink-850 rounded-lg hover:bg-ink-800 transition-colors duration-150 group"
                           >
                             <div className="flex items-center gap-3">
                               <img 
                                 src={`https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/champion/${mappedName}.png`}
-                                className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-red-500/40 transition-colors"
+                            className="w-8.5 h-8.5 rounded-full bg-ink-800"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = "/favicon.svg";
                                 }}
@@ -821,7 +821,7 @@ export const ChampionDetail = ({
               </div>
 
               {/* Sinergias */}
-              <div className="bg-panel-warm border border-border-warm rounded-xl p-5 shadow-sm">
+              <div className="bg-ink-900 rounded-xl p-5 shadow-sm">
                 <h3 className="text-sm text-purple-accent font-medium tracking-wide mb-6">
                   Mejores Aliados (Sinergias)
                 </h3>
@@ -855,12 +855,12 @@ export const ChampionDetail = ({
                         return (
                           <div 
                             key={syn.name}
-                            className="flex items-center justify-between p-3 bg-input-warm/30 border border-border-warm rounded-lg hover:border-purple-accent/30 hover:bg-input-warm/50 transition-colors duration-150 group"
+                            className="flex items-center justify-between p-3 bg-ink-850 rounded-lg hover:bg-ink-800 transition-colors duration-150 group"
                           >
                             <div className="flex items-center gap-3">
                               <img 
                                 src={`https://ddragon.leagueoflegends.com/cdn/${gameVersion}/img/champion/${mappedName}.png`}
-                                className="w-8.5 h-8.5 rounded-full border border-border-warm group-hover:border-purple-accent/40 transition-colors"
+                                className="w-8.5 h-8.5 rounded-full bg-ink-800"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = "/favicon.svg";
                                 }}

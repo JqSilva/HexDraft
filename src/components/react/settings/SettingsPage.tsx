@@ -187,7 +187,7 @@ export const SettingsPage = () => {
             <form onSubmit={handleSave} className="w-full flex flex-col">
 
                 {/* Cabecera Táctica (Ocupa todo el ancho) */}
-                <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4 mb-6">
+                <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 mb-7">
                     <div>
                         <span className="text-xs tracking-wide font-medium text-slate-500 block mb-1">
                             Preferencias de la aplicación
@@ -204,14 +204,14 @@ export const SettingsPage = () => {
 
                 {/* Contenido Principal Centrado */}
                 <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-6">
-                    <section className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm">
+                    <section className="bg-ink-900 rounded-2xl p-6 md:p-7">
                         <div className="mb-5">
                             <h2 className="text-base text-purple-accent font-semibold mb-1">Pool personal</h2>
                             <p className="text-sm text-slate-500">Tus preferencias influyen suavemente en el orden y no cambian el pool de picks del top 20 de Probuildstats.</p>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             {preferencePools.map(pool => (
-                                <div key={pool.key} className="min-w-0 rounded-lg border border-border-warm bg-black/15 p-4">
+                                <div key={pool.key} className="min-w-0 rounded-xl bg-ink-850 p-4">
                                     <label htmlFor={`preferred-${pool.key}`} className="block text-sm font-semibold text-slate-200 mb-1">{pool.title}</label>
                                     <p className="text-xs text-slate-500 mb-3">{pool.description}</p>
                                     <select
@@ -222,7 +222,7 @@ export const SettingsPage = () => {
                                             const id = Number(event.target.value);
                                             if (Number.isInteger(id) && id > 0 && !pool.ids.includes(id)) pool.setIds(current => [...current, id]);
                                         }}
-                                        className="w-full bg-[#060608]/90 border border-border-warm text-sm text-white p-3 rounded-md focus:outline-none focus:border-purple-accent disabled:opacity-50"
+                                        className="w-full bg-ink-950/80 border border-ink-600 text-sm text-white p-3 rounded-lg focus:outline-none focus:border-purple-accent disabled:opacity-50"
                                     >
                                         <option value="">{championCatalog.length ? 'Añadir campeón…' : 'Cargando campeones…'}</option>
                                         {championCatalog.filter(champ => !pool.ids.includes(champ.id)).map(champ => (
@@ -255,8 +255,7 @@ export const SettingsPage = () => {
                         <div className={isAdmin ? "lg:col-span-8 flex flex-col gap-6" : "lg:col-span-12 flex flex-col gap-6"}>
 
                             {/* Tarjeta 1: Integración con League & LCU */}
-                            <div className="bg-panel-warm border border-border-warm rounded-xl p-6 shadow-sm relative overflow-hidden flex flex-col gap-6">
-                                <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+                            <div className="bg-ink-900 rounded-2xl p-6 relative overflow-hidden flex flex-col gap-6">
 
                                 <div>
                                     <h3 className="text-base text-purple-accent font-semibold mb-1">
@@ -286,10 +285,10 @@ export const SettingsPage = () => {
 
                                 {/* Toggles de Auto-Pick / Auto-Ban */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                    <label className={`flex items-center justify-between p-4 rounded-xl border border-transparent focus-within:ring-2 focus-within:ring-purple-accent/60 cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                         ${autoPick
-                                            ? 'bg-purple-accent/10 border-purple-accent/50'
-                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                            ? 'bg-purple-accent/10'
+                                            : 'bg-ink-850 hover:bg-ink-800'}`}>
                                         <div className="flex flex-col">
                                             <span className="text-sm font-semibold text-slate-200">Auto-pick</span>
                                             <span className="text-xs text-slate-500 mt-0.5">Fija automáticamente el recomendado</span>
@@ -305,10 +304,10 @@ export const SettingsPage = () => {
                                         </div>
                                     </label>
 
-                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                    <label className={`flex items-center justify-between p-4 rounded-xl border border-transparent focus-within:ring-2 focus-within:ring-purple-accent/60 cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                         ${autoBan
-                                            ? 'bg-purple-accent/10 border-purple-accent/50'
-                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                            ? 'bg-purple-accent/10'
+                                            : 'bg-ink-850 hover:bg-ink-800'}`}>
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Ban</span>
                                             <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Banea automáticamente la sugerencia</span>
@@ -327,7 +326,7 @@ export const SettingsPage = () => {
 
                                 {/* Tiempo de Bloqueo Automático (Auto-Pick / Auto-Ban) */}
                                 {(autoPick || autoBan) && (
-                                    <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                    <div className="border-t border-white/[0.08] pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Tiempo de Bloqueo Automático</span>
                                             <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Segundos restantes en el reloj para fijar pick/ban</span>
@@ -335,7 +334,7 @@ export const SettingsPage = () => {
                                         <div className="w-full sm:w-1/2 space-y-3 px-2">
                                             <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
                                                 <label className="text-purple-accent tracking-widest font-black">Segundos restantes</label>
-                                                <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoExecuteSeconds}s</span>
+                                                <span className="font-mono text-xs font-bold text-white bg-ink-800 px-2 py-0.5 rounded-md">{autoExecuteSeconds}s</span>
                                             </div>
                                             <input
                                                 type="range"
@@ -354,11 +353,11 @@ export const SettingsPage = () => {
                                 )}
 
                                 {/* Auto-Aceptar Partida */}
-                                <div className="border-t border-border-warm/50 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                    <label className={`flex items-center justify-between p-4 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99] w-full sm:w-1/2
+                                <div className="border-t border-white/[0.08] pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                        <label className={`flex items-center justify-between p-4 rounded-xl border border-transparent focus-within:ring-2 focus-within:ring-purple-accent/60 cursor-pointer select-none transition-all duration-200 active:scale-[0.99] w-full sm:w-1/2
                                         ${autoAcceptEnabled
-                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
-                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                            ? 'bg-purple-accent/10'
+                                            : 'bg-ink-850 hover:bg-ink-800'}`}>
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Auto-Aceptar Partida</span>
                                             <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Acepta la partida automáticamente al encontrarla</span>
@@ -378,7 +377,7 @@ export const SettingsPage = () => {
                                         <div className="w-full sm:w-1/2 space-y-3 px-2">
                                             <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
                                                 <label className="text-purple-accent tracking-widest font-black">Delay de aceptación</label>
-                                                <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoAcceptDelayPct}%</span>
+                                                <span className="font-mono text-xs font-bold text-white bg-ink-800 px-2 py-0.5 rounded-md">{autoAcceptDelayPct}%</span>
                                             </div>
                                             <input
                                                 type="range"
@@ -397,17 +396,17 @@ export const SettingsPage = () => {
                                 </div>
 
                                 {/* Notificaciones de Telegram */}
-                                <div className="border-t border-border-warm/50 pt-6 flex flex-col gap-5">
+                                <div className="border-t border-white/[0.08] pt-6 flex flex-col gap-5">
                                     <div className="flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Notificaciones de Telegram</span>
                                             <span className="text-[9px] text-slate-500 uppercase tracking-wide font-extrabold mt-0.5">Recibe alertas en tu celular en tiempo real</span>
                                         </div>
 
-                                        <label className={`flex items-center justify-between p-2 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                        <label className={`flex items-center justify-between p-2 rounded-lg border border-transparent focus-within:ring-2 focus-within:ring-purple-accent/60 cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                             ${telegramNotificationsEnabled
-                                                ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
-                                                : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                                ? 'bg-purple-accent/10'
+                                                : 'bg-ink-850 hover:bg-ink-800'}`}>
                                             <input
                                                 type="checkbox"
                                                 checked={telegramNotificationsEnabled}
@@ -431,7 +430,7 @@ export const SettingsPage = () => {
                                                     value={telegramBotToken}
                                                     onChange={(e) => setTelegramBotToken(e.target.value)}
                                                     placeholder="123456789:ABCdefGh..."
-                                                    className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                                    className="w-full bg-ink-950/80 border border-ink-600 focus:border-purple-accent text-xs font-mono text-slate-200 rounded-lg px-4 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-purple-accent/20"
                                                 />
                                             </div>
 
@@ -445,7 +444,7 @@ export const SettingsPage = () => {
                                                         value={telegramChatId}
                                                         onChange={(e) => setTelegramChatId(e.target.value)}
                                                         placeholder="987654321"
-                                                        className="w-full bg-[#060608]/90 border border-border-warm focus:border-purple-accent text-xs font-mono text-slate-200 rounded-sm px-4 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-purple-accent/20"
+                                                        className="w-full bg-ink-950/80 border border-ink-600 focus:border-purple-accent text-xs font-mono text-slate-200 rounded-lg px-4 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-purple-accent/20"
                                                     />
 
                                                     <button
@@ -465,10 +464,10 @@ export const SettingsPage = () => {
                                                         <span className="text-[9.5px] uppercase font-black tracking-widest text-slate-300">Evitar Notificaciones Duplicadas</span>
                                                         <span className="text-[8px] text-slate-500 uppercase tracking-wide font-bold mt-0.5">Filtra mensajes repetidos en un intervalo de 5 segundos</span>
                                                     </div>
-                                                    <label className={`flex items-center justify-between p-1.5 rounded-sm border cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
+                                                    <label className={`flex items-center justify-between p-1.5 rounded-lg border border-transparent focus-within:ring-2 focus-within:ring-purple-accent/60 cursor-pointer select-none transition-all duration-200 active:scale-[0.99]
                                                         ${telegramDeduplicateEnabled
-                                                            ? 'bg-purple-accent/5 border-purple-accent/50 shadow-sm'
-                                                            : 'bg-black/20 border-border-warm hover:border-slate-800'}`}>
+                                                            ? 'bg-purple-accent/10'
+                                                            : 'bg-ink-850 hover:bg-ink-800'}`}>
                                                         <input
                                                             type="checkbox"
                                                             checked={telegramDeduplicateEnabled}
@@ -487,13 +486,13 @@ export const SettingsPage = () => {
                             </div>
 
                             {/* Tarjeta 2: Tiempos y Concurrencia */}
-                            <div className={`bg-panel-warm border border-border-warm p-6 rounded-xl shadow-sm relative overflow-hidden ${isAdmin ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'flex flex-col gap-6'}`}>
+                            <div className={`bg-ink-900 p-6 rounded-2xl relative overflow-hidden ${isAdmin ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'flex flex-col gap-6'}`}>
 
                                 {/* Segundos de autoejecución */}
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
                                         <label className="text-purple-accent tracking-widest font-black">Auto-Acción a falta de</label>
-                                        <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{autoExecuteSeconds}s</span>
+                                        <span className="font-mono text-xs font-bold text-white bg-ink-800 px-2 py-0.5 rounded-md">{autoExecuteSeconds}s</span>
                                     </div>
                                     <input
                                         type="range"
@@ -514,7 +513,7 @@ export const SettingsPage = () => {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-bold">
                                             <label className="text-purple-accent tracking-widest font-black">Hilos simultáneos (Scraper)</label>
-                                            <span className="font-mono text-xs font-bold text-white bg-black/40 border border-border-warm px-2 py-0.5 rounded-sm">{puppeteerConcurrency}</span>
+                                            <span className="font-mono text-xs font-bold text-white bg-ink-800 px-2 py-0.5 rounded-md">{puppeteerConcurrency}</span>
                                         </div>
                                         <input
                                             type="range"
@@ -536,8 +535,7 @@ export const SettingsPage = () => {
                         {/* Columna Derecha: Periodicidad de Sincronización (4 col) */}
                         {isAdmin && (
                             <div className="lg:col-span-4 flex flex-col gap-6">
-                                <div className="bg-panel-warm border border-border-warm p-6 rounded-xl shadow-sm flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 h-32 w-32 bg-purple-accent/5 rounded-full blur-3xl pointer-events-none" />
+                                <div className="bg-ink-900 p-6 rounded-2xl flex-1 flex flex-col justify-between gap-6 relative overflow-hidden">
 
                                     <div>
                                         <h3 className="text-xs text-purple-accent font-black uppercase tracking-[0.2em] italic mb-1">
@@ -554,7 +552,7 @@ export const SettingsPage = () => {
                                             <select
                                                 value={metaSyncFrequency}
                                                 onChange={(e) => setMetaSyncFrequency(parseFloat(e.target.value))}
-                                                className="w-full bg-[#060608]/90 border border-border-warm text-xs font-bold text-white p-3 rounded-sm focus:outline-none focus:border-purple-accent cursor-pointer"
+                                                className="w-full bg-ink-950/80 border border-ink-600 text-xs font-bold text-white p-3 rounded-lg focus:outline-none focus:border-purple-accent cursor-pointer"
                                             >
                                                 <option value={0}>Desactivado</option>
                                                 <option value={-1}>Al iniciar el programa</option>
@@ -574,11 +572,11 @@ export const SettingsPage = () => {
                     </div>
 
                     {/* Botón Guardar en contenedor transparente */}
-                    <div className="flex justify-end mt-4 pt-4 border-t border-border-warm">
+                    <div className="flex justify-end mt-4 pt-4 border-t border-white/[0.08]">
                         <button
                             type="submit"
                             disabled={saving}
-                            className={`px-8 py-3.5 rounded-sm text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 active:scale-95 ${saveSuccess
+                            className={`px-8 py-3.5 rounded-lg text-[9.5px] font-black uppercase tracking-widest cursor-pointer transition-all duration-300 active:scale-95 ${saveSuccess
                                     ? 'bg-emerald-600 text-white shadow-sm border border-emerald-500'
                                     : 'bg-purple-accent hover:bg-purple-accent/90 text-white shadow-sm border border-purple-accent'
                                 }`}

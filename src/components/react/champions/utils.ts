@@ -35,12 +35,12 @@ export const posLabels: Record<string, string> = {
 
 // Mapear rank a Tier
 export const getTierInfo = (tierNum: number) => {
-  if (tierNum <= 5) return { label: 'S+', color: 'text-purple-accent border-purple-accent/30 bg-purple-accent/10' };
-  if (tierNum <= 12) return { label: 'S', color: 'text-purple-accent border-purple-accent/30 bg-purple-accent/10' };
-  if (tierNum <= 22) return { label: 'A', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
-  if (tierNum <= 35) return { label: 'B', color: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' };
-  if (tierNum <= 48) return { label: 'C', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
-  return { label: 'D', color: 'text-slate-400 border-slate-500/30 bg-slate-500/10' };
+  if (tierNum <= 5) return { label: 'S+', color: 'text-purple-accent bg-purple-accent/10' };
+  if (tierNum <= 12) return { label: 'S', color: 'text-purple-accent bg-purple-accent/10' };
+  if (tierNum <= 22) return { label: 'A', color: 'text-emerald-400 bg-emerald-500/10' };
+  if (tierNum <= 35) return { label: 'B', color: 'text-yellow-400 bg-yellow-500/10' };
+  if (tierNum <= 48) return { label: 'C', color: 'text-orange-400 bg-orange-500/10' };
+  return { label: 'D', color: 'text-slate-400 bg-slate-500/10' };
 };
 
 // Mapear rol a clave interna

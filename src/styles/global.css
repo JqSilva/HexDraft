@@ -195,12 +195,49 @@ button:disabled, a[aria-disabled='true'] { cursor: not-allowed; }
     linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 48%);
 }
 
+.dashboard-hero-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-hero-shell::before {
+  content: "";
+  position: absolute;
+  inset: -36px -24px;
+  border-radius: 2rem;
+  background:
+    radial-gradient(
+      ellipse 86% 46% at 50% 0%,
+      rgba(155, 77, 230, 0.13) 0%,
+      rgba(108, 20, 213, 0.065) 48%,
+      transparent 78%
+    ),
+    radial-gradient(
+      ellipse 98% 70% at 50% 50%,
+      rgba(108, 20, 213, 0.055) 0%,
+      rgba(79, 22, 155, 0.025) 60%,
+      transparent 85%
+    ),
+    radial-gradient(
+      ellipse 86% 46% at 50% 100%,
+      rgba(155, 77, 230, 0.13) 0%,
+      rgba(108, 20, 213, 0.065) 48%,
+      transparent 78%
+    );
+  filter: blur(32px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .dashboard-hero {
   background-color: var(--ink-900);
   background-image:
     radial-gradient(560px 360px at 92% 50%, rgba(108, 20, 213, 0.13), transparent 72%),
     radial-gradient(420px 280px at 20% 115%, rgba(64, 19, 112, 0.12), transparent 70%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.025), transparent 52%);
+  box-shadow:
+    0 24px 64px -12px rgba(0, 0, 0, 0.78),
+    0 10px 24px -6px rgba(0, 0, 0, 0.6);
 }
 
 .btn-quiet {

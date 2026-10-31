@@ -160,7 +160,7 @@ export const SyncPanel = () => {
 
   return (
     <div className="w-full flex flex-col p-5 md:p-8 text-slate-200 animate-in fade-in duration-300">
-      <header className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-warm pb-5 mb-6">
+      <header className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 mb-7">
         <div>
           <span className="text-xs tracking-wide font-medium text-slate-500 block mb-2">
             Mantenimiento de datos
@@ -170,8 +170,8 @@ export const SyncPanel = () => {
               Estado de <span className="text-purple-accent">sincronización</span>
             </h1>
             {modeLoaded && (
-                <span className={`px-2.5 py-1 text-xs font-medium border rounded-md ${
-                isAdmin ? 'bg-purple-accent/10 border-purple-accent/40 text-purple-accent' : 'bg-slate-900 border-slate-700 text-slate-400'
+                <span className={`px-2.5 py-1 text-xs font-medium rounded-md ${
+                isAdmin ? 'bg-purple-accent/10 text-purple-accent' : 'bg-ink-850 text-slate-400'
               }`}>
                 Modo: {mode}
               </span>
@@ -187,21 +187,21 @@ export const SyncPanel = () => {
       </header>
 
       <div className="w-full max-w-[1300px] mx-auto flex flex-col gap-5">
-        <section className="bg-panel-warm border border-border-warm rounded-xl p-5 md:p-6 relative overflow-hidden shadow-sm">
+        <section className="bg-ink-900 rounded-2xl p-5 md:p-6 relative overflow-hidden">
           <div className="mb-5">
             <h2 className="text-base text-purple-accent font-semibold mb-1">Estado actual</h2>
             <p className="text-sm text-slate-400">Comparación entre el parche instalado, los datos locales y el calendario automático.</p>
           </div>
           <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+            <div className="pr-4">
               <span className="block text-xs text-slate-500 tracking-wide font-medium mb-1">Parche activo</span>
               <span className="text-base font-mono font-black text-white">{activePatch}</span>
             </div>
-            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+            <div className="pr-4">
               <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Parche de datos</span>
               <span className="text-base font-mono font-black text-white">{databasePatch}</span>
             </div>
-            <div className="lg:border-r border-border-warm-hover/40 pr-4">
+            <div className="pr-4">
               <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-black mb-1">Meta y builds</span>
               <span className="text-xs font-mono font-bold text-slate-300">{formatTimestamp(syncStatus?.last_sync_timestamp || '-')}</span>
             </div>
@@ -213,14 +213,14 @@ export const SyncPanel = () => {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-5">
-          <section className="bg-panel-warm border border-border-warm rounded-xl p-5 md:p-6 shadow-sm">
+          <section className="bg-ink-900 rounded-2xl p-5 md:p-6">
             <div className="mb-5">
               <h2 className="text-sm font-black text-white">Proceso automático</h2>
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
                 Cada ejecución procesa primero la estructura de carriles, después Meta y Builds, y finalmente publica la base resultante.
               </p>
             </div>
-            <div className="divide-y divide-border-warm/50 border-y border-border-warm/50">
+            <div className="divide-y divide-white/[0.08]">
               <div className="flex items-center gap-3 py-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-accent/10 text-[10px] font-mono font-semibold text-purple-accent">1</span>
                 <div className="min-w-0 flex-1">
@@ -247,7 +247,7 @@ export const SyncPanel = () => {
               </div>
             </div>
             {isAdmin && (
-              <div className="mt-5 border-t border-border-warm/50 pt-4">
+              <div className="mt-5 border-t border-white/[0.08] pt-4">
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleManualSync}
@@ -278,14 +278,14 @@ export const SyncPanel = () => {
             </p>
           </section>
 
-          <section className="bg-[#0b0b0f] border border-border-warm rounded-sm p-5 md:p-6 flex flex-col justify-between">
+          <section className="bg-ink-850 rounded-2xl p-5 md:p-6 flex flex-col justify-between">
             <div>
               <h2 className="text-sm font-black text-white">Distribución en GitHub</h2>
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
                 Publica una copia de la base local para que las instalaciones de usuario puedan descargarla y verificar su checksum.
               </p>
               {!loadingPublish && publishStatus && (
-                <div className="mt-5 space-y-2 border-y border-border-warm/50 py-3 text-[10px] font-mono">
+                <div className="mt-5 space-y-2 border-y border-white/[0.08] py-3 text-[10px] font-mono">
                   <div className="flex justify-between gap-4"><span className="text-slate-500">Última release</span><span className="text-right font-bold text-slate-300">{publishStatus.lastPublishVersion ? `v${publishStatus.lastPublishVersion} · ${publishStatus.lastPublishPatch}` : 'Ninguna'}</span></div>
                   <div className="flex justify-between gap-4"><span className="text-slate-500">Parche local</span><span className="font-bold text-slate-300">{syncStatus?.last_sync_version || '-'}</span></div>
                 </div>

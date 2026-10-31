@@ -161,7 +161,7 @@ export const DashboardHome = () => {
   return (
     <div className="w-full h-full flex flex-col gap-7 p-6 md:p-9 animate-in fade-in duration-300 overflow-y-auto">
       {/* TOP BAR */}
-      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-warm pb-4">
+      <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
         <div>
           <span className="text-xs tracking-wide font-medium text-slate-500">Resumen de tu cuenta</span>
           <div className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export const DashboardHome = () => {
 
         {/* LCU connection status indicator */}
         <div 
-          className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-2 bg-panel-warm border border-border-warm rounded-lg text-xs tracking-wide font-medium ${
+          className={`flex items-center justify-center gap-2 mt-3 md:mt-0 px-3 py-2 bg-ink-850 rounded-lg text-xs tracking-wide font-medium ${
             data.isConnected ? 'text-green-500' : 'text-slate-400'
           } md:absolute md:-translate-x-1/2 md:-translate-y-1/2`}
           style={{
@@ -206,7 +206,8 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
         {/* A. Hero Banner Card */}
-        <div className="md:col-span-7 lg:col-span-8 dashboard-hero border border-border-warm rounded-2xl relative overflow-hidden flex flex-row items-center justify-between p-7 md:p-10 min-h-[320px] md:min-h-[350px] group">
+        <div className="dashboard-hero-shell md:col-span-7 lg:col-span-8">
+          <div className="dashboard-hero rounded-2xl relative z-10 overflow-hidden flex flex-row items-center justify-between p-7 md:p-10 min-h-[320px] md:min-h-[350px] group">
 
           {/* Left: Text Content & Actions */}
           <div className="flex flex-col z-10 gap-4 w-full md:w-[62%] justify-center h-full">
@@ -255,9 +256,11 @@ export const DashboardHome = () => {
           </div>
         </div>
 
+        </div>
+
         {/* B. Top Champions / Collection List */}
-        <div className="md:col-span-5 lg:col-span-4 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[320px] md:min-h-[350px]">
-          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
+        <div className="md:col-span-5 lg:col-span-4 dashboard-panel rounded-xl p-5 flex flex-col justify-between min-h-[320px] md:min-h-[350px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/[0.08]">
             <span className="text-sm font-semibold text-white">Maestría de campeones</span>
             <a href="/champions" className="text-xs font-medium text-purple-accent hover:text-purple-accent-hover hover:underline">Ver todos</a>
           </div>
@@ -277,7 +280,7 @@ export const DashboardHome = () => {
                   <img
                     src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                     alt={name}
-                    className="w-9 h-9 rounded-lg border border-border-warm select-none object-cover scale-[1.06] shadow-sm group-hover:border-purple-accent/50 transition-colors duration-200"
+                    className="w-9 h-9 rounded-lg bg-ink-800 select-none object-cover scale-[1.06]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/favicon.svg";
                     }}
@@ -289,7 +292,7 @@ export const DashboardHome = () => {
                     </div>
                     <span className="block text-xs text-slate-500 tracking-wide font-medium mb-1">{role}</span>
                     {/* Horizontal progress bar */}
-                    <div className="w-full bg-input-warm h-1 rounded-full overflow-hidden border border-border-warm relative">
+                    <div className="w-full bg-ink-800 h-1 rounded-full overflow-hidden relative">
                       <div
                         className="bg-purple-accent h-full rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progressWidth}%` }}
@@ -297,7 +300,7 @@ export const DashboardHome = () => {
                     </div>
                   </div>
                   {/* Mastery Level Badge */}
-                  <div className="w-7 h-7 flex items-center justify-center rounded-md border border-purple-accent/30 bg-purple-accent/10 text-xs font-mono font-semibold text-purple-accent-hover group-hover:bg-purple-accent/15 transition-colors duration-200 select-none">
+                  <div className="w-7 h-7 flex items-center justify-center rounded-md bg-purple-accent/10 text-xs font-mono font-semibold text-purple-accent-hover group-hover:bg-purple-accent/15 transition-colors duration-200 select-none">
                     L{lvl}
                   </div>
                 </div>
@@ -311,8 +314,8 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-4">
 
         {/* A. Recent Matches (Bottom Left Grid) */}
-        <div className="md:col-span-12 lg:col-span-5 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
+        <div className="md:col-span-12 lg:col-span-5 dashboard-panel rounded-xl p-5 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/[0.08]">
             <span className="text-sm font-semibold text-white">Historial reciente</span>
             <a href="/history" className="text-xs font-medium text-purple-accent hover:text-purple-accent-hover hover:underline">Ver partidas</a>
           </div>
@@ -322,19 +325,17 @@ export const DashboardHome = () => {
             {matchesList.map((match, idx) => {
               const name = getNameFromId(match.championId) || "Campeón";
               const role = getChampionRole(name);
-              const borderClass = match.win ? "border-green-500/25 hover:border-green-500/40" : "border-red-500/25 hover:border-red-500/40";
               const badgeBg = match.win ? "bg-green-500/10 border-green-500/30 text-green-500" : "bg-red-500/10 border-red-500/30 text-red-500";
               const displayLane = match.lane || role.split(' / ')[1] || 'MID';
 
               return (
-                <div key={idx} className={`bg-[#08080b] border ${borderClass} p-3 rounded flex flex-col justify-between items-center text-center transition-all duration-300 relative group`}>
-                  <div className={`absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t border-l ${match.win ? 'border-green-500' : 'border-red-500'}`}></div>
+                <div key={idx} className="bg-ink-850 p-3 rounded-lg flex flex-col justify-between items-center text-center transition-colors duration-200 hover:bg-ink-800 relative group">
                   <div className={`absolute top-2.5 right-2.5 border ${badgeBg} text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm select-none`}>
                     {match.win ? 'VICTORIA' : 'DERROTA'}
                   </div>
 
                   {/* Champion portrait icon */}
-                  <div className="w-10 h-10 rounded-xl border border-border-warm overflow-hidden mb-1.5 mt-1.5 shadow-sm group-hover:border-purple-accent/50 group-hover:scale-105 transition-all duration-200">
+                  <div className="w-10 h-10 rounded-xl bg-ink-800 overflow-hidden mb-1.5 mt-1.5 group-hover:scale-105 transition-transform duration-200">
                     <img
                       src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${getChampionCdnName(name)}.png`}
                       alt={name}
@@ -348,7 +349,7 @@ export const DashboardHome = () => {
                     <span className="block text-xs font-black text-white uppercase tracking-wider">{name} - {displayLane}</span>
                     <span className="block text-xs font-mono font-bold text-slate-300 mt-0.5">{match.kills} / {match.deaths} / {match.assists} <span className="text-slate-500 font-normal">KDA</span></span>
                   </div>
-                  <div className="w-full h-px bg-border-warm my-1.5"></div>
+                  <div className="w-full h-px bg-white/[0.08] my-1.5"></div>
                   <div className="flex justify-between w-full text-[10.5px] font-mono text-slate-500">
                     <span>{match.csPerMin} CS/M</span>
                     <span>Hace {match.timeAgo.split(' ')[0]}</span>
@@ -360,8 +361,8 @@ export const DashboardHome = () => {
         </div>
 
         {/* B. Player Profile Details (Center Bottom) */}
-        <div className="md:col-span-6 lg:col-span-4 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
-          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
+        <div className="md:col-span-6 lg:col-span-4 dashboard-panel rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/[0.08]">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">DATOS DEL INVOCADOR</span>
             <span className="text-[11px] font-bold text-slate-400 font-mono">ESTE MES</span>
           </div>
@@ -370,10 +371,6 @@ export const DashboardHome = () => {
           <div className="flex-1 flex flex-col justify-center gap-4 my-auto">
             <div className="flex flex-col items-center justify-center gap-2 text-center">
               <div className="relative flex items-center justify-center">
-                {/* Outer animated rotating orbit ring */}
-                <div className="absolute w-20 h-20 border border-purple-accent/30 rounded-full"></div>
-                <div className="absolute w-[68px] h-[68px] border border-purple-accent/60 rounded-full"></div>
-
                 {/* Summoner Icon inside orbit */}
                 <img
                   src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/profileicon/${profileIconId}.png`}
@@ -412,20 +409,20 @@ export const DashboardHome = () => {
             </div>
 
             {/* Core Stats table positioned directly under the profile details */}
-            <div className="grid grid-cols-4 gap-2 text-center bg-[#08080b]/60 p-2.5 border border-border-warm rounded">
+            <div className="grid grid-cols-4 gap-2 text-center bg-ink-850 p-2.5 rounded-lg">
               <div>
                 <span className="block text-xs font-mono font-black text-white">{winRate}%</span>
                 <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Winrate</span>
               </div>
-              <div className="border-l border-border-warm">
+              <div>
                 <span className="block text-xs font-mono font-black text-white">{totalGames}</span>
                 <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Partidas</span>
               </div>
-              <div className="border-l border-border-warm">
+              <div>
                 <span className="block text-xs font-mono font-black text-white">{ranked.wins}</span>
                 <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">Victorias</span>
               </div>
-              <div className="border-l border-border-warm">
+              <div>
                 <span className="block text-xs font-mono font-black text-white">3.4K</span>
                 <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">KDA Score</span>
               </div>
@@ -434,8 +431,8 @@ export const DashboardHome = () => {
         </div>
 
         {/* C. Campeones Fuertes (Bottom Right Grid) */}
-        <div className="md:col-span-6 lg:col-span-3 dashboard-panel border border-border-warm rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
-          <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-warm">
+        <div className="md:col-span-6 lg:col-span-3 dashboard-panel rounded-xl p-5 flex flex-col justify-between min-h-[300px]">
+          <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/[0.08]">
             <span className="text-xs font-black uppercase tracking-[0.2em] text-white">META: CAMPEONES FUERTES</span>
             <span className="text-xs font-medium text-purple-accent font-mono">Parche {data.gameVersion || "14.9.1"}</span>
           </div>
@@ -464,7 +461,7 @@ export const DashboardHome = () => {
                           <img 
                             src={`https://ddragon.leagueoflegends.com/cdn/${data.gameVersion || "14.9.1"}/img/champion/${cdnName}.png`} 
                             alt={name} 
-                            className="w-6 h-6 rounded-full border border-border-warm hover:border-purple-accent/60 transition-all duration-200"
+                            className="w-6 h-6 rounded-full bg-ink-800 transition-transform duration-200 group-hover:scale-105"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = "/favicon.svg";
                             }}
