@@ -1148,14 +1148,14 @@ export const DraftPage = () => {
                         />
 
                 {/* AREA CENTRAL */}
-                <div className={`transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
+                <div className={`draft-panel-wrapper transition-all duration-700 ease-in-out h-full ${(hasPicked || isPlaying)
                     ? (isCompact ? 'max-h-[580px] min-h-[450px]' : 'max-h-[780px] min-h-[600px]')
                     : (isCompact ? 'max-h-[500px] min-h-[350px]' : 'max-h-[650px] min-h-[400px]')
                     } ${isPlaying
                         ? 'flex-[10] w-full max-w-[1400px] mx-auto'
                         : 'flex-1 min-w-0 mx-2 md:mx-4'
                     }`}>
-                    <div className={`bg-ink-900 rounded-2xl h-full min-h-0 relative overflow-hidden flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.65)] ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
+                    <div className={`draft-central-panel rounded-2xl h-full min-h-0 relative z-10 overflow-hidden flex flex-col ${isCompact ? 'p-4 md:p-5' : 'p-6 md:p-8'
                         }`}>
 
                         {/* ALERTA DE AUTO-PICK SI HUBO ERROR O NO SE DETECTÓ EL ROL */}

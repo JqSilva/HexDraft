@@ -58,13 +58,13 @@ export const RecommendationCard = memo(({
           }
         }}
         aria-label={`${name}, puntuación ${score.toFixed(1)}${isBan ? ', baneo sugerido' : ''}${isPreselected ? ', preseleccionado' : ''}`}
-        className={`recommendation-item group relative w-20 h-20 bg-ink-850 border ${cardBorder} rounded-lg cursor-pointer transition-all duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-active/70`}
+        className={`recommendation-item recommendation-card-mount group relative w-20 h-20 bg-ink-850 border ${cardBorder} rounded-lg cursor-pointer transition-[transform,border-color,box-shadow] duration-150 ease-out hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-active/70`}
       >
         {/* Imagen del Campeón */}
         <div className="w-full h-full overflow-hidden rounded-lg">
           <img
             src={`${imgBase}${id}.png`}
-            className="w-full h-full object-cover scale-[1.08] transition-opacity duration-200 group-hover:opacity-40"
+            className="w-full h-full object-cover scale-[1.08] transition-opacity duration-150 group-hover:opacity-40"
             alt={name}
             loading="lazy"
           />

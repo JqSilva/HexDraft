@@ -37,20 +37,21 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
       <div
         className={`w-16 h-16 bg-[#130f1e] border border-ink-800/60 ${
           isEnemy ? 'hover:border-status-danger/60' : 'hover:border-violet-muted/60'
-        } shadow-[0_2px_8px_rgba(0,0,0,0.4)] flex items-center justify-center rounded-lg transition-all duration-200 relative group cursor-default select-none`}
+        } shadow-[0_2px_8px_rgba(0,0,0,0.4)] flex items-center justify-center rounded-lg transition-[border-color,box-shadow] duration-150 ease-out relative group cursor-default select-none`}
         aria-label={`${player.displayName || player.gameName || (isEnemy ? "Enemigo" : "Invocador")} - ${position || "Sin rol"}`}
       >
         {/* Imagen del Campeón */}
         <div className="w-full h-full bg-ink-900/90 overflow-hidden rounded-lg relative">
           {hasChampion ? (
             <img
+              key={cid}
               src={`${IMG_BASE}${cid}.png`}
-              className="w-full h-full object-cover scale-[1.12] z-10 relative transition-opacity duration-300"
+              className="slot-portrait-enter w-full h-full object-cover scale-[1.12] z-10 relative transition-[opacity,filter] duration-200 ease-out"
               style={{ opacity: isLocked ? 1 : 0.45 }}
               alt={`Campeón de ${player.displayName || player.gameName || (isEnemy ? "enemigo" : "tu equipo")}`}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 transition-opacity duration-300">
+            <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 transition-opacity duration-200">
               <svg width="13" height="22" className="opacity-40" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id={`goldGradCompact-${isEnemy ? 'enemy' : 'ally'}`} x1="0%" y1="0%" x2="0%" y2="100%">
@@ -92,7 +93,7 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
     <div
       className={`h-20 bg-[#130f1e] border border-ink-800/60 ${
         isEnemy ? 'hover:border-status-danger/40' : 'hover:border-violet-muted/50'
-      } shadow-[0_2px_10px_rgba(0,0,0,0.4)] flex items-center px-3.5 rounded-lg transition-all duration-200 overflow-hidden relative group cursor-default ${
+      } shadow-[0_2px_10px_rgba(0,0,0,0.4)] flex items-center px-3.5 rounded-lg transition-[border-color,box-shadow] duration-150 ease-out overflow-hidden relative group cursor-default ${
         isEnemy ? 'flex-row-reverse' : 'flex-row'
       }`}
     >
@@ -101,13 +102,14 @@ export const PlayerSlot = memo(({ player, isEnemy = false, compact = false }: Pl
         <div className="w-full h-full overflow-hidden rounded-lg relative">
           {hasChampion ? (
             <img
+              key={cid}
               src={`${IMG_BASE}${cid}.png`}
-              className="w-full h-full object-cover scale-[1.12] z-10 relative transition-opacity duration-300"
+              className="slot-portrait-enter w-full h-full object-cover scale-[1.12] z-10 relative transition-[opacity,filter] duration-200 ease-out"
               style={{ opacity: isLocked ? 1 : 0.5 }}
               alt={`Campeón de ${player.displayName || player.gameName || (isEnemy ? "enemigo" : "tu equipo")}`}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 transition-opacity duration-300">
+            <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 transition-opacity duration-200">
               <svg width="13" height="22" className="opacity-40" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id={`goldGradSlot-${isEnemy ? 'enemy' : 'ally'}`} x1="0%" y1="0%" x2="0%" y2="100%">

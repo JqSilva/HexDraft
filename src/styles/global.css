@@ -41,6 +41,42 @@
   --purple-heart-1300: #1d072c;
   --purple-heart-1400: #160520;
   --purple-heart-1500: #0e0315;
+
+  /* Transitions.dev Motion Tokens */
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+  --ease-out: ease-out;
+  --ease-linear: linear;
+
+  --distance-micro: 4px;
+  --distance-small: 6px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+
+  --scale-large: 0.96;
+  --scale-medium: 0.97;
+  --scale-small: 0.98;
+  --scale-tiny: 0.99;
+
+  --blur-small: 2px;
+  --blur-medium: 3px;
+  --blur-large: 8px;
+
+  /* Tooltip tokens */
+  --tt-in-dur: 150ms;
+  --tt-out-dur: 80ms;
+  --tt-scale: 0.98;
+  --tt-delay: 80ms;
+  --tt-in-ease: ease-out;
+  --tt-out-ease: ease-out;
 }
 
 @theme {
@@ -290,10 +326,112 @@ p { text-wrap: pretty; }
   }
 }
 
-::view-transition-group(root), ::view-transition-old(root), ::view-transition-new(root) {
-  animation-duration: 180ms;
-  animation-timing-function: ease-out;
-  mix-blend-mode: normal;
+/* ── Central Draft Panel: Depth & Subtle Ambient Halo (Quiet Arcana) ── */
+.draft-panel-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.draft-panel-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -40px -48px;
+  background:
+    radial-gradient(
+      ellipse 85% 50% at 50% 0%,
+      rgba(155, 77, 230, 0.13) 0%,
+      rgba(108, 20, 213, 0.065) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 95% 80% at 50% 50%,
+      rgba(108, 20, 213, 0.075) 0%,
+      rgba(79, 22, 155, 0.035) 60%,
+      transparent 85%
+    ),
+    radial-gradient(
+      ellipse 85% 50% at 50% 100%,
+      rgba(155, 77, 230, 0.13) 0%,
+      rgba(108, 20, 213, 0.065) 45%,
+      transparent 75%
+    );  pointer-events: none;
+  z-index: 0;
+  border-radius: 2.25rem;
+  filter: blur(36px);
+}
+
+.draft-central-panel {
+  background-color: var(--ink-900);
+  box-shadow:
+    0 24px 64px -12px rgba(0, 0, 0, 0.85),
+    0 10px 24px -6px rgba(0, 0, 0, 0.65);
+}
+
+/* ── Microinteractions Keyframes & Classes ── */
+@keyframes hd-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-micro, 4px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recommendation-card-mount {
+  animation: hd-card-enter var(--duration-fast, 220ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+@keyframes hd-portrait-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+.slot-portrait-enter {
+  animation: hd-portrait-enter 220ms var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+/* ── View Transitions (Transitions.dev & Astro) ── */
+@keyframes hd-view-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes hd-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::view-transition-group(root) {
+  animation-duration: var(--duration-fast, 220ms);
+  animation-timing-function: var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+::view-transition-old(root) {
+  animation: hd-view-exit 140ms var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+::view-transition-new(root) {
+  animation: hd-view-enter 220ms var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -302,5 +440,8 @@ p { text-wrap: pretty; }
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+  ::view-transition-group(root), ::view-transition-old(root), ::view-transition-new(root) {
+    animation: none !important;
   }
 }

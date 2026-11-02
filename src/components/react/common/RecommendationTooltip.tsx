@@ -20,9 +20,10 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
   children,
   className = '',
   placement = 'top',
-  delayMs = 60,
+  delayMs = 80,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number; actualPlacement: 'top' | 'bottom' }>({
     top: 0,
     left: 0,
@@ -31,7 +32,8 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
 
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tooltipId = useId();
 
   const updatePosition = useCallback(() => {
@@ -77,20 +79,26 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
   }, [placement]);
 
   const handleOpen = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setIsOpen(true);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    if (openTimerRef.current) clearTimeout(openTimerRef.current);
+    setIsMounted(true);
+    openTimerRef.current = setTimeout(() => {
+      setIsVisible(true);
     }, delayMs);
   }, [delayMs]);
 
   const handleClose = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setIsOpen(false);
+    if (openTimerRef.current) clearTimeout(openTimerRef.current);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setIsVisible(false);
+    closeTimerRef.current = setTimeout(() => {
+      setIsMounted(false);
+    }, 80);
   }, []);
 
-  // Recalcular posición cuando se abre o tras montar el nodo del tooltip
+  // Recalcular posición cuando se monta o cambia visibilidad
   useEffect(() => {
-    if (isOpen) {
+    if (isMounted) {
       updatePosition();
       // Un segundo pase con requestAnimationFrame para medir dimensiones reales del DOM
       const raf = requestAnimationFrame(() => {
@@ -110,12 +118,13 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
         window.removeEventListener('resize', handleScrollOrResize);
       };
     }
-  }, [isOpen, updatePosition]);
+  }, [isMounted, updatePosition]);
 
-  // Limpiar timer al desmontar
+  // Limpiar timers al desmontar
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (openTimerRef.current) clearTimeout(openTimerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     };
   }, []);
 
@@ -152,13 +161,13 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
         onKeyDown={(e) => {
           if (e.key === 'Escape') handleClose();
         }}
-        aria-describedby={isOpen ? tooltipId : undefined}
+        aria-describedby={isMounted && isVisible ? tooltipId : undefined}
         className={`inline-flex ${className}`}
       >
         {children}
       </div>
 
-      {isOpen && typeof document !== 'undefined' &&
+      {isMounted && typeof document !== 'undefined' &&
         createPortal(
           <div
             ref={tooltipRef}
@@ -168,7 +177,9 @@ export const RecommendationTooltip: React.FC<RecommendationTooltipProps> = ({
               top: `${coords.top}px`,
               left: `${coords.left}px`,
             }}
-            className="fixed z-[9999] pointer-events-none w-64 sm:w-72 max-w-[calc(100vw-24px)] rounded-lg bg-ink-900 border border-ink-700 p-3 shadow-2xl shadow-black/90 transition-opacity duration-150 ease-out select-none animate-in fade-in zoom-in-95"
+            className={`fixed z-[9999] pointer-events-none w-64 sm:w-72 max-w-[calc(100vw-24px)] rounded-lg bg-ink-900 border border-ink-700 p-3 shadow-2xl shadow-black/90 select-none transition-[opacity,transform] duration-150 ease-out origin-center ${
+              isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
+            }`}
           >
             {/* Header: Campeón y Score */}
             <div className="flex items-center justify-between gap-2">

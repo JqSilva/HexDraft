@@ -25,7 +25,7 @@ export const DraftGrid = memo(({
     }
 
     return (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-x-3 gap-y-5 pb-4 w-full justify-items-center justify-center animate-in zoom-in-95">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-x-3 gap-y-5 pb-4 w-full justify-items-center justify-center">
             {recommendations.map((rec) => (
                 <RecommendationCard
                     key={rec.id}
