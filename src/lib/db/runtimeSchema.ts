@@ -254,6 +254,16 @@ export function ensureRuntimeSchema(connection: SqliteConnection, logger?: (mess
       lane TEXT DEFAULT 'UNKNOWN',
       FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS champion_build_cache (
+      champion_id INTEGER NOT NULL,
+      lane TEXT NOT NULL,
+      patch TEXT NOT NULL,
+      source TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (champion_id, lane),
+      FOREIGN KEY (champion_id) REFERENCES champions(id) ON DELETE CASCADE
+    );
     CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `);
   ensureColumns(connection, 'champions', {
@@ -300,8 +310,9 @@ export function ensureRuntimeSchema(connection: SqliteConnection, logger?: (mess
     CREATE INDEX IF NOT EXISTS idx_matchups_champ_type ON matchups(champion_id, matchup_type);
     CREATE INDEX IF NOT EXISTS idx_synergies_champ ON synergies(champion_id);
     CREATE INDEX IF NOT EXISTS idx_builds_champ ON builds(champion_id);
+    CREATE INDEX IF NOT EXISTS idx_champion_build_cache_patch ON champion_build_cache(patch);
     CREATE INDEX IF NOT EXISTS idx_items_categories ON items(categories);
     CREATE INDEX IF NOT EXISTS idx_player_history_champ ON player_history(champion_id);
-    PRAGMA user_version = 4;
+    PRAGMA user_version = 5;
   `);
 }

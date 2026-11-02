@@ -5,7 +5,7 @@ import type { Recommendation } from '../../lib/engine/picks/types';
 import type { BansRecommendation } from '../../lib/engine/bans/types';
 import { getProcessedRecommendations, getSingleChampionBuild } from '../../lib/engine/picks/index';
 import { getProcessedBans } from '../../lib/engine/bans/index';
-import { getNameFromId, setEngineWeights, initializePersonalStats, initializeChampionPreferences } from '../../lib/engine/core/constants';
+import { getNameFromId, normalizeRole, setEngineWeights, initializePersonalStats, initializeChampionPreferences } from '../../lib/engine/core/constants';
 import { ENRICHED_DB, initializeEngineData, initializeItemsData } from '../../lib/engine/core/dataProvider';
 import { getProbuildstatsTopPicksSnapshot } from '../../lib/meta/probuildstatsTopPicks';
 import { CombatDirectivesPanel } from './TacticalDirectives';
@@ -107,6 +107,25 @@ export const DraftPage = () => {
     const isPollingRef = useRef<boolean>(false);
     const apiTimeAtSyncRef = useRef<number>(0);
     const timestampAtSyncRef = useRef<number>(0);
+    const externalBuildDataRef = useRef<Map<string, any | null>>(new Map());
+    const externalBuildDataRequestedRef = useRef<Set<string>>(new Set());
+
+    const ensureExternalBuildData = (championId: number, role: string): string => {
+        const normalizedRole = normalizeRole(role);
+        const key = `${championId}:${normalizedRole}`;
+        if (externalBuildDataRef.current.has(key) || externalBuildDataRequestedRef.current.has(key)) return key;
+
+        externalBuildDataRequestedRef.current.add(key);
+        const params = new URLSearchParams({ championId: String(championId), role: normalizedRole });
+        fetch(`/api/champion-build-data?${params.toString()}`)
+            .then(async response => response.ok ? response.json() : null)
+            .then(data => externalBuildDataRef.current.set(key, data?.playstyles?.length ? data : null))
+            .catch(error => {
+                console.error('Error cargando build externa del campeón:', error);
+                externalBuildDataRef.current.set(key, null);
+            });
+        return key;
+    };
 
     const notifiedBanRef = useRef<number>(0);
     const notifiedPickRef = useRef<number>(0);
@@ -744,7 +763,27 @@ export const DraftPage = () => {
                         }
 
                         // 1. Calcular y actualizar la build en la interfaz (React state)
-                        const buildData = getSingleChampionBuild(myId, cleanMyTeam, cleanTheirTeam, currentRole, { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) });
+                        const sourceKey = ensureExternalBuildData(myId, currentRole);
+                        const sourceResolved = externalBuildDataRef.current.has(sourceKey);
+                        const externalBuildData = sourceResolved ? externalBuildDataRef.current.get(sourceKey) : null;
+                        const activeBuildRole = currentBuild?.sourceMetadata?.role || currentBuild?.evidence?.role;
+                        if (!sourceResolved && currentBuild && (
+                            Number(currentBuild.id) !== myId
+                            || !activeBuildRole
+                            || normalizeRole(activeBuildRole) !== normalizeRole(currentRole)
+                        )) {
+                            setCurrentBuild(null);
+                        }
+                        const buildData = sourceResolved
+                            ? getSingleChampionBuild(
+                                myId,
+                                cleanMyTeam,
+                                cleanTheirTeam,
+                                currentRole,
+                                { allyRoles: rolesFromPlayers(data.myTeam), enemyRoles: rolesFromPlayers(data.theirTeam) },
+                                externalBuildData || undefined
+                            )
+                            : null;
                         if (buildData) {
                             const coreIds = (buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
                             const buildOrderIds = (buildData.build.items.buildOrder || buildData.build.items.core || []).map((i: any) => i.id || i).join(',');
@@ -948,27 +987,49 @@ export const DraftPage = () => {
                         (!liveChampId && activeBuild.name)
                     );
 
-                    if (isSameChampion && activeBuild) {
-                        // Conservar build calculada con todos sus clusters intactos
+                    if (liveChampId > 0) {
+                        const sourceKey = ensureExternalBuildData(liveChampId, restoredRole);
+                        const sourceResolved = externalBuildDataRef.current.has(sourceKey);
+                        const externalBuildData = sourceResolved ? externalBuildDataRef.current.get(sourceKey) : null;
+                        const activeSource = activeBuild?.sourceMetadata;
+                        const sourceMatchesActiveBuild = Boolean(externalBuildData
+                            && activeSource?.source === externalBuildData.sourceMetadata?.source
+                            && activeSource?.patch === externalBuildData.sourceMetadata?.patch
+                            && activeSource?.role === normalizeRole(restoredRole));
+                        const canKeepBuild = Boolean(isSameChampion && activeBuild && (
+                            !sourceResolved ? true : externalBuildData ? sourceMatchesActiveBuild : !activeSource
+                        ));
+
+                        if (canKeepBuild && activeBuild) {
+                            setCurrentBuild(activeBuild);
+                        } else if (sourceResolved) {
+                            // Esperar la consulta específica de campeón/línea antes de regenerar la build.
+                            const cleanMyTeam = liveMyTeamIds.length > 0
+                                ? liveMyTeamIds
+                                : restoredMyTeam.map(p => p.championId).filter(id => id > 0 && id !== liveChampId);
+                            const cleanTheirTeam = liveTheirTeamIds.length > 0
+                                ? liveTheirTeamIds
+                                : restoredTheirTeam.map(p => p.championId).filter(id => id > 0);
+
+                            const newBuild = getSingleChampionBuild(
+                                liveChampId,
+                                cleanMyTeam,
+                                cleanTheirTeam,
+                                restoredRole,
+                                { allyRoles: rolesFromPlayers(restoredMyTeam), enemyRoles: rolesFromPlayers(restoredTheirTeam) },
+                                externalBuildData || undefined
+                            );
+                            if (newBuild) {
+                                activeBuild = newBuild;
+                                setCurrentBuild(newBuild);
+                                localStorage.setItem('last_build_data:v1', JSON.stringify(newBuild));
+                                sessionStorage.setItem('hexdraft_active_build', JSON.stringify(newBuild));
+                                console.log("Nueva build generada para InProgress:", newBuild.name);
+                            }
+                        }
+                    } else if (isSameChampion && activeBuild) {
                         setCurrentBuild(activeBuild);
                         console.log("Build previa conservada para InProgress:", activeBuild.name);
-                    } else if (liveChampId > 0) {
-                        // Campeón en vivo sin build previa o diferente: calcular con contexto completo
-                        const cleanMyTeam = liveMyTeamIds.length > 0
-                            ? liveMyTeamIds
-                            : restoredMyTeam.map(p => p.championId).filter(id => id > 0 && id !== liveChampId);
-                        const cleanTheirTeam = liveTheirTeamIds.length > 0
-                            ? liveTheirTeamIds
-                            : restoredTheirTeam.map(p => p.championId).filter(id => id > 0);
-
-                        const newBuild = getSingleChampionBuild(liveChampId, cleanMyTeam, cleanTheirTeam, restoredRole, { allyRoles: rolesFromPlayers(restoredMyTeam), enemyRoles: rolesFromPlayers(restoredTheirTeam) });
-                        if (newBuild) {
-                            activeBuild = newBuild;
-                            setCurrentBuild(newBuild);
-                            localStorage.setItem('last_build_data:v1', JSON.stringify(newBuild));
-                            sessionStorage.setItem('hexdraft_active_build', JSON.stringify(newBuild));
-                            console.log("Nueva build generada para InProgress:", newBuild.name);
-                        }
                     }
 
                     // 4. Cargar datos tácticos para el campeón activo

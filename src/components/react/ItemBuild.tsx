@@ -3,6 +3,8 @@ import { getDDragonUrl } from '../../lib/gameVersion.js';
 
 interface ScoredCluster {
     pivotItem: number;
+    firstItemPickrate?: number;
+    firstItem?: any;
     damageType: 'AD' | 'AP' | 'Hybrid';
     totalPickrate: number;
     weightedWinrate: number;
@@ -103,7 +105,7 @@ const ClusterTab = ({
                     ))}
                 </div>
                 <span className="text-[10px] font-mono font-bold text-text-secondary tabular-nums border-l border-ink-700/40 pl-2">
-                    {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(1)}
+                    {cluster.firstItemPickrate > 0 ? `${cluster.firstItemPickrate.toFixed(1)}%` : `${cluster.score > 0 ? '+' : ''}${cluster.score.toFixed(1)}`}
                 </span>
             </button>
         );
@@ -119,8 +121,13 @@ const ClusterTab = ({
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${colors.title} truncate max-w-[90px]`}>
                     {cluster.title || (isAp ? 'AP' : isAd ? 'AD' : 'Híbrido')}
                 </span>
-                <span className="text-[10.5px] font-mono font-bold text-text-muted tabular-nums">
-                    {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(2)}
+                <span className="flex items-center gap-1.5 shrink-0">
+                    {cluster.firstItemPickrate > 0 && (
+                        <span className="text-[9px] font-mono font-bold text-text-secondary tabular-nums">{cluster.firstItemPickrate.toFixed(1)}%</span>
+                    )}
+                    <span className="text-[10.5px] font-mono font-bold text-text-muted tabular-nums">
+                        {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(2)}
+                    </span>
                 </span>
             </div>
 
@@ -186,13 +193,19 @@ export const ItemBuild = memo(({
         });
     }
 
-    const finalSituational = situationalItemsList.length > 0
+    const observedPathOptions = build?.items?.pathOptions || [];
+    const finalSituational = observedPathOptions.length > 0
+        ? observedPathOptions
+        : situationalItemsList.length > 0
         ? situationalItemsList
+        : currentBuild?.sourceMetadata?.source
+        ? []
         : COMMON_SITUATIONAL_ITEMS.map(item => ({
             id: item.id,
             name: item.name,
             icon: `https://ddragon.leagueoflegends.com/cdn/16.9.1/img/item/${item.id}.png`
         }));
+    const optionalItems = build?.items?.optionalItems || [];
 
     return (
         <div className="flex-1 min-h-0 flex flex-col gap-0">
@@ -364,7 +377,7 @@ export const ItemBuild = memo(({
                             </span>
                             <div className="flex flex-wrap justify-center items-center gap-2 max-w-[190px] mx-auto w-full">
                                 {finalSituational.slice(0, 10).map((item: any, idx: number) => (
-                                    <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={item?.name}>
+                                    <div key={`situational-${idx}`} className="relative w-[38px] h-[38px] group" title={`${item?.name || 'Objeto'}${Number(item?.pickrate) > 0 ? ` · ${Number(item.pickrate).toFixed(1)}%` : ''}`}>
                                         <img
                                             src={item?.icon || getDDragonUrl('item', item?.id)}
                                             className="w-full h-full border border-ink-700/60 rounded-md hover:border-violet/70 transition-colors cursor-default"
@@ -373,6 +386,18 @@ export const ItemBuild = memo(({
                                     </div>
                                 ))}
                             </div>
+                            {optionalItems.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 border-t border-ink-700/40 pt-2">
+                                    <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider">Opcional · Solo si vas por delante</span>
+                                    <div className="flex justify-center gap-2">
+                                        {optionalItems.map((item: any, idx: number) => (
+                                            <div key={`optional-${idx}`} className="w-[32px] h-[32px]" title={`${item.name} · ${item.condition || 'Solo si vas por delante'}`}>
+                                                <img src={item.icon || getDDragonUrl('item', item.id)} className="w-full h-full border border-amber-400/50 rounded-md" alt={item.name || 'Objeto opcional'} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Bloque Swaps Situacionales Recomendados (si existen) */}

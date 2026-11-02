@@ -73,16 +73,21 @@ export const POST: APIRoute = async ({ request }) => {
             "3156"  // Fauces de Malmortius (Resistencia Mágica/AD)
         ];
 
-        const pathItems = [
-            ...(items.paths?.snowball || []),
-            ...(items.paths?.neutral || []),
-            ...(items.paths?.behind || [])
-        ];
+        const observedPathItems = Array.isArray(items.pathOptions) ? items.pathOptions : [];
+        const pathItems = observedPathItems.length > 0
+            ? observedPathItems
+            : [
+                ...(items.paths?.snowball || []),
+                ...(items.paths?.neutral || []),
+                ...(items.paths?.behind || [])
+            ];
+        const situationalPool = observedPathItems.length > 0
+            ? pathItems
+            : [...pathItems, ...COMMON_SITUATIONAL_IDS];
 
-        const situationalItems = Array.from(new Set([
-            ...pathItems,
-            ...COMMON_SITUATIONAL_IDS
-        ].map(getCleanId).filter(Boolean) as string[]))
+        const situationalItems = Array.from(new Set(
+            situationalPool.map(getCleanId).filter(Boolean) as string[]
+        ))
             .filter(id => !filterSet.has(id))
             .map(id => ({ id, count: 1 }));
 

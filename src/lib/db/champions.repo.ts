@@ -86,6 +86,7 @@ export const championsRepo = {
   clearAllData() {
     db.exec('PRAGMA foreign_keys = OFF;');
     db.exec('DELETE FROM builds;');
+    db.exec('DELETE FROM champion_build_cache;');
     db.exec('DELETE FROM synergies;');
     db.exec('DELETE FROM matchups;');
     db.exec('DELETE FROM champions;');

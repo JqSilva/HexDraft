@@ -333,7 +333,8 @@ export async function fetchLolalyticsChampionStats(
   champName: string,
   lane: string,
   _version: string,
-  sessionId?: string
+  sessionId?: string,
+  includeTeamData = true
 ): Promise<any> {
   const laneName = lane.toLowerCase() === 'utility' ? 'support' : lane.toLowerCase();
   const slug = normalizeSlug(champName);
@@ -343,7 +344,7 @@ export async function fetchLolalyticsChampionStats(
   try {
     const response = await throttledAxiosGet(url, {
       headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
-      timeout: 70000
+      timeout: includeTeamData ? 70000 : 25000
     });
     html = response.data;
   } catch (error) {
@@ -357,7 +358,7 @@ export async function fetchLolalyticsChampionStats(
   const pages = [data.summary?.pick, data.summary?.win]
     .map(raw => buildRunePage(raw, runeToStyle))
     .filter(Boolean);
-  const teamData = await fetchTeamStats(slug, patch, laneName, sessionId);
+  const teamData = includeTeamData ? await fetchTeamStats(slug, patch, laneName, sessionId) : null;
   const enemyMatchups: Record<string, any[]> = {};
   for (const currentLane of LANE_NAMES) enemyMatchups[currentLane] = buildMatchupRows(data.enemy?.[currentLane]);
   if (!enemyMatchups.utility?.length && enemyMatchups.support?.length) enemyMatchups.utility = enemyMatchups.support;

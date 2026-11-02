@@ -453,9 +453,10 @@ export function getSingleChampionBuild(
   myTeamIds: number[] = [],
   theirTeamIds: number[] = [],
   myRole: string = 'jungle',
-  context: DraftContext = {}
+  context: DraftContext = {},
+  externalBuildData?: any
 ): any {
-  const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole, context);
+  const adapted = getAdaptedBuild(championId, myTeamIds, theirTeamIds, myRole, context, externalBuildData);
   if (adapted) return adapted;
 
   const name = getNameFromId(championId);

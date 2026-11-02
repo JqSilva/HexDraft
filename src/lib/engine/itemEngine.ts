@@ -1110,7 +1110,9 @@ export function detectBuildClusters(statsData: any): BuildCluster[] {
 
     for (const pair of sortedCore2) {
       const pairIds = pair.itemIds.slice(0, 2);
-      const representativeCore = completeCoreItemIds(statsData, pairIds);
+      const representativeCore = statsData?.sourceMetadata?.coreMode === 'two-items'
+        ? cleanInventory(pairIds, 2)
+        : completeCoreItemIds(statsData, pairIds);
       const pivotItem = representativeCore.find((id: number) => !isBootItem(id)) || representativeCore[0];
       const damageType = classifyItemsDamageType(representativeCore);
       const sig = [...representativeCore].sort().join('-');
@@ -1574,6 +1576,76 @@ export function selectSummonersForCluster(summoners: any[], role: string): numbe
   return best ? [Number(best.summonerId1), Number(best.summonerId2)] : fallback;
 }
 
+function selectObservedSlotContinuation(
+  slotItems: any,
+  coreIds: number[],
+  bootsId: number,
+  damageType: string,
+  enemyContext: any,
+  explicitOptionalIds: number[] = []
+): { selected: number[]; pathOptions: any[]; optionalItems: any[] } {
+  const slots = ['item4', 'item5', 'item6'];
+  const allOptions = slots.flatMap(slot => (Array.isArray(slotItems?.[slot]) ? slotItems[slot] : []))
+    .map((raw: any) => {
+      const id = Number(raw?.itemId || raw?.Id || raw?.id);
+      return { ...raw, itemId: id, pickrate: Number(raw?.pickrate || raw?.pickRate || 0), winrate: Number(raw?.winrate || raw?.winRate || 50) };
+    })
+    .filter((item: any) => item.itemId > 0);
+  const optionalIds = new Set<number>([
+    ...explicitOptionalIds.map(Number),
+    ...allOptions.filter((item: any) => item.itemId === 3041).map((item: any) => item.itemId)
+  ]);
+  const used = new Set<number>([...coreIds, bootsId].filter(Boolean));
+  const canUse = (item: any): boolean => {
+    const id = Number(item.itemId);
+    if (!id || id === 3041 || optionalIds.has(id) || used.has(id) || isBootItem(id)) return false;
+    if (!canAddItem(id, [...used]) || !isItemCoherentWithCluster(id, damageType as any)) return false;
+    const asset = hydrateAsset('items', id);
+    return Boolean(asset && asset.gold >= 1500);
+  };
+  const rankOptions = (options: any[]) => options.filter(canUse).sort((a: any, b: any) => {
+    const aScore = scoreItemOption(a, { matchupFit: itemContextFit(a.itemId, enemyContext) }).score;
+    const bScore = scoreItemOption(b, { matchupFit: itemContextFit(b.itemId, enemyContext) }).score;
+    return bScore - aScore || b.pickrate - a.pickrate || a.itemId - b.itemId;
+  });
+
+  const selected: number[] = [];
+  for (const slot of slots) {
+    const directOptions = rankOptions(Array.isArray(slotItems?.[slot]) ? slotItems[slot].map((raw: any) => ({
+      ...raw,
+      itemId: Number(raw?.itemId || raw?.Id || raw?.id),
+      pickrate: Number(raw?.pickrate || raw?.pickRate || 0),
+      winrate: Number(raw?.winrate || raw?.winRate || 50)
+    })) : []);
+    // Las columnas son preferencias observadas, pero una repetición ya comprada se descarta.
+    // Si no queda ninguna opción para esa posición, se recurre a otras opciones aún no usadas.
+    const candidate = directOptions[0] || rankOptions(allOptions)[0];
+    if (!candidate) continue;
+    selected.push(candidate.itemId);
+    used.add(candidate.itemId);
+  }
+
+  const pathOptionsById = new Map<number, any>();
+  for (const item of allOptions) {
+    if (item.itemId === 3041 || coreIds.includes(item.itemId) || item.itemId === bootsId || isBootItem(item.itemId)) continue;
+    if (!isItemCoherentWithCluster(item.itemId, damageType as any)) continue;
+    const asset = hydrateAsset('items', item.itemId);
+    if (!asset || asset.gold < 1500) continue;
+    const existing = pathOptionsById.get(item.itemId);
+    if (!existing || item.pickrate > existing.pickrate) pathOptionsById.set(item.itemId, { ...asset, pickrate: item.pickrate, winrate: item.winrate });
+  }
+
+  const optionalItems = [...optionalIds].map(id => hydrateAsset('items', id)).filter(Boolean).map(item => ({
+    ...item,
+    condition: 'Solo si vas por delante'
+  }));
+  return {
+    selected,
+    pathOptions: [...pathOptionsById.values()].sort((a, b) => b.pickrate - a.pickrate),
+    optionalItems
+  };
+}
+
 function getPivotItemName(pivotId: number): string | null {
   const item = ITEMS_DB[pivotId];
   if (!item || !item.name) return null;
@@ -1651,14 +1723,23 @@ function buildOutputForCluster(
   }
   const chosenSummoners = selectSummonersForCluster(rawSummoners, myRole);
 
-  const dynamicPaths = getDynamicPaths(
-    statsData.items || {},
-    coreItemIds,
-    c.damageType,
-    chosenBootId,
-    enemyContext,
-    isAssassin
-  );
+  const hasSlotOptions = statsData?.sourceMetadata?.pathModel === 'slot-options';
+  const observedContinuation = hasSlotOptions
+    ? selectObservedSlotContinuation(
+      statsData.items || {}, coreItemIds, chosenBootId, c.damageType, enemyContext,
+      Array.isArray(statsData.optionalItems) ? statsData.optionalItems : []
+    )
+    : null;
+  const dynamicPaths = hasSlotOptions
+    ? { snowball: [], neutral: [], behind: [] }
+    : getDynamicPaths(
+      statsData.items || {},
+      coreItemIds,
+      c.damageType,
+      chosenBootId,
+      enemyContext,
+      isAssassin
+    );
 
   const starter = chosenStarterIds.map((id: number) => hydrateAsset('items', id));
   const boots = chosenBootId ? hydrateAsset('items', chosenBootId) : null;
@@ -1705,16 +1786,17 @@ function buildOutputForCluster(
     behind: dynamicPaths.behind.map((id: number) => hydrateAsset('items', id))
   };
 
-  // Ruta principal: cinco objetos terminados sin contar botas (seis espacios con botas).
-  // Se elige una única continuación por ajuste a la composición; no se mezclan estados de partida.
-  const recommendedContinuation = selectCompositionContinuation(dynamicPaths, fullCoreIds, chosenBootId, enemyContext);
+  // El orden se muestra sin botas; OneTricks puede aportar dos o tres objetos de core antes de sus columnas 4th–6th.
+  const recommendedContinuation = observedContinuation?.selected
+    || selectCompositionContinuation(dynamicPaths, fullCoreIds, chosenBootId, enemyContext);
+  const buildOrderLimit = hasSlotOptions && statsData?.sourceMetadata?.coreMode === 'three-items' ? 6 : 5;
   const buildOrderIds = cleanInventory([
     ...fullCoreIds,
     ...recommendedContinuation
-  ].filter((id: number) => !isBootItem(id)), 5);
+  ].filter((id: number) => !isBootItem(id)), buildOrderLimit);
   const buildOrder = buildOrderIds.map((id: number) => hydrateAsset('items', id));
 
-  const skillsData = defaultBuild?.skills || statsData?.skills || champ.buildData?.skills;
+  const skillsData = statsData?.skills || defaultBuild?.skills || champ.buildData?.skills;
   const fullOrder = calculateSkillMaxOrder(skillsData);
 
   return {
@@ -1734,7 +1816,11 @@ function buildOutputForCluster(
         boots,
         core,
         buildOrder,
-        paths
+        paths,
+        ...(observedContinuation ? {
+          pathOptions: observedContinuation.pathOptions,
+          optionalItems: observedContinuation.optionalItems
+        } : {})
       },
       skillOrder: fullOrder
     },
@@ -1769,7 +1855,8 @@ export function getAdaptedBuild(
   myTeamIds: number[] = [],
   theirTeamIds: number[] = [],
   myRole: string = 'jungle',
-  context: DraftContext = {}
+  context: DraftContext = {},
+  externalBuildData?: any
 ): any {
   let name = '';
   let champIdNum = 0;
@@ -1784,6 +1871,59 @@ export function getAdaptedBuild(
   const champ = ENRICHED_DB[name];
   if (!champ) return null;
 
+  const externalStyles = Array.isArray(externalBuildData?.playstyles) && !externalBuildData?.singleStyle
+    ? externalBuildData.playstyles.slice(0, 3)
+    : [];
+  if (externalStyles.length > 0) {
+    const sourceMetadata = externalBuildData.sourceMetadata || {};
+    const rankedStyles = externalStyles.map((style: any) => {
+      const result = getAdaptedBuild(
+        championId, myTeamIds, theirTeamIds, myRole, context,
+        { singleStyle: true, statsData: style.statsData, sourceMetadata }
+      );
+      const cluster = result?.scoredClusters?.[0];
+      if (!result || !cluster) return null;
+      const firstItemId = Number(style.firstItemId || style.statsData?.sourceMetadata?.playstyleItem || cluster.pivotItem);
+      const firstItem = hydrateAsset('items', firstItemId);
+      return {
+        result,
+        cluster: {
+          ...cluster,
+          pivotItem: firstItemId,
+          totalPickrate: Number(style.pickrate ?? cluster.totalPickrate),
+          weightedWinrate: Number(style.winrate ?? cluster.weightedWinrate),
+          games: Number(style.games ?? cluster.games) || undefined,
+          score: Number(cluster.score) || 0,
+          isWinner: false,
+          title: style.title || firstItem?.name || getPivotItemName(firstItemId) || `Objeto ${firstItemId}`,
+          firstItem,
+          firstItemPickrate: Number(style.pickrate) || 0,
+          source: sourceMetadata.source
+        }
+      };
+    }).filter(Boolean) as Array<{ result: any; cluster: any }>;
+
+    rankedStyles.sort((a, b) => b.cluster.score - a.cluster.score || b.cluster.totalPickrate - a.cluster.totalPickrate);
+    if (rankedStyles.length > 0) {
+      rankedStyles[0].cluster.isWinner = true;
+      const winner = rankedStyles[0];
+      const patch = sourceMetadata.sourcePatch || sourceMetadata.patch || winner.result.evidence?.patch || null;
+      return {
+        ...winner.result,
+        sourceMetadata,
+        evidence: {
+          ...winner.result.evidence,
+          source: sourceMetadata.source || 'observed',
+          patch,
+          role: sourceMetadata.role || normalizeRole(myRole),
+          games: winner.cluster.games || winner.result.evidence?.games || null
+        },
+        scoredClusters: rankedStyles.map(({ cluster }) => cluster),
+        build: winner.cluster.build
+      };
+    }
+  }
+
   const tacticRole = champ.tacticRole || champ.tactic_role || 'teamfight';
   const champClass = champ.class || '';
   const isAssassin = tacticRole === 'burst' || tacticRole === 'assassin' || champClass === 'Assassin';
@@ -1794,7 +1934,7 @@ export function getAdaptedBuild(
   // La ruta varía según la fuente de datos:
   // - SQLite → special_notes.statsData (guardado por sync.service)
   // - SQLite → buildData.statsData (ruta directa del scraper)
-  const statsData = defaultBuild?.special_notes?.statsData || defaultBuild?.statsData
+  const statsData = externalBuildData?.statsData || defaultBuild?.special_notes?.statsData || defaultBuild?.statsData
     || (defaultBuild === champ.buildData ? champ.statsData : undefined);
 
   console.log(`\n🔍 [ENGINE] getAdaptedBuild → ${name} (ID: ${champIdNum})`);
@@ -2025,7 +2165,7 @@ filteredClusters.forEach((c, i) => {
   const situationalItems = ['item4', 'item5', 'item6'].reduce((result: any, slot: string) => {
     const options = (statsData.items?.[slot] || [])
       .map((item: any) => ({ ...item, itemId: Number(item.itemId || item.Id || item.id) }))
-      .filter((item: any) => item.itemId > 0 && isItemCoherentWithCluster(item.itemId, winningClusterData.damageType))
+      .filter((item: any) => item.itemId > 0 && item.itemId !== 3041 && isItemCoherentWithCluster(item.itemId, winningClusterData.damageType))
       .sort((a: any, b: any) => scoreItemOption(b).score - scoreItemOption(a).score)
       .slice(0, 3)
       .map((item: any) => ({
