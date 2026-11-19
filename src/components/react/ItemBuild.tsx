@@ -74,6 +74,7 @@ const ClusterTab = ({
 
     const keystone = cluster.build?.runes?.keystone;
     const coreItems = cluster.build?.items?.core || [];
+    const firstItemPickrate = cluster.firstItemPickrate ?? 0;
 
     if (isCompact) {
         // Formato Ultra-Compacto Horizontal sin Nombre
@@ -105,7 +106,7 @@ const ClusterTab = ({
                     ))}
                 </div>
                 <span className="text-[10px] font-mono font-bold text-text-secondary tabular-nums border-l border-ink-700/40 pl-2">
-                    {cluster.firstItemPickrate > 0 ? `${cluster.firstItemPickrate.toFixed(1)}%` : `${cluster.score > 0 ? '+' : ''}${cluster.score.toFixed(1)}`}
+                    {firstItemPickrate > 0 ? `${firstItemPickrate.toFixed(1)}%` : `${cluster.score > 0 ? '+' : ''}${cluster.score.toFixed(1)}`}
                 </span>
             </button>
         );
@@ -122,8 +123,8 @@ const ClusterTab = ({
                     {cluster.title || (isAp ? 'AP' : isAd ? 'AD' : 'Híbrido')}
                 </span>
                 <span className="flex items-center gap-1.5 shrink-0">
-                    {cluster.firstItemPickrate > 0 && (
-                        <span className="text-[9px] font-mono font-bold text-text-secondary tabular-nums">{cluster.firstItemPickrate.toFixed(1)}%</span>
+                    {firstItemPickrate > 0 && (
+                        <span className="text-[9px] font-mono font-bold text-text-secondary tabular-nums">{firstItemPickrate.toFixed(1)}%</span>
                     )}
                     <span className="text-[10.5px] font-mono font-bold text-text-muted tabular-nums">
                         {cluster.score > 0 ? '+' : ''}{cluster.score.toFixed(2)}
